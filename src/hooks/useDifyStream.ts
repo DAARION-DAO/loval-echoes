@@ -1,0 +1,134 @@
+import { useState, useCallback, useRef, useEffect } from 'react';
+import { difyClient } from '@/utils/difyClient';
+
+export interface StreamMessage {
+  id: string;
+  content: string;
+  isComplete: boolean;
+  metadata?: {
+    usage?: {
+      prompt_tokens?: number;
+      completion_tokens?: number;
+      total_tokens?: number;
+      total_price?: string;
+      latency?: string;
+    };
+    retriever_resources?: Array<{
+      dataset_name: string;
+      document_name: string;
+      score: number;
+      content: string;
+    }>;
+  };
+}
+
+export const useDifyStream = (chatId: string) => {
+  const [currentMessage, setCurrentMessage] = useState<StreamMessage | null>(null);
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const unsubscribeRef = useRef<(() => void) | null>(null);
+
+  const handleStreamData = useCallback((data: any) => {
+    console.log('Stream data received:', data);
+
+    switch (data.event) {
+      case 'message':
+        // Частичный ответ агента
+        setCurrentMessage(prev => ({
+          id: data.message_id || prev?.id || 'temp',
+          content: (prev?.content || '') + (data.answer || ''),
+          isComplete: false,
+          metadata: prev?.metadata,
+        }));
+        break;
+
+      case 'message_end':
+        // Окончание ответа с метаданными
+        setCurrentMessage(prev => prev ? {
+          ...prev,
+          isComplete: true,
+          metadata: data.metadata,
+        } : null);
+        setIsStreaming(false);
+        break;
+
+      case 'error':
+        console.error('Stream error:', data);
+        setError(data.message || 'Unknown stream error');
+        setIsStreaming(false);
+        break;
+
+      case 'ping':
+        // Событие для поддержания активности соединения
+        break;
+
+      default:
+        console.log('Unknown stream event:', data.event);
+    }
+  }, []);
+
+  const startStream = useCallback(async (query: string, files?: string[]) => {
+    try {
+      setError(null);
+      setIsStreaming(true);
+      setCurrentMessage(null);
+
+      // Подписываемся на стрим
+      if (unsubscribeRef.current) {
+        unsubscribeRef.current();
+      }
+      unsubscribeRef.current = difyClient.subscribeToChat(chatId, handleStreamData);
+
+      // Отправляем сообщение
+      await difyClient.sendMessage(chatId, query, files);
+
+    } catch (err) {
+      console.error('Error starting stream:', err);
+      setError(err instanceof Error ? err.message : 'Unknown error');
+      setIsStreaming(false);
+    }
+  }, [chatId, handleStreamData]);
+
+  const stopStream = useCallback(async (taskId: string) => {
+    try {
+      await difyClient.stopGeneration(taskId);
+      setIsStreaming(false);
+    } catch (err) {
+      console.error('Error stopping stream:', err);
+      setError(err instanceof Error ? err.message : 'Error stopping generation');
+    }
+  }, []);
+
+  const clearMessage = useCallback(() => {
+    setCurrentMessage(null);
+    setError(null);
+  }, []);
+
+  // Очистка при unmount или смене chatId
+  useEffect(() => {
+    return () => {
+      if (unsubscribeRef.current) {
+        unsubscribeRef.current();
+      }
+    };
+  }, [chatId]);
+
+  // Переподписка при смене chatId
+  useEffect(() => {
+    if (unsubscribeRef.current) {
+      unsubscribeRef.current();
+    }
+    if (isStreaming) {
+      unsubscribeRef.current = difyClient.subscribeToChat(chatId, handleStreamData);
+    }
+  }, [chatId, isStreaming, handleStreamData]);
+
+  return {
+    currentMessage,
+    isStreaming,
+    error,
+    startStream,
+    stopStream,
+    clearMessage,
+  };
+};

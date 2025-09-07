@@ -1,0 +1,315 @@
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+interface DifyResponse {
+  answer?: string;
+  conversation_id?: string;
+  message_id?: string;
+  metadata?: {
+    usage?: {
+      prompt_tokens?: number;
+      completion_tokens?: number;
+      total_tokens?: number;
+      total_price?: string;
+      latency?: string;
+    };
+    retriever_resources?: Array<{
+      dataset_name: string;
+      document_name: string;
+      score: number;
+      content: string;
+    }>;
+  };
+}
+
+class DifyClient {
+  private apiKey: string;
+  private baseUrl: string;
+  private techUserId: string;
+
+  constructor() {
+    this.apiKey = Deno.env.get('DIFY_API_KEY') || '';
+    this.baseUrl = 'https://api.dify.ai/v1';
+    this.techUserId = 'daarion-community-system';
+  }
+
+  private async makeRequest(endpoint: string, options: RequestInit = {}) {
+    const url = `${this.baseUrl}${endpoint}`;
+    const headers = {
+      'Authorization': `Bearer ${this.apiKey}`,
+      'Content-Type': 'application/json',
+      ...options.headers,
+    };
+
+    console.log(`Making Dify request: ${options.method || 'GET'} ${url}`);
+
+    const response = await fetch(url, {
+      ...options,
+      headers,
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Dify API error: ${response.status} ${errorText}`);
+      throw new Error(`Dify API error: ${response.status} ${errorText}`);
+    }
+
+    return response;
+  }
+
+  async sendMessageStream(conversationId: string | null, query: string, files?: string[]) {
+    const body = {
+      inputs: {},
+      query,
+      response_mode: "streaming",
+      conversation_id: conversationId || undefined,
+      user: this.techUserId,
+      files: files || [],
+    };
+
+    console.log('Sending message to Dify:', { conversationId, query: query.substring(0, 100) });
+
+    return await this.makeRequest('/chat-messages', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+  }
+
+  async getMessages(conversationId: string, cursor?: string) {
+    const params = new URLSearchParams({
+      user: this.techUserId,
+      conversation_id: conversationId,
+    });
+    
+    if (cursor) {
+      params.append('first_id', cursor);
+    }
+
+    return await this.makeRequest(`/messages?${params.toString()}`);
+  }
+
+  async stopGeneration(taskId: string) {
+    return await this.makeRequest(`/chat-messages/${taskId}/stop`, {
+      method: 'POST',
+      body: JSON.stringify({ user: this.techUserId }),
+    });
+  }
+
+  async sendFeedback(messageId: string, rating: 'like' | 'dislike', content?: string) {
+    return await this.makeRequest(`/messages/${messageId}/feedbacks`, {
+      method: 'POST',
+      body: JSON.stringify({
+        rating,
+        content,
+        user: this.techUserId,
+      }),
+    });
+  }
+
+  async uploadFile(formData: FormData) {
+    formData.append('user', this.techUserId);
+    
+    return await this.makeRequest('/files/upload', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${this.apiKey}`,
+      },
+      body: formData,
+    });
+  }
+
+  async listConversations(limit = 20, cursor?: string) {
+    const params = new URLSearchParams({
+      user: this.techUserId,
+      limit: limit.toString(),
+    });
+    
+    if (cursor) {
+      params.append('first_id', cursor);
+    }
+
+    return await this.makeRequest(`/conversations?${params.toString()}`);
+  }
+
+  async renameConversation(conversationId: string, name: string) {
+    return await this.makeRequest(`/conversations/${conversationId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({
+        name,
+        user: this.techUserId,
+      }),
+    });
+  }
+
+  async deleteConversation(conversationId: string) {
+    return await this.makeRequest(`/conversations/${conversationId}`, {
+      method: 'DELETE',
+      body: JSON.stringify({ user: this.techUserId }),
+    });
+  }
+}
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    const difyClient = new DifyClient();
+    const url = new URL(req.url);
+    const action = url.searchParams.get('action');
+
+    switch (action) {
+      case 'send_message': {
+        const { conversationId, query, files, chatId } = await req.json();
+        
+        // Start streaming response from Dify
+        const response = await difyClient.sendMessageStream(conversationId, query, files);
+        
+        if (!response.body) {
+          throw new Error('No response body from Dify');
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        let actualConversationId = conversationId;
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(line.slice(6));
+                console.log('Dify stream event:', data.event, data);
+
+                // Extract conversation_id from first message
+                if (!actualConversationId && data.conversation_id) {
+                  actualConversationId = data.conversation_id;
+                  
+                  // Update chat with dify_conversation_id
+                  await supabase
+                    .from('conversations')
+                    .update({ dify_conversation_id: actualConversationId })
+                    .eq('id', chatId);
+                }
+
+                // Broadcast to all clients via Supabase Realtime
+                const channel = supabase.channel(`chat:${chatId}`);
+                await channel.send({
+                  type: 'broadcast',
+                  event: 'dify_stream',
+                  payload: data,
+                });
+
+              } catch (e) {
+                console.error('Error parsing SSE data:', e);
+              }
+            }
+          }
+        }
+
+        return new Response(JSON.stringify({ success: true }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      case 'get_messages': {
+        const { conversationId, cursor } = await req.json();
+        const response = await difyClient.getMessages(conversationId, cursor);
+        const data = await response.json();
+        
+        return new Response(JSON.stringify(data), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      case 'stop_generation': {
+        const { taskId } = await req.json();
+        const response = await difyClient.stopGeneration(taskId);
+        const data = await response.json();
+        
+        return new Response(JSON.stringify(data), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      case 'send_feedback': {
+        const { messageId, rating, content } = await req.json();
+        const response = await difyClient.sendFeedback(messageId, rating, content);
+        const data = await response.json();
+        
+        return new Response(JSON.stringify(data), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      case 'upload_file': {
+        const formData = await req.formData();
+        const response = await difyClient.uploadFile(formData);
+        const data = await response.json();
+        
+        return new Response(JSON.stringify(data), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      case 'list_conversations': {
+        const { limit, cursor } = await req.json();
+        const response = await difyClient.listConversations(limit, cursor);
+        const data = await response.json();
+        
+        return new Response(JSON.stringify(data), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      case 'rename_conversation': {
+        const { conversationId, name } = await req.json();
+        const response = await difyClient.renameConversation(conversationId, name);
+        const data = await response.json();
+        
+        return new Response(JSON.stringify(data), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      case 'delete_conversation': {
+        const { conversationId } = await req.json();
+        const response = await difyClient.deleteConversation(conversationId);
+        const data = await response.json();
+        
+        return new Response(JSON.stringify(data), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      default:
+        return new Response('Invalid action', { status: 400, headers: corsHeaders });
+    }
+
+  } catch (error) {
+    console.error('Error in dify-client:', error);
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+});
