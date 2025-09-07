@@ -57,6 +57,16 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        // ЖОС специфичные цвета
+        "zhos-banner": "hsl(var(--zhos-banner))",
+        "zhos-banner-foreground": "hsl(var(--zhos-banner-foreground))",
+        "zhos-banner-border": "hsl(var(--zhos-banner-border))",
+        "agent-message": "hsl(var(--agent-message))",
+        "agent-message-border": "hsl(var(--agent-message-border))",
+        "user-message": "hsl(var(--user-message))",
+        "user-message-border": "hsl(var(--user-message-border))",
+        "system-message": "hsl(var(--system-message))",
+        "system-message-border": "hsl(var(--system-message-border))",
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -80,10 +90,52 @@ export default {
             height: "0",
           },
         },
+        "fade-in": {
+          "0%": {
+            opacity: "0",
+            transform: "translateY(10px)"
+          },
+          "100%": {
+            opacity: "1",
+            transform: "translateY(0)"
+          }
+        },
+        "scale-in": {
+          "0%": {
+            transform: "scale(0.95)",
+            opacity: "0"
+          },
+          "100%": {
+            transform: "scale(1)",
+            opacity: "1"
+          }
+        },
+        "slide-up": {
+          "0%": {
+            opacity: "0",
+            transform: "translateY(20px)"
+          },
+          "100%": {
+            opacity: "1",
+            transform: "translateY(0)"
+          }
+        },
+        "pulse-soft": {
+          "0%, 100%": {
+            opacity: "1"
+          },
+          "50%": {
+            opacity: "0.7"
+          }
+        }
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "fade-in": "fade-in 0.3s ease-out",
+        "scale-in": "scale-in 0.2s ease-out",
+        "slide-up": "slide-up 0.3s ease-out",
+        "pulse-soft": "pulse-soft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
       },
     },
   },
