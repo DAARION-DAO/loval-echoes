@@ -156,6 +156,8 @@ class DifyClient {
 }
 
 serve(async (req) => {
+  console.log(`[dify-client] ${req.method} ${req.url}`);
+  
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -169,6 +171,8 @@ serve(async (req) => {
     const difyClient = new DifyClient();
     const url = new URL(req.url);
     const action = url.searchParams.get('action');
+    
+    console.log(`[dify-client] Action:`, action);
 
     switch (action) {
       case 'send_message': {

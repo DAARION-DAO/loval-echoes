@@ -8,6 +8,8 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  console.log(`[chat-api] ${req.method} ${req.url}`);
+  
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -20,7 +22,9 @@ serve(async (req) => {
 
     const url = new URL(req.url);
     const method = req.method;
-    const pathParts = url.pathname.split('/').filter(Boolean);
+    const pathParts = url.pathname.replace('/functions/v1/chat-api', '').split('/').filter(Boolean);
+    
+    console.log(`[chat-api] Parsed path parts:`, pathParts);
 
     // GET /chats - список чатов
     if (method === 'GET' && pathParts.length === 0) {

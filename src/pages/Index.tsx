@@ -17,21 +17,21 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 md:mb-8 gap-4">
           <div>
-            <h1 className="text-3xl font-bold">Добро пожаловать в ЖОС Мессенджер</h1>
+            <h1 className="text-2xl md:text-3xl font-bold">Добро пожаловать в ЖОС Мессенджер</h1>
             <p className="text-muted-foreground mt-2">
               Привет, {user.user_metadata?.display_name || user.email}!
             </p>
           </div>
-          <Button variant="outline" onClick={handleSignOut}>
+          <Button variant="outline" onClick={handleSignOut} className="self-start sm:self-auto">
             Выйти
           </Button>
         </div>
         
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 md:gap-6 sm:grid-cols-2 lg:grid-cols-3">
           <div 
             className="bg-card rounded-lg border p-6 hover:shadow-md transition-shadow cursor-pointer"
             onClick={() => navigate('/chats')}

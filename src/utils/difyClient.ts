@@ -55,53 +55,80 @@ export class DifyClient {
   }
 
   async getChats(): Promise<Chat[]> {
-    const { data, error } = await supabase.functions.invoke('chat-api', {
-      method: 'GET'
-    });
-    
-    if (error) {
-      throw new DifyClientError(error.message);
+    try {
+      const headers = await this.getAuthHeaders();
+      const response = await fetch(`https://pbsdsdexayzfoexjdlgb.supabase.co/functions/v1/chat-api`, {
+        method: 'GET',
+        headers
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error getting chats:', error);
+      throw new DifyClientError(error instanceof Error ? error.message : 'Failed to get chats');
     }
-    
-    return data;
   }
 
   async createChat(name: string, forkedFromChat?: string, forkedFromMessageId?: string): Promise<Chat> {
-    const { data, error } = await supabase.functions.invoke('chat-api', {
-      method: 'POST',
-      body: {
-        name,
-        forked_from_chat: forkedFromChat,
-        forked_from_message_id: forkedFromMessageId,
-      },
-    });
-    
-    if (error) {
-      throw new DifyClientError(error.message);
+    try {
+      const headers = await this.getAuthHeaders();
+      const response = await fetch(`https://pbsdsdexayzfoexjdlgb.supabase.co/functions/v1/chat-api`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          name,
+          forked_from_chat: forkedFromChat,
+          forked_from_message_id: forkedFromMessageId,
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error creating chat:', error);
+      throw new DifyClientError(error instanceof Error ? error.message : 'Failed to create chat');
     }
-    
-    return data;
   }
 
   async renameChat(chatId: string, name: string): Promise<void> {
-    const { error } = await supabase.functions.invoke('chat-api', {
-      method: 'PUT',
-      body: { name },
-    });
-    
-    if (error) {
-      throw new DifyClientError(error.message);
+    try {
+      const headers = await this.getAuthHeaders();
+      const response = await fetch(`https://pbsdsdexayzfoexjdlgb.supabase.co/functions/v1/chat-api/${chatId}/name`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ name }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+      }
+    } catch (error) {
+      console.error('Error renaming chat:', error);
+      throw new DifyClientError(error instanceof Error ? error.message : 'Failed to rename chat');
     }
   }
 
   async deleteChat(chatId: string): Promise<void> {
-    const { error } = await supabase.functions.invoke('chat-api', {
-      method: 'DELETE',
-      body: { chatId },
-    });
-    
-    if (error) {
-      throw new DifyClientError(error.message);
+    try {
+      const headers = await this.getAuthHeaders();
+      const response = await fetch(`https://pbsdsdexayzfoexjdlgb.supabase.co/functions/v1/chat-api/${chatId}`, {
+        method: 'DELETE',
+        headers,
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+      }
+    } catch (error) {
+      console.error('Error deleting chat:', error);
+      throw new DifyClientError(error instanceof Error ? error.message : 'Failed to delete chat');
     }
   }
 
@@ -110,121 +137,176 @@ export class DifyClient {
     has_more: boolean;
     limit: number;
   }> {
-    const params = new URLSearchParams();
-    if (cursor) {
-      params.append('cursor', cursor);
+    try {
+      const headers = await this.getAuthHeaders();
+      let url = `https://pbsdsdexayzfoexjdlgb.supabase.co/functions/v1/chat-api/${chatId}/history`;
+      if (cursor) {
+        url += `?cursor=${encodeURIComponent(cursor)}`;
+      }
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        headers,
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error getting chat history:', error);
+      throw new DifyClientError(error instanceof Error ? error.message : 'Failed to get chat history');
     }
-
-    const { data, error } = await supabase.functions.invoke('chat-api', {
-      method: 'GET',
-      body: { chatId, cursor },
-    });
-    
-    if (error) {
-      throw new DifyClientError(error.message);
-    }
-    
-    return data;
   }
 
   async sendMessage(chatId: string, query: string, files?: string[]): Promise<void> {
-    const { error } = await supabase.functions.invoke('chat-api', {
-      method: 'POST',
-      body: {
-        chatId,
-        query,
-        files,
-      },
-    });
-    
-    if (error) {
-      throw new DifyClientError(error.message);
+    try {
+      const headers = await this.getAuthHeaders();
+      const response = await fetch(`https://pbsdsdexayzfoexjdlgb.supabase.co/functions/v1/chat-api/${chatId}/send`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          query,
+          files,
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+      throw new DifyClientError(error instanceof Error ? error.message : 'Failed to send message');
     }
   }
 
   async stopGeneration(taskId: string): Promise<void> {
-    const { error } = await supabase.functions.invoke('chat-api', {
-      method: 'POST',
-      body: { taskId },
-    });
-    
-    if (error) {
-      throw new DifyClientError(error.message);
+    try {
+      const headers = await this.getAuthHeaders();
+      const response = await fetch(`https://pbsdsdexayzfoexjdlgb.supabase.co/functions/v1/chat-api/stop`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ taskId }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+      }
+    } catch (error) {
+      console.error('Error stopping generation:', error);
+      throw new DifyClientError(error instanceof Error ? error.message : 'Failed to stop generation');
     }
   }
 
   async sendFeedback(messageId: string, rating: 'like' | 'dislike', content?: string): Promise<void> {
-    const { error } = await supabase.functions.invoke('feedback-api', {
-      method: 'POST',
-      body: {
-        messageId,
-        rating,
-        content,
-      },
-    });
-    
-    if (error) {
-      throw new DifyClientError(error.message);
+    try {
+      const headers = await this.getAuthHeaders();
+      const response = await fetch(`https://pbsdsdexayzfoexjdlgb.supabase.co/functions/v1/feedback-api`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          messageId,
+          rating,
+          content,
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+      }
+    } catch (error) {
+      console.error('Error sending feedback:', error);
+      throw new DifyClientError(error instanceof Error ? error.message : 'Failed to send feedback');
     }
   }
 
   async uploadFile(file: File): Promise<{ id: string; name: string; size: number }> {
-    const formData = new FormData();
-    formData.append('file', file);
+    try {
+      const headers = await this.getAuthHeaders();
+      delete headers['Content-Type']; // Let browser set boundary for FormData
+      
+      const formData = new FormData();
+      formData.append('file', file);
 
-    const { data, error } = await supabase.functions.invoke('file-api', {
-      method: 'POST',
-      body: formData,
-    });
-    
-    if (error) {
-      throw new DifyClientError(error.message);
+      const response = await fetch(`https://pbsdsdexayzfoexjdlgb.supabase.co/functions/v1/file-api`, {
+        method: 'POST',
+        headers,
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      throw new DifyClientError(error instanceof Error ? error.message : 'Failed to upload file');
     }
-    
-    return data;
   }
 
   async getFilePreview(fileId: string): Promise<Blob> {
-    const { data, error } = await supabase.functions.invoke('file-api', {
-      method: 'GET',
-      body: { fileId },
-    });
-    
-    if (error) {
-      throw new DifyClientError(error.message);
+    try {
+      const headers = await this.getAuthHeaders();
+      const response = await fetch(`https://pbsdsdexayzfoexjdlgb.supabase.co/functions/v1/file-api/${fileId}`, {
+        method: 'GET',
+        headers,
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+      }
+      
+      return await response.blob();
+    } catch (error) {
+      console.error('Error getting file preview:', error);
+      throw new DifyClientError(error instanceof Error ? error.message : 'Failed to get file preview');
     }
-    
-    return data;
   }
 
   async speechToText(audioBlob: Blob): Promise<{ text: string }> {
-    // Конвертируем blob в base64
-    const arrayBuffer = await audioBlob.arrayBuffer();
-    const base64Audio = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+    try {
+      // Конвертируем blob в base64
+      const arrayBuffer = await audioBlob.arrayBuffer();
+      const base64Audio = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
 
-    const { data, error } = await supabase.functions.invoke('stt-api', {
-      method: 'POST',
-      body: { audio: base64Audio },
-    });
-    
-    if (error) {
-      throw new DifyClientError(error.message);
+      const headers = await this.getAuthHeaders();
+      const response = await fetch(`https://pbsdsdexayzfoexjdlgb.supabase.co/functions/v1/stt-api`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ audio: base64Audio }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error converting speech to text:', error);
+      throw new DifyClientError(error instanceof Error ? error.message : 'Failed to convert speech to text');
     }
-    
-    return data;
   }
 
   async textToSpeech(text: string, voice = 'alloy'): Promise<{ audioContent: string; contentType: string }> {
-    const { data, error } = await supabase.functions.invoke('tts-api', {
-      method: 'POST',
-      body: { text, voice },
-    });
-    
-    if (error) {
-      throw new DifyClientError(error.message);
+    try {
+      const headers = await this.getAuthHeaders();
+      const response = await fetch(`https://pbsdsdexayzfoexjdlgb.supabase.co/functions/v1/tts-api`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ text, voice }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error converting text to speech:', error);
+      throw new DifyClientError(error instanceof Error ? error.message : 'Failed to convert text to speech');
     }
-    
-    return data;
   }
 
   // Подписка на стрим сообщений для чата
