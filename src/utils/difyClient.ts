@@ -46,16 +46,18 @@ export class DifyClientError extends Error {
 }
 
 export class DifyClient {
-  private getAuthHeaders() {
-    const session = supabase.auth.getSession();
+  private async getAuthHeaders() {
+    const { data: { session } } = await supabase.auth.getSession();
     return {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${session}`,
+      'Authorization': `Bearer ${session?.access_token || ''}`,
     };
   }
 
   async getChats(): Promise<Chat[]> {
-    const { data, error } = await supabase.functions.invoke('chat-api');
+    const { data, error } = await supabase.functions.invoke('chat-api', {
+      method: 'GET'
+    });
     
     if (error) {
       throw new DifyClientError(error.message);
@@ -66,6 +68,7 @@ export class DifyClient {
 
   async createChat(name: string, forkedFromChat?: string, forkedFromMessageId?: string): Promise<Chat> {
     const { data, error } = await supabase.functions.invoke('chat-api', {
+      method: 'POST',
       body: {
         name,
         forked_from_chat: forkedFromChat,
@@ -82,6 +85,7 @@ export class DifyClient {
 
   async renameChat(chatId: string, name: string): Promise<void> {
     const { error } = await supabase.functions.invoke('chat-api', {
+      method: 'PUT',
       body: { name },
     });
     
@@ -92,7 +96,8 @@ export class DifyClient {
 
   async deleteChat(chatId: string): Promise<void> {
     const { error } = await supabase.functions.invoke('chat-api', {
-      body: {},
+      method: 'DELETE',
+      body: { chatId },
     });
     
     if (error) {
@@ -111,7 +116,8 @@ export class DifyClient {
     }
 
     const { data, error } = await supabase.functions.invoke('chat-api', {
-      body: { cursor },
+      method: 'GET',
+      body: { chatId, cursor },
     });
     
     if (error) {
@@ -123,7 +129,9 @@ export class DifyClient {
 
   async sendMessage(chatId: string, query: string, files?: string[]): Promise<void> {
     const { error } = await supabase.functions.invoke('chat-api', {
+      method: 'POST',
       body: {
+        chatId,
         query,
         files,
       },
@@ -136,6 +144,7 @@ export class DifyClient {
 
   async stopGeneration(taskId: string): Promise<void> {
     const { error } = await supabase.functions.invoke('chat-api', {
+      method: 'POST',
       body: { taskId },
     });
     
@@ -146,6 +155,7 @@ export class DifyClient {
 
   async sendFeedback(messageId: string, rating: 'like' | 'dislike', content?: string): Promise<void> {
     const { error } = await supabase.functions.invoke('feedback-api', {
+      method: 'POST',
       body: {
         messageId,
         rating,
@@ -163,6 +173,7 @@ export class DifyClient {
     formData.append('file', file);
 
     const { data, error } = await supabase.functions.invoke('file-api', {
+      method: 'POST',
       body: formData,
     });
     
@@ -174,7 +185,10 @@ export class DifyClient {
   }
 
   async getFilePreview(fileId: string): Promise<Blob> {
-    const { data, error } = await supabase.functions.invoke('file-api');
+    const { data, error } = await supabase.functions.invoke('file-api', {
+      method: 'GET',
+      body: { fileId },
+    });
     
     if (error) {
       throw new DifyClientError(error.message);
@@ -189,6 +203,7 @@ export class DifyClient {
     const base64Audio = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
 
     const { data, error } = await supabase.functions.invoke('stt-api', {
+      method: 'POST',
       body: { audio: base64Audio },
     });
     
@@ -201,6 +216,7 @@ export class DifyClient {
 
   async textToSpeech(text: string, voice = 'alloy'): Promise<{ audioContent: string; contentType: string }> {
     const { data, error } = await supabase.functions.invoke('tts-api', {
+      method: 'POST',
       body: { text, voice },
     });
     
