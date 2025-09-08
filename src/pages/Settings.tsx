@@ -21,7 +21,7 @@ import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 
 export const Settings = () => {
-  const { t, language, changeLanguage } = useTranslation();
+  const { t, language, setLanguage } = useTranslation();
   const { user } = useAuth();
   const [showPrinciplesBanner, setShowPrinciplesBanner] = useState(
     localStorage.getItem('zhos-principles-banner-dismissed') !== 'true'
@@ -68,7 +68,7 @@ export const Settings = () => {
     <div className="container max-w-2xl mx-auto p-6 space-y-6">
       <div className="flex items-center gap-2 mb-6">
         <Shield className="h-6 w-6" />
-        <h1 className="text-2xl font-bold">{t.settings}</h1>
+        <h1 className="text-2xl font-bold">{t.settings.title}</h1>
       </div>
 
       {/* Profile Settings */}
@@ -176,7 +176,7 @@ export const Settings = () => {
         <CardContent>
           <div className="space-y-2">
             <Label>{t.language}</Label>
-            <Select value={language} onValueChange={changeLanguage}>
+            <Select value={language} onValueChange={(value) => setLanguage(value as Language)}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>

@@ -8,7 +8,7 @@ import {
   X 
 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
-import { ErrorDetails } from '@/utils/errorMapping';
+import type { ErrorDetails } from '@/utils/errorMapping';
 
 interface ErrorToastProps {
   error: ErrorDetails;

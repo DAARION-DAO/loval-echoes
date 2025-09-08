@@ -1,6 +1,14 @@
 /**
  * Маппинг ошибок Dify API на дружественные UX-тексты
  */
+
+export interface ErrorDetails {
+  code: string;
+  title: string;
+  message: string;
+  retryable: boolean;
+  showDetails?: boolean;
+}
 export const mapDifyError = (error: string): string => {
   const errorMap: Record<string, string> = {
     '404 conversation_not_exists': 'Чат не найден или был удалён. Обновите список.',

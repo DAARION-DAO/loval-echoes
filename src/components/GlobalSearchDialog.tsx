@@ -180,7 +180,7 @@ export const GlobalSearchDialog = ({
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder={t.globalSearch + '...'}
+            placeholder={t.chats.search}
             className="border-0 focus-visible:ring-0 text-lg"
             autoFocus
           />

@@ -13,6 +13,36 @@ export interface Translations {
   edit: string;
   send: string;
   stop: string;
+
+  // Дополнительные общие
+  allRepliesVisible: string;
+  inviteParticipants: string;
+  globalSearch: string;
+  online: string;
+  
+  // Создание
+  branchFromMessage: string;
+  project: string;
+  generalChat: string;
+  name: string;
+  description: string;
+  tags: string;
+  create: string;
+  
+  // Принципы ЖОС
+  principlesTitle: string;
+  principleNeutral: string;
+  principleVisible: string;
+  principlePause: string;
+  
+  // Настройки
+  profile: string;
+  theme: string;
+  themeLight: string;
+  themeDark: string;
+  themeSystem: string;
+  language: string;
+  showPrinciplesBanner: string;
   
   // ЖОС баннер
   zhosBanner: {
@@ -102,6 +132,9 @@ export interface Translations {
     fileTypeNotAllowed: string;
     rateLimitExceeded: string;
     unknownError: string;
+    retry: string;
+    hideDetails: string;
+    showDetails: string;
   };
 }
 
@@ -116,6 +149,32 @@ const translations: Record<Language, Translations> = {
     edit: 'Редактировать',
     send: 'Отправить',
     stop: 'Остановить',
+
+    allRepliesVisible: 'Все реплики видят все участники',
+    inviteParticipants: 'Пригласите участников',
+    globalSearch: 'Глобальный поиск',
+    online: 'Онлайн',
+    
+    branchFromMessage: 'Ветка из сообщения',
+    project: 'Проект',
+    generalChat: 'Общий чат',
+    name: 'Название',
+    description: 'Описание',
+    tags: 'Теги',
+    create: 'Создать',
+    
+    principlesTitle: 'Принципы ЖОС',
+    principleNeutral: 'Агент нейтрален и учитывает контекст всей беседы',
+    principleVisible: 'Все сообщения видны всем участникам',
+    principlePause: 'В споре используйте «Пауза/Узел»',
+    
+    profile: 'Профиль',
+    theme: 'Тема',
+    themeLight: 'Светлая',
+    themeDark: 'Тёмная',
+    themeSystem: 'Системная',
+    language: 'Язык',
+    showPrinciplesBanner: 'Показывать баннер принципов',
     
     zhosBanner: {
       line1: 'Агент ЖОС нейтрален и учитывает контекст всей беседы.',
@@ -197,6 +256,9 @@ const translations: Record<Language, Translations> = {
       fileTypeNotAllowed: 'Тип файла не поддерживается.',
       rateLimitExceeded: 'Слишком много запросов. Подождите немного.',
       unknownError: 'Произошла неожиданная ошибка. Попробуйте ещё раз.',
+      retry: 'Повторить',
+      hideDetails: 'Скрыть детали',
+      showDetails: 'Показать детали',
     },
   },
   
@@ -210,6 +272,32 @@ const translations: Record<Language, Translations> = {
     edit: 'Редагувати',
     send: 'Надіслати',
     stop: 'Зупинити',
+
+    allRepliesVisible: 'Усі репліки бачать усі учасники',
+    inviteParticipants: 'Запросіть учасників',
+    globalSearch: 'Глобальний пошук',
+    online: 'Онлайн',
+    
+    branchFromMessage: 'Гілка від повідомлення',
+    project: 'Проєкт',
+    generalChat: 'Загальний чат',
+    name: 'Назва',
+    description: 'Опис',
+    tags: 'Теги',
+    create: 'Створити',
+    
+    principlesTitle: 'Принципи ЖОС',
+    principleNeutral: 'Агент нейтральний і враховує увесь контекст',
+    principleVisible: 'Усі повідомлення видимі для всіх',
+    principlePause: 'У конфлікті використовуйте «Пауза/Вузол»',
+    
+    profile: 'Профіль',
+    theme: 'Тема',
+    themeLight: 'Світла',
+    themeDark: 'Темна',
+    themeSystem: 'Системна',
+    language: 'Мова',
+    showPrinciplesBanner: 'Показувати банер принципів',
     
     zhosBanner: {
       line1: 'Агент ЖОС нейтральний і враховує контекст всієї розмови.',
@@ -291,6 +379,9 @@ const translations: Record<Language, Translations> = {
       fileTypeNotAllowed: 'Тип файлу не підтримується.',
       rateLimitExceeded: 'Забагато запитів. Зачекайте трохи.',
       unknownError: 'Сталася неочікувана помилка. Спробуйте ще раз.',
+      retry: 'Повторити',
+      hideDetails: 'Приховати деталі',
+      showDetails: 'Показати деталі',
     },
   },
   
@@ -304,6 +395,32 @@ const translations: Record<Language, Translations> = {
     edit: 'Edit',
     send: 'Send',
     stop: 'Stop',
+
+    allRepliesVisible: 'All replies are visible to everyone',
+    inviteParticipants: 'Invite participants',
+    globalSearch: 'Global search',
+    online: 'Online',
+    
+    branchFromMessage: 'Branch from message',
+    project: 'Project',
+    generalChat: 'General chat',
+    name: 'Name',
+    description: 'Description',
+    tags: 'Tags',
+    create: 'Create',
+    
+    principlesTitle: 'Community Principles',
+    principleNeutral: 'The agent is neutral and considers full context',
+    principleVisible: 'All messages are visible to everyone',
+    principlePause: 'Use "Pause/Knot" in conflicts',
+    
+    profile: 'Profile',
+    theme: 'Theme',
+    themeLight: 'Light',
+    themeDark: 'Dark',
+    themeSystem: 'System',
+    language: 'Language',
+    showPrinciplesBanner: 'Show principles banner',
     
     zhosBanner: {
       line1: 'ZHOS Agent is neutral and considers the context of the entire conversation.',
@@ -385,6 +502,9 @@ const translations: Record<Language, Translations> = {
       fileTypeNotAllowed: 'File type not supported.',
       rateLimitExceeded: 'Too many requests. Please wait a moment.',
       unknownError: 'An unexpected error occurred. Please try again.',
+      retry: 'Retry',
+      hideDetails: 'Hide details',
+      showDetails: 'Show details',
     },
   },
 };
