@@ -1,0 +1,201 @@
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { 
+  MessageSquarePlus, 
+  FolderPlus, 
+  Video, 
+  Upload, 
+  Search,
+  User,
+  Bell,
+  Settings
+} from 'lucide-react';
+import { PrinciplesBanner } from '@/components/PrinciplesBanner';
+import { CreateModal, CreateFormData } from '@/components/CreateModal';
+import { GlobalSearchDialog } from '@/components/GlobalSearchDialog';
+import { useTranslation } from '@/lib/i18n';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from '@/hooks/use-toast';
+
+export const NewIndex = () => {
+  const { t } = useTranslation();
+  const { user } = useAuth();
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [searchDialogOpen, setSearchDialogOpen] = useState(false);
+
+  const handleCreateSubmit = async (data: CreateFormData) => {
+    try {
+      // TODO: Replace with actual API call
+      console.log('Creating:', data);
+      toast({
+        title: 'Успешно создано',
+        description: `${data.type === 'chat' ? 'Чат' : data.type === 'project' ? 'Проект' : 'Ветка'} "${data.name}" создан`,
+      });
+      setCreateModalOpen(false);
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Ошибка создания',
+        description: 'Не удалось создать элемент',
+      });
+    }
+  };
+
+  const quickActions = [
+    {
+      title: 'Создать чат',
+      description: 'Начать новое обсуждение с сообществом',
+      icon: MessageSquarePlus,
+      action: () => setCreateModalOpen(true),
+    },
+    {
+      title: 'Создать проект',
+      description: 'Запустить новый проект для совместной работы',
+      icon: FolderPlus,
+      action: () => setCreateModalOpen(true),
+    },
+    {
+      title: 'Начать встречу',
+      description: 'Организовать видеоконференцию',
+      icon: Video,
+      action: () => toast({ title: 'TODO', description: 'Функция встреч в разработке' }),
+    },
+    {
+      title: 'Импорт истории',
+      description: 'Загрузить историю из других платформ',
+      icon: Upload,
+      action: () => toast({ title: 'TODO', description: 'Импорт в разработке' }),
+    },
+  ];
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <h1 className="text-2xl font-bold">{t.zhosBanner.line1.split(' ')[0]} Мессенджер</h1>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSearchDialogOpen(true)}
+                className="hidden md:flex items-center gap-2 w-64 justify-start text-muted-foreground"
+              >
+                <Search className="h-4 w-4" />
+                <span>Глобальный поиск...</span>
+                <kbd className="ml-auto text-xs">⌘K</kbd>
+              </Button>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="default"
+                size="sm"
+                onClick={() => setCreateModalOpen(true)}
+              >
+                <MessageSquarePlus className="h-4 w-4 mr-2" />
+                Создать
+              </Button>
+              
+              <Button variant="ghost" size="sm">
+                <Bell className="h-4 w-4" />
+              </Button>
+              
+              <Button variant="ghost" size="sm">
+                <User className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="container mx-auto px-4 py-6 space-y-6">
+        {/* Principles Banner */}
+        <PrinciplesBanner />
+
+        {/* Welcome Section */}
+        <div className="text-center space-y-4">
+          <h2 className="text-3xl font-bold">Добро пожаловать в ЖОС Мессенджер</h2>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            Платформа для открытого общения и совместной работы сообщества. 
+            Все взаимодействия прозрачны и видны всем участникам.
+          </p>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="space-y-4">
+          <h3 className="text-xl font-semibold">Быстрые действия</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {quickActions.map((action, index) => (
+              <Card 
+                key={index}
+                className="cursor-pointer hover:shadow-lg transition-shadow"
+                onClick={action.action}
+              >
+                <CardHeader className="pb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-primary/10 rounded-lg">
+                      <action.icon className="h-6 w-6 text-primary" />
+                    </div>
+                    <CardTitle className="text-base">{action.title}</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <CardDescription className="text-sm">
+                    {action.description}
+                  </CardDescription>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+
+        {/* Stats or Recent Activity */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Активность сообщества</CardTitle>
+            <CardDescription>
+              Последние обновления и статистика
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-primary">12</div>
+                <div className="text-sm text-muted-foreground">Активных участников</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-primary">5</div>
+                <div className="text-sm text-muted-foreground">Открытых чатов</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-primary">2</div>
+                <div className="text-sm text-muted-foreground">Активных проектов</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </main>
+
+      {/* Modals */}
+      <CreateModal
+        open={createModalOpen}
+        onClose={() => setCreateModalOpen(false)}
+        onSubmit={handleCreateSubmit}
+      />
+      
+      <GlobalSearchDialog
+        open={searchDialogOpen}
+        onClose={() => setSearchDialogOpen(false)}
+        onNavigate={(type, id) => {
+          console.log('Navigate to:', type, id);
+          // TODO: Implement navigation
+        }}
+      />
+    </div>
+  );
+};
