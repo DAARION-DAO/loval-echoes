@@ -21,6 +21,8 @@ async function getAuthHeaders() {
 export async function apiGet<T>(url: string): Promise<T> {
   const headers = await getAuthHeaders();
   
+  console.log('API GET:', url);
+  
   const response = await fetch(url, {
     method: 'GET',
     headers: {
@@ -30,8 +32,20 @@ export async function apiGet<T>(url: string): Promise<T> {
     credentials: 'include',
   });
 
+  console.log('Response status:', response.status);
+  console.log('Response headers:', response.headers.get('content-type'));
+
   if (!response.ok) {
+    const text = await response.text();
+    console.log('Error response body:', text);
     throw new ApiError(response.status, `HTTP ${response.status}: ${response.statusText}`);
+  }
+
+  const contentType = response.headers.get('content-type');
+  if (!contentType?.includes('application/json')) {
+    const text = await response.text();
+    console.log('Non-JSON response:', text);
+    throw new ApiError(response.status, 'API returned non-JSON response');
   }
 
   return response.json();
@@ -39,6 +53,8 @@ export async function apiGet<T>(url: string): Promise<T> {
 
 export async function apiPost<T>(url: string, body?: unknown): Promise<T> {
   const headers = await getAuthHeaders();
+  
+  console.log('API POST:', url, body);
   
   const response = await fetch(url, {
     method: 'POST',
@@ -50,8 +66,19 @@ export async function apiPost<T>(url: string, body?: unknown): Promise<T> {
     body: body ? JSON.stringify(body) : undefined,
   });
 
+  console.log('Response status:', response.status);
+
   if (!response.ok) {
+    const text = await response.text();
+    console.log('Error response body:', text);
     throw new ApiError(response.status, `HTTP ${response.status}: ${response.statusText}`);
+  }
+
+  const contentType = response.headers.get('content-type');
+  if (!contentType?.includes('application/json')) {
+    const text = await response.text();
+    console.log('Non-JSON response:', text);
+    throw new ApiError(response.status, 'API returned non-JSON response');
   }
 
   return response.json();

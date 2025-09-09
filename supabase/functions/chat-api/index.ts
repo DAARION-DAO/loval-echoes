@@ -22,12 +22,16 @@ serve(async (req) => {
 
     const url = new URL(req.url);
     const method = req.method;
-    const pathParts = url.pathname.replace('/functions/v1/chat-api', '').split('/').filter(Boolean);
+    const pathParts = url.pathname.split('/').filter(Boolean);
+    console.log('[chat-api] Full pathname:', url.pathname);
+    console.log('[chat-api] Path parts before filtering:', pathParts);
     
-    console.log(`[chat-api] Parsed path parts:`, pathParts);
-
+    // Remove the standard edge function prefix
+    const apiPathParts = pathParts.slice(pathParts.indexOf('chat-api') + 1);
+    console.log('[chat-api] API path parts:', apiPathParts);
+    
     // GET /chats - список чатов
-    if (method === 'GET' && pathParts.length === 0) {
+    if (method === 'GET' && apiPathParts.length === 0) {
       const { data: chats, error } = await supabase
         .from('conversations')
         .select('*')
@@ -70,7 +74,7 @@ serve(async (req) => {
     }
 
     // POST /chats - создание нового чата
-    if (method === 'POST' && pathParts.length === 0) {
+    if (method === 'POST' && apiPathParts.length === 0) {
       const { name, forked_from_chat, forked_from_message_id } = await req.json();
       
       const authHeader = req.headers.get('authorization');
@@ -110,8 +114,8 @@ serve(async (req) => {
     }
 
     // POST /chats/:chatId/name - переименование чата
-    if (method === 'POST' && pathParts.length === 2 && pathParts[1] === 'name') {
-      const chatId = pathParts[0];
+    if (method === 'POST' && apiPathParts.length === 2 && apiPathParts[1] === 'name') {
+      const chatId = apiPathParts[0];
       const { name } = await req.json();
       
       const authHeader = req.headers.get('authorization');
@@ -169,8 +173,8 @@ serve(async (req) => {
     }
 
     // DELETE /chats/:chatId - удаление чата
-    if (method === 'DELETE' && pathParts.length === 1) {
-      const chatId = pathParts[0];
+    if (method === 'DELETE' && apiPathParts.length === 1) {
+      const chatId = apiPathParts[0];
       
       const authHeader = req.headers.get('authorization');
       const token = authHeader?.replace('Bearer ', '');
@@ -226,8 +230,8 @@ serve(async (req) => {
     }
 
     // GET /chats/:chatId/history - история сообщений
-    if (method === 'GET' && pathParts.length === 2 && pathParts[1] === 'history') {
-      const chatId = pathParts[0];
+    if (method === 'GET' && apiPathParts.length === 2 && apiPathParts[1] === 'history') {
+      const chatId = apiPathParts[0];
       const cursor = url.searchParams.get('cursor');
       
       const { data: chat } = await supabase
@@ -256,8 +260,8 @@ serve(async (req) => {
     }
 
     // POST /chats/:chatId/send - отправка сообщения
-    if (method === 'POST' && pathParts.length === 2 && pathParts[1] === 'send') {
-      const chatId = pathParts[0];
+    if (method === 'POST' && apiPathParts.length === 2 && apiPathParts[1] === 'send') {
+      const chatId = apiPathParts[0];
       const { query, files } = await req.json();
       
       const authHeader = req.headers.get('authorization');
@@ -305,7 +309,7 @@ serve(async (req) => {
     }
 
     // POST /chats/:chatId/stop - остановка генерации
-    if (method === 'POST' && pathParts.length === 2 && pathParts[1] === 'stop') {
+    if (method === 'POST' && apiPathParts.length === 2 && apiPathParts[1] === 'stop') {
       const { taskId } = await req.json();
       
       const response = await supabase.functions.invoke('dify-client', {
