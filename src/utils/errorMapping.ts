@@ -88,3 +88,39 @@ export const isRetryableError = (error: string): boolean => {
     lowerError.includes(retryable.toLowerCase()) || retryable.toLowerCase().includes(lowerError)
   );
 };
+
+export const getErrorMessage = (error: unknown): string => {
+  if (error instanceof Error) {
+    // Map specific error messages to user-friendly text
+    const message = error.message.toLowerCase();
+    
+    if (message.includes('401') || message.includes('unauthorized')) {
+      return 'Сессия истекла. Войдите заново.';
+    }
+    
+    if (message.includes('404') || message.includes('not found')) {
+      return 'Не удалось найти запрашиваемый ресурс. Проверьте подключение к серверу.';
+    }
+    
+    if (message.includes('500') || message.includes('server')) {
+      return 'Временная ошибка сервера. Повторите позже.';
+    }
+    
+    if (message.includes('network') || message.includes('fetch')) {
+      return 'Проблема с подключением к серверу.';
+    }
+    
+    if (message.includes('failed to fetch')) {
+      return 'Не удалось подключиться к серверу. Проверьте интернет-соединение.';
+    }
+    
+    if (message.includes('api returned non-json')) {
+      return 'Сервер вернул некорректный ответ. Обратитесь в поддержку.';
+    }
+    
+    // Use the existing mapDifyError function for known errors
+    return mapDifyError(error.message);
+  }
+  
+  return 'Неизвестная ошибка.';
+};

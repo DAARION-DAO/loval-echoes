@@ -32,42 +32,114 @@ serve(async (req) => {
     
     // GET /chats - список чатов
     if (method === 'GET' && apiPathParts.length === 0) {
-      console.log('Returning empty chats array for development');
-      // Return empty array for now until we have proper database tables
-      return new Response(JSON.stringify([]), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // POST /chats - создание нового чата
-    if (method === 'POST' && apiPathParts.length === 0) {
-      const { name } = await req.json();
-      
       const authHeader = req.headers.get('authorization');
       const token = authHeader?.replace('Bearer ', '');
-      const { data: { user } } = await supabase.auth.getUser(token);
       
-      if (!user) {
+      if (!token) {
+        console.log('No auth token provided');
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), { 
+          status: 401, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+      
+      const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+      
+      if (authError || !user) {
+        console.log('Auth error:', authError);
         return new Response(JSON.stringify({ error: 'Unauthorized' }), { 
           status: 401, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
       }
 
-      // Return mock chat for development
-      const mockChat = {
-        id: crypto.randomUUID(),
-        name: name || 'Новый чат',
-        user_id: user.id,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
+      try {
+        const { data: conversations, error } = await supabase
+          .from('conversations')
+          .select('id, name, updated_at, created_at, dify_conversation_id')
+          .eq('user_id', user.id)
+          .order('updated_at', { ascending: false });
 
-      console.log('Created mock chat:', mockChat);
+        if (error) {
+          console.error('Database error:', error);
+          throw error;
+        }
 
-      return new Response(JSON.stringify(mockChat), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+        // Transform to expected format
+        const chats = conversations?.map(conv => ({
+          id: conv.id,
+          name: conv.name,
+          updatedAt: conv.updated_at,
+          lastMessagePreview: '', // Could be enhanced later
+          dify_conversation_id: conv.dify_conversation_id
+        })) || [];
+
+        console.log(`Found ${chats.length} chats for user ${user.id}`);
+        
+        return new Response(JSON.stringify(chats), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      } catch (error) {
+        console.error('Error fetching chats:', error);
+        return new Response(JSON.stringify({ error: 'Failed to fetch chats' }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
+    // POST /chats - создание нового чата
+    if (method === 'POST' && apiPathParts.length === 0) {
+      try {
+        const { name } = await req.json();
+        
+        const authHeader = req.headers.get('authorization');
+        const token = authHeader?.replace('Bearer ', '');
+        
+        if (!token) {
+          return new Response(JSON.stringify({ error: 'Unauthorized' }), { 
+            status: 401, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+        
+        const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+        
+        if (authError || !user) {
+          console.log('Auth error creating chat:', authError);
+          return new Response(JSON.stringify({ error: 'Unauthorized' }), { 
+            status: 401, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+
+        // Create new conversation in database
+        const { data: newChat, error } = await supabase
+          .from('conversations')
+          .insert({
+            name: name || 'Новый чат',
+            user_id: user.id,
+          })
+          .select('id, name, created_at, updated_at')
+          .single();
+
+        if (error) {
+          console.error('Error creating chat:', error);
+          throw error;
+        }
+
+        console.log('Created new chat:', newChat);
+
+        return new Response(JSON.stringify(newChat), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      } catch (error) {
+        console.error('Error in POST /chats:', error);
+        return new Response(JSON.stringify({ error: 'Failed to create chat' }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
     }
 
     // POST /chats/:chatId/name - переименование чата

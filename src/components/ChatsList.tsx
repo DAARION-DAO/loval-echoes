@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import { getErrorMessage } from "@/utils/errorMapping";
 
 export function ChatsList() {
   const [loading, setLoading] = useState(true);
@@ -15,14 +16,16 @@ export function ChatsList() {
   const loadChats = async () => {
     try {
       setLoading(true);
+      console.log('Loading chats...');
       const chats = await fetchChats();
+      console.log('Loaded chats:', chats);
       setItems(chats);
     } catch (e: any) {
       console.error('Error loading chats:', e);
       toast({
         variant: "destructive",
-        title: "Ошибка",
-        description: "Не удалось загрузить чаты",
+        title: "Ошибка загрузки",
+        description: getErrorMessage(e),
       });
     } finally {
       setLoading(false);
@@ -34,16 +37,12 @@ export function ChatsList() {
   }, []);
 
   const handleOpenChat = (id: string) => {
-    navigate(`/chats/${id}`);
-  };
-
-  const handleCreateChat = () => {
-    // This will be handled by the empty state component
+    navigate(`/chat/${id}`);
   };
 
   if (loading) {
     return (
-      <div className="p-4 text-sm text-muted-foreground">
+      <div className="p-4 text-sm text-muted-foreground flex items-center justify-center">
         Загружаем чаты...
       </div>
     );
@@ -59,9 +58,9 @@ export function ChatsList() {
         <li key={chat.id}>
           <button
             onClick={() => handleOpenChat(chat.id)}
-            className="w-full text-left px-3 py-2 rounded-lg hover:bg-muted/60 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="w-full text-left px-3 py-2 rounded-lg hover:bg-muted/60 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20 group"
           >
-            <div className="font-medium truncate">{chat.name}</div>
+            <div className="font-medium truncate group-hover:text-primary">{chat.name}</div>
             {chat.lastMessagePreview && (
               <div className="text-xs text-muted-foreground truncate mt-1">
                 {chat.lastMessagePreview}

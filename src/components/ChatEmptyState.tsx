@@ -6,6 +6,7 @@ import { createChat } from '@/services/chats';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import { getErrorMessage } from "@/utils/errorMapping";
 
 interface ChatEmptyStateProps {
   onCreateChat: () => void;
@@ -21,19 +22,23 @@ export const ChatEmptyState = ({ onCreateChat, className = '' }: ChatEmptyStateP
   const handleCreateFirstChat = async () => {
     try {
       setCreating(true);
-      const chat = await createChat('Общий зал');
+      console.log('Creating first chat...');
+      const chat = await createChat('Мой первый чат');
+      console.log('Created chat:', chat);
+      
       toast({
         title: "Чат создан",
         description: "Первый чат успешно создан!",
       });
+      
       onCreateChat(); // Refresh the chat list
-      navigate(`/chats/${chat.id}`);
+      navigate(`/chat/${chat.id}`);
     } catch (error) {
       console.error('Error creating chat:', error);
       toast({
         variant: "destructive",
-        title: "Ошибка",
-        description: "Не удалось создать чат",
+        title: "Ошибка создания",
+        description: getErrorMessage(error),
       });
     } finally {
       setCreating(false);
