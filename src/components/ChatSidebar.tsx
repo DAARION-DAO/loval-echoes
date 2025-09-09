@@ -1,26 +1,17 @@
 import { useState, useEffect } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { 
   Search, 
   Plus, 
-  MessageSquare, 
-  MoreVertical, 
+  MessageCircle, 
+  MoreHorizontal, 
   Edit2, 
   Trash2,
-  Users,
-  GitBranch
+  Settings,
+  Folder,
+  Video,
+  Files
 } from 'lucide-react';
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar,
-} from '@/components/ui/sidebar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,14 +20,22 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useTranslation } from '@/lib/i18n';
-import { difyClient, type Chat } from '@/utils/difyClient';
+import { routes } from '@/lib/routes';
+import { apiGet, apiPost, apiDelete } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
+
+interface Chat {
+  id: string;
+  name: string;
+  updated_at: string;
+  forked_from_chat?: string;
+}
 
 export const ChatSidebar = () => {
-  const { state } = useSidebar();
+  const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
   const { toast } = useToast();
@@ -44,9 +43,7 @@ export const ChatSidebar = () => {
   const [chats, setChats] = useState<Chat[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
-  const [onlineCount, setOnlineCount] = useState(3); // Мок данные
-
-  const collapsed = state === 'collapsed';
+  const [onlineCount, setOnlineCount] = useState(3);
 
   useEffect(() => {
     loadChats();
@@ -55,14 +52,14 @@ export const ChatSidebar = () => {
   const loadChats = async () => {
     try {
       setLoading(true);
-      const chatList = await difyClient.getChats();
-      setChats(chatList);
+      const chats = await apiGet<Chat[]>(routes.chats);
+      setChats(chats);
     } catch (error) {
-      console.error('Error loading chats:', error);
+      console.error("Error loading chats:", error);
       toast({
-        title: t.error,
-        description: error instanceof Error ? error.message : t.errors.unknownError,
-        variant: 'destructive',
+        title: "Ошибка",
+        description: "Не удалось загрузить чаты",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -71,58 +68,58 @@ export const ChatSidebar = () => {
 
   const handleCreateChat = async () => {
     try {
-      const newChat = await difyClient.createChat(t.chats.newChat);
+      const newChat = await apiPost<Chat>(routes.chats, { name: "Новый чат" });
       setChats(prev => [newChat, ...prev]);
+      navigate(`/chats/${newChat.id}`);
       toast({
-        title: t.chats.newChat,
-        description: 'Чат создан успешно',
+        description: "Чат создан",
       });
     } catch (error) {
-      console.error('Error creating chat:', error);
+      console.error("Error creating chat:", error);
       toast({
-        title: t.error,
-        description: error instanceof Error ? error.message : t.errors.unknownError,
-        variant: 'destructive',
+        title: "Ошибка",
+        description: "Не удалось создать чат",
+        variant: "destructive",
       });
     }
   };
 
   const handleRenameChat = async (chatId: string, newName: string) => {
     try {
-      await difyClient.renameChat(chatId, newName);
+      await apiPost<any>(routes.chatName(chatId), { name: newName });
       setChats(prev => prev.map(chat => 
         chat.id === chatId ? { ...chat, name: newName } : chat
       ));
       toast({
-        title: t.chats.rename,
-        description: 'Чат переименован',
+        description: "Чат переименован",
       });
     } catch (error) {
-      console.error('Error renaming chat:', error);
+      console.error("Error renaming chat:", error);
       toast({
-        title: t.error,
-        description: error instanceof Error ? error.message : t.errors.unknownError,
-        variant: 'destructive',
+        title: "Ошибка", 
+        description: "Не удалось переименовать чат",
+        variant: "destructive",
       });
     }
   };
 
   const handleDeleteChat = async (chatId: string) => {
-    if (!confirm(t.chats.deleteConfirm)) return;
+    if (!confirm("Вы уверены, что хотите удалить этот чат?")) {
+      return;
+    }
     
     try {
-      await difyClient.deleteChat(chatId);
+      await apiDelete<any>(routes.chat(chatId));
       setChats(prev => prev.filter(chat => chat.id !== chatId));
       toast({
-        title: t.chats.delete,
-        description: 'Чат удален',
+        description: "Чат удален",
       });
     } catch (error) {
-      console.error('Error deleting chat:', error);
+      console.error("Error deleting chat:", error);
       toast({
-        title: t.error,
-        description: error instanceof Error ? error.message : t.errors.unknownError,
-        variant: 'destructive',
+        title: "Ошибка",
+        description: "Не удалось удалить чат",
+        variant: "destructive",
       });
     }
   };
@@ -131,128 +128,170 @@ export const ChatSidebar = () => {
     chat.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const isActive = (chatId: string) => location.pathname === `/chats/${chatId}`;
-
-  const getNavClass = (chatId: string) =>
-    isActive(chatId) 
-      ? 'bg-primary/10 text-primary border-primary/20' 
-      : 'hover:bg-muted/50 border-transparent';
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    
+    if (diff < 24 * 60 * 60 * 1000) {
+      return "Сегодня";
+    } else if (diff < 2 * 24 * 60 * 60 * 1000) {
+      return "Вчера";
+    } else {
+      return date.toLocaleDateString();
+    }
+  };
 
   return (
-    <Sidebar className={collapsed ? 'w-16' : 'w-80'} collapsible="icon">
-      {!collapsed && (
-        <div className="p-4 border-b">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold">{t.chats.title}</h2>
-            <div className="flex items-center gap-2">
-              <Badge variant="secondary" className="text-xs">
-                <Users className="h-3 w-3 mr-1" />
-                {onlineCount}{t.presence.limit}
-              </Badge>
-            </div>
+    <div className="h-full flex flex-col">
+      <div className="px-3 py-3 border-b">
+        <div className="flex items-center gap-2 mb-3">
+          <Input 
+            placeholder="Поиск чатов..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="flex-1"
+          />
+          <Button size="sm" onClick={handleCreateChat} className="shrink-0">
+            <Plus className="h-4 w-4" />
+          </Button>
+        </div>
+        <div className="text-sm text-muted-foreground flex items-center gap-2">
+          <span>👥 {onlineCount}/12 онлайн</span>
+        </div>
+      </div>
+
+      <ScrollArea className="flex-1 px-2">
+        {loading ? (
+          <div className="space-y-2 p-2">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="h-12 bg-muted rounded animate-pulse" />
+            ))}
           </div>
-          
-          <div className="flex gap-2 mb-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder={t.chats.search}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
-              />
-            </div>
-            <Button onClick={handleCreateChat} size="sm">
-              <Plus className="h-4 w-4" />
+        ) : filteredChats.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full text-center p-6">
+            <MessageCircle className="h-12 w-12 text-muted-foreground mb-3" />
+            <p className="text-muted-foreground mb-4">
+              {searchQuery ? "Чаты не найдены" : "Пока нет чатов"}
+            </p>
+            <Button size="sm" onClick={handleCreateChat}>
+              Создать первый чат
             </Button>
           </div>
-        </div>
-      )}
+        ) : (
+          <div className="space-y-1 py-2">
+            {filteredChats.map((chat) => (
+              <div key={chat.id} className="group relative">
+                <NavLink
+                  to={`/chats/${chat.id}`}
+                  className={({ isActive }) => cn(
+                    "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
+                    isActive 
+                      ? "bg-primary text-primary-foreground" 
+                      : "hover:bg-muted"
+                  )}
+                >
+                  <MessageCircle className="h-4 w-4 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium truncate">{chat.name}</p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {formatDate(chat.updated_at)}
+                    </p>
+                  </div>
+                </NavLink>
+                
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      size="sm" 
+                      variant="ghost"
+                      className="absolute right-1 top-1 opacity-0 group-hover:opacity-100 h-8 w-8 p-0"
+                    >
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem 
+                      onClick={() => {
+                        const newName = prompt("Новое название:", chat.name);
+                        if (newName && newName !== chat.name) {
+                          handleRenameChat(chat.id, newName);
+                        }
+                      }}
+                    >
+                      <Edit2 className="h-4 w-4 mr-2" />
+                      Переименовать
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => handleDeleteChat(chat.id)}
+                      className="text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Удалить
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            ))}
+          </div>
+        )}
+      </ScrollArea>
 
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel className={collapsed ? 'hidden' : 'px-4'}>
-            {loading ? t.loading : `${filteredChats.length} чатов`}
-          </SidebarGroupLabel>
-          
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {filteredChats.map((chat) => (
-                <SidebarMenuItem key={chat.id}>
-                  <SidebarMenuButton asChild>
-                    <div className={`flex items-center gap-3 p-3 rounded-lg border transition-all hover-lift ${getNavClass(chat.id)}`}>
-                      <NavLink 
-                        to={`/chats/${chat.id}`} 
-                        className="flex items-center gap-3 flex-1 min-w-0"
-                      >
-                        <div className="flex-shrink-0">
-                          <Avatar className="h-8 w-8">
-                            <AvatarFallback className="text-xs">
-                              <MessageSquare className="h-4 w-4" />
-                            </AvatarFallback>
-                          </Avatar>
-                        </div>
-                        
-                        {!collapsed && (
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <h3 className="font-medium text-sm truncate">
-                                {chat.name}
-                              </h3>
-                              {chat.forked_from_chat && (
-                                <GitBranch className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-                              )}
-                            </div>
-                            
-                            <div className="flex items-center justify-between text-xs text-muted-foreground">
-                              <span className="truncate">
-                                {chat.forked_from_chat 
-                                  ? `${t.chats.forkFrom} ${chat.forked_from_chat.slice(0, 8)}...`
-                                  : new Date(chat.updated_at).toLocaleDateString()
-                                }
-                              </span>
-                            </div>
-                          </div>
-                        )}
-                      </NavLink>
-                      
-                      {!collapsed && (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                              <MoreVertical className="h-3 w-3" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem 
-                              onClick={() => {
-                                const newName = prompt('Новое имя чата:', chat.name);
-                                if (newName && newName !== chat.name) {
-                                  handleRenameChat(chat.id, newName);
-                                }
-                              }}
-                            >
-                              <Edit2 className="h-4 w-4 mr-2" />
-                              {t.chats.rename}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={() => handleDeleteChat(chat.id)}
-                              className="text-destructive"
-                            >
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              {t.chats.delete}
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      )}
-                    </div>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-    </Sidebar>
+      {/* Navigation sections */}
+      <div className="border-t mt-auto">
+        <div className="p-2 space-y-1">
+          <NavLink
+            to="/chats"
+            className={({ isActive }) => cn(
+              "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
+              isActive ? "bg-muted" : "hover:bg-muted/50"
+            )}
+          >
+            <MessageCircle className="h-4 w-4" />
+            Чаты
+          </NavLink>
+          <NavLink
+            to="/projects"
+            className={({ isActive }) => cn(
+              "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors opacity-50",
+              isActive ? "bg-muted" : "hover:bg-muted/50"
+            )}
+          >
+            <Folder className="h-4 w-4" />
+            Проекты
+          </NavLink>
+          <NavLink
+            to="/meetings"
+            className={({ isActive }) => cn(
+              "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors opacity-50",
+              isActive ? "bg-muted" : "hover:bg-muted/50"
+            )}
+          >
+            <Video className="h-4 w-4" />
+            Встречи
+          </NavLink>
+          <NavLink
+            to="/files"
+            className={({ isActive }) => cn(
+              "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors opacity-50",
+              isActive ? "bg-muted" : "hover:bg-muted/50"
+            )}
+          >
+            <Files className="h-4 w-4" />
+            Файлы
+          </NavLink>
+          <NavLink
+            to="/settings"
+            className={({ isActive }) => cn(
+              "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
+              isActive ? "bg-muted" : "hover:bg-muted/50"
+            )}
+          >
+            <Settings className="h-4 w-4" />
+            Настройки
+          </NavLink>
+        </div>
+      </div>
+    </div>
   );
 };

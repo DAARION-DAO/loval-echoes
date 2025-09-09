@@ -12,7 +12,9 @@ import { ChatsPage } from "./pages/Chats";
 import { ChatPage } from "./pages/Chat";
 import { Auth } from "./pages/Auth";
 import NotFound from "./pages/NotFound";
-import Index from "./pages/Index";
+import { NewIndex } from "./pages/NewIndex";
+import { Settings } from "./pages/Settings";
+import { Layout } from "./components/Layout";
 
 const queryClient = new QueryClient();
 
@@ -32,25 +34,15 @@ const ProtectedLayout = () => {
   }
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background">
-        <ChatSidebar />
-        <div className="flex-1 flex flex-col">
-          <header className="h-12 flex items-center border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 md:hidden">
-            <SidebarTrigger className="ml-2" />
-            <h1 className="ml-4 font-semibold text-foreground">ЖОС Мессенджер</h1>
-          </header>
-          <main className="flex-1">
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/chats" element={<ChatsPage />} />
-              <Route path="/chats/:chatId" element={<ChatPage />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </main>
-        </div>
-      </div>
-    </SidebarProvider>
+    <Layout sidebar={<ChatSidebar />}>
+      <Routes>
+        <Route path="/" element={<NewIndex />} />
+        <Route path="/chats" element={<ChatsPage />} />
+        <Route path="/chats/:chatId" element={<ChatPage />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </Layout>
   );
 };
 

@@ -7,8 +7,17 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useTranslation } from '@/lib/i18n';
-import { difyClient, type Chat } from '@/utils/difyClient';
+import { routes } from '@/lib/routes';
+import { apiGet, apiPost } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
+
+interface Chat {
+  id: string;
+  name: string;
+  updated_at: string;
+  forked_from_chat?: string;
+  dify_conversation_id?: string;
+}
 
 export const ChatsPage = () => {
   const navigate = useNavigate();
@@ -19,7 +28,7 @@ export const ChatsPage = () => {
   const [filteredChats, setFilteredChats] = useState<Chat[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
-  const [onlineCount] = useState(3); // Мок данные
+  const [onlineCount] = useState(3); // Mock data
 
   useEffect(() => {
     loadChats();
@@ -35,13 +44,13 @@ export const ChatsPage = () => {
   const loadChats = async () => {
     try {
       setLoading(true);
-      const chatList = await difyClient.getChats();
+      const chatList = await apiGet<Chat[]>(routes.chats);
       setChats(chatList);
     } catch (error) {
       console.error('Error loading chats:', error);
       toast({
-        title: t.error,
-        description: error instanceof Error ? error.message : t.errors.unknownError,
+        title: "Ошибка",
+        description: "Не удалось загрузить чаты",
         variant: 'destructive',
       });
     } finally {
@@ -51,19 +60,19 @@ export const ChatsPage = () => {
 
   const handleCreateChat = async () => {
     try {
-      const newChat = await difyClient.createChat(t.chats.newChat);
+      const newChat = await apiPost<Chat>(routes.chats, { name: "Новый чат" });
       setChats(prev => [newChat, ...prev]);
       navigate(`/chats/${newChat.id}`);
       
       toast({
-        title: t.chats.newChat,
+        title: "Чат создан",
         description: 'Чат создан успешно',
       });
     } catch (error) {
       console.error('Error creating chat:', error);
       toast({
-        title: t.error,
-        description: error instanceof Error ? error.message : t.errors.unknownError,
+        title: "Ошибка",
+        description: "Не удалось создать чат",
         variant: 'destructive',
       });
     }
@@ -87,7 +96,7 @@ export const ChatsPage = () => {
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">{t.loading}</p>
+          <p className="text-muted-foreground">Загрузка...</p>
         </div>
       </div>
     );
@@ -95,37 +104,37 @@ export const ChatsPage = () => {
 
   return (
     <div className="flex-1 p-6 max-w-6xl mx-auto">
-      {/* Заголовок */}
+      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold mb-2">{t.chats.title}</h1>
+          <h1 className="text-3xl font-bold mb-2">Чаты</h1>
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
             <span>{filteredChats.length} чатов</span>
             <Badge variant="secondary" className="flex items-center gap-1">
               <Users className="h-3 w-3" />
-              {onlineCount}{t.presence.limit}
+              {onlineCount}/12
             </Badge>
           </div>
         </div>
         
         <Button onClick={handleCreateChat} className="hover-lift">
           <Plus className="h-4 w-4 mr-2" />
-          {t.chats.newChat}
+          Новый чат
         </Button>
       </div>
 
-      {/* Поиск */}
+      {/* Search */}
       <div className="relative mb-6">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder={t.chats.search}
+          placeholder="Поиск чатов..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="pl-9 max-w-md"
         />
       </div>
 
-      {/* Список чатов */}
+      {/* Chat List */}
       {filteredChats.length === 0 ? (
         <div className="text-center py-12">
           <MessageSquare className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
@@ -141,7 +150,7 @@ export const ChatsPage = () => {
           {!searchQuery && (
             <Button onClick={handleCreateChat}>
               <Plus className="h-4 w-4 mr-2" />
-              {t.chats.newChat}
+              Новый чат
             </Button>
           )}
         </div>
@@ -172,7 +181,7 @@ export const ChatsPage = () => {
                     <div className="space-y-2">
                       {chat.forked_from_chat && (
                         <p className="text-xs text-muted-foreground">
-                          {t.chats.forkFrom} {chat.forked_from_chat.slice(0, 8)}...
+                          Ветка из {chat.forked_from_chat.slice(0, 8)}...
                         </p>
                       )}
                       
