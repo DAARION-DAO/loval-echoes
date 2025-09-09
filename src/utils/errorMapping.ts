@@ -11,16 +11,27 @@ export interface ErrorDetails {
 }
 
 export const FRIENDLY_ERRORS = {
-  HTTP_404: "Не удалось найти API. Проверьте подключение.",
-  HTTP_401: "Требуется авторизация. Войдите заново.",
-  HTTP_403: "Недостаточно прав для выполнения действия.",
+  HTTP_404: "Не нашли конечную точку API. Проверьте адрес или развертывание.",
+  HTTP_401: "Нужна авторизация. Войдите заново.",
+  HTTP_403: "Доступ запрещен",
   HTTP_500: "Временная ошибка сервера. Повторите позже.",
-  NETWORK_ERROR: "Ошибка сети. Проверьте подключение к интернету.",
-  TIMEOUT: "Превышено время ожидания. Попробуйте ещё раз.",
+  NETWORK_ERROR: "Ошибка сети. Проверьте подключение к интернету",
+  TIMEOUT_ERROR: "Превышено время ожидания",
+  API_NON_JSON: "Сервер вернул некорректный ответ. Попробуйте позже.",
   UNKNOWN: "Произошла неожиданная ошибка. Попробуйте ещё раз.",
 };
 export const mapDifyError = (error: string): string => {
+  // Handle specific API errors first
+  if (error.includes('API returned non-JSON response')) {
+    return FRIENDLY_ERRORS.API_NON_JSON;
+  }
+  
   // Handle HTTP errors from API calls
+  if (error.startsWith('HTTP_')) {
+    const errorKey = error as keyof typeof FRIENDLY_ERRORS;
+    return FRIENDLY_ERRORS[errorKey] || FRIENDLY_ERRORS.UNKNOWN;
+  }
+  
   if (error.startsWith('HTTP ')) {
     const status = error.split(' ')[1];
     switch (status) {

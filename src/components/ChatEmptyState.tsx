@@ -2,6 +2,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { MessageSquarePlus, Users, Sparkles } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
+import { createChat } from '@/services/chats';
+import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 
 interface ChatEmptyStateProps {
   onCreateChat: () => void;
@@ -10,6 +14,31 @@ interface ChatEmptyStateProps {
 
 export const ChatEmptyState = ({ onCreateChat, className = '' }: ChatEmptyStateProps) => {
   const { t } = useTranslation();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const [creating, setCreating] = useState(false);
+
+  const handleCreateFirstChat = async () => {
+    try {
+      setCreating(true);
+      const chat = await createChat('Общий зал');
+      toast({
+        title: "Чат создан",
+        description: "Первый чат успешно создан!",
+      });
+      onCreateChat(); // Refresh the chat list
+      navigate(`/chats/${chat.id}`);
+    } catch (error) {
+      console.error('Error creating chat:', error);
+      toast({
+        variant: "destructive",
+        title: "Ошибка",
+        description: "Не удалось создать чат",
+      });
+    } finally {
+      setCreating(false);
+    }
+  };
 
   return (
     <div className={`flex items-center justify-center min-h-[400px] p-8 ${className}`}>
@@ -22,26 +51,30 @@ export const ChatEmptyState = ({ onCreateChat, className = '' }: ChatEmptyStateP
           <div className="space-y-2">
             <h3 className="text-lg font-semibold">Пока нет чатов</h3>
             <p className="text-sm text-muted-foreground">
-              {t.chats.emptyState}
+              Создайте свой первый чат, чтобы начать общение
             </p>
           </div>
           
           <div className="space-y-3">
-            <Button onClick={onCreateChat} className="w-full">
+            <Button 
+              onClick={handleCreateFirstChat} 
+              className="w-full"
+              disabled={creating}
+            >
               <MessageSquarePlus className="h-4 w-4 mr-2" />
-              {t.chats.newChat}
+              {creating ? 'Создаем...' : 'Создать первый чат'}
             </Button>
             
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Users className="h-3 w-3" />
-              <span>{t.allRepliesVisible}</span>
+              <span>Все ответы видны участникам</span>
             </div>
           </div>
           
           <div className="pt-4 border-t border-border">
             <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground">
               <Sparkles className="h-3 w-3" />
-              <span>{t.inviteParticipants}</span>
+              <span>Пригласить участников</span>
             </div>
           </div>
         </CardContent>

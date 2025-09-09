@@ -1,0 +1,83 @@
+import { useEffect, useState } from "react";
+import { fetchChats, ChatLite } from "@/services/chats";
+import { ChatEmptyState } from "@/components/ChatEmptyState";
+import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
+import { formatDistanceToNow } from 'date-fns';
+import { ru } from 'date-fns/locale';
+
+export function ChatsList() {
+  const [loading, setLoading] = useState(true);
+  const [items, setItems] = useState<ChatLite[]>([]);
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
+  const loadChats = async () => {
+    try {
+      setLoading(true);
+      const chats = await fetchChats();
+      setItems(chats);
+    } catch (e: any) {
+      console.error('Error loading chats:', e);
+      toast({
+        variant: "destructive",
+        title: "Ошибка",
+        description: "Не удалось загрузить чаты",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadChats();
+  }, []);
+
+  const handleOpenChat = (id: string) => {
+    navigate(`/chats/${id}`);
+  };
+
+  const handleCreateChat = () => {
+    // This will be handled by the empty state component
+  };
+
+  if (loading) {
+    return (
+      <div className="p-4 text-sm text-muted-foreground">
+        Загружаем чаты...
+      </div>
+    );
+  }
+
+  if (items.length === 0) {
+    return <ChatEmptyState onCreateChat={loadChats} />;
+  }
+
+  return (
+    <ul className="px-2 pb-4 space-y-1">
+      {items.map(chat => (
+        <li key={chat.id}>
+          <button
+            onClick={() => handleOpenChat(chat.id)}
+            className="w-full text-left px-3 py-2 rounded-lg hover:bg-muted/60 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20"
+          >
+            <div className="font-medium truncate">{chat.name}</div>
+            {chat.lastMessagePreview && (
+              <div className="text-xs text-muted-foreground truncate mt-1">
+                {chat.lastMessagePreview}
+              </div>
+            )}
+            {chat.updatedAt && (
+              <div className="text-xs text-muted-foreground mt-1">
+                {formatDistanceToNow(new Date(chat.updatedAt), { 
+                  addSuffix: true, 
+                  locale: ru 
+                })}
+              </div>
+            )}
+          </button>
+        </li>
+      ))}
+    </ul>
+  );
+}

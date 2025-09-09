@@ -7,25 +7,17 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useTranslation } from '@/lib/i18n';
-import { routes } from '@/lib/routes';
-import { apiGet, apiPost } from '@/lib/api';
+import { fetchChats, createChat, ChatLite } from '@/services/chats';
 import { useToast } from '@/hooks/use-toast';
-
-interface Chat {
-  id: string;
-  name: string;
-  updated_at: string;
-  forked_from_chat?: string;
-  dify_conversation_id?: string;
-}
+import { mapDifyError } from '@/utils/errorMapping';
 
 export const ChatsPage = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { toast } = useToast();
   
-  const [chats, setChats] = useState<Chat[]>([]);
-  const [filteredChats, setFilteredChats] = useState<Chat[]>([]);
+  const [chats, setChats] = useState<ChatLite[]>([]);
+  const [filteredChats, setFilteredChats] = useState<ChatLite[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [onlineCount] = useState(3); // Mock data
@@ -44,13 +36,14 @@ export const ChatsPage = () => {
   const loadChats = async () => {
     try {
       setLoading(true);
-      const chatList = await apiGet<Chat[]>(routes.chats);
+      const chatList = await fetchChats();
       setChats(chatList);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading chats:', error);
+      const friendlyMessage = mapDifyError(error.message || 'Unknown error');
       toast({
         title: "Ошибка",
-        description: "Не удалось загрузить чаты",
+        description: friendlyMessage,
         variant: 'destructive',
       });
     } finally {
@@ -60,7 +53,7 @@ export const ChatsPage = () => {
 
   const handleCreateChat = async () => {
     try {
-      const newChat = await apiPost<Chat>(routes.chats, { name: "Новый чат" });
+      const newChat = await createChat("Новый чат");
       setChats(prev => [newChat, ...prev]);
       navigate(`/chats/${newChat.id}`);
       
@@ -68,11 +61,12 @@ export const ChatsPage = () => {
         title: "Чат создан",
         description: 'Чат создан успешно',
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating chat:', error);
+      const friendlyMessage = mapDifyError(error.message || 'Unknown error');
       toast({
         title: "Ошибка",
-        description: "Не удалось создать чат",
+        description: friendlyMessage,
         variant: 'destructive',
       });
     }
@@ -186,7 +180,7 @@ export const ChatsPage = () => {
                       )}
                       
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>{formatDate(chat.updated_at)}</span>
+                        <span>{chat.updatedAt && formatDate(chat.updatedAt)}</span>
                         {chat.dify_conversation_id && (
                           <Badge variant="outline" className="text-xs">
                             Активный

@@ -54,11 +54,14 @@ export const ChatSidebar = () => {
       setLoading(true);
       const chats = await apiGet<Chat[]>(routes.chats);
       setChats(chats);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error loading chats:", error);
+      const friendlyMessage = error.message?.includes('non-JSON') 
+        ? "Сервер вернул некорректный ответ. Попробуйте позже."
+        : "Не удалось загрузить чаты";
       toast({
         title: "Ошибка",
-        description: "Не удалось загрузить чаты",
+        description: friendlyMessage,
         variant: "destructive",
       });
     } finally {
