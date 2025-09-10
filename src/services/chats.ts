@@ -1,5 +1,4 @@
-import { apiGet, apiPost } from "@/lib/api";
-import { routes } from "@/lib/routes";
+import { supabase } from "@/integrations/supabase/client";
 
 export type ChatLite = { 
   id: string; 
@@ -11,19 +10,62 @@ export type ChatLite = {
 };
 
 export async function fetchChats(): Promise<ChatLite[]> {
-  const json = await apiGet<any>(routes.chats);
-  // Support both formats: {items:[…]} or just […]
-  const arr = Array.isArray(json) ? json : Array.isArray(json.items) ? json.items : [];
-  return arr.map((x: any) => ({
-    id: String(x.id),
-    name: String(x.name ?? x.title ?? "Без названия"),
-    updatedAt: x.updatedAt ?? x.updated_at ?? x.mtime ?? null,
-    lastMessagePreview: x.lastMessagePreview ?? x.preview ?? "",
-    dify_conversation_id: x.dify_conversation_id,
-    forked_from_chat: x.forked_from_chat,
+  console.log('Fetching chats directly from Supabase...');
+  
+  const { data: conversations, error } = await supabase
+    .from('conversations')
+    .select('id, name, updated_at, created_at, dify_conversation_id')
+    .order('updated_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching chats:', error);
+    throw new Error(`Failed to fetch chats: ${error.message}`);
+  }
+
+  console.log('Fetched conversations:', conversations);
+
+  return (conversations || []).map(conv => ({
+    id: conv.id,
+    name: conv.name,
+    updatedAt: conv.updated_at,
+    lastMessagePreview: '',
+    dify_conversation_id: conv.dify_conversation_id,
+    forked_from_chat: undefined,
   }));
 }
 
 export async function createChat(name: string): Promise<ChatLite> {
-  return await apiPost<ChatLite>(routes.chats, { name });
+  console.log('Creating chat directly with Supabase...', { name });
+  
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  
+  if (authError || !user) {
+    console.error('Authentication error:', authError);
+    throw new Error('You must be logged in to create a chat');
+  }
+
+  const { data: newChat, error } = await supabase
+    .from('conversations')
+    .insert({
+      name: name || 'Новый чат',
+      user_id: user.id,
+    })
+    .select('id, name, created_at, updated_at')
+    .single();
+
+  if (error) {
+    console.error('Error creating chat:', error);
+    throw new Error(`Failed to create chat: ${error.message}`);
+  }
+
+  console.log('Created chat:', newChat);
+
+  return {
+    id: newChat.id,
+    name: newChat.name,
+    updatedAt: newChat.updated_at,
+    lastMessagePreview: '',
+    dify_conversation_id: undefined,
+    forked_from_chat: undefined,
+  };
 }
