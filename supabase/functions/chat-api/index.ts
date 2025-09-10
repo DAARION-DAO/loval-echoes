@@ -8,13 +8,15 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  console.log(`[chat-api] ${req.method} ${req.url}`);
+  console.log(`[chat-api] Request: ${req.method} ${req.url}`);
   
+  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    // Initialize Supabase client
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -22,38 +24,39 @@ serve(async (req) => {
 
     const url = new URL(req.url);
     const method = req.method;
-    const pathParts = url.pathname.split('/').filter(Boolean);
-    console.log('[chat-api] Full pathname:', url.pathname);
-    console.log('[chat-api] Path parts before filtering:', pathParts);
     
-    // Remove the standard edge function prefix
-    const apiPathParts = pathParts.slice(pathParts.indexOf('chat-api') + 1);
-    console.log('[chat-api] API path parts:', apiPathParts);
+    // Parse path - remove functions/v1/chat-api prefix
+    const pathSegments = url.pathname.split('/').filter(Boolean);
+    console.log('[chat-api] Path segments:', pathSegments);
     
-    // GET /chats - список чатов
-    if (method === 'GET' && apiPathParts.length === 0) {
+    // GET /chats - List all chats
+    if (method === 'GET' && pathSegments.length === 3) { // functions/v1/chat-api
+      console.log('[chat-api] Handling GET /chats');
+      
       const authHeader = req.headers.get('authorization');
       const token = authHeader?.replace('Bearer ', '');
       
       if (!token) {
-        console.log('No auth token provided');
+        console.log('[chat-api] No auth token provided');
         return new Response(JSON.stringify({ error: 'Unauthorized' }), { 
           status: 401, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
       }
       
+      // Get user from token
       const { data: { user }, error: authError } = await supabase.auth.getUser(token);
       
       if (authError || !user) {
-        console.log('Auth error:', authError);
-        return new Response(JSON.stringify({ error: 'Unauthorized' }), { 
+        console.log('[chat-api] Auth error:', authError);
+        return new Response(JSON.stringify({ error: 'Invalid token' }), { 
           status: 401, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
       }
 
       try {
+        // Fetch conversations from database
         const { data: conversations, error } = await supabase
           .from('conversations')
           .select('id, name, updated_at, created_at, dify_conversation_id')
@@ -61,7 +64,7 @@ serve(async (req) => {
           .order('updated_at', { ascending: false });
 
         if (error) {
-          console.error('Database error:', error);
+          console.error('[chat-api] Database error:', error);
           throw error;
         }
 
@@ -70,17 +73,18 @@ serve(async (req) => {
           id: conv.id,
           name: conv.name,
           updatedAt: conv.updated_at,
-          lastMessagePreview: '', // Could be enhanced later
+          lastMessagePreview: '',
           dify_conversation_id: conv.dify_conversation_id
         })) || [];
 
-        console.log(`Found ${chats.length} chats for user ${user.id}`);
+        console.log(`[chat-api] Found ${chats.length} chats for user ${user.id}`);
         
         return new Response(JSON.stringify(chats), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
+        
       } catch (error) {
-        console.error('Error fetching chats:', error);
+        console.error('[chat-api] Error fetching chats:', error);
         return new Response(JSON.stringify({ error: 'Failed to fetch chats' }), {
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -88,15 +92,19 @@ serve(async (req) => {
       }
     }
 
-    // POST /chats - создание нового чата
-    if (method === 'POST' && apiPathParts.length === 0) {
+    // POST /chats - Create new chat
+    if (method === 'POST' && pathSegments.length === 3) { // functions/v1/chat-api
+      console.log('[chat-api] Handling POST /chats');
+      
       try {
-        const { name } = await req.json();
+        const body = await req.json();
+        const { name } = body;
         
         const authHeader = req.headers.get('authorization');
         const token = authHeader?.replace('Bearer ', '');
         
         if (!token) {
+          console.log('[chat-api] No auth token for POST');
           return new Response(JSON.stringify({ error: 'Unauthorized' }), { 
             status: 401, 
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -106,14 +114,14 @@ serve(async (req) => {
         const { data: { user }, error: authError } = await supabase.auth.getUser(token);
         
         if (authError || !user) {
-          console.log('Auth error creating chat:', authError);
-          return new Response(JSON.stringify({ error: 'Unauthorized' }), { 
+          console.log('[chat-api] Auth error creating chat:', authError);
+          return new Response(JSON.stringify({ error: 'Invalid token' }), { 
             status: 401, 
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           });
         }
 
-        // Create new conversation in database
+        // Create new conversation
         const { data: newChat, error } = await supabase
           .from('conversations')
           .insert({
@@ -124,243 +132,45 @@ serve(async (req) => {
           .single();
 
         if (error) {
-          console.error('Error creating chat:', error);
+          console.error('[chat-api] Error creating chat:', error);
           throw error;
         }
 
-        console.log('Created new chat:', newChat);
+        console.log('[chat-api] Created new chat:', newChat);
 
         return new Response(JSON.stringify(newChat), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
+        
       } catch (error) {
-        console.error('Error in POST /chats:', error);
-        return new Response(JSON.stringify({ error: 'Failed to create chat' }), {
+        console.error('[chat-api] Error in POST /chats:', error);
+        return new Response(JSON.stringify({ 
+          error: 'Failed to create chat', 
+          details: error.message 
+        }), {
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
     }
 
-    // POST /chats/:chatId/name - переименование чата
-    if (method === 'POST' && apiPathParts.length === 2 && apiPathParts[1] === 'name') {
-      const chatId = apiPathParts[0];
-      const { name } = await req.json();
-      
-      const authHeader = req.headers.get('authorization');
-      const token = authHeader?.replace('Bearer ', '');
-      const { data: { user } } = await supabase.auth.getUser(token);
-      
-      if (!user) {
-        return new Response('Unauthorized', { status: 401, headers: corsHeaders });
-      }
-
-      const { data: chat, error: fetchError } = await supabase
-        .from('conversations')
-        .select('*')
-        .eq('id', chatId)
-        .single();
-
-      if (fetchError) throw fetchError;
-
-      // Обновляем в нашей БД
-      const { error: updateError } = await supabase
-        .from('conversations')
-        .update({ name, updated_at: new Date().toISOString() })
-        .eq('id', chatId);
-
-      if (updateError) throw updateError;
-
-      // Если есть dify_conversation_id, переименовываем в Dify
-      if (chat.dify_conversation_id) {
-        try {
-          await supabase.functions.invoke('dify-client', {
-            body: {
-              action: 'rename_conversation',
-              conversationId: chat.dify_conversation_id,
-              name,
-            },
-          });
-        } catch (e) {
-          console.error('Error renaming in Dify:', e);
-        }
-      }
-
-      // Логирование
-      await supabase
-        .from('audit_log')
-        .insert({
-          actor: user.id,
-          action: 'chat_renamed',
-          chat_id: chatId,
-          details: { old_name: chat.name, new_name: name },
-        });
-
-      return new Response(JSON.stringify({ success: true }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // DELETE /chats/:chatId - удаление чата
-    if (method === 'DELETE' && apiPathParts.length === 1) {
-      const chatId = apiPathParts[0];
-      
-      const authHeader = req.headers.get('authorization');
-      const token = authHeader?.replace('Bearer ', '');
-      const { data: { user } } = await supabase.auth.getUser(token);
-      
-      if (!user) {
-        return new Response('Unauthorized', { status: 401, headers: corsHeaders });
-      }
-
-      const { data: chat, error: fetchError } = await supabase
-        .from('conversations')
-        .select('*')
-        .eq('id', chatId)
-        .single();
-
-      if (fetchError) throw fetchError;
-
-      // Удаляем из Dify если есть conversation_id
-      if (chat.dify_conversation_id) {
-        try {
-          await supabase.functions.invoke('dify-client', {
-            body: {
-              action: 'delete_conversation',
-              conversationId: chat.dify_conversation_id,
-            },
-          });
-        } catch (e) {
-          console.error('Error deleting from Dify:', e);
-        }
-      }
-
-      // Удаляем из нашей БД
-      const { error: deleteError } = await supabase
-        .from('conversations')
-        .delete()
-        .eq('id', chatId);
-
-      if (deleteError) throw deleteError;
-
-      // Логирование
-      await supabase
-        .from('audit_log')
-        .insert({
-          actor: user.id,
-          action: 'chat_deleted',
-          chat_id: chatId,
-          details: { name: chat.name },
-        });
-
-      return new Response(JSON.stringify({ success: true }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // GET /chats/:chatId/history - история сообщений
-    if (method === 'GET' && apiPathParts.length === 2 && apiPathParts[1] === 'history') {
-      const chatId = apiPathParts[0];
-      const cursor = url.searchParams.get('cursor');
-      
-      const { data: chat } = await supabase
-        .from('conversations')
-        .select('dify_conversation_id')
-        .eq('id', chatId)
-        .single();
-
-      if (!chat?.dify_conversation_id) {
-        return new Response(JSON.stringify({ data: [], has_more: false }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-
-      const response = await supabase.functions.invoke('dify-client', {
-        body: {
-          action: 'get_messages',
-          conversationId: chat.dify_conversation_id,
-          cursor,
-        },
-      });
-
-      return new Response(JSON.stringify(response.data), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // POST /chats/:chatId/send - отправка сообщения
-    if (method === 'POST' && apiPathParts.length === 2 && apiPathParts[1] === 'send') {
-      const chatId = apiPathParts[0];
-      const { query, files } = await req.json();
-      
-      const authHeader = req.headers.get('authorization');
-      const token = authHeader?.replace('Bearer ', '');
-      const { data: { user } } = await supabase.auth.getUser(token);
-      
-      if (!user) {
-        return new Response('Unauthorized', { status: 401, headers: corsHeaders });
-      }
-
-      const { data: chat } = await supabase
-        .from('conversations')
-        .select('*')
-        .eq('id', chatId)
-        .single();
-
-      if (!chat) {
-        return new Response('Chat not found', { status: 404, headers: corsHeaders });
-      }
-
-      // Отправляем сообщение через Dify client (это запустит стрим)
-      await supabase.functions.invoke('dify-client', {
-        body: {
-          action: 'send_message',
-          conversationId: chat.dify_conversation_id,
-          query,
-          files,
-          chatId,
-        },
-      });
-
-      // Логирование
-      await supabase
-        .from('audit_log')
-        .insert({
-          actor: user.id,
-          action: 'message_sent',
-          chat_id: chatId,
-          details: { query: query.substring(0, 100) },
-        });
-
-      return new Response(JSON.stringify({ success: true }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // POST /chats/:chatId/stop - остановка генерации
-    if (method === 'POST' && apiPathParts.length === 2 && apiPathParts[1] === 'stop') {
-      const { taskId } = await req.json();
-      
-      const response = await supabase.functions.invoke('dify-client', {
-        body: {
-          action: 'stop_generation',
-          taskId,
-        },
-      });
-
-      return new Response(JSON.stringify(response.data), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    return new Response(JSON.stringify({ error: 'Route not found' }), { 
+    // If no route matches
+    console.log('[chat-api] Route not found for:', method, pathSegments);
+    return new Response(JSON.stringify({ 
+      error: 'Route not found',
+      method,
+      path: pathSegments 
+    }), { 
       status: 404, 
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
 
   } catch (error) {
-    console.error('Error in chat-api:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    console.error('[chat-api] Unhandled error:', error);
+    return new Response(JSON.stringify({ 
+      error: 'Internal server error',
+      details: error.message 
+    }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
