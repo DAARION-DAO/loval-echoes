@@ -34,7 +34,7 @@ export const AuthForm = () => {
     try {
       const redirectUrl = `${window.location.origin}/`;
       
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
@@ -62,10 +62,18 @@ export const AuthForm = () => {
         return;
       }
 
-      toast({
-        title: 'Регистрация успешна',
-        description: 'Проверьте email для подтверждения аккаунта',
-      });
+      if (data.user && !data.session) {
+        toast({
+          title: 'Регистрация успешна',
+          description: 'Проверьте email для подтверждения аккаунта. Письмо может прийти в папку "Спам".',
+        });
+      } else if (data.session) {
+        toast({
+          title: 'Добро пожаловать!',
+          description: 'Вы успешно зарегистрированы и вошли в систему',
+        });
+      }
+
     } catch (error) {
       toast({
         title: t.error,

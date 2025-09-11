@@ -34,18 +34,7 @@ export function Layout({ sidebar, children }: LayoutProps) {
             <span className="font-bold text-lg">Дух Общины</span>
           </div>
           
-          <div className="hidden md:flex items-center gap-3">
-            <Button size="sm" className="gap-2">
-              <Plus className="h-4 w-4" />
-              Создать
-            </Button>
-            <div className="relative w-64">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input 
-                className="pl-10 h-9" 
-                placeholder={`${t.globalSearch} (Ctrl/⌘+K)`}
-              />
-            </div>
+          <div className="flex items-center gap-3">
             <Avatar className="h-8 w-8">
               <AvatarImage src={user?.user_metadata?.avatar_url} />
               <AvatarFallback>

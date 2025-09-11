@@ -90,19 +90,20 @@ export const NewIndex = () => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
+        <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <h1 className="text-2xl font-bold">{t.zhosBanner.line1.split(' ')[0]} Мессенджер</h1>
+            <div className="flex items-center gap-2 sm:gap-4">
+              <h1 className="text-lg sm:text-xl md:text-2xl font-bold truncate">{t.zhosBanner.line1.split(' ')[0]} Мессенджер</h1>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setSearchDialogOpen(true)}
-                className="hidden md:flex items-center gap-2 w-64 justify-start text-muted-foreground"
+                className="hidden sm:flex items-center gap-2 min-w-[200px] justify-start text-muted-foreground"
               >
                 <Search className="h-4 w-4" />
-                <span>Глобальный поиск...</span>
-                <kbd className="ml-auto text-xs">⌘K</kbd>
+                <span className="hidden md:inline">Глобальный поиск...</span>
+                <span className="md:hidden">Поиск...</span>
+                <kbd className="ml-auto text-xs hidden md:inline">⌘K</kbd>
               </Button>
             </div>
 
@@ -111,9 +112,19 @@ export const NewIndex = () => {
                 variant="default"
                 size="sm"
                 onClick={() => setCreateModalOpen(true)}
+                className="flex items-center gap-2"
               >
-                <MessageSquarePlus className="h-4 w-4 mr-2" />
-                Создать
+                <MessageSquarePlus className="h-4 w-4" />
+                <span className="hidden sm:inline">Создать</span>
+              </Button>
+              
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => setSearchDialogOpen(true)}
+                className="sm:hidden"
+              >
+                <Search className="h-4 w-4" />
               </Button>
               
               <Button variant="ghost" size="sm">
@@ -129,14 +140,14 @@ export const NewIndex = () => {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-6 space-y-6">
+      <main className="container mx-auto px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
         {/* Principles Banner */}
         <PrinciplesBanner />
 
         {/* Welcome Section */}
-        <div className="text-center space-y-4">
-          <h2 className="text-3xl font-bold">Добро пожаловать в ЖОС Мессенджер</h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+        <div className="text-center space-y-3 sm:space-y-4">
+          <h2 className="text-2xl sm:text-3xl font-bold">Добро пожаловать в ЖОС Мессенджер</h2>
+          <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-2">
             Платформа для открытого общения и совместной работы сообщества. 
             Все взаимодействия прозрачны и видны всем участникам.
           </p>
@@ -144,8 +155,8 @@ export const NewIndex = () => {
 
         {/* Quick Actions */}
         <div className="space-y-4">
-          <h3 className="text-xl font-semibold">Быстрые действия</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <h3 className="text-lg sm:text-xl font-semibold">Быстрые действия</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {quickActions.map((action, index) => (
               <Card 
                 key={index}
