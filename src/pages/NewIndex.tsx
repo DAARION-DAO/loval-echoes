@@ -19,8 +19,7 @@ import { GlobalSearchDialog } from '@/components/GlobalSearchDialog';
 import { useTranslation } from '@/lib/i18n';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
-import { routes } from '@/lib/routes';
-import { apiPost } from '@/lib/api';
+import { createChat } from '@/services/chats';
 
 export const NewIndex = () => {
   const { t } = useTranslation();
@@ -28,34 +27,38 @@ export const NewIndex = () => {
   const navigate = useNavigate();
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [searchDialogOpen, setSearchDialogOpen] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
 
   const handleCreateSubmit = async (data: CreateFormData) => {
+    if (isCreating) return;
+    
     try {
       if (data.type === 'chat') {
-        const newChat = await apiPost<any>(routes.chats, { 
-          name: data.name || "Новый чат",
-          description: data.description 
-        });
+        setIsCreating(true);
+        const newChat = await createChat(data.name || "Новый чат");
         navigate(`/chats/${newChat.id}`);
         toast({
           title: "Чат создан",
           description: `Чат "${data.name}" успешно создан`,
         });
+        setCreateModalOpen(false);
       } else {
         // TODO: Implement other types
         toast({
           title: "В разработке",
           description: `Создание ${data.type} будет добавлено позже`,
         });
+        setCreateModalOpen(false);
       }
-      setCreateModalOpen(false);
     } catch (error) {
       console.error('Error creating:', error);
       toast({
         variant: 'destructive',
         title: 'Ошибка создания',
-        description: 'Не удалось создать элемент',
+        description: error instanceof Error ? error.message : 'Не удалось создать чат',
       });
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -211,8 +214,9 @@ export const NewIndex = () => {
       {/* Modals */}
       <CreateModal
         open={createModalOpen}
-        onClose={() => setCreateModalOpen(false)}
+        onClose={() => !isCreating && setCreateModalOpen(false)}
         onSubmit={handleCreateSubmit}
+        loading={isCreating}
       />
       
       <GlobalSearchDialog
