@@ -22,10 +22,9 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useTranslation } from '@/lib/i18n';
-import { routes } from '@/lib/routes';
-import { apiGet, apiPost, apiDelete } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Chat {
   id: string;
@@ -52,16 +51,27 @@ export const ChatSidebar = () => {
   const loadChats = async () => {
     try {
       setLoading(true);
-      const chats = await apiGet<Chat[]>(routes.chats);
+      const { data: conversations, error } = await supabase
+        .from('conversations')
+        .select('id, name, updated_at, created_at')
+        .order('updated_at', { ascending: false });
+
+      if (error) {
+        throw new Error(`Failed to fetch chats: ${error.message}`);
+      }
+
+      const chats = (conversations || []).map(conv => ({
+        id: conv.id,
+        name: conv.name,
+        updated_at: conv.updated_at,
+      }));
+      
       setChats(chats);
     } catch (error: any) {
       console.error("Error loading chats:", error);
-      const friendlyMessage = error.message?.includes('non-JSON') 
-        ? "Сервер вернул некорректный ответ. Попробуйте позже."
-        : "Не удалось загрузить чаты";
       toast({
         title: "Ошибка",
-        description: friendlyMessage,
+        description: "Не удалось загрузить чаты",
         variant: "destructive",
       });
     } finally {
@@ -71,9 +81,33 @@ export const ChatSidebar = () => {
 
   const handleCreateChat = async () => {
     try {
-      const newChat = await apiPost<Chat>(routes.chats, { name: "Новый чат" });
-      setChats(prev => [newChat, ...prev]);
-      navigate(`/chats/${newChat.id}`);
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      
+      if (authError || !user) {
+        throw new Error('You must be logged in to create a chat');
+      }
+
+      const { data: newChat, error } = await supabase
+        .from('conversations')
+        .insert({
+          name: 'Новый чат',
+          user_id: user.id,
+        })
+        .select('id, name, updated_at')
+        .single();
+
+      if (error) {
+        throw new Error(`Failed to create chat: ${error.message}`);
+      }
+
+      const chatData = {
+        id: newChat.id,
+        name: newChat.name,
+        updated_at: newChat.updated_at,
+      };
+
+      setChats(prev => [chatData, ...prev]);
+      navigate(`/chat/${newChat.id}`);
       toast({
         description: "Чат создан",
       });
@@ -89,7 +123,15 @@ export const ChatSidebar = () => {
 
   const handleRenameChat = async (chatId: string, newName: string) => {
     try {
-      await apiPost<any>(routes.chatName(chatId), { name: newName });
+      const { error } = await supabase
+        .from('conversations')
+        .update({ name: newName })
+        .eq('id', chatId);
+
+      if (error) {
+        throw new Error(`Failed to rename chat: ${error.message}`);
+      }
+
       setChats(prev => prev.map(chat => 
         chat.id === chatId ? { ...chat, name: newName } : chat
       ));
@@ -112,7 +154,26 @@ export const ChatSidebar = () => {
     }
     
     try {
-      await apiDelete<any>(routes.chat(chatId));
+      // Удаляем сообщения чата
+      const { error: messagesError } = await supabase
+        .from('messages')
+        .delete()
+        .eq('conversation_id', chatId);
+
+      if (messagesError) {
+        console.error('Error deleting messages:', messagesError);
+      }
+
+      // Удаляем сам чат
+      const { error } = await supabase
+        .from('conversations')
+        .delete()
+        .eq('id', chatId);
+
+      if (error) {
+        throw new Error(`Failed to delete chat: ${error.message}`);
+      }
+
       setChats(prev => prev.filter(chat => chat.id !== chatId));
       toast({
         description: "Чат удален",
@@ -186,7 +247,7 @@ export const ChatSidebar = () => {
             {filteredChats.map((chat) => (
               <div key={chat.id} className="group relative">
                 <NavLink
-                  to={`/chats/${chat.id}`}
+                  to={`/chat/${chat.id}`}
                   className={({ isActive }) => cn(
                     "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
                     isActive 

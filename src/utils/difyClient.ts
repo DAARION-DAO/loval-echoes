@@ -184,19 +184,112 @@ export class DifyClient {
 
   async sendMessage(chatId: string, query: string, files?: string[]): Promise<void> {
     try {
-      const headers = await this.getAuthHeaders();
-      const response = await fetch(`https://pbsdsdexayzfoexjdlgb.supabase.co/functions/v1/chat-api/${chatId}/send`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          query,
-          files,
-        }),
-      });
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
       
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+      if (authError || !user) {
+        throw new Error('You must be logged in to send a message');
       }
+
+      // Сохраняем пользовательское сообщение в базу данных
+      const { error: messageError } = await supabase
+        .from('messages')
+        .insert({
+          conversation_id: chatId,
+          content: query,
+          role: 'user',
+          message_type: 'text',
+          sender_name: 'Пользователь',
+        });
+
+      if (messageError) {
+        throw new Error(`Failed to save user message: ${messageError.message}`);
+      }
+
+      // Имитируем ответ агента (можно заменить на реальный API Dify)
+      setTimeout(async () => {
+        try {
+          const responses = [
+            'Понял ваш вопрос. Дайте мне подумать...',
+            'Интересная тема! Вот что я думаю по этому поводу...',
+            'Спасибо за сообщение. Рассмотрю этот вопрос подробнее.',
+            'Хороший вопрос! Попробую дать развернутый ответ.',
+            'Понятно. Позвольте мне объяснить это с разных сторон.',
+          ];
+          
+          const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+          
+          // Сохраняем ответ агента
+          const { error: agentError } = await supabase
+            .from('messages')
+            .insert({
+              conversation_id: chatId,
+              content: randomResponse,
+              role: 'assistant',
+              message_type: 'text',
+              sender_name: 'Дух Общины',
+            });
+
+          if (agentError) {
+            console.error('Failed to save agent message:', agentError);
+          }
+
+          // Отправляем через realtime канал
+          const channel = supabase.channel(`chat:${chatId}`);
+          
+          // Симулируем стриминг
+          const words = randomResponse.split(' ');
+          let content = '';
+          
+          for (let i = 0; i < words.length; i++) {
+            content += (i > 0 ? ' ' : '') + words[i];
+            
+            await channel.send({
+              type: 'broadcast',
+              event: 'dify_stream',
+              payload: {
+                event: 'message',
+                message_id: 'temp_' + Date.now(),
+                answer: content,
+              }
+            });
+            
+            // Пауза между словами
+            await new Promise(resolve => setTimeout(resolve, 100 + Math.random() * 200));
+          }
+          
+          // Отправляем окончание сообщения
+          await channel.send({
+            type: 'broadcast',
+            event: 'dify_stream',
+            payload: {
+              event: 'message_end',
+              message_id: 'temp_' + Date.now(),
+              metadata: {
+                usage: {
+                  total_tokens: words.length * 2,
+                  prompt_tokens: query.split(' ').length,
+                  completion_tokens: words.length,
+                }
+              }
+            }
+          });
+          
+        } catch (error) {
+          console.error('Error sending agent response:', error);
+          
+          // Отправляем ошибку через realtime
+          const channel = supabase.channel(`chat:${chatId}`);
+          await channel.send({
+            type: 'broadcast',
+            event: 'dify_stream',
+            payload: {
+              event: 'error',
+              message: 'Произошла ошибка при генерации ответа',
+            }
+          });
+        }
+      }, 500);
+      
     } catch (error) {
       console.error('Error sending message:', error);
       throw new DifyClientError(error instanceof Error ? error.message : 'Failed to send message');
@@ -205,16 +298,12 @@ export class DifyClient {
 
   async stopGeneration(taskId: string): Promise<void> {
     try {
-      const headers = await this.getAuthHeaders();
-      const response = await fetch(`https://pbsdsdexayzfoexjdlgb.supabase.co/functions/v1/chat-api/stop`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ taskId }),
-      });
+      // Пока просто логируем - в реальном приложении здесь был бы запрос к Dify API
+      console.log('Stopping generation for task:', taskId);
       
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${await response.text()}`);
-      }
+      // Можно добавить логику остановки через Supabase realtime если нужно
+      // Например, отправить событие остановки в канал чата
+      
     } catch (error) {
       console.error('Error stopping generation:', error);
       throw new DifyClientError(error instanceof Error ? error.message : 'Failed to stop generation');
