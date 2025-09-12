@@ -56,17 +56,22 @@ export class DifyClient {
 
   async getChats(): Promise<Chat[]> {
     try {
-      const headers = await this.getAuthHeaders();
-      const response = await fetch(`https://pbsdsdexayzfoexjdlgb.supabase.co/functions/v1/chat-api`, {
-        method: 'GET',
-        headers
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+      const { data: conversations, error } = await supabase
+        .from('conversations')
+        .select('id, name, updated_at, created_at, dify_conversation_id')
+        .order('updated_at', { ascending: false });
+
+      if (error) {
+        throw new Error(`Failed to fetch chats: ${error.message}`);
       }
-      
-      return await response.json();
+
+      return (conversations || []).map(conv => ({
+        id: conv.id,
+        name: conv.name,
+        dify_conversation_id: conv.dify_conversation_id,
+        created_at: conv.created_at,
+        updated_at: conv.updated_at,
+      }));
     } catch (error) {
       console.error('Error getting chats:', error);
       throw new DifyClientError(error instanceof Error ? error.message : 'Failed to get chats');
@@ -75,22 +80,31 @@ export class DifyClient {
 
   async createChat(name: string, forkedFromChat?: string, forkedFromMessageId?: string): Promise<Chat> {
     try {
-      const headers = await this.getAuthHeaders();
-      const response = await fetch(`https://pbsdsdexayzfoexjdlgb.supabase.co/functions/v1/chat-api`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          name,
-          forked_from_chat: forkedFromChat,
-          forked_from_message_id: forkedFromMessageId,
-        }),
-      });
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
       
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+      if (authError || !user) {
+        throw new Error('You must be logged in to create a chat');
       }
-      
-      return await response.json();
+
+      const { data: newChat, error } = await supabase
+        .from('conversations')
+        .insert({
+          name: name || 'Новый чат',
+          user_id: user.id,
+        })
+        .select('id, name, created_at, updated_at')
+        .single();
+
+      if (error) {
+        throw new Error(`Failed to create chat: ${error.message}`);
+      }
+
+      return {
+        id: newChat.id,
+        name: newChat.name,
+        created_at: newChat.created_at,
+        updated_at: newChat.updated_at,
+      };
     } catch (error) {
       console.error('Error creating chat:', error);
       throw new DifyClientError(error instanceof Error ? error.message : 'Failed to create chat');
@@ -138,22 +152,30 @@ export class DifyClient {
     limit: number;
   }> {
     try {
-      const headers = await this.getAuthHeaders();
-      let url = `https://pbsdsdexayzfoexjdlgb.supabase.co/functions/v1/chat-api/${chatId}/history`;
-      if (cursor) {
-        url += `?cursor=${encodeURIComponent(cursor)}`;
+      const { data: messages, error } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('conversation_id', chatId)
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        throw new Error(`Failed to get chat history: ${error.message}`);
       }
-      
-      const response = await fetch(url, {
-        method: 'GET',
-        headers,
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${await response.text()}`);
-      }
-      
-      return await response.json();
+
+      // Convert database messages to DifyMessage format
+      const difyMessages: DifyMessage[] = (messages || []).map(msg => ({
+        id: msg.id,
+        conversation_id: msg.conversation_id,
+        query: msg.role === 'user' ? msg.content : '',
+        answer: msg.role === 'assistant' ? msg.content : '',
+        created_at: msg.created_at,
+      }));
+
+      return {
+        data: difyMessages,
+        has_more: false,
+        limit: 50,
+      };
     } catch (error) {
       console.error('Error getting chat history:', error);
       throw new DifyClientError(error instanceof Error ? error.message : 'Failed to get chat history');

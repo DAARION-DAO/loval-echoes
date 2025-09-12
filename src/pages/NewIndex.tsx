@@ -145,7 +145,9 @@ export const NewIndex = () => {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
         {/* Principles Banner */}
-        <PrinciplesBanner />
+        {localStorage.getItem('zhos-principles-banner-dismissed') !== 'true' && (
+          <PrinciplesBanner />
+        )}
 
         {/* Welcome Section */}
         <div className="text-center space-y-3 sm:space-y-4">
