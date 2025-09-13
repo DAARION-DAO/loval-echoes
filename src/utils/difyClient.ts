@@ -113,15 +113,13 @@ export class DifyClient {
 
   async renameChat(chatId: string, name: string): Promise<void> {
     try {
-      const headers = await this.getAuthHeaders();
-      const response = await fetch(`https://pbsdsdexayzfoexjdlgb.supabase.co/functions/v1/chat-api/${chatId}/name`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ name }),
-      });
+      const { error } = await supabase
+        .from('conversations')
+        .update({ name })
+        .eq('id', chatId);
       
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+      if (error) {
+        throw new Error(`Failed to rename chat: ${error.message}`);
       }
     } catch (error) {
       console.error('Error renaming chat:', error);
@@ -131,18 +129,33 @@ export class DifyClient {
 
   async deleteChat(chatId: string): Promise<void> {
     try {
-      const headers = await this.getAuthHeaders();
-      const response = await fetch(`https://pbsdsdexayzfoexjdlgb.supabase.co/functions/v1/chat-api/${chatId}`, {
-        method: 'DELETE',
-        headers,
-      });
+      const { error } = await supabase
+        .from('conversations')
+        .delete()
+        .eq('id', chatId);
       
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+      if (error) {
+        throw new Error(`Failed to delete chat: ${error.message}`);
       }
     } catch (error) {
       console.error('Error deleting chat:', error);
       throw new DifyClientError(error instanceof Error ? error.message : 'Failed to delete chat');
+    }
+  }
+
+  async archiveChat(chatId: string): Promise<void> {
+    try {
+      const { error } = await supabase
+        .from('conversations')
+        .update({ is_archived: true })
+        .eq('id', chatId);
+      
+      if (error) {
+        throw new Error(`Failed to archive chat: ${error.message}`);
+      }
+    } catch (error) {
+      console.error('Error archiving chat:', error);
+      throw new DifyClientError(error instanceof Error ? error.message : 'Failed to archive chat');
     }
   }
 
@@ -220,10 +233,10 @@ export class DifyClient {
       const { data, error } = await supabase.functions.invoke('dify-client', {
         body: {
           action: 'send_message',
-          conversation_id: conversation?.dify_conversation_id || null,
+          conversationId: conversation?.dify_conversation_id || null,
           query,
           files: files || [],
-          chat_id: chatId
+          chatId: chatId
         }
       });
 
@@ -247,7 +260,7 @@ export class DifyClient {
       const { error } = await supabase.functions.invoke('dify-client', {
         body: {
           action: 'stop_generation',
-          task_id: taskId
+          taskId: taskId
         }
       });
 
