@@ -59,6 +59,7 @@ export class DifyClient {
       const { data: conversations, error } = await supabase
         .from('conversations')
         .select('id, name, updated_at, created_at, dify_conversation_id')
+        .eq('is_archived', false)
         .order('updated_at', { ascending: false });
 
       if (error) {
@@ -147,7 +148,7 @@ export class DifyClient {
     try {
       const { error } = await supabase
         .from('conversations')
-        .update({ is_archived: true })
+        .update({ is_archived: true } as any)
         .eq('id', chatId);
       
       if (error) {

@@ -56,6 +56,7 @@ export type Database = {
           description: string | null
           dify_conversation_id: string | null
           id: string
+          is_archived: boolean
           is_group_chat: boolean | null
           name: string
           updated_at: string
@@ -67,6 +68,7 @@ export type Database = {
           description?: string | null
           dify_conversation_id?: string | null
           id?: string
+          is_archived?: boolean
           is_group_chat?: boolean | null
           name: string
           updated_at?: string
@@ -78,6 +80,7 @@ export type Database = {
           description?: string | null
           dify_conversation_id?: string | null
           id?: string
+          is_archived?: boolean
           is_group_chat?: boolean | null
           name?: string
           updated_at?: string
