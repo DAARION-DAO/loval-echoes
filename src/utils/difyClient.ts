@@ -205,90 +205,33 @@ export class DifyClient {
         throw new Error(`Failed to save user message: ${messageError.message}`);
       }
 
-      // Имитируем ответ агента (можно заменить на реальный API Dify)
-      setTimeout(async () => {
-        try {
-          const responses = [
-            'Понял ваш вопрос. Дайте мне подумать...',
-            'Интересная тема! Вот что я думаю по этому поводу...',
-            'Спасибо за сообщение. Рассмотрю этот вопрос подробнее.',
-            'Хороший вопрос! Попробую дать развернутый ответ.',
-            'Понятно. Позвольте мне объяснить это с разных сторон.',
-          ];
-          
-          const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-          
-          // Сохраняем ответ агента
-          const { error: agentError } = await supabase
-            .from('messages')
-            .insert({
-              conversation_id: chatId,
-              content: randomResponse,
-              role: 'assistant',
-              message_type: 'text',
-              sender_name: 'Дух Общины',
-            });
+      // Получаем conversation_id из Dify для этого чата
+      const { data: conversation, error: convError } = await supabase
+        .from('conversations')
+        .select('dify_conversation_id')
+        .eq('id', chatId)
+        .single();
 
-          if (agentError) {
-            console.error('Failed to save agent message:', agentError);
-          }
+      if (convError) {
+        throw new Error(`Failed to get conversation: ${convError.message}`);
+      }
 
-          // Отправляем через realtime канал
-          const channel = supabase.channel(`chat:${chatId}`);
-          
-          // Симулируем стриминг
-          const words = randomResponse.split(' ');
-          let content = '';
-          
-          for (let i = 0; i < words.length; i++) {
-            content += (i > 0 ? ' ' : '') + words[i];
-            
-            await channel.send({
-              type: 'broadcast',
-              event: 'dify_stream',
-              payload: {
-                event: 'message',
-                message_id: 'temp_' + Date.now(),
-                answer: content,
-              }
-            });
-            
-            // Пауза между словами
-            await new Promise(resolve => setTimeout(resolve, 100 + Math.random() * 200));
-          }
-          
-          // Отправляем окончание сообщения
-          await channel.send({
-            type: 'broadcast',
-            event: 'dify_stream',
-            payload: {
-              event: 'message_end',
-              message_id: 'temp_' + Date.now(),
-              metadata: {
-                usage: {
-                  total_tokens: words.length * 2,
-                  prompt_tokens: query.split(' ').length,
-                  completion_tokens: words.length,
-                }
-              }
-            }
-          });
-          
-        } catch (error) {
-          console.error('Error sending agent response:', error);
-          
-          // Отправляем ошибку через realtime
-          const channel = supabase.channel(`chat:${chatId}`);
-          await channel.send({
-            type: 'broadcast',
-            event: 'dify_stream',
-            payload: {
-              event: 'error',
-              message: 'Произошла ошибка при генерации ответа',
-            }
-          });
+      // Отправляем сообщение к Dify API через edge function
+      const { data, error } = await supabase.functions.invoke('dify-client', {
+        body: {
+          action: 'send_message',
+          conversation_id: conversation?.dify_conversation_id || null,
+          query,
+          files: files || [],
+          chat_id: chatId
         }
-      }, 500);
+      });
+
+      if (error) {
+        throw new Error(`Failed to send message to Dify: ${error.message}`);
+      }
+
+      console.log('Message sent to Dify successfully:', data);
       
     } catch (error) {
       console.error('Error sending message:', error);
@@ -298,11 +241,19 @@ export class DifyClient {
 
   async stopGeneration(taskId: string): Promise<void> {
     try {
-      // Пока просто логируем - в реальном приложении здесь был бы запрос к Dify API
       console.log('Stopping generation for task:', taskId);
       
-      // Можно добавить логику остановки через Supabase realtime если нужно
-      // Например, отправить событие остановки в канал чата
+      // Отправляем запрос остановки к Dify API
+      const { error } = await supabase.functions.invoke('dify-client', {
+        body: {
+          action: 'stop_generation',
+          task_id: taskId
+        }
+      });
+
+      if (error) {
+        throw new Error(`Failed to stop generation: ${error.message}`);
+      }
       
     } catch (error) {
       console.error('Error stopping generation:', error);

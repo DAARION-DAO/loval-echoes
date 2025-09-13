@@ -107,7 +107,7 @@ export const ChatSidebar = () => {
       };
 
       setChats(prev => [chatData, ...prev]);
-      navigate(`/chat/${newChat.id}`);
+      navigate(`/chats/${newChat.id}`);
       toast({
         description: "Чат создан",
       });
@@ -247,7 +247,7 @@ export const ChatSidebar = () => {
             {filteredChats.map((chat) => (
               <div key={chat.id} className="group relative">
                 <NavLink
-                  to={`/chat/${chat.id}`}
+                  to={`/chats/${chat.id}`}
                   className={({ isActive }) => cn(
                     "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
                     isActive 
