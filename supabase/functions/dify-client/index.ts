@@ -171,12 +171,21 @@ serve(async (req) => {
     const difyClient = new DifyClient();
     const url = new URL(req.url);
     const action = url.searchParams.get('action');
+    let requestBody = {};
+    
+    if (req.method === 'POST') {
+      try {
+        requestBody = await req.json();
+      } catch (e) {
+        console.log('No JSON body to parse');
+      }
+    }
     
     console.log(`[dify-client] Action:`, action);
 
     switch (action) {
       case 'send_message': {
-        const { conversationId, query, files, chatId } = await req.json();
+        const { conversationId, query, files, chatId } = requestBody as any;
         
         // Start streaming response from Dify
         const response = await difyClient.sendMessageStream(conversationId, query, files);
@@ -236,7 +245,7 @@ serve(async (req) => {
       }
 
       case 'get_messages': {
-        const { conversationId, cursor } = await req.json();
+        const { conversationId, cursor } = requestBody as any;
         const response = await difyClient.getMessages(conversationId, cursor);
         const data = await response.json();
         
@@ -246,7 +255,7 @@ serve(async (req) => {
       }
 
       case 'stop_generation': {
-        const { taskId } = await req.json();
+        const { taskId } = requestBody as any;
         const response = await difyClient.stopGeneration(taskId);
         const data = await response.json();
         
@@ -256,7 +265,7 @@ serve(async (req) => {
       }
 
       case 'send_feedback': {
-        const { messageId, rating, content } = await req.json();
+        const { messageId, rating, content } = requestBody as any;
         const response = await difyClient.sendFeedback(messageId, rating, content);
         const data = await response.json();
         
@@ -276,7 +285,7 @@ serve(async (req) => {
       }
 
       case 'list_conversations': {
-        const { limit, cursor } = await req.json();
+        const { limit, cursor } = requestBody as any;
         const response = await difyClient.listConversations(limit, cursor);
         const data = await response.json();
         
@@ -286,7 +295,7 @@ serve(async (req) => {
       }
 
       case 'rename_conversation': {
-        const { conversationId, name } = await req.json();
+        const { conversationId, name } = requestBody as any;
         const response = await difyClient.renameConversation(conversationId, name);
         const data = await response.json();
         
@@ -296,7 +305,7 @@ serve(async (req) => {
       }
 
       case 'delete_conversation': {
-        const { conversationId } = await req.json();
+        const { conversationId } = requestBody as any;
         const response = await difyClient.deleteConversation(conversationId);
         const data = await response.json();
         

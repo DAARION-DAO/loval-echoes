@@ -1,10 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Search, Plus, Menu } from "lucide-react";
+import { Search, Plus, Menu, Home } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "@/lib/i18n";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 interface LayoutProps {
   sidebar: React.ReactNode;
@@ -14,6 +15,7 @@ interface LayoutProps {
 export function Layout({ sidebar, children }: LayoutProps) {
   const { user } = useAuth();
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
@@ -35,6 +37,14 @@ export function Layout({ sidebar, children }: LayoutProps) {
           </div>
           
           <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/')}
+              className="p-2"
+            >
+              <Home className="h-4 w-4" />
+            </Button>
             <Avatar className="h-8 w-8">
               <AvatarImage src={user?.user_metadata?.avatar_url} />
               <AvatarFallback>

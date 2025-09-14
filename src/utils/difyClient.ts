@@ -231,9 +231,8 @@ export class DifyClient {
       }
 
       // Отправляем сообщение к Dify API через edge function
-      const { data, error } = await supabase.functions.invoke('dify-client', {
+      const { data, error } = await supabase.functions.invoke('dify-client?action=send_message', {
         body: {
-          action: 'send_message',
           conversationId: conversation?.dify_conversation_id || null,
           query,
           files: files || [],
@@ -258,9 +257,8 @@ export class DifyClient {
       console.log('Stopping generation for task:', taskId);
       
       // Отправляем запрос остановки к Dify API
-      const { error } = await supabase.functions.invoke('dify-client', {
+      const { error } = await supabase.functions.invoke('dify-client?action=stop_generation', {
         body: {
-          action: 'stop_generation',
           taskId: taskId
         }
       });

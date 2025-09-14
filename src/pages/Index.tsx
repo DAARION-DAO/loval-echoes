@@ -2,6 +2,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '@/lib/i18n';
+import { CommunityChat } from '@/components/CommunityChat';
 
 const Index = () => {
   const { user, signOut } = useAuth();
@@ -31,29 +32,35 @@ const Index = () => {
           </Button>
         </div>
         
-        <div className="grid gap-4 md:gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          <div 
-            className="bg-card rounded-lg border p-6 hover:shadow-md transition-shadow cursor-pointer"
-            onClick={() => navigate('/chats')}
-          >
-            <h2 className="text-xl font-semibold mb-2">{t.chats.title}</h2>
-            <p className="text-muted-foreground">
-              Перейти к чатам общины и начать общение с агентом ЖОС
-            </p>
+        <div className="grid gap-6 lg:grid-cols-2">
+          <div className="space-y-4">
+            <div 
+              className="bg-card rounded-lg border p-6 hover:shadow-md transition-shadow cursor-pointer"
+              onClick={() => navigate('/chats')}
+            >
+              <h2 className="text-xl font-semibold mb-2">{t.chats.title}</h2>
+              <p className="text-muted-foreground">
+                Перейти к чатам общины и начать общение с агентом ЖОС
+              </p>
+            </div>
+            
+            <div className="bg-card rounded-lg border p-6 hover:shadow-md transition-shadow">
+              <h2 className="text-xl font-semibold mb-2">Принципы ЖОС</h2>
+              <p className="text-muted-foreground">
+                Изучить принципы живой операционной системы и духа общины
+              </p>
+            </div>
+            
+            <div className="bg-card rounded-lg border p-6 hover:shadow-md transition-shadow">
+              <h2 className="text-xl font-semibold mb-2">Настройки</h2>
+              <p className="text-muted-foreground">
+                Настроить профиль и параметры взаимодействия
+              </p>
+            </div>
           </div>
           
-          <div className="bg-card rounded-lg border p-6 hover:shadow-md transition-shadow">
-            <h2 className="text-xl font-semibold mb-2">Принципы ЖОС</h2>
-            <p className="text-muted-foreground">
-              Изучить принципы живой операционной системы и духа общины
-            </p>
-          </div>
-          
-          <div className="bg-card rounded-lg border p-6 hover:shadow-md transition-shadow">
-            <h2 className="text-xl font-semibold mb-2">Настройки</h2>
-            <p className="text-muted-foreground">
-              Настроить профиль и параметры взаимодействия
-            </p>
+          <div>
+            <CommunityChat />
           </div>
         </div>
       </div>
