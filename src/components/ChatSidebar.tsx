@@ -284,11 +284,11 @@ export const ChatSidebar = () => {
         ) : (
           <div className="space-y-1 py-2">
             {filteredChats.map((chat) => (
-              <div key={chat.id} className="group relative">
+              <div key={chat.id} className="group relative hover:bg-muted/20 rounded-lg transition-colors">
                 <NavLink
-                  to={`/chats/${chat.id}`}
+                  to={`/chat/${chat.id}`}
                   className={({ isActive }) => cn(
-                    "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
+                    "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors block",
                     isActive 
                       ? "bg-primary text-primary-foreground" 
                       : "hover:bg-muted"
@@ -308,7 +308,8 @@ export const ChatSidebar = () => {
                     <Button
                       size="sm" 
                       variant="ghost"
-                      className="absolute right-1 top-1 opacity-0 group-hover:opacity-100 h-8 w-8 p-0"
+                      className="absolute right-2 top-2 h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-muted z-10"
+                      onClick={(e) => e.preventDefault()}
                     >
                       <MoreHorizontal className="h-4 w-4" />
                     </Button>

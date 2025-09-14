@@ -10,6 +10,7 @@ import { difyClient, type DifyMessage } from '@/utils/difyClient';
 import { useDifyStream } from '@/hooks/useDifyStream';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 interface CommunityMessage {
   id: string;
@@ -23,27 +24,115 @@ interface CommunityMessage {
 export const CommunityChat = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { isStreaming, startStream, currentMessage } = useDifyStream('community-chat');
+  const [communityChat, setCommunityChat] = useState<{ id: string } | null>(null);
+  const { isStreaming, startStream, currentMessage } = useDifyStream(communityChat?.id || '');
   
   const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState<CommunityMessage[]>([
-    {
-      id: 'welcome',
-      content: 'Добро пожаловать в общий чат ЖОС! Здесь публикуются важные новости и объявления общины.',
-      sender_name: 'ЖОС Система',
-      created_at: new Date().toISOString(),
-      is_system: true,
-    },
-    {
-      id: 'news-1',
-      content: 'Обновление системы: Улучшена работа с диалогами и добавлена возможность архивирования чатов.',
-      sender_name: 'ЖОС Агент',
-      created_at: new Date(Date.now() - 3600000).toISOString(),
-      is_agent: true,
-    }
-  ]);
+  const [messages, setMessages] = useState<CommunityMessage[]>([]);
   const [onlineUsers] = useState(5); // Мок данные
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Создаем или получаем сообщественный чат
+  useEffect(() => {
+    const setupCommunityChat = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Проверяем существующий сообщественный чат
+        const { data: existingChats, error } = await supabase
+          .from('conversations')
+          .select('id, name')
+          .eq('name', 'Общий чат ЖОС')
+          .eq('is_group_chat', true)
+          .single();
+
+        if (existingChats && !error) {
+          setCommunityChat({ id: existingChats.id });
+          await loadChatHistory(existingChats.id);
+        } else {
+          // Создаем новый сообщественный чат
+          const { data: newChat, error: createError } = await supabase
+            .from('conversations')
+            .insert({
+              name: 'Общий чат ЖОС',
+              description: 'Общий чат сообщества с агентом ЖОС',
+              is_group_chat: true,
+              user_id: user?.id
+            })
+            .select('id')
+            .single();
+
+          if (createError) throw createError;
+          
+          setCommunityChat({ id: newChat.id });
+          
+          // Добавляем приветственные сообщения
+          await addWelcomeMessages(newChat.id);
+          await loadChatHistory(newChat.id);
+        }
+      } catch (error) {
+        console.error('Error setting up community chat:', error);
+        toast({
+          title: 'Ошибка',
+          description: 'Не удалось загрузить общий чат',
+          variant: 'destructive',
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (user) {
+      setupCommunityChat();
+    }
+  }, [user, toast]);
+
+  const addWelcomeMessages = async (chatId: string) => {
+    const welcomeMessages = [
+      {
+        conversation_id: chatId,
+        content: 'Добро пожаловать в общий чат ЖОС! Здесь публикуются важные новости и объявления общины.',
+        role: 'system',
+        sender_name: 'ЖОС Система',
+        message_type: 'text'
+      },
+      {
+        conversation_id: chatId,
+        content: 'Обновление системы: Улучшена работа с диалогами и добавлена возможность архивирования чатов.',
+        role: 'assistant',
+        sender_name: 'ЖОС Агент',
+        message_type: 'text'
+      }
+    ];
+
+    await supabase.from('messages').insert(welcomeMessages);
+  };
+
+  const loadChatHistory = async (chatId: string) => {
+    try {
+      const { data: dbMessages, error } = await supabase
+        .from('messages')
+        .select('id, content, sender_name, created_at, role')
+        .eq('conversation_id', chatId)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+
+      const formattedMessages: CommunityMessage[] = dbMessages.map(msg => ({
+        id: msg.id,
+        content: msg.content,
+        sender_name: msg.sender_name || 'Пользователь',
+        created_at: msg.created_at,
+        is_agent: msg.role === 'assistant',
+        is_system: msg.role === 'system'
+      }));
+
+      setMessages(formattedMessages);
+    } catch (error) {
+      console.error('Error loading chat history:', error);
+    }
+  };
 
   useEffect(() => {
     scrollToBottom();
@@ -54,7 +143,7 @@ export const CommunityChat = () => {
   };
 
   const handleSendMessage = async () => {
-    if (!message.trim() || isStreaming) return;
+    if (!message.trim() || isStreaming || !communityChat) return;
 
     const userMessage: CommunityMessage = {
       id: `user-${Date.now()}`,
@@ -66,7 +155,16 @@ export const CommunityChat = () => {
     setMessages(prev => [...prev, userMessage]);
 
     try {
-      // Создаем чат если его еще нет или используем существующий
+      // Сохраняем сообщение пользователя в базу данных
+      await supabase.from('messages').insert({
+        conversation_id: communityChat.id,
+        content: message,
+        role: 'user',
+        sender_name: userMessage.sender_name,
+        message_type: 'text'
+      });
+
+      // Отправляем сообщение агенту
       await startStream(message);
       setMessage('');
     } catch (error) {
@@ -105,6 +203,51 @@ export const CommunityChat = () => {
     }
     return 'bg-background';
   };
+
+  // Обработчик завершения потока для сохранения ответа агента
+  useEffect(() => {
+    if (currentMessage?.isComplete && communityChat) {
+      const saveAgentMessage = async () => {
+        try {
+          await supabase.from('messages').insert({
+            conversation_id: communityChat.id,
+            content: currentMessage.content,
+            role: 'assistant',
+            sender_name: 'ЖОС Агент',
+            message_type: 'text'
+          });
+
+          // Добавляем сообщение агента в локальное состояние
+          const agentMessage: CommunityMessage = {
+            id: `agent-${Date.now()}`,
+            content: currentMessage.content,
+            sender_name: 'ЖОС Агент',
+            created_at: new Date().toISOString(),
+            is_agent: true
+          };
+          
+          setMessages(prev => [...prev, agentMessage]);
+        } catch (error) {
+          console.error('Error saving agent message:', error);
+        }
+      };
+
+      saveAgentMessage();
+    }
+  }, [currentMessage?.isComplete, communityChat]);
+
+  if (isLoading) {
+    return (
+      <Card className="h-[600px] flex flex-col">
+        <CardContent className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+            <p className="text-muted-foreground">Загружаем общий чат...</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="h-[600px] flex flex-col">
