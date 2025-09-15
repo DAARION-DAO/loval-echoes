@@ -11,8 +11,7 @@ import {
   Settings,
   Folder,
   Video,
-  Files,
-  MessageSquare
+  Files
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -20,7 +19,6 @@ import {
   DropdownMenuTrigger,
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -28,7 +26,6 @@ import { useTranslation } from '@/lib/i18n';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
-import { difyClient } from '@/utils/difyClient';
 
 interface Chat {
   id: string;
@@ -46,8 +43,6 @@ export const ChatSidebar = () => {
   const [chats, setChats] = useState<Chat[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
-  const [onlineCount, setOnlineCount] = useState(3);
-  const [showAgentDialog, setShowAgentDialog] = useState(false);
 
   useEffect(() => {
     loadChats();
@@ -250,17 +245,9 @@ export const ChatSidebar = () => {
           <Button size="sm" onClick={handleCreateChat} className="shrink-0">
             <Plus className="h-4 w-4" />
           </Button>
-          <Button 
-            size="sm" 
-            variant="outline" 
-            onClick={() => setShowAgentDialog(true)}
-            className="shrink-0"
-          >
-            <MessageSquare className="h-4 w-4" />
-          </Button>
         </div>
         <div className="text-sm text-muted-foreground flex items-center gap-2">
-          <span>👥 {onlineCount}/12 онлайн</span>
+          <span>👥 3/12 онлайн</span>
         </div>
       </div>
 
@@ -286,7 +273,7 @@ export const ChatSidebar = () => {
             {filteredChats.map((chat) => (
               <div key={chat.id} className="group relative hover:bg-muted/20 rounded-lg transition-colors">
                 <NavLink
-                  to={`/chat/${chat.id}`}
+                  to={`/chats/${chat.id}`}
                   className={({ isActive }) => cn(
                     "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors block",
                     isActive 
@@ -308,7 +295,7 @@ export const ChatSidebar = () => {
                     <Button
                       size="sm" 
                       variant="ghost"
-                      className="absolute right-2 top-2 h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-muted z-10"
+                      className="absolute right-2 top-2 h-8 w-8 p-0 opacity-70 group-hover:opacity-100 transition-opacity duration-200 hover:bg-muted z-10"
                       onClick={(e) => e.preventDefault()}
                     >
                       <MoreHorizontal className="h-4 w-4" />
@@ -403,133 +390,6 @@ export const ChatSidebar = () => {
         </div>
       </div>
 
-      {/* Agent Chat Dialog */}
-      <AgentChatDialog 
-        open={showAgentDialog} 
-        onOpenChange={setShowAgentDialog} 
-      />
     </div>
-  );
-};
-
-interface AgentChatDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}
-
-const AgentChatDialog = ({ open, onOpenChange }: AgentChatDialogProps) => {
-  const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState<{ role: 'user' | 'agent'; content: string }[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
-
-  const handleSendMessage = async () => {
-    if (!message.trim() || isLoading) return;
-
-    const userMessage = { role: 'user' as const, content: message.trim() };
-    setMessages(prev => [...prev, userMessage]);
-    setMessage('');
-    setIsLoading(true);
-
-    try {
-      // Create a temporary chat for agent communication
-      const tempChat = await difyClient.createChat('Диалог с агентом');
-      
-      // Send message to Dify
-      await difyClient.sendMessage(tempChat.id, userMessage.content);
-      
-      // For now, add a placeholder response
-      setTimeout(() => {
-        setMessages(prev => [...prev, { 
-          role: 'agent', 
-          content: 'Агент получил ваше сообщение и обрабатывает его. Создан временный чат для продолжения диалога.' 
-        }]);
-        setIsLoading(false);
-      }, 1000);
-
-    } catch (error) {
-      console.error('Error sending message to agent:', error);
-      toast({
-        title: 'Ошибка',
-        description: 'Не удалось отправить сообщение агенту',
-        variant: 'destructive',
-      });
-      setIsLoading(false);
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
-        <DialogHeader>
-          <DialogTitle>Быстрый чат с ЖОС Агентом</DialogTitle>
-        </DialogHeader>
-        
-        <ScrollArea className="flex-1 pr-4 max-h-96">
-          <div className="space-y-4">
-            {messages.length === 0 && (
-              <div className="text-center text-muted-foreground py-8">
-                <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>Начните диалог с агентом</p>
-                <p className="text-xs mt-1">Для полноценного чата будет создан новый диалог</p>
-              </div>
-            )}
-            
-            {messages.map((msg, index) => (
-              <div 
-                key={index} 
-                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                <div 
-                  className={`max-w-[80%] px-4 py-2 rounded-lg ${
-                    msg.role === 'user' 
-                      ? 'bg-primary text-primary-foreground ml-4' 
-                      : 'bg-muted mr-4'
-                  }`}
-                >
-                  {msg.content}
-                </div>
-              </div>
-            ))}
-            
-            {isLoading && (
-              <div className="flex justify-start">
-                <div className="bg-muted px-4 py-2 rounded-lg mr-4">
-                  <div className="flex gap-1">
-                    <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" />
-                    <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
-                    <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </ScrollArea>
-        
-        <div className="flex gap-2 pt-4 border-t">
-          <Input
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Введите сообщение..."
-            className="flex-1"
-            disabled={isLoading}
-          />
-          <Button 
-            onClick={handleSendMessage} 
-            disabled={!message.trim() || isLoading}
-          >
-            Отправить
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
   );
 };
