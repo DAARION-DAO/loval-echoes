@@ -170,7 +170,7 @@ serve(async (req) => {
 
     const difyClient = new DifyClient();
     const url = new URL(req.url);
-    const action = url.searchParams.get('action');
+    const action = url.searchParams.get('action') || (requestBody as any)?.action;
     let requestBody = {};
     
     if (req.method === 'POST') {
@@ -185,7 +185,7 @@ serve(async (req) => {
 
     switch (action) {
       case 'send_message': {
-        const { conversationId, query, files, chatId } = requestBody as any;
+        const { conversationId, query, files, chatId, action } = requestBody as any;
         
         // Start streaming response from Dify
         const response = await difyClient.sendMessageStream(conversationId, query, files);

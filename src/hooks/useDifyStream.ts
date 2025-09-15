@@ -22,7 +22,7 @@ export interface StreamMessage {
   };
 }
 
-export const useDifyStream = (chatId: string) => {
+export const useDifyStream = (chatId: string | null) => {
   const [currentMessage, setCurrentMessage] = useState<StreamMessage | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -68,6 +68,12 @@ export const useDifyStream = (chatId: string) => {
   }, []);
 
   const startStream = useCallback(async (query: string, files?: string[]) => {
+    if (!chatId) {
+      console.error('Cannot start stream: chatId is null');
+      setError('Chat ID is required');
+      return;
+    }
+
     try {
       setError(null);
       setIsStreaming(true);
@@ -118,7 +124,7 @@ export const useDifyStream = (chatId: string) => {
     if (unsubscribeRef.current) {
       unsubscribeRef.current();
     }
-    if (isStreaming) {
+    if (isStreaming && chatId) {
       unsubscribeRef.current = difyClient.subscribeToChat(chatId, handleStreamData);
     }
   }, [chatId, isStreaming, handleStreamData]);

@@ -231,8 +231,9 @@ export class DifyClient {
       }
 
       // Отправляем сообщение к Dify API через edge function
-      const { data, error } = await supabase.functions.invoke('dify-client?action=send_message', {
+      const { data, error } = await supabase.functions.invoke('dify-client', {
         body: {
+          action: 'send_message',
           conversationId: conversation?.dify_conversation_id || null,
           query,
           files: files || [],

@@ -25,7 +25,7 @@ export const CommunityChat = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [communityChat, setCommunityChat] = useState<{ id: string } | null>(null);
-  const { isStreaming, startStream, currentMessage } = useDifyStream(communityChat?.id || '');
+  const { isStreaming, startStream, currentMessage } = useDifyStream(communityChat?.id || null);
   
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<CommunityMessage[]>([]);
