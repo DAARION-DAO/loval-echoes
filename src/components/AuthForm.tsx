@@ -13,6 +13,8 @@ export const AuthForm = () => {
   const { toast } = useToast();
   
   const [loading, setLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [showResendButton, setShowResendButton] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -105,9 +107,17 @@ export const AuthForm = () => {
 
       if (error) {
         if (error.message.includes('Invalid login credentials')) {
+          setShowResendButton(true);
           toast({
             title: t.error,
-            description: 'Неверный email или пароль',
+            description: 'Неверный email или пароль. Если вы недавно регистрировались, проверьте email и подтвердите аккаунт.',
+            variant: 'destructive',
+          });
+        } else if (error.message.includes('Email not confirmed')) {
+          setShowResendButton(true);
+          toast({
+            title: t.error,
+            description: 'Пожалуйста, подтвердите ваш email перед входом.',
             variant: 'destructive',
           });
         } else {
@@ -132,6 +142,49 @@ export const AuthForm = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResendConfirmation = async () => {
+    if (!formData.email) {
+      toast({
+        title: t.error,
+        description: 'Введите email для повторной отправки письма подтверждения',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setResendLoading(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: formData.email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`
+        }
+      });
+
+      if (error) {
+        toast({
+          title: t.error,
+          description: error.message,
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Письмо отправлено',
+          description: 'Проверьте email (включая папку "Спам") и перейдите по ссылке для подтверждения',
+        });
+      }
+    } catch (error) {
+      toast({
+        title: t.error,
+        description: 'Ошибка при отправке письма подтверждения',
+        variant: 'destructive',
+      });
+    } finally {
+      setResendLoading(false);
     }
   };
 
@@ -178,6 +231,24 @@ export const AuthForm = () => {
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? 'Вход...' : 'Войти'}
                 </Button>
+                
+                {showResendButton && (
+                  <div className="mt-4 p-3 bg-muted/50 rounded-lg border">
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Не можете войти? Возможно, нужно подтвердить email.
+                    </p>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm" 
+                      className="w-full"
+                      onClick={handleResendConfirmation}
+                      disabled={resendLoading}
+                    >
+                      {resendLoading ? 'Отправка...' : 'Отправить письмо подтверждения повторно'}
+                    </Button>
+                  </div>
+                )}
               </form>
             </TabsContent>
             
