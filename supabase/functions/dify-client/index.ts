@@ -170,9 +170,8 @@ serve(async (req) => {
 
     const difyClient = new DifyClient();
     const url = new URL(req.url);
-    const action = url.searchParams.get('action') || (requestBody as any)?.action;
-    let requestBody = {};
     
+    let requestBody = {};
     if (req.method === 'POST') {
       try {
         requestBody = await req.json();
@@ -180,6 +179,8 @@ serve(async (req) => {
         console.log('No JSON body to parse');
       }
     }
+    
+    const action = url.searchParams.get('action') || (requestBody as any)?.action;
     
     console.log(`[dify-client] Action:`, action);
 

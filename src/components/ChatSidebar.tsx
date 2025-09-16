@@ -295,7 +295,7 @@ export const ChatSidebar = () => {
                     <Button
                       size="sm" 
                       variant="ghost"
-                      className="absolute right-2 top-2 h-8 w-8 p-0 opacity-70 group-hover:opacity-100 transition-opacity duration-200 hover:bg-muted z-10"
+                      className="absolute right-2 top-2 h-8 w-8 p-0 opacity-100 hover:bg-muted z-10"
                       onClick={(e) => e.preventDefault()}
                     >
                       <MoreHorizontal className="h-4 w-4" />

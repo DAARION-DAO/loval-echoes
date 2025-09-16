@@ -38,6 +38,7 @@ export const CommunityChat = () => {
     const setupCommunityChat = async () => {
       try {
         setIsLoading(true);
+        console.log('[CommunityChat] Setting up community chat...');
         
         // Проверяем существующий сообщественный чат
         const { data: existingChats, error } = await supabase
@@ -48,9 +49,11 @@ export const CommunityChat = () => {
           .single();
 
         if (existingChats && !error) {
+          console.log('[CommunityChat] Found existing chat:', existingChats);
           setCommunityChat({ id: existingChats.id });
           await loadChatHistory(existingChats.id);
         } else {
+          console.log('[CommunityChat] Creating new community chat...');
           // Создаем новый сообщественный чат
           const { data: newChat, error: createError } = await supabase
             .from('conversations')
@@ -65,6 +68,7 @@ export const CommunityChat = () => {
 
           if (createError) throw createError;
           
+          console.log('[CommunityChat] Created new chat:', newChat);
           setCommunityChat({ id: newChat.id });
           
           // Добавляем приветственные сообщения
@@ -145,6 +149,8 @@ export const CommunityChat = () => {
   const handleSendMessage = async () => {
     if (!message.trim() || isStreaming || !communityChat) return;
 
+    console.log('[CommunityChat] Sending message:', message);
+
     const userMessage: CommunityMessage = {
       id: `user-${Date.now()}`,
       content: message,
@@ -164,7 +170,10 @@ export const CommunityChat = () => {
         message_type: 'text'
       });
 
+      console.log('[CommunityChat] Saved user message to DB');
+
       // Отправляем сообщение агенту
+      console.log('[CommunityChat] Starting stream to agent...');
       await startStream(message);
       setMessage('');
     } catch (error) {
@@ -207,6 +216,8 @@ export const CommunityChat = () => {
   // Обработчик завершения потока для сохранения ответа агента
   useEffect(() => {
     if (currentMessage?.isComplete && communityChat) {
+      console.log('[CommunityChat] Agent message complete, saving to DB:', currentMessage.content);
+      
       const saveAgentMessage = async () => {
         try {
           await supabase.from('messages').insert({
@@ -216,6 +227,8 @@ export const CommunityChat = () => {
             sender_name: 'ЖОС Агент',
             message_type: 'text'
           });
+
+          console.log('[CommunityChat] Saved agent message to DB');
 
           // Добавляем сообщение агента в локальное состояние
           const agentMessage: CommunityMessage = {

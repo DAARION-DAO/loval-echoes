@@ -237,8 +237,8 @@ export class DifyClient {
           conversationId: conversation?.dify_conversation_id || null,
           query,
           files: files || [],
-          chatId: chatId
-        }
+          chatId: chatId,
+        },
       });
 
       if (error) {
