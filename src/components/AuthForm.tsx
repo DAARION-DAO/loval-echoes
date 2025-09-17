@@ -14,7 +14,9 @@ export const AuthForm = () => {
   
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
   const [showResendButton, setShowResendButton] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -48,12 +50,17 @@ export const AuthForm = () => {
       });
 
       if (error) {
-        if (error.message.includes('User already registered')) {
+        if (error.message.includes('User already registered') || error.message.includes('already been registered')) {
           toast({
-            title: t.error,
-            description: 'Пользователь с таким email уже зарегистрирован. Попробуйте войти.',
+            title: 'Пользователь уже существует',
+            description: 'Этот email уже зарегистрирован. Перейдите на вкладку "Вход" для входа в систему.',
             variant: 'destructive',
           });
+          // Автоматически переключаем на вкладку входа
+          setTimeout(() => {
+            const signinTab = document.querySelector('[value="signin"]') as HTMLButtonElement;
+            if (signinTab) signinTab.click();
+          }, 2000);
         } else {
           toast({
             title: t.error,
@@ -108,16 +115,17 @@ export const AuthForm = () => {
       if (error) {
         if (error.message.includes('Invalid login credentials')) {
           setShowResendButton(true);
+          setShowForgotPassword(true);
           toast({
-            title: t.error,
-            description: 'Неверный email или пароль. Если вы недавно регистрировались, проверьте email и подтвердите аккаунт.',
+            title: 'Ошибка входа',
+            description: 'Неверный email или пароль. Если вы недавно регистрировались, подтвердите email. Если забыли пароль, воспользуйтесь восстановлением.',
             variant: 'destructive',
           });
         } else if (error.message.includes('Email not confirmed')) {
           setShowResendButton(true);
           toast({
-            title: t.error,
-            description: 'Пожалуйста, подтвердите ваш email перед входом.',
+            title: 'Email не подтвержден',
+            description: 'Пожалуйста, подтвердите ваш email перед входом. Проверьте почту и папку "Спам".',
             variant: 'destructive',
           });
         } else {
@@ -188,6 +196,46 @@ export const AuthForm = () => {
     }
   };
 
+  const handlePasswordReset = async () => {
+    if (!formData.email) {
+      toast({
+        title: t.error,
+        description: 'Введите email для восстановления пароля',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setResetLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(formData.email, {
+        redirectTo: `${window.location.origin}/auth?reset=true`
+      });
+
+      if (error) {
+        toast({
+          title: t.error,
+          description: error.message,
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Письмо отправлено',
+          description: 'Проверьте email. Мы отправили ссылку для восстановления пароля.',
+        });
+        setShowForgotPassword(false);
+      }
+    } catch (error) {
+      toast({
+        title: t.error,
+        description: 'Ошибка при отправке письма восстановления',
+        variant: 'destructive',
+      });
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted/20 p-4">
       <Card className="w-full max-w-md shadow-elegant">
@@ -232,6 +280,18 @@ export const AuthForm = () => {
                   {loading ? 'Вход...' : 'Войти'}
                 </Button>
                 
+                <div className="mt-4 flex justify-center">
+                  <Button 
+                    type="button" 
+                    variant="link" 
+                    size="sm" 
+                    onClick={() => setShowForgotPassword(true)}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    Забыли пароль?
+                  </Button>
+                </div>
+                
                 {showResendButton && (
                   <div className="mt-4 p-3 bg-muted/50 rounded-lg border">
                     <p className="text-sm text-muted-foreground mb-2">
@@ -241,12 +301,43 @@ export const AuthForm = () => {
                       type="button" 
                       variant="outline" 
                       size="sm" 
-                      className="w-full"
+                      className="w-full mb-2"
                       onClick={handleResendConfirmation}
                       disabled={resendLoading}
                     >
                       {resendLoading ? 'Отправка...' : 'Отправить письмо подтверждения повторно'}
                     </Button>
+                  </div>
+                )}
+                
+                {showForgotPassword && (
+                  <div className="mt-4 p-3 bg-muted/50 rounded-lg border">
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Восстановление пароля
+                    </p>
+                    <p className="text-xs text-muted-foreground mb-3">
+                      Мы отправим вам ссылку для создания нового пароля на указанный email.
+                    </p>
+                    <div className="flex gap-2">
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex-1"
+                        onClick={handlePasswordReset}
+                        disabled={resetLoading}
+                      >
+                        {resetLoading ? 'Отправка...' : 'Восстановить пароль'}
+                      </Button>
+                      <Button 
+                        type="button" 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => setShowForgotPassword(false)}
+                      >
+                        Отмена
+                      </Button>
+                    </div>
                   </div>
                 )}
               </form>
