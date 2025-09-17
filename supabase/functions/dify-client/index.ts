@@ -200,6 +200,9 @@ serve(async (req) => {
         let buffer = '';
         let actualConversationId = conversationId;
 
+        let completeMessage = '';
+        let messageId = '';
+        
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
@@ -223,6 +226,26 @@ serve(async (req) => {
                     .from('conversations')
                     .update({ dify_conversation_id: actualConversationId })
                     .eq('id', chatId);
+                }
+
+                // Accumulate agent response
+                if (data.event === 'message' || data.event === 'agent_message') {
+                  completeMessage += data.answer || '';
+                  messageId = data.message_id || data.id;
+                }
+
+                // Save complete response to database when finished
+                if (data.event === 'message_end' && completeMessage) {
+                  console.log('Saving agent response to database:', completeMessage);
+                  
+                  await supabase
+                    .from('messages')
+                    .insert({
+                      conversation_id: chatId,
+                      content: completeMessage,
+                      role: 'assistant',
+                      sender_name: 'ЖОС',
+                    });
                 }
 
                 // Broadcast to all clients via Supabase Realtime

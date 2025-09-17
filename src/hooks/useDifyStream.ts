@@ -41,6 +41,21 @@ export const useDifyStream = (chatId: string | null) => {
           metadata: prev?.metadata,
         }));
         break;
+        
+      case 'agent_message':
+        // Дополнительная обработка ответов агента
+        setCurrentMessage(prev => ({
+          id: data.id || prev?.id || 'temp',
+          content: (prev?.content || '') + (data.answer || ''),
+          isComplete: false,
+          metadata: prev?.metadata,
+        }));
+        break;
+        
+      case 'agent_thought':
+        // Обработка мыслей агента (обычно игнорируем, но логируем)
+        console.log('Agent thought:', data.thought);
+        break;
 
       case 'message_end':
         // Окончание ответа с метаданными
@@ -63,7 +78,7 @@ export const useDifyStream = (chatId: string | null) => {
         break;
 
       default:
-        console.log('Unknown stream event:', data.event);
+        console.log('Unknown stream event:', data.event, data);
     }
   }, []);
 

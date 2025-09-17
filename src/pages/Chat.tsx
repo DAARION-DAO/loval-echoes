@@ -11,6 +11,7 @@ import { useTranslation } from '@/lib/i18n';
 import { difyClient, type DifyMessage, type Chat } from '@/utils/difyClient';
 import { useDifyStream } from '@/hooks/useDifyStream';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 export const ChatPage = () => {
   const { chatId } = useParams<{ chatId: string }>();
@@ -22,7 +23,7 @@ export const ChatPage = () => {
   const [chat, setChat] = useState<Chat | null>(null);
   const [messages, setMessages] = useState<DifyMessage[]>([]);
   const [loading, setLoading] = useState(true);
-  const [onlineUsers] = useState(['user1', 'user2', 'current']); // Мок данные
+  const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -32,11 +33,86 @@ export const ChatPage = () => {
     }
     
     loadChatData();
+    setupRealTimePresence();
   }, [chatId]);
+
+  const setupRealTimePresence = () => {
+    if (!chatId) return;
+
+    const channel = supabase.channel(`presence-chat-${chatId}`, {
+      config: {
+        presence: {
+          key: chatId,
+        },
+      },
+    });
+
+    // Получаем текущего пользователя
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        const userInfo = {
+          user_id: user.id,
+          user_name: user.user_metadata?.display_name || user.email?.split('@')[0] || 'Пользователь',
+          online_at: new Date().toISOString(),
+        };
+
+        channel
+          .on('presence', { event: 'sync' }, () => {
+            const presenceState = channel.presenceState();
+            const users: string[] = [];
+            Object.keys(presenceState).forEach(key => {
+              const presences = presenceState[key];
+              presences.forEach((presence: any) => {
+                if (presence.user_name) {
+                  users.push(presence.user_name);
+                }
+              });
+            });
+            setOnlineUsers(users);
+          })
+          .on('presence', { event: 'join' }, ({ newPresences }) => {
+            console.log('User joined:', newPresences);
+          })
+          .on('presence', { event: 'leave' }, ({ leftPresences }) => {
+            console.log('User left:', leftPresences);
+          })
+          .subscribe(async (status) => {
+            if (status === 'SUBSCRIBED') {
+              await channel.track(userInfo);
+            }
+          });
+      }
+    });
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  };
 
   useEffect(() => {
     scrollToBottom();
   }, [messages, currentMessage]);
+
+  // Обработка завершенного сообщения агента
+  useEffect(() => {
+    if (currentMessage?.isComplete && currentMessage.content.trim()) {
+      // Добавляем завершенное сообщение в список
+      const agentMessage: DifyMessage = {
+        id: currentMessage.id,
+        conversation_id: chatId || '',
+        query: '',
+        answer: currentMessage.content,
+        created_at: new Date().toISOString(),
+        metadata: currentMessage.metadata,
+      };
+      
+      setMessages(prev => [...prev, agentMessage]);
+      // Очищаем текущее сообщение после добавления в список
+      setTimeout(() => {
+        // Небольшая задержка чтобы пользователь увидел что сообщение добавлено
+      }, 100);
+    }
+  }, [currentMessage?.isComplete, currentMessage?.content, chatId]);
 
   const loadChatData = async () => {
     if (!chatId) return;
