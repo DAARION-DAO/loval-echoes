@@ -188,6 +188,22 @@ serve(async (req) => {
       case 'send_message': {
         const { conversationId, query, files, chatId, action } = requestBody as any;
         
+        console.log('Processing send_message:', { chatId, conversationId, query: query.substring(0, 50) });
+        
+        // First, save user message to database
+        try {
+          await supabase
+            .from('messages')
+            .insert({
+              conversation_id: chatId,
+              content: query,
+              role: 'user',
+            });
+          console.log('User message saved to database');
+        } catch (dbError) {
+          console.error('Error saving user message:', dbError);
+        }
+        
         // Start streaming response from Dify
         const response = await difyClient.sendMessageStream(conversationId, query, files);
         
@@ -249,12 +265,17 @@ serve(async (req) => {
                 }
 
                 // Broadcast to all clients via Supabase Realtime
-                const channel = supabase.channel(`chat:${chatId}`);
-                await channel.send({
-                  type: 'broadcast',
-                  event: 'dify_stream',
-                  payload: data,
-                });
+                try {
+                  const channel = supabase.channel(`chat:${chatId}`);
+                  await channel.subscribe();
+                  await channel.send({
+                    type: 'broadcast',
+                    event: 'dify_stream',
+                    payload: data,
+                  });
+                } catch (broadcastError) {
+                  console.error('Broadcast error:', broadcastError);
+                }
 
               } catch (e) {
                 console.error('Error parsing SSE data:', e);

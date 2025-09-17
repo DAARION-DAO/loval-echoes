@@ -282,15 +282,19 @@ export const ChatPage = () => {
           <div className="flex items-center gap-2">
             <Badge variant="secondary" className="flex items-center gap-1">
               <Users className="h-3 w-3" />
-              {onlineUsers.length}{t.presence.limit}
+              {onlineUsers.length} онлайн
             </Badge>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handlePauseNode}
+              className="flex items-center gap-1"
+            >
+              <AlertTriangle className="h-3 w-3" />
+              Пауза/Узел
+            </Button>
           </div>
         </div>
-      </div>
-
-      {/* ЖОС баннер */}
-      <div className="p-4 border-b">
-        <ZhosBanner onPauseNode={handlePauseNode} />
       </div>
 
       {/* Лента сообщений */}

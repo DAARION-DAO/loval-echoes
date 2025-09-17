@@ -43,10 +43,40 @@ export const ChatSidebar = () => {
   const [chats, setChats] = useState<Chat[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
+  const [onlineUsers, setOnlineUsers] = useState(0);
 
   useEffect(() => {
     loadChats();
+    loadOnlineUsers();
   }, []);
+
+  const loadOnlineUsers = async () => {
+    try {
+      // Get recent messages from last 5 minutes to determine active users
+      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+      
+      const { data: recentMessages, error } = await supabase
+        .from('messages')
+        .select('sender_name')
+        .gte('created_at', fiveMinutesAgo)
+        .not('sender_name', 'is', null);
+        
+      if (error) {
+        console.error('Error loading online users:', error);
+        return;
+      }
+      
+      // Count unique active users (excluding agent)
+      const uniqueUsers = new Set(
+        recentMessages?.filter(m => m.sender_name && m.sender_name !== 'ЖОС')
+          .map(m => m.sender_name) || []
+      );
+      
+      setOnlineUsers(uniqueUsers.size);
+    } catch (error) {
+      console.error('Error loading online users:', error);
+    }
+  };
 
   const loadChats = async () => {
     try {
@@ -247,7 +277,7 @@ export const ChatSidebar = () => {
           </Button>
         </div>
         <div className="text-sm text-muted-foreground flex items-center gap-2">
-          <span>👥 3/12 онлайн</span>
+          <span>👥 {onlineUsers}/12 онлайн</span>
         </div>
       </div>
 
@@ -295,7 +325,7 @@ export const ChatSidebar = () => {
                     <Button
                       size="sm" 
                       variant="ghost"
-                      className="absolute right-2 top-2 h-8 w-8 p-0 opacity-60 group-hover:opacity-100 hover:bg-muted z-10 transition-opacity"
+                      className="absolute right-2 top-2 h-8 w-8 p-0 opacity-100 hover:bg-muted z-10"
                       onClick={(e) => e.preventDefault()}
                     >
                       <MoreHorizontal className="h-4 w-4" />
