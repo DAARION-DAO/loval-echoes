@@ -31,6 +31,7 @@ interface MessageBubbleProps {
   message: DifyMessage;
   isAgent?: boolean;
   isSystem?: boolean;
+  senderName?: string;
   onFork?: (messageId: string) => void;
   onReport?: (messageId: string) => void;
 }
@@ -39,6 +40,7 @@ export const MessageBubble = ({
   message, 
   isAgent = false, 
   isSystem = false,
+  senderName,
   onFork,
   onReport 
 }: MessageBubbleProps) => {
@@ -180,7 +182,7 @@ export const MessageBubble = ({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-2">
             <span className="font-medium text-sm">
-              {isSystem ? 'Система' : isAgent ? 'ЖОС Агент' : 'Участник'}
+              {isSystem ? 'Система' : isAgent ? 'ЖОС Агент' : (senderName || 'Участник')}
             </span>
             <span className="text-xs text-muted-foreground">
               {new Date(message.created_at).toLocaleTimeString()}

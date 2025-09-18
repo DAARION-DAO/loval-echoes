@@ -325,7 +325,7 @@ export const ChatSidebar = () => {
                     <Button
                       size="sm" 
                       variant="ghost"
-                      className="absolute right-2 top-2 h-8 w-8 p-0 opacity-100 hover:bg-muted z-10"
+                      className="absolute right-2 top-2 h-8 w-8 p-0 opacity-100 hover:bg-accent hover:text-accent-foreground z-20 bg-background/80 backdrop-blur-sm border border-border/40"
                       onClick={(e) => e.preventDefault()}
                     >
                       <MoreHorizontal className="h-4 w-4" />
@@ -350,8 +350,12 @@ export const ChatSidebar = () => {
                       В архив
                     </DropdownMenuItem>
                     <DropdownMenuItem 
-                      onClick={() => handleDeleteChat(chat.id)}
-                      className="text-destructive"
+                      onClick={() => {
+                        if (window.confirm(`Вы уверены, что хотите удалить чат "${chat.name}"? Это действие нельзя отменить.`)) {
+                          handleDeleteChat(chat.id);
+                        }
+                      }}
+                      className="text-destructive focus:text-destructive"
                     >
                       <Trash2 className="h-4 w-4 mr-2" />
                       Удалить

@@ -192,12 +192,18 @@ serve(async (req) => {
         
         // First, save user message to database
         try {
+          const { data: userSession } = await supabase.auth.getUser();
+          const userDisplayName = userSession?.user?.user_metadata?.display_name || 
+                                   userSession?.user?.email?.split('@')[0] || 
+                                   'Пользователь';
+          
           await supabase
             .from('messages')
             .insert({
               conversation_id: chatId,
               content: query,
               role: 'user',
+              sender_name: userDisplayName,
             });
           console.log('User message saved to database');
         } catch (dbError) {
@@ -273,6 +279,7 @@ serve(async (req) => {
                     event: 'dify_stream',
                     payload: data,
                   });
+                  await channel.unsubscribe();
                 } catch (broadcastError) {
                   console.error('Broadcast error:', broadcastError);
                 }

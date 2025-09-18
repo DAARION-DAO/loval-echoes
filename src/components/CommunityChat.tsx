@@ -29,11 +29,39 @@ export const CommunityChat = () => {
   
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<CommunityMessage[]>([]);
-  const [onlineUsers] = useState(5); // Мок данные
+  const [onlineUsers, setOnlineUsers] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   // Создаем или получаем сообщественный чат
+  const loadGlobalOnlineUsers = async () => {
+    try {
+      // Получаем пользователей, которые были активны в последние 5 минут
+      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+      
+      const { data: recentMessages, error } = await supabase
+        .from('messages')
+        .select('sender_name')
+        .gte('created_at', fiveMinutesAgo)
+        .not('sender_name', 'is', null);
+        
+      if (error) {
+        console.error('Error loading global online users:', error);
+        return;
+      }
+      
+      // Подсчитываем уникальных активных пользователей (исключая агента)
+      const uniqueUsers = new Set(
+        recentMessages?.filter(m => m.sender_name && !m.sender_name.includes('ЖОС'))
+          .map(m => m.sender_name) || []
+      );
+      
+      setOnlineUsers(uniqueUsers.size);
+    } catch (error) {
+      console.error('Error loading global online users:', error);
+    }
+  };
+
   useEffect(() => {
     const setupCommunityChat = async () => {
       try {
@@ -89,6 +117,11 @@ export const CommunityChat = () => {
 
     if (user) {
       setupCommunityChat();
+      loadGlobalOnlineUsers();
+      
+      // Обновляем активность каждую минуту
+      const interval = setInterval(loadGlobalOnlineUsers, 60000);
+      return () => clearInterval(interval);
     }
   }, [user, toast]);
 
