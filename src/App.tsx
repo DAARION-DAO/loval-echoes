@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { ChatsPage } from "./pages/Chats";
+import { ChatsManagement } from "./pages/ChatsManagement";
 import { ChatPage } from "./pages/Chat";
 import { Auth } from "./pages/Auth";
 import NotFound from "./pages/NotFound";
@@ -37,6 +38,7 @@ const ProtectedLayout = () => {
       <Routes>
         <Route path="/" element={<NewIndex />} />
         <Route path="/chats" element={<ChatsPage />} />
+        <Route path="/chats/manage" element={<ChatsManagement />} />
         <Route path="/chats/:chatId" element={<ChatPage />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="*" element={<NotFound />} />

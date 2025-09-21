@@ -34,6 +34,7 @@ export const ChatPage = () => {
     
     loadChatData();
     setupRealTimePresence();
+    setupRealTimeMessages();
   }, [chatId]);
 
   const setupRealTimePresence = () => {
@@ -86,6 +87,47 @@ export const ChatPage = () => {
 
     return () => {
       supabase.removeChannel(channel);
+    };
+  };
+
+  const setupRealTimeMessages = () => {
+    if (!chatId) return;
+
+    const messagesChannel = supabase
+      .channel(`messages-${chatId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `conversation_id=eq.${chatId}`,
+        },
+        (payload) => {
+          console.log('New message received:', payload.new);
+          const newMessage = payload.new as any;
+          
+          const difyMessage: DifyMessage = {
+            id: newMessage.id,
+            conversation_id: newMessage.conversation_id,
+            query: newMessage.role === 'user' ? newMessage.content : '',
+            answer: newMessage.role === 'assistant' ? newMessage.content : '',
+            created_at: newMessage.created_at,
+            sender_name: newMessage.sender_name,
+          };
+
+          setMessages(prev => {
+            // Избегаем дублирования сообщений
+            const exists = prev.some(msg => msg.id === difyMessage.id);
+            if (exists) return prev;
+            return [...prev, difyMessage];
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(messagesChannel);
     };
   };
 
@@ -342,17 +384,8 @@ export const ChatPage = () => {
       <ChatInterface
         chatId={chatId || ''}
         onMessageSent={(userMessage) => {
-          // Добавляем пользовательское сообщение сразу в список
-          if (userMessage) {
-            const newUserMessage: DifyMessage = {
-              id: `user-${Date.now()}`,
-              conversation_id: chatId || '',
-              query: userMessage,
-              answer: '',
-              created_at: new Date().toISOString(),
-            };
-            setMessages(prev => [...prev, newUserMessage]);
-          }
+          // Пользовательские сообщения теперь появляются через Realtime подписку
+          // Не нужно добавлять их в локальный стейт вручную
         }}
       />
     </div>

@@ -5,6 +5,7 @@ export interface DifyMessage {
   conversation_id: string;
   query: string;
   answer: string;
+  sender_name?: string;
   feedback?: {
     rating: 'like' | 'dislike';
     content?: string;
@@ -182,6 +183,7 @@ export class DifyClient {
         conversation_id: msg.conversation_id,
         query: msg.role === 'user' ? msg.content : '',
         answer: msg.role === 'assistant' ? msg.content : '',
+        sender_name: msg.sender_name,
         created_at: msg.created_at,
       }));
 
