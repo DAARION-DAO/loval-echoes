@@ -44,6 +44,7 @@ export async function createChat(name: string): Promise<ChatLite> {
     throw new Error('You must be logged in to create a chat');
   }
 
+  // Create conversation
   const { data: newChat, error } = await supabase
     .from('conversations')
     .insert({
@@ -58,7 +59,23 @@ export async function createChat(name: string): Promise<ChatLite> {
     throw new Error(`Failed to create chat: ${error.message}`);
   }
 
-  console.log('Created chat:', newChat);
+  // Add user as conversation participant (required for RLS policies)
+  const { error: participantError } = await supabase
+    .from('conversation_participants')
+    .insert({
+      conversation_id: newChat.id,
+      user_id: user.id,
+      role: 'owner'
+    });
+
+  if (participantError) {
+    console.error('Error adding user as participant:', participantError);
+    // Try to clean up the conversation if participant insertion failed
+    await supabase.from('conversations').delete().eq('id', newChat.id);
+    throw new Error(`Failed to create chat: ${participantError.message}`);
+  }
+
+  console.log('Created chat with participant:', newChat);
 
   return {
     id: newChat.id,
