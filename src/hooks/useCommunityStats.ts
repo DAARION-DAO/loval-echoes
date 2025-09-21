@@ -1,0 +1,68 @@
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+
+interface CommunityStats {
+  totalUsers: number;
+  onlineUsers: number;
+  totalChats: number;
+  todayMessages: number;
+  isLoading: boolean;
+}
+
+export const useCommunityStats = () => {
+  const [stats, setStats] = useState<CommunityStats>({
+    totalUsers: 0,
+    onlineUsers: 0,
+    totalChats: 0,
+    todayMessages: 0,
+    isLoading: true
+  });
+
+  const loadStats = async () => {
+    try {
+      const now = new Date();
+      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+
+      // Параллельно получаем все статистики
+      const [profilesResult, chatsResult, messagesResult, onlineResult] = await Promise.all([
+        // Общее количество пользователей
+        supabase.from('profiles').select('id', { count: 'exact', head: true }),
+        // Общее количество чатов (не архивированных)
+        supabase.from('conversations').select('id', { count: 'exact', head: true }).eq('is_archived', false),
+        // Сообщения за сегодня
+        supabase.from('messages').select('id', { count: 'exact', head: true }).gte('created_at', todayStart),
+        // Активные пользователи (по сообщениям за последние 5 минут)
+        supabase.from('messages').select('sender_name').gte('created_at', fiveMinutesAgo).not('sender_name', 'is', null)
+      ]);
+
+      // Подсчитываем уникальных онлайн пользователей (исключая агента)
+      const uniqueOnlineUsers = new Set(
+        (onlineResult.data || [])
+          .filter(m => m.sender_name && !m.sender_name.includes('ЖОС'))
+          .map(m => m.sender_name)
+      );
+
+      setStats({
+        totalUsers: profilesResult.count || 0,
+        onlineUsers: uniqueOnlineUsers.size,
+        totalChats: chatsResult.count || 0,
+        todayMessages: messagesResult.count || 0,
+        isLoading: false
+      });
+    } catch (error) {
+      console.error('Error loading community stats:', error);
+      setStats(prev => ({ ...prev, isLoading: false }));
+    }
+  };
+
+  useEffect(() => {
+    loadStats();
+    
+    // Обновляем статистику каждые 30 секунд
+    const interval = setInterval(loadStats, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return { stats, loadStats };
+};

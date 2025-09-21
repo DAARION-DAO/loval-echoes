@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,6 +18,7 @@ import { CreateModal, CreateFormData } from '@/components/CreateModal';
 import { GlobalSearchDialog } from '@/components/GlobalSearchDialog';
 import { useTranslation } from '@/lib/i18n';
 import { useAuth } from '@/hooks/useAuth';
+import { useCommunityStats } from '@/hooks/useCommunityStats';
 import { toast } from '@/hooks/use-toast';
 import { createChat } from '@/services/chats';
 
@@ -25,6 +26,7 @@ export const NewIndex = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { stats } = useCommunityStats();
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [searchDialogOpen, setSearchDialogOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
@@ -195,18 +197,30 @@ export const NewIndex = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <div className="text-center">
-                <div className="text-2xl font-bold text-primary">12</div>
-                <div className="text-sm text-muted-foreground">Активных участников</div>
+                <div className="text-2xl font-bold text-primary">
+                  {stats.isLoading ? '...' : stats.onlineUsers}
+                </div>
+                <div className="text-sm text-muted-foreground">Сейчас онлайн</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-primary">5</div>
-                <div className="text-sm text-muted-foreground">Открытых чатов</div>
+                <div className="text-2xl font-bold text-primary">
+                  {stats.isLoading ? '...' : stats.totalUsers}
+                </div>
+                <div className="text-sm text-muted-foreground">Всего участников</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-primary">2</div>
-                <div className="text-sm text-muted-foreground">Активных проектов</div>
+                <div className="text-2xl font-bold text-primary">
+                  {stats.isLoading ? '...' : stats.totalChats}
+                </div>
+                <div className="text-sm text-muted-foreground">Активных чатов</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-primary">
+                  {stats.isLoading ? '...' : stats.todayMessages}
+                </div>
+                <div className="text-sm text-muted-foreground">Сообщений сегодня</div>
               </div>
             </div>
           </CardContent>

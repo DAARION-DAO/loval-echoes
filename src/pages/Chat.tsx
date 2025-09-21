@@ -341,9 +341,18 @@ export const ChatPage = () => {
       {/* Интерфейс ввода */}
       <ChatInterface
         chatId={chatId || ''}
-        onMessageSent={() => {
-          // Обновляем список сообщений после отправки
-          // Сообщения будут обновлены через стрим
+        onMessageSent={(userMessage) => {
+          // Добавляем пользовательское сообщение сразу в список
+          if (userMessage) {
+            const newUserMessage: DifyMessage = {
+              id: `user-${Date.now()}`,
+              conversation_id: chatId || '',
+              query: userMessage,
+              answer: '',
+              created_at: new Date().toISOString(),
+            };
+            setMessages(prev => [...prev, newUserMessage]);
+          }
         }}
       />
     </div>

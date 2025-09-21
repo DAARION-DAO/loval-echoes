@@ -296,16 +296,6 @@ export const MessageBubble = ({
               <GitBranch className="h-3 w-3 mr-1" />
               {t.messages.fork}
             </Button>
-
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onReport?.(message.id)}
-              className="h-7 px-2 text-xs text-destructive hover:text-destructive"
-            >
-              <Flag className="h-3 w-3 mr-1" />
-              {t.messages.report}
-            </Button>
           </div>
         </div>
       </div>

@@ -20,7 +20,7 @@ import { useToast } from '@/hooks/use-toast';
 
 interface ChatInterfaceProps {
   chatId: string;
-  onMessageSent?: () => void;
+  onMessageSent?: (message: string) => void;
 }
 
 export const ChatInterface = ({ chatId, onMessageSent }: ChatInterfaceProps) => {
@@ -70,13 +70,15 @@ export const ChatInterface = ({ chatId, onMessageSent }: ChatInterfaceProps) => 
         }
       }
 
+      // Уведомляем о сообщении перед отправкой
+      onMessageSent?.(message);
+      
       // Отправляем сообщение
       await startStream(message, fileIds);
       
       // Очищаем форму
       setMessage('');
       setAttachedFiles([]);
-      onMessageSent?.();
       
     } catch (error) {
       console.error('Error sending message:', error);
