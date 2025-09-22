@@ -118,13 +118,18 @@ export const ChatSidebar = () => {
 
   const handleCreateChat = async () => {
     try {
+      console.log('Creating chat...');
       const { data: { user }, error: authError } = await supabase.auth.getUser();
       
       if (authError || !user) {
+        console.error('Authentication error:', authError);
         throw new Error('You must be logged in to create a chat');
       }
 
+      console.log('Authenticated user for chat creation:', user.id);
+
       // Create conversation
+      console.log('Inserting conversation into database...');
       const { data: newChat, error } = await supabase
         .from('conversations')
         .insert({
@@ -135,10 +140,14 @@ export const ChatSidebar = () => {
         .single();
 
       if (error) {
+        console.error('Error creating conversation:', error);
         throw new Error(`Failed to create chat: ${error.message}`);
       }
 
+      console.log('Conversation created successfully:', newChat);
+
       // Add user as conversation participant (required for RLS policies)
+      console.log('Adding user as participant...');
       const { error: participantError } = await supabase
         .from('conversation_participants')
         .insert({
@@ -154,6 +163,8 @@ export const ChatSidebar = () => {
         throw new Error(`Failed to create chat: ${participantError.message}`);
       }
 
+      console.log('Participant added successfully');
+
       const chatData = {
         id: newChat.id,
         name: newChat.name,
@@ -161,6 +172,7 @@ export const ChatSidebar = () => {
       };
 
       setChats(prev => [chatData, ...prev]);
+      console.log('Chat added to local state, navigating to chat:', newChat.id);
       navigate(`/chats/${newChat.id}`);
       toast({
         description: "Чат создан",
@@ -169,7 +181,7 @@ export const ChatSidebar = () => {
       console.error("Error creating chat:", error);
       toast({
         title: "Ошибка",
-        description: "Не удалось создать чат",
+        description: error instanceof Error ? error.message : "Не удалось создать чат",
         variant: "destructive",
       });
     }

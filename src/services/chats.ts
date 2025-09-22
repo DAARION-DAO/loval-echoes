@@ -44,7 +44,10 @@ export async function createChat(name: string): Promise<ChatLite> {
     throw new Error('You must be logged in to create a chat');
   }
 
+  console.log('Authenticated user for chat creation:', user.id);
+
   // Create conversation
+  console.log('Inserting conversation into database...');
   const { data: newChat, error } = await supabase
     .from('conversations')
     .insert({
@@ -59,7 +62,10 @@ export async function createChat(name: string): Promise<ChatLite> {
     throw new Error(`Failed to create chat: ${error.message}`);
   }
 
+  console.log('Conversation created successfully:', newChat);
+
   // Add user as conversation participant (required for RLS policies)
+  console.log('Adding participant to conversation...');
   const { error: participantError } = await supabase
     .from('conversation_participants')
     .insert({
