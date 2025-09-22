@@ -11,7 +11,8 @@ import {
   Settings,
   Folder,
   Video,
-  Files
+  Files,
+  Users
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -26,6 +27,8 @@ import { useTranslation } from '@/lib/i18n';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
+import { Badge } from '@/components/ui/badge';
+import { usePendingApprovals } from '@/hooks/usePendingApprovals';
 
 interface Chat {
   id: string;
@@ -39,6 +42,7 @@ export const ChatSidebar = () => {
   const location = useLocation();
   const { t } = useTranslation();
   const { toast } = useToast();
+  const { pendingCount } = usePendingApprovals();
   
   const [chats, setChats] = useState<Chat[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -344,6 +348,24 @@ export const ChatSidebar = () => {
       {/* Navigation sections */}
       <div className="border-t mt-auto">
         <div className="p-2 space-y-1">
+          <NavLink
+            to="/participants"
+            className={({ isActive }) => cn(
+              "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors relative",
+              isActive ? "bg-muted" : "hover:bg-muted/50"
+            )}
+          >
+            <Users className="h-4 w-4" />
+            Участники
+            {pendingCount > 0 && (
+              <Badge 
+                variant="destructive" 
+                className="ml-auto h-5 px-2 text-xs"
+              >
+                {pendingCount}
+              </Badge>
+            )}
+          </NavLink>
           <NavLink
             to="/chats"
             className={({ isActive }) => cn(
