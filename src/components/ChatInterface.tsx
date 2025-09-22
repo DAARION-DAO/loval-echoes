@@ -172,20 +172,41 @@ export const ChatInterface = ({ chatId, onMessageSent }: ChatInterfaceProps) => 
             const transcribedText = result.text.trim();
             setMessage(prev => prev + (prev ? ' ' : '') + transcribedText);
             
+            toast({
+              title: 'Голос распознан',
+              description: 'Отправляем сообщение...',
+            });
+            
             // Автоматически отправляем голосовое сообщение
             setTimeout(() => {
               if (transcribedText) {
                 handleSendMessage();
               }
-            }, 500); // Небольшая задержка чтобы пользователь увидел текст
+            }, 500);
+          } else {
+            toast({
+              title: 'Голос не распознан',
+              description: 'Попробуйте говорить четче или проверьте микрофон',
+              variant: 'destructive',
+            });
           }
         } catch (error) {
           console.error('Error transcribing audio:', error);
-          toast({
-            title: t.error,
-            description: error instanceof Error ? error.message : t.errors.unknownError,
-            variant: 'destructive',
-          });
+          const errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';
+          
+          if (errorMessage.includes('Speech to text is not enabled')) {
+            toast({
+              title: 'Голосовой ввод недоступен',
+              description: 'В настоящий момент функция преобразования речи в текст отключена. Используйте текстовый ввод.',
+              variant: 'destructive',
+            });
+          } else {
+            toast({
+              title: 'Ошибка голосового ввода',
+              description: 'Не удалось распознать речь. Попробуйте еще раз.',
+              variant: 'destructive',
+            });
+          }
         }
         
         // Останавливаем stream
