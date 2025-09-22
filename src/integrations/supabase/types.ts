@@ -288,11 +288,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_conversation_participant_profiles: {
+        Args: { requesting_user_id: string }
+        Returns: {
+          user_id: string
+        }[]
+      }
       get_user_conversations: {
         Args: { user_id: string }
         Returns: {
           conversation_id: string
         }[]
+      }
+      is_admin: {
+        Args: { user_id: string }
+        Returns: boolean
       }
       is_conversation_participant: {
         Args: { conversation_id: string; user_id: string }

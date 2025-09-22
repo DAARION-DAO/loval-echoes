@@ -81,15 +81,42 @@ export const useUserProfile = () => {
     if (!user) throw new Error('User not authenticated');
 
     try {
+      // Client-side validation first
+      const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+      const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+      
+      if (file.size > MAX_SIZE) {
+        throw new Error('Файл слишком большой. Максимальный размер: 5MB');
+      }
+      
+      if (!ALLOWED_TYPES.includes(file.type)) {
+        throw new Error('Неподдерживаемый тип файла. Используйте JPG, PNG, GIF или WebP');
+      }
+
+      // Server-side validation via edge function
+      const { data: validationData, error: validationError } = await supabase.functions.invoke('file-validation', {
+        body: {
+          fileName: file.name,
+          fileSize: file.size,
+          fileType: file.type,
+          contentHash: 'avatar-upload'
+        }
+      });
+
+      if (validationError || !validationData?.success) {
+        throw new Error(validationData?.error || 'Файл не прошел проверку безопасности');
+      }
+
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}/avatar.${fileExt}`;
 
-      // Upload file to storage
+      // Upload file to storage with additional security headers
       const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(fileName, file, { 
           upsert: true,
-          cacheControl: '3600'
+          cacheControl: '3600',
+          contentType: file.type
         });
 
       if (uploadError) throw uploadError;
@@ -99,6 +126,18 @@ export const useUserProfile = () => {
         .from('avatars')
         .getPublicUrl(fileName);
 
+      // Log security event
+      await supabase.rpc('log_security_event', {
+        p_user_id: user.id,
+        p_event_type: 'avatar_upload',
+        p_event_data: {
+          file_name: validationData.sanitizedFileName,
+          file_size: file.size,
+          file_type: file.type,
+          timestamp: new Date().toISOString()
+        }
+      });
+
       // Update profile with new avatar URL
       await updateProfile({ avatar_url: publicUrl });
 
@@ -107,7 +146,7 @@ export const useUserProfile = () => {
       console.error('Error uploading avatar:', error);
       toast({
         title: 'Ошибка',
-        description: 'Не удалось загрузить фото',
+        description: error instanceof Error ? error.message : 'Не удалось загрузить фото',
         variant: 'destructive'
       });
       throw error;

@@ -40,6 +40,26 @@ export const UserApprovalPanel = ({ className = '' }: UserApprovalPanelProps) =>
 
   const loadApprovalRequests = async () => {
     try {
+      // First check if user is approved to see any requests  
+      if (!user) {
+        setRequests([]);
+        setLoading(false);
+        return;
+      }
+
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('approval_status')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      // Only approved users can see approval requests (admin check is in RLS)
+      if (!userProfile || userProfile.approval_status !== 'approved') {
+        setRequests([]);
+        setLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('user_approval_requests')
         .select(`
@@ -50,7 +70,7 @@ export const UserApprovalPanel = ({ className = '' }: UserApprovalPanelProps) =>
           approved_by,
           rejected_by,
           total_existing_users,
-          profiles (
+          profiles!user_approval_requests_user_id_fkey (
             display_name,
             avatar_url
           )
@@ -58,7 +78,14 @@ export const UserApprovalPanel = ({ className = '' }: UserApprovalPanelProps) =>
         .eq('status', 'pending')
         .order('requested_at', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        // If RLS blocks access, just return empty results
+        if (error.code === 'PGRST116' || error.message?.includes('row-level security')) {
+          setRequests([]);
+          return;
+        }
+        throw error;
+      }
 
       setRequests((data as any) || []);
     } catch (error) {
@@ -68,6 +95,7 @@ export const UserApprovalPanel = ({ className = '' }: UserApprovalPanelProps) =>
         description: 'Не удалось загрузить запросы на подтверждение',
         variant: 'destructive',
       });
+      setRequests([]);
     } finally {
       setLoading(false);
     }
