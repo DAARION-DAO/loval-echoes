@@ -20,10 +20,9 @@ import { useToast } from '@/hooks/use-toast';
 
 interface ChatInterfaceProps {
   chatId: string;
-  onMessageSent?: (message: string) => void;
 }
 
-export const ChatInterface = ({ chatId, onMessageSent }: ChatInterfaceProps) => {
+export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
   const { t } = useTranslation();
   const { toast } = useToast();
   const { isStreaming, startStream, stopStream } = useDifyStream(chatId);
@@ -70,9 +69,6 @@ export const ChatInterface = ({ chatId, onMessageSent }: ChatInterfaceProps) => 
         }
       }
 
-      // Уведомляем о сообщении перед отправкой
-      onMessageSent?.(message);
-      
       // Отправляем сообщение
       await startStream(message, fileIds);
       

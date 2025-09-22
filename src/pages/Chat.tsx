@@ -364,10 +364,6 @@ export const ChatPage = () => {
       {/* Интерфейс ввода */}
       <ChatInterface
         chatId={chatId || ''}
-        onMessageSent={(userMessage) => {
-          // Пользовательские сообщения теперь появляются через Realtime подписку
-          // Не нужно добавлять их в локальный стейт вручную
-        }}
       />
     </div>
   );

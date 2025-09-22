@@ -127,6 +127,48 @@ export const CommunityChat = () => {
     }
   }, [user, toast]);
 
+  // Настраиваем real-time подписку на сообщения
+  useEffect(() => {
+    if (!communityChat?.id) return;
+
+    const messagesChannel = supabase
+      .channel(`community-messages-${communityChat.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `conversation_id=eq.${communityChat.id}`,
+        },
+        (payload) => {
+          console.log('[CommunityChat] New message received via realtime:', payload.new);
+          const newMessage = payload.new as any;
+          
+          const communityMessage: CommunityMessage = {
+            id: newMessage.id,
+            content: newMessage.content,
+            sender_name: newMessage.sender_name || 'Пользователь',
+            created_at: newMessage.created_at,
+            is_agent: newMessage.role === 'assistant',
+            is_system: newMessage.role === 'system'
+          };
+
+          setMessages(prev => {
+            // Избегаем дублирования сообщений
+            const exists = prev.some(msg => msg.id === communityMessage.id);
+            if (exists) return prev;
+            return [...prev, communityMessage];
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(messagesChannel);
+    };
+  }, [communityChat?.id]);
+
   const addWelcomeMessages = async (chatId: string) => {
     const welcomeMessages = [
       {
@@ -192,8 +234,6 @@ export const CommunityChat = () => {
       sender_name: profile?.display_name || user?.user_metadata?.display_name || user?.email?.split('@')[0] || 'Участник',
       created_at: new Date().toISOString(),
     };
-
-    setMessages(prev => [...prev, userMessage]);
 
     try {
       // Сохраняем сообщение пользователя в базу данных
@@ -265,16 +305,8 @@ export const CommunityChat = () => {
 
           console.log('[CommunityChat] Saved agent message to DB');
 
-          // Добавляем сообщение агента в локальное состояние
-          const agentMessage: CommunityMessage = {
-            id: `agent-${Date.now()}`,
-            content: currentMessage.content,
-            sender_name: 'Дух общины',
-            created_at: new Date().toISOString(),
-            is_agent: true
-          };
-          
-          setMessages(prev => [...prev, agentMessage]);
+          // Сообщение агента появится через real-time подписку
+          // Не добавляем в локальное состояние, чтобы избежать дублирования
         } catch (error) {
           console.error('Error saving agent message:', error);
         }
