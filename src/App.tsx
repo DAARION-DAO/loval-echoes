@@ -14,6 +14,7 @@ import { Auth } from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import { NewIndex } from "./pages/NewIndex";
 import { Settings } from "./pages/Settings";
+import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { Layout } from "./components/Layout";
 
 const queryClient = new QueryClient();
@@ -35,14 +36,16 @@ const ProtectedLayout = () => {
 
   return (
     <Layout sidebar={<ChatSidebar />}>
-      <Routes>
-        <Route path="/" element={<NewIndex />} />
-        <Route path="/chats" element={<ChatsPage />} />
-        <Route path="/chats/manage" element={<ChatsManagement />} />
-        <Route path="/chats/:chatId" element={<ChatPage />} />
-        <Route path="/settings" element={<Settings />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+      <ProtectedRoute>
+        <Routes>
+          <Route path="/" element={<NewIndex />} />
+          <Route path="/chats" element={<ChatsPage />} />
+          <Route path="/chats/manage" element={<ChatsManagement />} />
+          <Route path="/chats/:chatId" element={<ChatPage />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </ProtectedRoute>
     </Layout>
   );
 };

@@ -67,11 +67,11 @@ serve(async (req) => {
 
     // Логирование
     await supabase
-      .from('audit_log')
+      .from('security_audit_log')
       .insert({
-        actor: user.id,
-        action: 'stt_used',
-        details: {
+        user_id: user.id,
+        event_type: 'stt_used',
+        event_data: {
           text_length: result.text?.length || 0,
         },
       });

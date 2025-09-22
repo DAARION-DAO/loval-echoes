@@ -16,6 +16,8 @@ import {
 import { PrinciplesBanner } from '@/components/PrinciplesBanner';
 import { CreateModal, CreateFormData } from '@/components/CreateModal';
 import { GlobalSearchDialog } from '@/components/GlobalSearchDialog';
+import { VideoIntro } from '@/components/VideoIntro';
+import { UserApprovalPanel } from '@/components/UserApprovalPanel';
 import { useTranslation } from '@/lib/i18n';
 import { useAuth } from '@/hooks/useAuth';
 import { useCommunityStats } from '@/hooks/useCommunityStats';
@@ -30,6 +32,7 @@ export const NewIndex = () => {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [searchDialogOpen, setSearchDialogOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [showVideoIntro, setShowVideoIntro] = useState(true);
 
   const handleCreateSubmit = async (data: CreateFormData) => {
     if (isCreating) return;
@@ -93,6 +96,9 @@ export const NewIndex = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Video Intro */}
+      <VideoIntro onComplete={() => setShowVideoIntro(false)} />
+      
       {/* Header */}
       <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
         <div className="container mx-auto px-4 py-3">
@@ -146,6 +152,9 @@ export const NewIndex = () => {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
+        {/* User Approval Panel */}
+        <UserApprovalPanel />
+
         {/* Principles Banner */}
         {localStorage.getItem('zhos-principles-banner-dismissed') !== 'true' && (
           <PrinciplesBanner />

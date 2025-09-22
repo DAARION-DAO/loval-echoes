@@ -161,8 +161,10 @@ export const ChatInterface = ({ chatId, onMessageSent }: ChatInterfaceProps) => 
         const audioBlob = new Blob(chunks, { type: 'audio/webm' });
         
         try {
-          const { text } = await difyClient.speechToText(audioBlob);
-          setMessage(prev => prev + text);
+        const result = await difyClient.speechToText(audioBlob);
+        if (result?.text) {
+          setMessage(prev => prev + (prev ? ' ' : '') + result.text);
+        }
         } catch (error) {
           console.error('Error transcribing audio:', error);
           toast({

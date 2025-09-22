@@ -146,6 +146,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          approval_status: string | null
           avatar_url: string | null
           created_at: string
           display_name: string
@@ -154,6 +155,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          approval_status?: string | null
           avatar_url?: string | null
           created_at?: string
           display_name: string
@@ -162,6 +164,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          approval_status?: string | null
           avatar_url?: string | null
           created_at?: string
           display_name?: string
@@ -200,6 +203,77 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      user_approval_requests: {
+        Row: {
+          approved_by: string[] | null
+          created_at: string | null
+          id: string
+          rejected_by: string[] | null
+          requested_at: string | null
+          status: string
+          total_existing_users: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          approved_by?: string[] | null
+          created_at?: string | null
+          id?: string
+          rejected_by?: string[] | null
+          requested_at?: string | null
+          status?: string
+          total_existing_users?: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          approved_by?: string[] | null
+          created_at?: string | null
+          id?: string
+          rejected_by?: string[] | null
+          requested_at?: string | null
+          status?: string
+          total_existing_users?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_approvals: {
+        Row: {
+          approver_id: string
+          created_at: string | null
+          decision: string
+          id: string
+          notes: string | null
+          request_id: string | null
+        }
+        Insert: {
+          approver_id: string
+          created_at?: string | null
+          decision: string
+          id?: string
+          notes?: string | null
+          request_id?: string | null
+        }
+        Update: {
+          approver_id?: string
+          created_at?: string | null
+          decision?: string
+          id?: string
+          notes?: string | null
+          request_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_approvals_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "user_approval_requests"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
