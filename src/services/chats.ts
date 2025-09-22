@@ -71,7 +71,7 @@ export async function createChat(name: string): Promise<ChatLite> {
     .insert({
       conversation_id: newChat.id,
       user_id: user.id,
-      role: 'owner'
+      role: 'member'
     });
 
   if (participantError) {

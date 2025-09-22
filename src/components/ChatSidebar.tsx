@@ -153,7 +153,7 @@ export const ChatSidebar = () => {
         .insert({
           conversation_id: newChat.id,
           user_id: user.id,
-          role: 'owner'
+          role: 'member'
         });
 
       if (participantError) {
