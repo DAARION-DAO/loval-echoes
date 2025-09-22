@@ -10,6 +10,7 @@ import { difyClient, type DifyMessage } from '@/utils/difyClient';
 import { useDifyStream } from '@/hooks/useDifyStream';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserProfile } from '@/hooks/useUserProfile';
 import { supabase } from '@/integrations/supabase/client';
 
 interface CommunityMessage {
@@ -23,6 +24,7 @@ interface CommunityMessage {
 
 export const CommunityChat = () => {
   const { user } = useAuth();
+  const { profile } = useUserProfile();
   const { toast } = useToast();
   const [communityChat, setCommunityChat] = useState<{ id: string } | null>(null);
   const { isStreaming, startStream, currentMessage } = useDifyStream(communityChat?.id || null);
@@ -50,9 +52,9 @@ export const CommunityChat = () => {
         return;
       }
       
-      // Подсчитываем уникальных активных пользователей (исключая агента)
+      // Подсчитываем уникальных активных пользователей (исключая агентов)
       const uniqueUsers = new Set(
-        recentMessages?.filter(m => m.sender_name && !m.sender_name.includes('ЖОС'))
+        recentMessages?.filter(m => m.sender_name && !m.sender_name.includes('ЖОС') && !m.sender_name.includes('Дух общины'))
           .map(m => m.sender_name) || []
       );
       
@@ -138,7 +140,7 @@ export const CommunityChat = () => {
         conversation_id: chatId,
         content: 'Обновление системы: Улучшена работа с диалогами и добавлена возможность архивирования чатов.',
         role: 'assistant',
-        sender_name: 'ЖОС Агент',
+        sender_name: 'Дух общины',
         message_type: 'text'
       }
     ];
@@ -187,7 +189,7 @@ export const CommunityChat = () => {
     const userMessage: CommunityMessage = {
       id: `user-${Date.now()}`,
       content: message,
-      sender_name: user?.user_metadata?.display_name || user?.email?.split('@')[0] || 'Пользователь',
+      sender_name: profile?.display_name || user?.user_metadata?.display_name || user?.email?.split('@')[0] || 'Участник',
       created_at: new Date().toISOString(),
     };
 
@@ -257,7 +259,7 @@ export const CommunityChat = () => {
             conversation_id: communityChat.id,
             content: currentMessage.content,
             role: 'assistant',
-            sender_name: 'ЖОС Агент',
+            sender_name: 'Дух общины',
             message_type: 'text'
           });
 
@@ -267,7 +269,7 @@ export const CommunityChat = () => {
           const agentMessage: CommunityMessage = {
             id: `agent-${Date.now()}`,
             content: currentMessage.content,
-            sender_name: 'ЖОС Агент',
+            sender_name: 'Дух общины',
             created_at: new Date().toISOString(),
             is_agent: true
           };
@@ -350,7 +352,7 @@ export const CommunityChat = () => {
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="font-medium text-sm">ЖОС Агент</span>
+                      <span className="font-medium text-sm">Дух общины</span>
                       <Badge variant="secondary" className="text-xs px-1 py-0">
                         <Bot className="h-3 w-3 mr-1" />
                         Агент
@@ -398,7 +400,7 @@ export const CommunityChat = () => {
                 <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
                 <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
               </div>
-              ЖОС Агент печатает...
+              Дух общины печатает...
             </div>
           )}
         </div>

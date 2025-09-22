@@ -18,6 +18,7 @@ import { CreateModal, CreateFormData } from '@/components/CreateModal';
 import { GlobalSearchDialog } from '@/components/GlobalSearchDialog';
 import { VideoIntro } from '@/components/VideoIntro';
 import { UserApprovalPanel } from '@/components/UserApprovalPanel';
+import { CommunityNewsFeed } from '@/components/CommunityNewsFeed';
 import { useTranslation } from '@/lib/i18n';
 import { useAuth } from '@/hooks/useAuth';
 import { useCommunityStats } from '@/hooks/useCommunityStats';
@@ -142,8 +143,12 @@ export const NewIndex = () => {
                 <Bell className="h-4 w-4" />
               </Button>
               
-              <Button variant="ghost" size="sm">
-                <User className="h-4 w-4" />
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => navigate('/settings')}
+              >
+                <Settings className="h-4 w-4" />
               </Button>
             </div>
           </div>
@@ -170,25 +175,25 @@ export const NewIndex = () => {
         </div>
 
         {/* Quick Actions */}
-        <div className="space-y-4">
-          <h3 className="text-lg sm:text-xl font-semibold">Быстрые действия</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="space-y-3">
+          <h3 className="text-lg font-semibold">Быстрые действия</h3>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {quickActions.map((action, index) => (
               <Card 
                 key={index}
-                className="cursor-pointer hover:shadow-lg transition-shadow"
+                className="cursor-pointer hover:shadow-md transition-shadow"
                 onClick={action.action}
               >
-                <CardHeader className="pb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-primary/10 rounded-lg">
-                      <action.icon className="h-6 w-6 text-primary" />
+                <CardHeader className="pb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 bg-primary/10 rounded-md">
+                      <action.icon className="h-4 w-4 text-primary" />
                     </div>
-                    <CardTitle className="text-base">{action.title}</CardTitle>
+                    <CardTitle className="text-sm">{action.title}</CardTitle>
                   </div>
                 </CardHeader>
                 <CardContent className="pt-0">
-                  <CardDescription className="text-sm">
+                  <CardDescription className="text-xs leading-tight">
                     {action.description}
                   </CardDescription>
                 </CardContent>
@@ -199,41 +204,53 @@ export const NewIndex = () => {
 
         {/* Stats or Recent Activity */}
         <Card>
-          <CardHeader>
-            <CardTitle>Активность сообщества</CardTitle>
+          <CardHeader className="pb-4">
+            <CardTitle className="text-lg">Активность сообщества</CardTitle>
             <CardDescription>
-              Последние обновления и статистика
+              Статистика участников и активности
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
               <div className="text-center">
                 <div className="text-2xl font-bold text-primary">
                   {stats.isLoading ? '...' : stats.onlineUsers}
                 </div>
-                <div className="text-sm text-muted-foreground">Сейчас онлайн</div>
+                <div className="text-xs text-muted-foreground">Участников онлайн</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-primary">
+                  {stats.isLoading ? '...' : stats.onlineAgents}
+                </div>
+                <div className="text-xs text-muted-foreground">Агентов онлайн</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-primary">
                   {stats.isLoading ? '...' : stats.totalUsers}
                 </div>
-                <div className="text-sm text-muted-foreground">Всего участников</div>
+                <div className="text-xs text-muted-foreground">Всего участников</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-primary">
                   {stats.isLoading ? '...' : stats.totalChats}
                 </div>
-                <div className="text-sm text-muted-foreground">Активных чатов</div>
+                <div className="text-xs text-muted-foreground">Активных чатов</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-primary">
                   {stats.isLoading ? '...' : stats.todayMessages}
                 </div>
-                <div className="text-sm text-muted-foreground">Сообщений сегодня</div>
+                <div className="text-xs text-muted-foreground">Сообщений сегодня</div>
               </div>
             </div>
           </CardContent>
         </Card>
+        
+        {/* Community News Feed */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold">Новостная лента сообщества</h3>
+          <CommunityNewsFeed />
+        </div>
       </main>
 
       {/* Modals */}

@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 interface CommunityStats {
   totalUsers: number;
   onlineUsers: number;
+  onlineAgents: number;
   totalChats: number;
   todayMessages: number;
   isLoading: boolean;
@@ -13,6 +14,7 @@ export const useCommunityStats = () => {
   const [stats, setStats] = useState<CommunityStats>({
     totalUsers: 0,
     onlineUsers: 0,
+    onlineAgents: 0,
     totalChats: 0,
     todayMessages: 0,
     isLoading: true
@@ -36,16 +38,21 @@ export const useCommunityStats = () => {
         supabase.from('messages').select('sender_name').gte('created_at', fiveMinutesAgo).not('sender_name', 'is', null)
       ]);
 
-      // Подсчитываем уникальных онлайн пользователей (исключая агента)
+      // Подсчитываем уникальных онлайн пользователей и агентов
+      const allOnlineNames = (onlineResult.data || []).filter(m => m.sender_name).map(m => m.sender_name);
+      
       const uniqueOnlineUsers = new Set(
-        (onlineResult.data || [])
-          .filter(m => m.sender_name && !m.sender_name.includes('ЖОС'))
-          .map(m => m.sender_name)
+        allOnlineNames.filter(name => !name.includes('ЖОС') && !name.includes('Дух общины'))
+      );
+      
+      const uniqueOnlineAgents = new Set(
+        allOnlineNames.filter(name => name.includes('ЖОС') || name.includes('Дух общины'))
       );
 
       setStats({
         totalUsers: profilesResult.count || 0,
         onlineUsers: uniqueOnlineUsers.size,
+        onlineAgents: uniqueOnlineAgents.size,
         totalChats: chatsResult.count || 0,
         todayMessages: messagesResult.count || 0,
         isLoading: false

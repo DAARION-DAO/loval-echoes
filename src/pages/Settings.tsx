@@ -17,18 +17,31 @@ import {
   Monitor
 } from 'lucide-react';
 import { useTranslation, Language } from '@/lib/i18n';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserProfile } from '@/hooks/useUserProfile';
+import { useToast } from '@/hooks/use-toast';
 
 export const Settings = () => {
   const { t, language, setLanguage } = useTranslation();
   const { user } = useAuth();
+  const { profile, updateProfile, uploadAvatar, loading } = useUserProfile();
+  const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [showPrinciplesBanner, setShowPrinciplesBanner] = useState(
     localStorage.getItem('zhos-principles-banner-dismissed') !== 'true'
   );
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>(
     (localStorage.getItem('theme') as 'light' | 'dark' | 'system') || 'system'
   );
+  const [displayName, setDisplayName] = useState(profile?.display_name || '');
+
+  // Sync displayName with profile when it loads
+  useEffect(() => {
+    if (profile?.display_name) {
+      setDisplayName(profile.display_name);
+    }
+  }, [profile]);
 
   const handleThemeChange = (newTheme: 'light' | 'dark' | 'system') => {
     setTheme(newTheme);
@@ -50,6 +63,45 @@ export const Settings = () => {
       localStorage.removeItem('zhos-principles-banner-dismissed');
     } else {
       localStorage.setItem('zhos-principles-banner-dismissed', 'true');
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    try {
+      await updateProfile({ display_name: displayName });
+    } catch (error) {
+      console.error('Error saving profile:', error);
+    }
+  };
+
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Check file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: 'Ошибка',
+        description: 'Размер файла не должен превышать 5MB',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    // Check file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: 'Ошибка',
+        description: 'Можно загружать только изображения',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    try {
+      await uploadAvatar(file);
+    } catch (error) {
+      console.error('Error uploading avatar:', error);
     }
   };
 
@@ -85,15 +137,29 @@ export const Settings = () => {
         <CardContent className="space-y-4">
           <div className="flex items-center gap-4">
             <Avatar className="h-16 w-16">
-              <AvatarImage src="" alt="Profile" />
+              <AvatarImage src={profile?.avatar_url || ''} alt="Profile" />
               <AvatarFallback>
-                {user?.email?.charAt(0).toUpperCase() || 'U'}
+                {profile?.display_name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
               </AvatarFallback>
             </Avatar>
-            <Button variant="outline" size="sm">
-              <Upload className="h-4 w-4 mr-2" />
-              Загрузить фото
-            </Button>
+            <div>
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleAvatarUpload}
+                accept="image/*"
+                className="hidden"
+              />
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={loading}
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                Загрузить фото
+              </Button>
+            </div>
           </div>
 
           <div className="grid gap-4">
@@ -112,7 +178,8 @@ export const Settings = () => {
               <Input 
                 id="displayName" 
                 placeholder="Ваше имя в чатах"
-                defaultValue=""
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
               />
             </div>
           </div>
@@ -227,8 +294,12 @@ export const Settings = () => {
 
       {/* Save Button */}
       <div className="flex justify-end pt-4">
-        <Button className="w-full sm:w-auto">
-          {t.save}
+        <Button 
+          className="w-full sm:w-auto"
+          onClick={handleSaveProfile}
+          disabled={loading}
+        >
+          {loading ? 'Сохранение...' : t.save}
         </Button>
       </div>
     </div>
