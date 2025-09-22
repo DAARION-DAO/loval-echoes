@@ -48,10 +48,13 @@ export const useCommunityStats = () => {
       const uniqueOnlineAgents = new Set(
         allOnlineNames.filter(name => name.includes('ЖОС') || name.includes('Дух общины'))
       );
+      
+      // Ensure "Дух общины" is always counted as online
+      uniqueOnlineAgents.add('Дух общины');
 
       setStats({
         totalUsers: profilesResult.count || 0,
-        onlineUsers: uniqueOnlineUsers.size,
+        onlineUsers: Math.max(1, uniqueOnlineUsers.size), // At least current user
         onlineAgents: uniqueOnlineAgents.size,
         totalChats: chatsResult.count || 0,
         todayMessages: messagesResult.count || 0,
