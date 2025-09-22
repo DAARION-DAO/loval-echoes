@@ -344,9 +344,18 @@ export class DifyClient {
 
   async speechToText(audioBlob: Blob): Promise<{ text: string }> {
     try {
-      // Конвертируем blob в base64
+      // Конвертируем blob в base64 безопасно для больших файлов
       const arrayBuffer = await audioBlob.arrayBuffer();
-      const base64Audio = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+      const uint8Array = new Uint8Array(arrayBuffer);
+      
+      // Обрабатываем по частям чтобы избежать Maximum call stack
+      let binary = '';
+      const chunkSize = 8192;
+      for (let i = 0; i < uint8Array.length; i += chunkSize) {
+        const chunk = uint8Array.subarray(i, i + chunkSize);
+        binary += String.fromCharCode.apply(null, Array.from(chunk));
+      }
+      const base64Audio = btoa(binary);
 
       const headers = await this.getAuthHeaders();
       const response = await fetch(`https://pbsdsdexayzfoexjdlgb.supabase.co/functions/v1/stt-api`, {

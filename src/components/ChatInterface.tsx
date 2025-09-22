@@ -160,11 +160,25 @@ export const ChatInterface = ({ chatId, onMessageSent }: ChatInterfaceProps) => 
       mediaRecorder.onstop = async () => {
         const audioBlob = new Blob(chunks, { type: 'audio/webm' });
         
+        // Показываем индикатор обработки
+        toast({
+          title: 'Обработка голоса',
+          description: 'Транскрибируем аудио...',
+        });
+        
         try {
-        const result = await difyClient.speechToText(audioBlob);
-        if (result?.text) {
-          setMessage(prev => prev + (prev ? ' ' : '') + result.text);
-        }
+          const result = await difyClient.speechToText(audioBlob);
+          if (result?.text) {
+            const transcribedText = result.text.trim();
+            setMessage(prev => prev + (prev ? ' ' : '') + transcribedText);
+            
+            // Автоматически отправляем голосовое сообщение
+            setTimeout(() => {
+              if (transcribedText) {
+                handleSendMessage();
+              }
+            }, 500); // Небольшая задержка чтобы пользователь увидел текст
+          }
         } catch (error) {
           console.error('Error transcribing audio:', error);
           toast({
@@ -273,7 +287,7 @@ export const ChatInterface = ({ chatId, onMessageSent }: ChatInterfaceProps) => 
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={isRecording ? t.voice.transcribing : 'Введите сообщение...'}
+              placeholder={isRecording ? 'Записываю голос...' : 'Введите сообщение...'}
               className="min-h-[44px] max-h-32 resize-none border-0 shadow-none focus-visible:ring-0"
               disabled={isRecording}
             />

@@ -135,26 +135,7 @@ export const ChatPage = () => {
     scrollToBottom();
   }, [messages, currentMessage]);
 
-  // Обработка завершенного сообщения агента
-  useEffect(() => {
-    if (currentMessage?.isComplete && currentMessage.content.trim()) {
-      // Добавляем завершенное сообщение в список
-      const agentMessage: DifyMessage = {
-        id: currentMessage.id,
-        conversation_id: chatId || '',
-        query: '',
-        answer: currentMessage.content,
-        created_at: new Date().toISOString(),
-        metadata: currentMessage.metadata,
-      };
-      
-      setMessages(prev => [...prev, agentMessage]);
-      // Очищаем текущее сообщение после добавления в список
-      setTimeout(() => {
-        // Небольшая задержка чтобы пользователь увидел что сообщение добавлено
-      }, 100);
-    }
-  }, [currentMessage?.isComplete, currentMessage?.content, chatId]);
+  // Убираем дублирующий useEffect - сообщения агента приходят через Real-time подписку
 
   const loadChatData = async () => {
     if (!chatId) return;
