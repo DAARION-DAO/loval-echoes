@@ -50,7 +50,7 @@ export const UserApprovalPanel = ({ className = '' }: UserApprovalPanelProps) =>
           approved_by,
           rejected_by,
           total_existing_users,
-          profiles!user_approval_requests_user_id_profiles_user_id_fkey (
+          profiles (
             display_name,
             avatar_url
           )
