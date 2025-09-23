@@ -88,12 +88,7 @@ export const UserApprovalPanel = ({ className = '' }: UserApprovalPanelProps) =>
           status,
           approved_by,
           rejected_by,
-          total_existing_users,
-          profiles!user_approval_requests_user_id_fkey (
-            display_name,
-            avatar_url,
-            email
-          )
+          total_existing_users
         `)
         .eq('status', 'pending')
         .order('requested_at', { ascending: true });
@@ -109,8 +104,30 @@ export const UserApprovalPanel = ({ className = '' }: UserApprovalPanelProps) =>
         throw error;
       }
 
-      console.log(`Loaded ${data?.length || 0} pending approval requests`);
-      setRequests((data as any) || []);
+      // Step 3: Load profile data for each request separately
+      let requestsWithProfiles: ApprovalRequest[] = [];
+      
+      if (data && data.length > 0) {
+        const userIds = data.map(req => req.user_id);
+        
+        const { data: profiles, error: profilesError } = await supabase
+          .from('profiles')
+          .select('user_id, display_name, avatar_url, email')
+          .in('user_id', userIds);
+        
+        if (profilesError) {
+          console.error('Error loading profiles:', profilesError);
+          // Continue without profiles if needed
+        }
+        
+        requestsWithProfiles = data.map(request => ({
+          ...request,
+          profiles: profiles?.find(profile => profile.user_id === request.user_id) || null
+        }));
+      }
+
+      console.log(`Loaded ${requestsWithProfiles?.length || 0} pending approval requests`);
+      setRequests(requestsWithProfiles || []);
 
       // Step 3: Check for any remaining inconsistencies and warn user
       try {
