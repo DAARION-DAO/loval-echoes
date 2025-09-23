@@ -19,6 +19,7 @@ interface ApprovalRequest {
   profiles: {
     display_name: string;
     avatar_url?: string;
+    email?: string;
   } | null;
 }
 
@@ -72,7 +73,8 @@ export const UserApprovalPanel = ({ className = '' }: UserApprovalPanelProps) =>
           total_existing_users,
           profiles!user_approval_requests_user_id_fkey (
             display_name,
-            avatar_url
+            avatar_url,
+            email
           )
         `)
         .eq('status', 'pending')
@@ -249,6 +251,9 @@ export const UserApprovalPanel = ({ className = '' }: UserApprovalPanelProps) =>
                     </div>
                     <div>
                       <div className="font-medium">{request.profiles?.display_name || 'Неизвестный пользователь'}</div>
+                      {request.profiles?.email && (
+                        <div className="text-sm text-muted-foreground">{request.profiles.email}</div>
+                      )}
                       <div className="text-sm text-muted-foreground flex items-center gap-1">
                         <Clock className="h-3 w-3" />
                         {new Date(request.requested_at).toLocaleDateString('ru-RU')}
