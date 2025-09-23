@@ -27,3 +27,9 @@ verify_jwt = true
 
 [functions.tts-api]
 verify_jwt = true
+
+[functions.auth-security]
+verify_jwt = false
+
+[functions.file-validation]
+verify_jwt = true

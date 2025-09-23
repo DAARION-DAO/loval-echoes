@@ -174,6 +174,36 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limits: {
+        Row: {
+          action: string
+          attempts: number | null
+          blocked_until: string | null
+          created_at: string | null
+          id: string
+          identifier: string
+          window_start: string | null
+        }
+        Insert: {
+          action: string
+          attempts?: number | null
+          blocked_until?: string | null
+          created_at?: string | null
+          id?: string
+          identifier: string
+          window_start?: string | null
+        }
+        Update: {
+          action?: string
+          attempts?: number | null
+          blocked_until?: string | null
+          created_at?: string | null
+          id?: string
+          identifier?: string
+          window_start?: string | null
+        }
+        Relationships: []
+      }
       security_audit_log: {
         Row: {
           created_at: string | null
@@ -242,7 +272,7 @@ export type Database = {
           {
             foreignKeyName: "fk_user_approval_requests_user_id"
             columns: ["user_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "profiles"
             referencedColumns: ["user_id"]
           },
@@ -288,6 +318,26 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_rate_limit: {
+        Args: {
+          p_action: string
+          p_identifier: string
+          p_max_attempts?: number
+          p_window_minutes?: number
+        }
+        Returns: boolean
+      }
+      enhanced_log_security_event: {
+        Args: {
+          p_event_data?: Json
+          p_event_type: string
+          p_ip_address?: unknown
+          p_severity?: string
+          p_user_agent?: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
       get_conversation_participant_profiles: {
         Args: { requesting_user_id: string }
         Returns: {

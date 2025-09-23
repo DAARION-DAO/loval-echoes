@@ -15,24 +15,58 @@ serve(async (req) => {
   try {
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: { Authorization: req.headers.get('Authorization')! },
-        },
-      }
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Get the current user
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser()
-    if (authError || !user) {
+    // Get the authenticated user
+    const authHeader = req.headers.get('Authorization')!;
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(
+      authHeader.replace('Bearer ', '')
+    );
+
+    if (userError || !user) {
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+      );
     }
 
-    const { fileName, fileSize, fileType, contentHash } = await req.json()
+    const { fileName, fileSize, fileType, contentHash, userAgent } = await req.json();
+    
+    // Get client IP
+    const clientIP = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+
+    console.log(`File validation request from ${clientIP} for file: ${fileName}`);
+
+    // Check rate limit for file uploads
+    const { data: rateLimitOk } = await supabaseClient.rpc('check_rate_limit', {
+      p_identifier: user.id, // Use user ID for authenticated requests
+      p_action: 'file_upload',
+      p_max_attempts: 10, // Allow 10 file uploads per window
+      p_window_minutes: 5   // 5 minute window
+    });
+
+    if (!rateLimitOk) {
+      console.log(`File upload rate limit exceeded for user ${user.id}`);
+      
+      // Log security event
+      await supabaseClient.rpc('enhanced_log_security_event', {
+        p_user_id: user.id,
+        p_event_type: 'file_upload_rate_limit',
+        p_event_data: { fileName, fileSize, fileType },
+        p_ip_address: clientIP,
+        p_user_agent: userAgent,
+        p_severity: 'warning'
+      });
+
+      return new Response(
+        JSON.stringify({ 
+          error: 'Слишком много попыток загрузки файлов. Попробуйте позже.',
+          rateLimited: true 
+        }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     // Input validation
     if (!fileName || !fileSize || !fileType) {
@@ -82,19 +116,22 @@ serve(async (req) => {
     // Sanitize filename
     const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_')
 
-    // Log security event
-    await supabaseClient.rpc('log_security_event', {
+    // Log security event with enhanced logging
+    await supabaseClient.rpc('enhanced_log_security_event', {
       p_user_id: user.id,
-      p_event_type: 'file_upload_validation',
+      p_event_type: 'file_upload_validation_success',
       p_event_data: {
         original_filename: fileName,
         sanitized_filename: sanitizedFileName,
         file_size: fileSize,
         file_type: fileType,
         content_hash: contentHash,
-        timestamp: new Date().toISOString()
-      }
-    })
+        ip_address: clientIP
+      },
+      p_ip_address: clientIP,
+      p_user_agent: userAgent || 'unknown',
+      p_severity: 'info'
+    });
 
     return new Response(
       JSON.stringify({ 
