@@ -276,6 +276,13 @@ export type Database = {
             foreignKeyName: "fk_user_approval_requests_user_id"
             columns: ["user_id"]
             isOneToOne: true
+            referencedRelation: "approval_inconsistencies"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "fk_user_approval_requests_user_id"
+            columns: ["user_id"]
+            isOneToOne: true
             referencedRelation: "profiles"
             referencedColumns: ["user_id"]
           },
@@ -318,7 +325,20 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      approval_inconsistencies: {
+        Row: {
+          approval_count: number | null
+          approved_by: string[] | null
+          display_name: string | null
+          profile_status: string | null
+          rejected_by: string[] | null
+          rejection_count: number | null
+          request_status: string | null
+          required_approvals: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       calculate_required_approvals: {
@@ -344,6 +364,14 @@ export type Database = {
           p_user_id: string
         }
         Returns: undefined
+      }
+      fix_approval_inconsistencies: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          fixed_user_id: string
+          new_status: string
+          old_status: string
+        }[]
       }
       get_conversation_participant_profiles: {
         Args: { requesting_user_id: string }
