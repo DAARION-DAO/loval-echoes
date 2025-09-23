@@ -206,20 +206,7 @@ export class DifyClient {
         throw new Error('You must be logged in to send a message');
       }
 
-      // Сохраняем пользовательское сообщение в базу данных
-      const { error: messageError } = await supabase
-        .from('messages')
-        .insert({
-          conversation_id: chatId,
-          content: query,
-          role: 'user',
-          message_type: 'text',
-          sender_name: 'Пользователь',
-        });
-
-      if (messageError) {
-        throw new Error(`Failed to save user message: ${messageError.message}`);
-      }
+      // User message will be saved by the Edge Function
 
       // Получаем conversation_id из Dify для этого чата
       const { data: conversation, error: convError } = await supabase

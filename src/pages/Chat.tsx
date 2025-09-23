@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { ZhosBanner } from '@/components/ZhosBanner';
 import { MessageBubble } from '@/components/MessageBubble';
 import { ChatInterface } from '@/components/ChatInterface';
+import { ParticipantsList } from '@/components/ParticipantsList';
 import { useTranslation } from '@/lib/i18n';
 import { difyClient, type DifyMessage, type Chat } from '@/utils/difyClient';
 import { useDifyStream } from '@/hooks/useDifyStream';
@@ -303,10 +304,7 @@ export const ChatPage = () => {
           </div>
 
           <div className="flex items-center gap-2">
-            <Badge variant="secondary" className="flex items-center gap-1">
-              <Users className="h-3 w-3" />
-              {onlineUsers.length} онлайн
-            </Badge>
+            <ParticipantsList chatId={chatId} onlineUsers={onlineUsers} />
             <Button
               variant="outline"
               size="sm"

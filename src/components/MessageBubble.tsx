@@ -182,7 +182,7 @@ export const MessageBubble = ({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-2">
             <span className="font-medium text-sm">
-              {isSystem ? 'Система' : isAgent ? 'ЖОС Агент' : (senderName || 'Участник')}
+              {isSystem ? 'Система' : isAgent ? 'ЖОС Агент' : (senderName || message.sender_name || 'Участник')}
             </span>
             <span className="text-xs text-muted-foreground">
               {new Date(message.created_at).toLocaleTimeString()}

@@ -193,9 +193,21 @@ serve(async (req) => {
         // First, save user message to database
         try {
           const { data: userSession } = await supabase.auth.getUser();
-          const userDisplayName = userSession?.user?.user_metadata?.display_name || 
-                                   userSession?.user?.email?.split('@')[0] || 
-                                   'Пользователь';
+          
+          // Get user display name from profiles table
+          let userDisplayName = 'Пользователь';
+          if (userSession?.user) {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('display_name')
+              .eq('user_id', userSession.user.id)
+              .single();
+            
+            userDisplayName = profile?.display_name || 
+                             userSession.user.user_metadata?.display_name || 
+                             userSession.user.email?.split('@')[0] || 
+                             'Пользователь';
+          }
           
           await supabase
             .from('messages')
