@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,11 +17,61 @@ export const AuthForm = () => {
   const [resetLoading, setResetLoading] = useState(false);
   const [showResendButton, setShowResendButton] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [isPasswordReset, setIsPasswordReset] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     displayName: ''
   });
+
+  // Check for password reset mode on mount
+  useEffect(() => {
+    const checkForPasswordReset = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      
+      // Check URL search params
+      if (urlParams.get('reset') === 'true') {
+        setIsPasswordReset(true);
+        console.log('Password reset mode activated from URL params');
+      }
+      
+      // Check hash params (Supabase auth callback)
+      if (hashParams.get('type') === 'recovery') {
+        setIsPasswordReset(true);
+        console.log('Password reset mode activated from hash params');
+      }
+      
+      // Handle auth callback errors
+      const error = hashParams.get('error');
+      const errorDescription = hashParams.get('error_description');
+      if (error) {
+        console.error('Auth callback error:', error, errorDescription);
+        toast({
+          title: 'Ошибка аутентификации',
+          description: errorDescription || error,
+          variant: 'destructive',
+        });
+        // Clean up URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    };
+
+    checkForPasswordReset();
+    
+    // Listen for hash changes
+    const handleHashChange = () => {
+      checkForPasswordReset();
+    };
+    
+    window.addEventListener('hashchange', handleHashChange);
+    
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+    };
+  }, [toast]);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -235,6 +285,134 @@ export const AuthForm = () => {
       setResetLoading(false);
     }
   };
+
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!newPassword || !confirmPassword) {
+      toast({
+        title: t.error,
+        description: 'Пожалуйста, заполните оба поля пароля',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast({
+        title: t.error,
+        description: 'Пароли не совпадают',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toast({
+        title: t.error,
+        description: 'Пароль должен содержать минимум 6 символов',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (error) {
+        console.error('Password update error:', error);
+        toast({
+          title: 'Ошибка обновления пароля',
+          description: error.message,
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Пароль обновлен',
+          description: 'Ваш пароль успешно изменен. Теперь вы можете войти с новым паролем.',
+        });
+        
+        // Reset the form and exit password reset mode
+        setIsPasswordReset(false);
+        setNewPassword('');
+        setConfirmPassword('');
+        
+        // Clean up URL
+        window.history.replaceState({}, document.title, '/auth');
+      }
+    } catch (error) {
+      console.error('Password update error:', error);
+      toast({
+        title: t.error,
+        description: 'Произошла ошибка при обновлении пароля',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Password Reset Form
+  if (isPasswordReset) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted/20 p-4">
+        <Card className="w-full max-w-md shadow-elegant">
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl font-bold">Новый пароль</CardTitle>
+            <CardDescription>
+              Создайте новый пароль для вашего аккаунта
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleUpdatePassword} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="new-password">Новый пароль</Label>
+                <Input
+                  id="new-password"
+                  type="password"
+                  placeholder="введите новый пароль (мин. 6 символов)"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  minLength={6}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirm-password">Подтвердите пароль</Label>
+                <Input
+                  id="confirm-password"
+                  type="password"
+                  placeholder="повторите новый пароль"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  minLength={6}
+                  required
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? 'Обновление...' : 'Обновить пароль'}
+              </Button>
+              <div className="text-center">
+                <Button 
+                  type="button" 
+                  variant="link" 
+                  onClick={() => {
+                    setIsPasswordReset(false);
+                    window.history.replaceState({}, document.title, '/auth');
+                  }}
+                >
+                  Вернуться к входу
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted/20 p-4">
