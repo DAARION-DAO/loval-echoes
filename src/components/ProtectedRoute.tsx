@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserApprovalStatus } from '@/hooks/useUserApprovalStatus';
+import { useSessionRecovery } from '@/hooks/useSessionRecovery';
 import { PendingApprovalPage } from '@/components/PendingApprovalPage';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 
@@ -11,6 +12,9 @@ interface ProtectedRouteProps {
 export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const { user, loading: authLoading } = useAuth();
   const { approvalStatus } = useUserApprovalStatus();
+  
+  // Initialize session recovery
+  useSessionRecovery();
 
   // Show loading while checking auth and approval status
   if (authLoading || approvalStatus === 'loading') {

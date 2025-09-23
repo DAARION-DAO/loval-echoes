@@ -34,20 +34,46 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(session?.user ?? null);
         setLoading(false);
         
-        // Handle different auth events
+        // Handle different auth events with reduced logging to prevent rate limiting
         if (event === 'SIGNED_IN') {
           console.log('User signed in successfully');
+          // Defer profile creation to avoid race conditions
+          if (session?.user) {
+            setTimeout(() => {
+              ensureUserProfile(session.user);
+            }, 1000);
+          }
         } else if (event === 'SIGNED_OUT') {
           console.log('User signed out');
-        } else if (event === 'PASSWORD_RECOVERY') {
-          console.log('Password recovery initiated');
-        } else if (event === 'TOKEN_REFRESHED') {
-          console.log('Token refreshed');
-        } else if (event === 'USER_UPDATED') {
-          console.log('User updated');
         }
       }
     );
+
+    const ensureUserProfile = async (user: any) => {
+      try {
+        const { data: existingProfile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (!existingProfile) {
+          console.log('Creating profile for new user:', user.id);
+          await supabase
+            .from('profiles')
+            .insert({
+              user_id: user.id,
+              display_name: user.user_metadata?.display_name || 
+                           user.user_metadata?.full_name || 
+                           user.email?.split('@')[0] || 
+                           'Пользователь',
+              approval_status: 'pending'
+            });
+        }
+      } catch (error) {
+        console.error('Error ensuring user profile:', error);
+      }
+    };
 
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session }, error }) => {
