@@ -126,7 +126,9 @@ export const Participants = () => {
     
     try {
       const request = pendingRequests.find(r => r.id === requestId);
-      if (!request) return;
+      if (!request) {
+        throw new Error('Request not found');
+      }
 
       // Insert user's vote
       const { error: voteError } = await supabase
@@ -138,7 +140,10 @@ export const Participants = () => {
           notes: userNotes[requestId] || null
         });
 
-      if (voteError) throw voteError;
+      if (voteError) {
+        console.error('Vote error:', voteError);
+        throw voteError;
+      }
 
       // Get updated vote counts
       const { data: votes, error: votesError } = await supabase
@@ -146,39 +151,80 @@ export const Participants = () => {
         .select('decision')
         .eq('request_id', requestId);
 
-      if (votesError) throw votesError;
+      if (votesError) {
+        console.error('Votes error:', votesError);
+        throw votesError;
+      }
 
       const approveCount = votes?.filter(v => v.decision === 'approve').length || 0;
       const rejectCount = votes?.filter(v => v.decision === 'reject').length || 0;
 
+      // Update request with vote counts
+      const { error: updateError } = await supabase
+        .from('user_approval_requests')
+        .update({
+          approved_by: Array(approveCount).fill('approved'),
+          rejected_by: Array(rejectCount).fill('rejected')
+        })
+        .eq('id', requestId);
+
+      if (updateError) {
+        console.error('Update error:', updateError);
+        throw updateError;
+      }
+
+      // Get required approvals using new function
+      const { data: requiredData, error: requiredError } = await supabase
+        .rpc('calculate_required_approvals');
+
+      if (requiredError) {
+        console.error('Required approvals error:', requiredError);
+        throw requiredError;
+      }
+
+      const requiredApprovals = requiredData || 1;
+
       // Determine final status
       let finalStatus = 'pending';
+      let profileStatus: string | null = null;
+
       if (rejectCount > 0) {
         finalStatus = 'rejected';
-      } else if (approveCount >= request.total_existing_users) {
+        profileStatus = 'rejected';
+      } else if (approveCount >= requiredApprovals) {
         finalStatus = 'approved';
+        profileStatus = 'approved';
       }
 
       // Update request status if needed
-      if (finalStatus !== 'pending') {
+      if (finalStatus !== 'pending' && profileStatus) {
         const { error: statusError } = await supabase
           .from('user_approval_requests')
-          .update({ 
-            status: finalStatus,
-            approved_by: finalStatus === 'approved' ? votes.filter(v => v.decision === 'approve').map((_, i) => `user_${i}`) : [],
-            rejected_by: finalStatus === 'rejected' ? votes.filter(v => v.decision === 'reject').map((_, i) => `user_${i}`) : []
-          })
+          .update({ status: finalStatus })
           .eq('id', requestId);
 
-        if (statusError) throw statusError;
+        if (statusError) {
+          console.error('Status error:', statusError);
+          throw statusError;
+        }
 
         // Update user's profile status
         const { error: profileError } = await supabase
           .from('profiles')
-          .update({ approval_status: finalStatus })
+          .update({ approval_status: profileStatus })
           .eq('user_id', request.user_id);
 
-        if (profileError) throw profileError;
+        if (profileError) {
+          console.error('Profile update error:', profileError);
+          toast({
+            title: "Ошибка обновления профиля",
+            description: `Ошибка RLS: ${profileError.message}. Проверьте права доступа.`,
+            variant: "destructive",
+          });
+          throw profileError;
+        }
+
+        console.log(`Successfully updated user ${request.user_id} to status: ${profileStatus}`);
       }
 
       // Clear note for this user
@@ -195,14 +241,14 @@ export const Participants = () => {
         title: decision === 'approve' ? 'Заявка одобрена' : 'Заявка отклонена',
         description: finalStatus !== 'pending' 
           ? `Пользователь ${finalStatus === 'approved' ? 'принят в сообщество' : 'отклонён'}`
-          : 'Ваш голос учтён'
+          : `Ваш голос учтён. Требуется ${requiredApprovals - approveCount} дополнительных одобрений.`
       });
 
     } catch (error) {
       console.error('Error processing approval:', error);
       toast({
         title: 'Ошибка',
-        description: 'Не удалось обработать заявку',
+        description: `Не удалось обработать заявку: ${error.message}`,
         variant: 'destructive'
       });
     } finally {

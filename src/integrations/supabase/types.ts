@@ -321,6 +321,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_required_approvals: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       check_rate_limit: {
         Args: {
           p_action: string
@@ -359,6 +363,10 @@ export type Database = {
       }
       is_conversation_participant: {
         Args: { conversation_id: string; user_id: string }
+        Returns: boolean
+      }
+      is_moderator: {
+        Args: { user_id: string }
         Returns: boolean
       }
       log_security_event: {

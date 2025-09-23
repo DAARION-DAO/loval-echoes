@@ -119,66 +119,108 @@ export const UserApprovalPanel = ({ className = '' }: UserApprovalPanelProps) =>
           notes: notes[requestId] || null,
         });
 
-      if (approvalError) throw approvalError;
+      if (approvalError) {
+        console.error('Vote error:', approvalError);
+        throw approvalError;
+      }
 
       // Get current request data
       const request = requests.find(r => r.id === requestId);
-      if (!request) return;
-
-      const newApprovedBy = decision === 'approve' 
-        ? [...request.approved_by, user.id]
-        : request.approved_by;
-      
-      const newRejectedBy = decision === 'reject'
-        ? [...request.rejected_by, user.id]
-        : request.rejected_by;
-
-      // Check if we have enough approvals (all existing users) or any rejection
-      const shouldApprove = newApprovedBy.length === request.total_existing_users && newRejectedBy.length === 0;
-      const shouldReject = newRejectedBy.length > 0;
-
-      let newStatus = 'pending';
-      if (shouldApprove) {
-        newStatus = 'approved';
-        
-        // Update user profile to approved
-        await supabase
-          .from('profiles')
-          .update({ approval_status: 'approved' })
-          .eq('user_id', request.user_id);
-          
-      } else if (shouldReject) {
-        newStatus = 'rejected';
-        
-        // Update user profile to rejected
-        await supabase
-          .from('profiles')
-          .update({ approval_status: 'rejected' })
-          .eq('user_id', request.user_id);
+      if (!request) {
+        throw new Error('Request not found');
       }
 
-      // Update the request
+      // Get all votes for this request
+      const { data: votes, error: votesError } = await supabase
+        .from('user_approvals')
+        .select('decision')
+        .eq('request_id', requestId);
+
+      if (votesError) {
+        console.error('Votes error:', votesError);
+        throw votesError;
+      }
+
+      const approvals = votes.filter(vote => vote.decision === 'approve').length;
+      const rejections = votes.filter(vote => vote.decision === 'reject').length;
+
+      // Update request with vote counts
       const { error: updateError } = await supabase
         .from('user_approval_requests')
         .update({
-          status: newStatus,
-          approved_by: newApprovedBy,
-          rejected_by: newRejectedBy,
+          approved_by: Array(approvals).fill('approved'),
+          rejected_by: Array(rejections).fill('rejected')
         })
         .eq('id', requestId);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error('Update error:', updateError);
+        throw updateError;
+      }
+
+      // Get required approvals using new function
+      const { data: requiredData, error: requiredError } = await supabase
+        .rpc('calculate_required_approvals');
+
+      if (requiredError) {
+        console.error('Required approvals error:', requiredError);
+        throw requiredError;
+      }
+
+      const requiredApprovals = requiredData || 1;
+      
+      let finalStatus: string | null = null;
+      let profileStatus: string | null = null;
+
+      if (approvals >= requiredApprovals) {
+        finalStatus = 'approved';
+        profileStatus = 'approved';
+      } else if (rejections >= requiredApprovals) {
+        finalStatus = 'rejected';
+        profileStatus = 'rejected';
+      }
+
+      if (finalStatus && profileStatus) {
+        // Update the request status
+        const { error: statusError } = await supabase
+          .from('user_approval_requests')
+          .update({ status: finalStatus })
+          .eq('id', requestId);
+
+        if (statusError) {
+          console.error('Status error:', statusError);
+          throw statusError;
+        }
+
+        // Update the user's profile status
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({ approval_status: profileStatus })
+          .eq('user_id', request.user_id);
+
+        if (profileError) {
+          console.error('Profile update error:', profileError);
+          toast({
+            title: "Ошибка обновления профиля",
+            description: `Ошибка RLS: ${profileError.message}. Проверьте права доступа.`,
+            variant: "destructive",
+          });
+          throw profileError;
+        }
+
+        console.log(`Successfully updated user ${request.user_id} to status: ${profileStatus}`);
+      }
 
       // Reload requests
       await loadApprovalRequests();
 
       toast({
         title: decision === 'approve' ? 'Голос засчитан' : 'Отклонение засчитано',
-        description: shouldApprove 
-          ? 'Пользователь одобрен всем сообществом!' 
-          : shouldReject 
+        description: finalStatus === 'approved'
+          ? 'Пользователь одобрен сообществом!' 
+          : finalStatus === 'rejected'
             ? 'Пользователь отклонен'
-            : `Ваш голос учтен. Нужно ${request.total_existing_users - newApprovedBy.length} голосов для подтверждения.`,
+            : `Ваш голос учтен. Нужно ${requiredApprovals - approvals} голосов для подтверждения.`,
       });
 
       // Clear notes
@@ -192,7 +234,7 @@ export const UserApprovalPanel = ({ className = '' }: UserApprovalPanelProps) =>
       console.error('Error processing approval:', error);
       toast({
         title: 'Ошибка',
-        description: 'Не удалось обработать решение',
+        description: `Не удалось обработать решение: ${error.message}`,
         variant: 'destructive',
       });
     } finally {
@@ -226,7 +268,7 @@ export const UserApprovalPanel = ({ className = '' }: UserApprovalPanelProps) =>
             Новые участники ожидают подтверждения
           </CardTitle>
           <CardDescription>
-            Для входа в сообщество новые участники должны быть единогласно одобрены существующими пользователями.
+            Новые участники становятся модераторами после одобрения. Требуется: 1-й пользователь одобряется автоматически, 2-й требует 1 одобрение, 3-й требует 2 одобрения, далее требуется 3 одобрения для каждого нового участника.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
