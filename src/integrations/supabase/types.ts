@@ -359,6 +359,16 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: number
       }
+      check_enhanced_rate_limit: {
+        Args: {
+          p_action: string
+          p_block_duration_minutes?: number
+          p_identifier: string
+          p_max_attempts?: number
+          p_window_minutes?: number
+        }
+        Returns: boolean
+      }
       check_rate_limit: {
         Args: {
           p_action: string
@@ -420,6 +430,15 @@ export type Database = {
           p_user_id: string
         }
         Returns: undefined
+      }
+      validate_file_upload_security: {
+        Args: {
+          p_file_name: string
+          p_file_size: number
+          p_file_type: string
+          p_user_id?: string
+        }
+        Returns: Json
       }
     }
     Enums: {

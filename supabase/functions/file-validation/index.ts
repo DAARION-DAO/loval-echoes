@@ -38,12 +38,13 @@ serve(async (req) => {
 
     console.log(`File validation request from ${clientIP} for file: ${fileName}`);
 
-    // Check rate limit for file uploads
-    const { data: rateLimitOk } = await supabaseClient.rpc('check_rate_limit', {
-      p_identifier: user.id, // Use user ID for authenticated requests
+    // Check rate limit with enhanced function
+    const { data: rateLimitOk } = await supabaseClient.rpc('check_enhanced_rate_limit', {
+      p_identifier: user.id, 
       p_action: 'file_upload',
-      p_max_attempts: 10, // Allow 10 file uploads per window
-      p_window_minutes: 5   // 5 minute window
+      p_max_attempts: 10, 
+      p_window_minutes: 5,
+      p_block_duration_minutes: 30  // Block for 30 minutes if exceeded
     });
 
     if (!rateLimitOk) {
@@ -68,53 +69,43 @@ serve(async (req) => {
       );
     }
 
-    // Input validation
-    if (!fileName || !fileSize || !fileType) {
+    // Use enhanced validation function with comprehensive security checks
+    const { data: validationResult, error: validationError } = await supabaseClient.rpc('validate_file_upload_security', {
+      p_file_name: fileName,
+      p_file_size: fileSize,
+      p_file_type: fileType,
+      p_user_id: user.id
+    });
+
+    if (validationError) {
+      console.error('File validation error:', validationError);
       return new Response(
-        JSON.stringify({ error: 'Missing required fields' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+        JSON.stringify({ 
+          error: 'Ошибка валидации файла' 
+        }),
+        { 
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
 
-    // File size validation (50MB limit)
-    const MAX_FILE_SIZE = 50 * 1024 * 1024
-    if (fileSize > MAX_FILE_SIZE) {
+    if (!validationResult.valid) {
+      const errors = validationResult.errors || ['Файл не прошел проверку безопасности'];
+      
       return new Response(
-        JSON.stringify({ error: 'File size exceeds 50MB limit' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+        JSON.stringify({ 
+          error: errors[0] || 'Файл не прошел проверку безопасности' 
+        }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
 
-    // File type validation
-    const ALLOWED_TYPES = [
-      'image/jpeg', 'image/png', 'image/gif', 'image/webp',
-      'audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/webm',
-      'video/mp4', 'video/webm', 'video/ogg',
-      'application/pdf', 'text/plain',
-      'application/msword', 
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-    ]
-
-    if (!ALLOWED_TYPES.includes(fileType)) {
-      return new Response(
-        JSON.stringify({ error: 'File type not allowed' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
-    // Filename validation
-    const DANGEROUS_EXTENSIONS = ['.exe', '.bat', '.cmd', '.com', '.pif', '.scr', '.js', '.jar']
-    const fileExtension = fileName.toLowerCase().substring(fileName.lastIndexOf('.'))
-    
-    if (DANGEROUS_EXTENSIONS.includes(fileExtension)) {
-      return new Response(
-        JSON.stringify({ error: 'File extension not allowed' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
-    // Sanitize filename
-    const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_')
+    // Get sanitized filename from validation result
+    const sanitizedFileName = validationResult.sanitized_filename || fileName;
 
     // Log security event with enhanced logging
     await supabaseClient.rpc('enhanced_log_security_event', {
