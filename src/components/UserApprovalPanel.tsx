@@ -61,6 +61,24 @@ export const UserApprovalPanel = ({ className = '' }: UserApprovalPanelProps) =>
         return;
       }
 
+      // Step 1: Fix any data inconsistencies automatically
+      try {
+        const { data: fixedUsers, error: fixError } = await supabase
+          .rpc('fix_approval_inconsistencies');
+        
+        if (!fixError && fixedUsers && fixedUsers.length > 0) {
+          console.log('Fixed approval inconsistencies for users:', fixedUsers);
+          toast({
+            title: 'Данные синхронизированы',
+            description: `Исправлены несоответствия для ${fixedUsers.length} пользователей`,
+          });
+        }
+      } catch (fixError) {
+        console.warn('Could not auto-fix inconsistencies:', fixError);
+        // Continue loading requests even if auto-fix fails
+      }
+
+      // Step 2: Load pending requests
       const { data, error } = await supabase
         .from('user_approval_requests')
         .select(`
@@ -83,18 +101,40 @@ export const UserApprovalPanel = ({ className = '' }: UserApprovalPanelProps) =>
       if (error) {
         // If RLS blocks access, just return empty results
         if (error.code === 'PGRST116' || error.message?.includes('row-level security')) {
+          console.log('RLS blocked access to approval requests - user may not be admin');
           setRequests([]);
           return;
         }
+        console.error('Database error loading requests:', error);
         throw error;
       }
 
+      console.log(`Loaded ${data?.length || 0} pending approval requests`);
       setRequests((data as any) || []);
+
+      // Step 3: Check for any remaining inconsistencies and warn user
+      try {
+        const { data: inconsistencies, error: inconsError } = await supabase
+          .from('approval_inconsistencies')
+          .select('*');
+        
+        if (!inconsError && inconsistencies && inconsistencies.length > 0) {
+          console.warn('Data inconsistencies detected:', inconsistencies);
+          toast({
+            title: 'Внимание',
+            description: `Обнаружены ${inconsistencies.length} несоответствий в данных. Попробуйте обновить страницу.`,
+            variant: 'destructive',
+          });
+        }
+      } catch (inconsError) {
+        console.warn('Could not check for inconsistencies:', inconsError);
+      }
+
     } catch (error) {
       console.error('Error loading approval requests:', error);
       toast({
         title: 'Ошибка',
-        description: 'Не удалось загрузить запросы на подтверждение',
+        description: `Не удалось загрузить запросы: ${error.message}`,
         variant: 'destructive',
       });
       setRequests([]);
