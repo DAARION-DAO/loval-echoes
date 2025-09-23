@@ -248,7 +248,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
   };
 
   return (
-    <div className="border-t bg-background p-4">
+    <div className="border-t bg-background p-4 mobile-safe-area">
       {/* Прогресс загрузки */}
       {uploadProgress > 0 && uploadProgress < 100 && (
         <div className="mb-4">
@@ -264,13 +264,13 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
             <Badge 
               key={index} 
               variant="secondary" 
-              className="flex items-center gap-2 px-3 py-1"
+              className="flex items-center gap-2 px-3 py-2 text-sm touch-target"
             >
               {getFileIcon(file)}
-              <span className="text-xs">{file.name}</span>
+              <span className="text-xs sm:text-sm max-w-20 sm:max-w-none truncate">{file.name}</span>
               <button
                 onClick={() => removeFile(index)}
-                className="ml-1 text-muted-foreground hover:text-foreground"
+                className="ml-1 text-muted-foreground hover:text-foreground touch-target"
               >
                 ×
               </button>
@@ -292,11 +292,11 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
       >
         {isDragging && (
           <div className="absolute inset-0 bg-primary/5 rounded-lg flex items-center justify-center z-10">
-            <p className="text-primary font-medium">{t.files.dragDrop}</p>
+            <p className="text-primary font-medium text-sm sm:text-base">{t.files.dragDrop}</p>
           </div>
         )}
 
-        <div className="flex gap-2 p-3">
+        <div className="flex gap-2 p-3 sm:p-4">
           {/* Textarea */}
           <div className="flex-1">
             <Textarea
@@ -305,22 +305,22 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
               onChange={(e) => setMessage(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder={isRecording ? 'Записываю голос...' : 'Введите сообщение...'}
-              className="min-h-[44px] max-h-32 resize-none border-0 shadow-none focus-visible:ring-0"
+              className="min-h-[44px] max-h-32 resize-none border-0 shadow-none focus-visible:ring-0 mobile-input text-base"
               disabled={isRecording}
             />
           </div>
 
           {/* Кнопки действий */}
-          <div className="flex items-end gap-1">
+          <div className="flex items-end gap-1 sm:gap-2">
             {/* Кнопка файлов */}
             <Button
               variant="ghost"
               size="sm"
               onClick={() => fileInputRef.current?.click()}
               disabled={isStreaming}
-              className="h-10 w-10 p-0"
+              className="touch-target h-11 w-11 p-0 flex-shrink-0"
             >
-              <Paperclip className="h-4 w-4" />
+              <Paperclip className="h-5 w-5" />
             </Button>
 
             {/* Кнопка записи голоса */}
@@ -329,9 +329,9 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
               size="sm"
               onClick={isRecording ? stopRecording : startRecording}
               disabled={isStreaming}
-              className={`h-10 w-10 p-0 ${isRecording ? 'text-destructive animate-pulse-soft' : ''}`}
+              className={`touch-target h-11 w-11 p-0 flex-shrink-0 ${isRecording ? 'text-destructive animate-pulse-soft' : ''}`}
             >
-              {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+              {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
             </Button>
 
             {/* Кнопка остановки/отправки */}
@@ -340,18 +340,18 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
                 variant="destructive"
                 size="sm"
                 onClick={() => stopStream('current-task-id')} // TODO: получать task_id
-                className="h-10 w-10 p-0"
+                className="touch-target h-11 w-11 p-0 flex-shrink-0"
               >
-                <Square className="h-4 w-4" />
+                <Square className="h-5 w-5" />
               </Button>
             ) : (
               <Button
                 onClick={handleSendMessage}
                 disabled={!message.trim() && attachedFiles.length === 0}
                 size="sm"
-                className="h-10 w-10 p-0"
+                className="touch-target h-11 w-11 p-0 flex-shrink-0"
               >
-                <Send className="h-4 w-4" />
+                <Send className="h-5 w-5" />
               </Button>
             )}
           </div>
@@ -370,13 +370,13 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
 
       {/* Индикатор печати */}
       {isStreaming && (
-        <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground animate-pulse-soft">
+        <div className="mt-3 flex items-center gap-3 text-sm text-muted-foreground animate-pulse-soft px-1">
           <div className="flex gap-1">
             <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
             <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
             <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
           </div>
-          ЖОС Агент печатает...
+          <span className="text-responsive-base">ЖОС Агент печатает...</span>
         </div>
       )}
     </div>

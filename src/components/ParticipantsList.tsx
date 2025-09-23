@@ -79,81 +79,112 @@ export const ParticipantsList = ({ chatId, onlineUsers }: ParticipantsListProps)
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="sm" className="flex items-center gap-2">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="touch-target h-10 px-3 flex items-center gap-2"
+        >
           <Users className="h-4 w-4" />
+          <span className="hidden sm:inline">Участники</span>
           <Badge variant="secondary" className="flex items-center gap-1">
             <Circle className="h-2 w-2 fill-green-500 text-green-500" />
-            {onlineCount}/{totalCount}
+            <span className="text-xs">{onlineCount}/{totalCount}</span>
           </Badge>
         </Button>
       </SheetTrigger>
-      <SheetContent>
-        <SheetHeader>
-          <SheetTitle className="flex items-center gap-2">
+      
+      <SheetContent side="right" className="w-[90vw] sm:w-[400px] p-0">
+        <SheetHeader className="p-6 border-b">
+          <SheetTitle className="flex items-center gap-2 text-lg">
             <Users className="h-5 w-5" />
             Участники чата
           </SheetTitle>
+          <p className="text-sm text-muted-foreground mt-1">
+            {onlineCount} из {totalCount} онлайн
+          </p>
         </SheetHeader>
         
-        <div className="mt-6">
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-sm text-muted-foreground">
-              {onlineCount} из {totalCount} онлайн
-            </span>
-          </div>
-
-          <ScrollArea className="h-[calc(100vh-200px)]">
-            <div className="space-y-2">
+        <div className="flex-1 overflow-hidden">
+          <ScrollArea className="h-[calc(100vh-140px)]">
+            <div className="p-6 space-y-6">
               {loading ? (
-                <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto mb-2" />
-                  <p className="text-sm text-muted-foreground">Загрузка...</p>
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-3" />
+                    <p className="text-sm text-muted-foreground">Загрузка участников...</p>
+                  </div>
                 </div>
               ) : (
                 <>
                   {/* Online users first */}
-                  {participants.filter(p => p.isOnline).map((participant) => (
-                    <div
-                      key={participant.user_id}
-                      className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50"
-                    >
-                      <div className="relative">
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src={participant.avatar_url} />
-                          <AvatarFallback>
-                            <User className="h-4 w-4" />
-                          </AvatarFallback>
-                        </Avatar>
-                        <Circle className="h-3 w-3 fill-green-500 text-green-500 absolute -bottom-0.5 -right-0.5 bg-background rounded-full" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">{participant.display_name}</p>
-                        <p className="text-xs text-green-600">онлайн</p>
+                  {participants.filter(p => p.isOnline).length > 0 && (
+                    <div>
+                      <h3 className="text-sm font-medium text-muted-foreground mb-3">
+                        Онлайн ({participants.filter(p => p.isOnline).length})
+                      </h3>
+                      <div className="space-y-3">
+                        {participants.filter(p => p.isOnline).map((participant) => (
+                          <div
+                            key={participant.user_id}
+                            className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors touch-target"
+                          >
+                            <div className="relative">
+                              <Avatar className="h-10 w-10">
+                                <AvatarImage src={participant.avatar_url} />
+                                <AvatarFallback className="text-sm bg-primary/10">
+                                  {participant.display_name?.charAt(0).toUpperCase() || 'U'}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 bg-green-500 border-2 border-background rounded-full" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium truncate">{participant.display_name}</p>
+                              <p className="text-xs text-green-600">онлайн</p>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
-                  ))}
+                  )}
 
                   {/* Offline users */}
-                  {participants.filter(p => !p.isOnline).map((participant) => (
-                    <div
-                      key={participant.user_id}
-                      className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 opacity-60"
-                    >
-                      <div className="relative">
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src={participant.avatar_url} />
-                          <AvatarFallback>
-                            <User className="h-4 w-4" />
-                          </AvatarFallback>
-                        </Avatar>
-                        <Circle className="h-3 w-3 fill-muted-foreground text-muted-foreground absolute -bottom-0.5 -right-0.5 bg-background rounded-full" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">{participant.display_name}</p>
-                        <p className="text-xs text-muted-foreground">не в сети</p>
+                  {participants.filter(p => !p.isOnline).length > 0 && (
+                    <div>
+                      <h3 className="text-sm font-medium text-muted-foreground mb-3">
+                        Офлайн ({participants.filter(p => !p.isOnline).length})
+                      </h3>
+                      <div className="space-y-3">
+                        {participants.filter(p => !p.isOnline).map((participant) => (
+                          <div
+                            key={participant.user_id}
+                            className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors opacity-70 touch-target"
+                          >
+                            <div className="relative">
+                              <Avatar className="h-10 w-10">
+                                <AvatarImage src={participant.avatar_url} />
+                                <AvatarFallback className="text-sm bg-muted/50">
+                                  {participant.display_name?.charAt(0).toUpperCase() || 'U'}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 bg-muted border-2 border-background rounded-full" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium truncate">{participant.display_name}</p>
+                              <p className="text-xs text-muted-foreground">не в сети</p>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
-                  ))}
+                  )}
+
+                  {/* Empty state */}
+                  {participants.length === 0 && (
+                    <div className="text-center py-12">
+                      <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <p className="text-sm text-muted-foreground">Нет данных об участниках</p>
+                    </div>
+                  )}
                 </>
               )}
             </div>

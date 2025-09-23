@@ -97,11 +97,11 @@ export const ChatsPage = () => {
   }
 
   return (
-    <div className="flex-1 p-6 max-w-6xl mx-auto">
+    <div className="flex-1 p-4 sm:p-6 max-w-6xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Чаты</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold mb-2">Чаты</h1>
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
             <span>{filteredChats.length} чатов</span>
             <Badge variant="secondary" className="flex items-center gap-1">
@@ -111,7 +111,11 @@ export const ChatsPage = () => {
           </div>
         </div>
         
-        <Button onClick={handleCreateChat} className="hover-lift">
+        <Button 
+          onClick={handleCreateChat} 
+          className="hover-lift h-11 px-6 w-full sm:w-auto"
+          size="lg"
+        >
           <Plus className="h-4 w-4 mr-2" />
           Новый чат
         </Button>
@@ -124,7 +128,7 @@ export const ChatsPage = () => {
           placeholder="Поиск чатов..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-9 max-w-md"
+          className="pl-9 h-11 text-base w-full sm:max-w-md"
         />
       </div>
 
@@ -149,24 +153,24 @@ export const ChatsPage = () => {
           )}
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filteredChats.map((chat) => (
             <Card 
               key={chat.id}
-              className="hover-lift cursor-pointer transition-all animate-fade-in"
+              className="hover-lift cursor-pointer transition-all animate-fade-in active:scale-95"
               onClick={() => navigate(`/chats/${chat.id}`)}
             >
-              <CardContent className="p-4">
+              <CardContent className="p-4 sm:p-5">
                 <div className="flex items-start gap-3">
-                  <Avatar className="h-10 w-10 flex-shrink-0">
-                    <AvatarFallback>
-                      <MessageSquare className="h-5 w-5" />
+                  <Avatar className="h-11 w-11 flex-shrink-0">
+                    <AvatarFallback className="bg-primary/10">
+                      <MessageSquare className="h-5 w-5 text-primary" />
                     </AvatarFallback>
                   </Avatar>
                   
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-2">
-                      <h3 className="font-semibold text-sm truncate">{chat.name}</h3>
+                      <h3 className="font-semibold text-base truncate">{chat.name}</h3>
                       {chat.forked_from_chat && (
                         <GitBranch className="h-3 w-3 text-muted-foreground flex-shrink-0" />
                       )}
@@ -174,12 +178,12 @@ export const ChatsPage = () => {
                     
                     <div className="space-y-2">
                       {chat.forked_from_chat && (
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-sm text-muted-foreground">
                           Ветка из {chat.forked_from_chat.slice(0, 8)}...
                         </p>
                       )}
                       
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <div className="flex items-center justify-between text-sm text-muted-foreground">
                         <span>{chat.updatedAt && formatDate(chat.updatedAt)}</span>
                         {chat.dify_conversation_id && (
                           <Badge variant="outline" className="text-xs">

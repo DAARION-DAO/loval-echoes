@@ -7,10 +7,34 @@ export default {
   theme: {
     container: {
       center: true,
-      padding: "2rem",
+      padding: {
+        DEFAULT: "1rem",
+        sm: "1.5rem", 
+        md: "2rem",
+        lg: "2.5rem",
+        xl: "3rem",
+      },
       screens: {
+        sm: "640px",
+        md: "768px", 
+        lg: "1024px",
+        xl: "1280px",
         "2xl": "1400px",
       },
+    },
+    screens: {
+      'xs': '475px',
+      'sm': '640px',
+      'md': '768px',
+      'lg': '1024px',
+      'xl': '1280px',
+      '2xl': '1400px',
+      // Touch-friendly breakpoints
+      'touch': {'raw': '(hover: none) and (pointer: coarse)'},
+      'no-touch': {'raw': '(hover: hover) and (pointer: fine)'},
+      // Orientation breakpoints
+      'portrait': {'raw': '(orientation: portrait)'},
+      'landscape': {'raw': '(orientation: landscape)'},
     },
     extend: {
       colors: {
@@ -120,6 +144,22 @@ export default {
             transform: "translateY(0)"
           }
         },
+        "slide-in-right": {
+          "0%": {
+            transform: "translateX(-100%)"
+          },
+          "100%": {
+            transform: "translateX(0)"
+          }
+        },
+        "slide-out-right": {
+          "0%": {
+            transform: "translateX(0)"
+          },
+          "100%": {
+            transform: "translateX(-100%)"
+          }
+        },
         "pulse-soft": {
           "0%, 100%": {
             opacity: "1"
@@ -135,6 +175,8 @@ export default {
         "fade-in": "fade-in 0.3s ease-out",
         "scale-in": "scale-in 0.2s ease-out",
         "slide-up": "slide-up 0.3s ease-out",
+        "slide-in-right": "slide-in-right 0.3s ease-out",
+        "slide-out-right": "slide-out-right 0.3s ease-out",
         "pulse-soft": "pulse-soft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
       },
     },

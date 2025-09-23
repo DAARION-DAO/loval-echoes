@@ -48,13 +48,13 @@ export function Layout({ sidebar, children }: LayoutProps) {
             <Button
               variant="ghost"
               size="sm"
-              className="md:hidden p-2"
+              className="lg:hidden p-2 h-9 w-9"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
               <Menu className="h-5 w-5" />
               <span className="sr-only">Open menu</span>
             </Button>
-            <span className="font-bold text-lg">Дух Общины</span>
+            <span className="font-bold text-lg sm:text-xl">Дух Общины</span>
           </div>
           
           <div className="flex items-center gap-3">
@@ -134,15 +134,17 @@ export function Layout({ sidebar, children }: LayoutProps) {
       </header>
 
       <div className="mx-auto max-w-7xl">
-        <div className="grid grid-cols-1 md:grid-cols-[320px_1fr]">
+        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] xl:grid-cols-[320px_1fr]">
           {/* Desktop Sidebar */}
-          <aside className="hidden md:block border-r min-h-[calc(100vh-3.5rem)]">
-            {sidebar}
+          <aside className="hidden lg:block border-r min-h-[calc(100vh-3.5rem)] bg-sidebar">
+            <div className="p-4">
+              {sidebar}
+            </div>
           </aside>
 
           {/* Main Content */}
           <main className="min-h-[calc(100vh-3.5rem)] overflow-hidden">
-            <div className="h-full">
+            <div className="h-full flex flex-col">
               {children}
             </div>
           </main>
@@ -151,18 +153,19 @@ export function Layout({ sidebar, children }: LayoutProps) {
 
       {/* Mobile Sidebar Overlay */}
       {isMobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-50">
+        <div className="lg:hidden fixed inset-0 z-50">
           <div 
-            className="absolute inset-0 bg-black/40" 
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm" 
             onClick={() => setIsMobileMenuOpen(false)}
           />
-          <aside className="absolute left-0 top-0 h-full w-80 bg-background border-r overflow-y-auto">
-            <div className="p-4">
-              <div className="flex items-center justify-between mb-4">
-                <span className="font-bold">Меню</span>
+          <aside className="absolute left-0 top-0 h-full w-[280px] max-w-[80vw] bg-sidebar border-r overflow-y-auto animate-slide-in-right">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <span className="font-bold text-lg">Навигация</span>
                 <Button
                   variant="ghost"
                   size="sm"
+                  className="h-8 w-8 p-0 rounded-full"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   ✕
