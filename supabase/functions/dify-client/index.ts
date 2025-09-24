@@ -192,21 +192,55 @@ serve(async (req) => {
         
         // First, save user message to database
         try {
-          const { data: userSession } = await supabase.auth.getUser();
-          
-          // Get user display name from profiles table
-          let userDisplayName = 'Пользователь';
-          if (userSession?.user) {
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('display_name')
-              .eq('user_id', userSession.user.id)
-              .single();
-            
-            userDisplayName = profile?.display_name || 
-                             userSession.user.user_metadata?.display_name || 
-                             userSession.user.email?.split('@')[0] || 
-                             'Пользователь';
+          // Get user info from Authorization header
+          const authHeader = req.headers.get('authorization');
+          let currentUserId = null;
+          let userDisplayName = 'Участник';
+
+          if (authHeader) {
+            try {
+              // Create a user-context Supabase client to get proper user session
+              const userSupabase = createClient(
+                Deno.env.get('SUPABASE_URL') ?? '',
+                Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+                {
+                  global: {
+                    headers: {
+                      Authorization: authHeader
+                    }
+                  }
+                }
+              );
+
+              const { data: { user }, error: userError } = await userSupabase.auth.getUser();
+              
+              if (!userError && user) {
+                currentUserId = user.id;
+                console.log('Found user:', user.id, user.email);
+                
+                // Get user display name from profiles table
+                const { data: profile, error: profileError } = await supabase
+                  .from('profiles')
+                  .select('display_name')
+                  .eq('user_id', user.id)
+                  .single();
+                
+                if (!profileError && profile?.display_name) {
+                  userDisplayName = profile.display_name;
+                  console.log('Found display name:', userDisplayName);
+                } else {
+                  // Fallback to user metadata or email
+                  userDisplayName = user.user_metadata?.display_name || 
+                                   user.email?.split('@')[0] || 
+                                   'Участник';
+                  console.log('Using fallback display name:', userDisplayName);
+                }
+              } else {
+                console.error('Error getting user from auth:', userError);
+              }
+            } catch (authError) {
+              console.error('Error processing auth:', authError);
+            }
           }
           
           await supabase
@@ -216,8 +250,9 @@ serve(async (req) => {
               content: query,
               role: 'user',
               sender_name: userDisplayName,
+              user_id: currentUserId,
             });
-          console.log('User message saved to database');
+          console.log('User message saved to database with sender:', userDisplayName);
         } catch (dbError) {
           console.error('Error saving user message:', dbError);
         }
