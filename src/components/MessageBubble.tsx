@@ -213,8 +213,8 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
       const language = match[1] || 'text';
       const code = match[2];
       parts.push(
-        <div key={match.index} className="my-3 rounded-lg border bg-muted/30 overflow-hidden">
-          <div className="flex items-center justify-between px-3 py-2 border-b bg-muted/50">
+        <div key={match.index} className="my-3 rounded-lg bg-muted/10 overflow-hidden">
+          <div className="flex items-center justify-between px-3 py-2 bg-muted/20">
             <span className="text-xs text-muted-foreground font-mono">{language}</span>
             <Button
               variant="ghost"
@@ -260,57 +260,53 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   return (
     <div
       className={cn(
-        'group relative max-w-4xl animate-fade-in transition-all duration-300 mb-4',
+        'group relative max-w-4xl animate-fade-in transition-all duration-300 mb-6',
         // Позиционируем: агент слева, пользователь справа
-        isAgent ? 'ml-0 mr-auto' : 'ml-auto mr-0',
-        getBubbleClasses()
+        isAgent ? 'ml-0 mr-auto' : 'ml-auto mr-0'
       )}
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
     >
-      <Card className={cn('border-border bg-background', isAgent ? '' : 'ml-16')}>
-        <div className={cn('flex gap-3 p-4', isAgent ? '' : 'flex-row-reverse')}>
-          {/* Аватар */}
-          <div className="flex-shrink-0">
-            {isSystem ? (
-              <div className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center">
-                <AlertTriangle className="h-4 w-4 text-white" />
-              </div>
-            ) : (
-              <CustomAvatar 
-                user={{
-                  id: isAgent ? 'agent' : currentUserId || 'user',
-                  display_name: senderName || (isAgent ? 'ЖОС Агент' : 'Пользователь'),
-                  avatar_url: isAgent ? '/favicon.ico' : undefined
-                }}
-                size="lg"
-              />
-            )}
-          </div>
-
-          {/* Контент сообщения */}
-          <div className="flex-1 min-w-0 space-y-3">
-          {/* Заголовок */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="font-medium text-sm">
-                {senderName || (isSystem ? 'Система' : (isAgent ? 'ЖОС Агент' : 'Пользователь'))}
-              </span>
-              <span className="text-xs text-muted-foreground">
-                {new Date(message.created_at).toLocaleTimeString('ru-RU', { 
-                  hour: '2-digit', 
-                  minute: '2-digit' 
-                })}
-              </span>
+      <div className={cn('flex gap-3', isAgent ? '' : 'flex-row-reverse')}>
+        {/* Аватар */}
+        <div className="flex-shrink-0">
+          {isSystem ? (
+            <div className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center">
+              <AlertTriangle className="h-4 w-4 text-white" />
             </div>
+          ) : (
+            <CustomAvatar 
+              user={{
+                id: isAgent ? 'agent' : currentUserId || 'user',
+                display_name: senderName || (isAgent ? 'Дух Общины' : 'Пользователь'),
+                avatar_url: isAgent ? '/favicon.ico' : undefined
+              }}
+              size="lg"
+            />
+          )}
+        </div>
+
+        {/* Контент сообщения */}
+        <div className={cn('flex-1 min-w-0 space-y-2', isAgent ? '' : 'text-right')}>
+          {/* Заголовок с именем и временем */}
+          <div className={cn('flex items-center gap-2', isAgent ? '' : 'flex-row-reverse')}>
+            <span className="font-medium text-sm text-foreground">
+              {senderName || (isSystem ? 'Система' : (isAgent ? 'Дух Общины' : 'Пользователь'))}
+            </span>
+            <span className="text-xs text-muted-foreground">
+              {new Date(message.created_at).toLocaleTimeString('ru-RU', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+              })}
+            </span>
             
-            {/* Кнопка удаления */}
-            {showActions && canDelete && !isDeleted && (
+            {/* Кнопка удаления - только для пользовательских сообщений */}
+            {showActions && canDelete && !isDeleted && !isAgent && !isSystem && (
               <Button
                 size="sm"
                 variant="ghost"
                 onClick={handleDeleteMessage}
-                className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity ml-2"
                 title="Удалить сообщение"
               >
                 <Trash2 className="h-3 w-3" />
@@ -319,23 +315,25 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
           </div>
 
           {/* Текст сообщения */}
-          <div className="prose prose-sm max-w-none dark:prose-invert">
+          <div className={cn('prose prose-sm max-w-none', isAgent ? '' : 'text-left')}>
             {isDeleted ? (
               <em className="text-muted-foreground">Сообщение удалено</em>
             ) : (
-              renderMessage(message.query || message.answer || '')
+              <div className="text-foreground leading-relaxed">
+                {renderMessage(message.query || message.answer || '')}
+              </div>
             )}
           </div>
 
           {/* Источники */}
           {!isDeleted && message.retriever_resources && message.retriever_resources.length > 0 && (
-            <div className="space-y-2">
+            <div className="space-y-2 mt-3">
               <h4 className="text-xs font-medium text-muted-foreground">Источники</h4>
-              <div className="grid gap-2">
+              <div className="space-y-2">
                 {message.retriever_resources.map((source, index) => (
-                  <div key={index} className="p-2 rounded border bg-muted/30 text-xs">
+                  <div key={index} className="p-3 rounded-lg bg-muted/20 text-xs">
                     <div className="flex items-center justify-between mb-1">
-                      <span className="font-medium">{source.document_name}</span>
+                      <span className="font-medium text-foreground">{source.document_name}</span>
                       <Badge variant="secondary" className="text-xs">
                         {Math.round(source.score * 100)}%
                       </Badge>
@@ -351,7 +349,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
 
           {/* Метаданные использования */}
           {!isDeleted && message.metadata?.usage && isAgent && (
-            <div className="p-2 rounded bg-muted/20 text-xs text-muted-foreground">
+            <div className="p-2 rounded-lg bg-muted/10 text-xs text-muted-foreground mt-3">
               <div className="flex items-center gap-4">
                 {message.metadata.usage.total_tokens && (
                   <span>Токены: {message.metadata.usage.total_tokens}</span>
@@ -373,7 +371,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
 
           {/* Действия для сообщений агента */}
           {isAgent && message.answer && !isDeleted && (
-            <div className="flex items-center gap-2 pt-2">
+            <div className="flex items-center gap-2 pt-3">
               {/* Воспроизведение аудио */}
               <Button
                 size="sm"
@@ -421,9 +419,8 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
               )}
             </div>
           )}
-          </div>
         </div>
-      </Card>
+      </div>
     </div>
   );
 };

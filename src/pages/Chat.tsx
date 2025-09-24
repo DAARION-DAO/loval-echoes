@@ -111,13 +111,21 @@ export const ChatPage = () => {
           console.log('New message received:', payload.new);
           const newMessage = payload.new as any;
           
+          // Получаем имя пользователя из профиля
+          let senderName = newMessage.sender_name;
+          if (!senderName && newMessage.role === 'user') {
+            senderName = 'Пользователь';
+          } else if (newMessage.role === 'assistant') {
+            senderName = 'Дух Общины';
+          }
+          
           const difyMessage: DifyMessage = {
             id: newMessage.id,
             conversation_id: newMessage.conversation_id,
             query: newMessage.role === 'user' ? newMessage.content : '',
             answer: newMessage.role === 'assistant' ? newMessage.content : '',
             created_at: newMessage.created_at,
-            sender_name: newMessage.sender_name,
+            sender_name: senderName,
           };
 
           setMessages(prev => {
@@ -165,7 +173,9 @@ export const ChatPage = () => {
       }
       
       setChat(currentChat);
-      setMessages(history.data);
+      
+      // Получаем профили пользователей для отображения имен
+      await loadUserProfiles(history.data);
       
     } catch (error) {
       console.error('Error loading chat data:', error);
@@ -177,6 +187,19 @@ export const ChatPage = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadUserProfiles = async (messages: DifyMessage[]) => {
+    // Имена пользователей уже есть в sender_name полях сообщений
+    // Обновляем сообщения с корректными именами
+    const updatedMessages = messages.map(msg => ({
+      ...msg,
+      sender_name: msg.answer 
+        ? 'Дух Общины' 
+        : (msg.sender_name || 'Пользователь')
+    }));
+    
+    setMessages(updatedMessages);
   };
 
   const scrollToBottom = () => {
@@ -364,6 +387,7 @@ export const ChatPage = () => {
                 message={message}
                 isAgent={!!message.answer}
                 isSystem={message.id.startsWith('pause-')}
+                senderName={message.sender_name}
                 onFork={handleForkMessage}
                 onReport={handleReportMessage}
                 onDelete={handleDeleteMessage}
@@ -383,6 +407,7 @@ export const ChatPage = () => {
                 metadata: currentMessage.metadata,
               }}
               isAgent={true}
+              senderName="Дух Общины"
               onFork={handleForkMessage}
               onReport={handleReportMessage}
               onDelete={handleDeleteMessage}
