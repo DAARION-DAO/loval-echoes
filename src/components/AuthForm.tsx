@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,10 +9,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useTranslation } from '@/lib/i18n';
 import { useToast } from '@/hooks/use-toast';
 import { useSecureAuth } from '@/hooks/useSecureAuth';
+import { useAuth } from '@/hooks/useAuth';
 
 export const AuthForm = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const { loading: secureAuthLoading, secureSignIn, secureSignUp } = useSecureAuth();
   
   const [loading, setLoading] = useState(false);
@@ -27,6 +31,14 @@ export const AuthForm = () => {
     password: '',
     displayName: ''
   });
+
+  // Redirect if user is already logged in
+  useEffect(() => {
+    if (user) {
+      console.log('User detected in AuthForm, redirecting to home');
+      navigate('/', { replace: true });
+    }
+  }, [user, navigate]);
 
   // Check for password reset mode on mount
   useEffect(() => {
@@ -192,6 +204,10 @@ export const AuthForm = () => {
           title: 'Добро пожаловать!',
           description: 'Вы успешно вошли в систему',
         });
+        // Navigate after showing success message
+        setTimeout(() => {
+          navigate('/', { replace: true });
+        }, 100);
         return;
       }
 
@@ -234,6 +250,10 @@ export const AuthForm = () => {
           title: 'Добро пожаловать!',
           description: 'Вы успешно вошли в систему',
         });
+        // Navigate after showing success message
+        setTimeout(() => {
+          navigate('/', { replace: true });
+        }, 100);
       } else {
         // Show specific error from secure auth
         if (result.error?.includes('Invalid login credentials')) {
