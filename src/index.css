@@ -238,6 +238,56 @@
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background-color: hsl(var(--muted-foreground));
   }
+  
+  /* Mobile dialog optimizations */
+  .mobile-dialog {
+    /* Prevent text overflow in dialogs */
+    max-width: calc(100vw - 2rem);
+    max-height: calc(100vh - 2rem);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+  }
+  
+  .mobile-dialog .dialog-content {
+    padding: 1rem;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+  
+  .mobile-dialog .dialog-content * {
+    max-width: 100%;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+  
+  /* Fix for text overflow in mobile dialogs */
+  @media (max-width: 640px) {
+    [role="dialog"] {
+      max-width: calc(100vw - 1rem);
+      max-height: calc(100vh - 1rem);
+      margin: 0.5rem;
+    }
+    
+    [role="dialog"] * {
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      hyphens: auto;
+    }
+    
+    /* Ensure buttons are touch-friendly */
+    button {
+      min-height: 44px;
+      min-width: 44px;
+    }
+    
+    /* Better input handling on mobile */
+    input, textarea {
+      font-size: 16px;
+      width: 100%;
+      max-width: 100%;
+    }
+  }
 }
 
 /* Video intro styles - handle aspect ratio and remove black bars */

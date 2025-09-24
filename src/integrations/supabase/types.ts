@@ -433,6 +433,10 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_user_approval_status: {
+        Args: { user_id: string }
+        Returns: string
+      }
       get_user_conversations: {
         Args: { user_id: string }
         Returns: {
@@ -448,6 +452,14 @@ export type Database = {
         Returns: boolean
       }
       is_moderator: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
+      is_user_admin_simple: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
+      is_user_approved: {
         Args: { user_id: string }
         Returns: boolean
       }
