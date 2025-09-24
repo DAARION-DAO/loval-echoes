@@ -14,7 +14,8 @@ export async function fetchChats(): Promise<ChatLite[]> {
   
   const { data: conversations, error } = await supabase
     .from('conversations')
-    .select('id, name, updated_at, created_at, dify_conversation_id')
+    .select('id, name, updated_at, created_at, dify_conversation_id, status')
+    .eq('status', 'active')
     .order('updated_at', { ascending: false });
 
   if (error) {
@@ -53,6 +54,7 @@ export async function createChat(name: string): Promise<ChatLite> {
     .insert({
       name: name || 'Новый чат',
       user_id: user.id,
+      status: 'active'
     })
     .select('id, name, created_at, updated_at')
     .single();
@@ -91,4 +93,63 @@ export async function createChat(name: string): Promise<ChatLite> {
     dify_conversation_id: undefined,
     forked_from_chat: undefined,
   };
+}
+
+// Archive a chat (move from active to archived)
+export async function archiveChat(chatId: string): Promise<void> {
+  const { error } = await supabase
+    .from('conversations')
+    .update({ status: 'archived' })
+    .eq('id', chatId);
+
+  if (error) {
+    throw new Error(`Failed to archive chat: ${error.message}`);
+  }
+}
+
+// Delete a chat permanently (move to deleted status)
+export async function deleteChat(chatId: string): Promise<void> {
+  const { error } = await supabase
+    .from('conversations')
+    .update({ status: 'deleted' })
+    .eq('id', chatId);
+
+  if (error) {
+    throw new Error(`Failed to delete chat: ${error.message}`);
+  }
+}
+
+// Restore a chat from archive
+export async function restoreChat(chatId: string): Promise<void> {
+  const { error } = await supabase
+    .from('conversations')
+    .update({ status: 'active' })
+    .eq('id', chatId);
+
+  if (error) {
+    throw new Error(`Failed to restore chat: ${error.message}`);
+  }
+}
+
+// Fetch chats by status
+export async function fetchChatsByStatus(status: 'active' | 'archived' | 'deleted'): Promise<ChatLite[]> {
+  const { data: conversations, error } = await supabase
+    .from('conversations')
+    .select('id, name, updated_at, created_at, dify_conversation_id, status')
+    .eq('status', status)
+    .order('updated_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching chats by status:', error);
+    throw new Error(`Failed to fetch chats: ${error.message}`);
+  }
+
+  return (conversations || []).map(conv => ({
+    id: conv.id,
+    name: conv.name,
+    updatedAt: conv.updated_at,
+    lastMessagePreview: '',
+    dify_conversation_id: conv.dify_conversation_id,
+    forked_from_chat: undefined,
+  }));
 }

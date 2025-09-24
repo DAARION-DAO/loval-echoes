@@ -112,6 +112,7 @@ export type Database = {
           is_archived: boolean
           is_group_chat: boolean | null
           name: string
+          status: string
           updated_at: string
           user_id: string | null
         }
@@ -124,6 +125,7 @@ export type Database = {
           is_archived?: boolean
           is_group_chat?: boolean | null
           name: string
+          status?: string
           updated_at?: string
           user_id?: string | null
         }
@@ -136,6 +138,7 @@ export type Database = {
           is_archived?: boolean
           is_group_chat?: boolean | null
           name?: string
+          status?: string
           updated_at?: string
           user_id?: string | null
         }

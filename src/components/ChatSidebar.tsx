@@ -29,6 +29,7 @@ import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { Badge } from '@/components/ui/badge';
 import { usePendingApprovals } from '@/hooks/usePendingApprovals';
+import { OnlineUsersBar } from '@/components/OnlineUsersBar';
 
 interface Chat {
   id: string;
@@ -216,14 +217,8 @@ export const ChatSidebar = () => {
 
   const handleArchiveChat = async (chatId: string) => {
     try {
-      const { error } = await supabase
-        .from('conversations')
-        .update({ is_archived: true } as any)
-        .eq('id', chatId);
-
-      if (error) {
-        throw new Error(`Failed to archive chat: ${error.message}`);
-      }
+      const { archiveChat } = await import('@/services/chats');
+      await archiveChat(chatId);
 
       setChats(prev => prev.filter(chat => chat.id !== chatId));
       toast({
@@ -245,25 +240,8 @@ export const ChatSidebar = () => {
     }
     
     try {
-      // Удаляем сообщения чата
-      const { error: messagesError } = await supabase
-        .from('messages')
-        .delete()
-        .eq('conversation_id', chatId);
-
-      if (messagesError) {
-        console.error('Error deleting messages:', messagesError);
-      }
-
-      // Удаляем сам чат
-      const { error } = await supabase
-        .from('conversations')
-        .delete()
-        .eq('id', chatId);
-
-      if (error) {
-        throw new Error(`Failed to delete chat: ${error.message}`);
-      }
+      const { deleteChat } = await import('@/services/chats');
+      await deleteChat(chatId);
 
       setChats(prev => prev.filter(chat => chat.id !== chatId));
       toast({
@@ -311,9 +289,7 @@ export const ChatSidebar = () => {
             <Plus className="h-4 w-4" />
           </Button>
         </div>
-        <div className="text-sm text-muted-foreground flex items-center gap-2">
-          <span>👥 {onlineUsers}/12 онлайн</span>
-        </div>
+        <OnlineUsersBar className="mb-3" maxVisible={4} />
       </div>
 
       <ScrollArea className="flex-1 px-2">

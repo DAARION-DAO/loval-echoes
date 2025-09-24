@@ -17,7 +17,7 @@ interface Chat {
   name: string;
   created_at: string;
   updated_at: string;
-  is_archived: boolean;
+  status: 'active' | 'archived' | 'deleted';
   is_group_chat: boolean;
   user_id: string;
   messageCount?: number;
@@ -50,7 +50,7 @@ export const ChatsManagement = () => {
           name,
           created_at,
           updated_at,
-          is_archived,
+          status,
           is_group_chat,
           user_id
         `)
@@ -79,6 +79,7 @@ export const ChatsManagement = () => {
 
           return {
             ...chat,
+            status: chat.status as 'active' | 'archived' | 'deleted',
             messageCount: messageCount || 0,
             lastMessage: lastMessageData?.content?.substring(0, 50) + '...' || 'Нет сообщений',
           };
@@ -100,7 +101,7 @@ export const ChatsManagement = () => {
 
   const filteredChats = chats.filter(chat => {
     const matchesSearch = chat.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesTab = activeTab === 'active' ? !chat.is_archived : chat.is_archived;
+    const matchesTab = activeTab === 'active' ? chat.status === 'active' : chat.status === 'archived';
     return matchesSearch && matchesTab;
   });
 
@@ -124,7 +125,7 @@ export const ChatsManagement = () => {
     try {
       const { error } = await supabase
         .from('conversations')
-        .update({ is_archived: archive })
+        .update({ status: archive ? 'archived' : 'active' })
         .in('id', chatIds);
 
       if (error) throw error;
@@ -148,25 +149,17 @@ export const ChatsManagement = () => {
 
   const deleteChats = async (chatIds: string[]) => {
     try {
-      // Сначала удаляем все сообщения из чатов
-      const { error: messagesError } = await supabase
-        .from('messages')
-        .delete()
-        .in('conversation_id', chatIds);
-
-      if (messagesError) throw messagesError;
-
-      // Затем удаляем сами чаты
-      const { error: chatsError } = await supabase
+      // Помечаем чаты как удаленные вместо физического удаления
+      const { error } = await supabase
         .from('conversations')
-        .delete()
+        .update({ status: 'deleted' })
         .in('id', chatIds);
 
-      if (chatsError) throw chatsError;
+      if (error) throw error;
 
       toast({
         title: 'Чаты удалены',
-        description: `${chatIds.length} чат(ов) удалены навсегда`,
+        description: `${chatIds.length} чат(ов) перемещены в корзину`,
       });
 
       setSelectedChats([]);
@@ -251,11 +244,11 @@ export const ChatsManagement = () => {
             <TabsList>
               <TabsTrigger value="active">
                 <MessageSquare className="h-4 w-4 mr-2" />
-                Активные ({chats.filter(c => !c.is_archived).length})
+                Активные ({chats.filter(c => c.status === 'active').length})
               </TabsTrigger>
               <TabsTrigger value="archived">
                 <Archive className="h-4 w-4 mr-2" />
-                Архивные ({chats.filter(c => c.is_archived).length})
+                Архивные ({chats.filter(c => c.status === 'archived').length})
               </TabsTrigger>
             </TabsList>
 
