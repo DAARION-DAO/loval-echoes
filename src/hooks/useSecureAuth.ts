@@ -109,35 +109,10 @@ export const useSecureAuth = () => {
 
       if (error) {
         console.error('Secure sign up error:', error);
-        
-        // Log client-side registration error
-        try {
-          await supabase.rpc('enhanced_log_security_event', {
-            p_user_id: null,
-            p_event_type: 'auth_client_error',
-            p_event_data: { error: error.message, action: 'signup' },
-            p_severity: 'error'
-          });
-        } catch (logError) {
-          console.error('Failed to log security event:', logError);
-        }
-        
         return { success: false, error: 'Ошибка подключения к серверу' };
       }
 
       if (data.rateLimited) {
-        // Log rate limit event
-        try {
-          await supabase.rpc('enhanced_log_security_event', {
-            p_user_id: null,
-            p_event_type: 'rate_limit_blocked_client',
-            p_event_data: { email, action: 'signup' },
-            p_severity: 'warning'
-          });
-        } catch (logError) {
-          console.error('Failed to log security event:', logError);
-        }
-        
         toast({
           title: 'Слишком много попыток',
           description: data.error,
@@ -152,17 +127,6 @@ export const useSecureAuth = () => {
           friendlyError = 'Пользователь с таким email уже существует';
         }
         
-        // Log failed registration attempt
-        try {
-          await supabase.rpc('enhanced_log_security_event', {
-            p_user_id: null,
-            p_event_type: 'secure_auth_failed',
-            p_event_data: { email, action: 'signup', error: data.error },
-            p_severity: 'warning'
-          });
-        } catch (logError) {
-          console.error('Failed to log security event:', logError);
-        }
         
         toast({
           title: 'Ошибка регистрации',
@@ -185,17 +149,6 @@ export const useSecureAuth = () => {
           }
         }
         
-        // Log successful registration
-        try {
-          await supabase.rpc('enhanced_log_security_event', {
-            p_user_id: null,
-            p_event_type: 'secure_auth_success',
-            p_event_data: { email, action: 'signup' },
-            p_severity: 'info'
-          });
-        } catch (logError) {
-          console.error('Failed to log security event:', logError);
-        }
         
         toast({
           title: 'Регистрация успешна',
@@ -209,17 +162,6 @@ export const useSecureAuth = () => {
     } catch (error: any) {
       console.error('Secure signup error:', error);
       
-      // Log client-side error
-      try {
-        await supabase.rpc('enhanced_log_security_event', {
-          p_user_id: null,
-          p_event_type: 'auth_client_error',
-          p_event_data: { error: error.message || 'Unknown error', action: 'signup' },
-          p_severity: 'error'
-        });
-      } catch (logError) {
-        console.error('Failed to log security event:', logError);
-      }
       
       return { success: false, error: 'Ошибка подключения' };
     } finally {
