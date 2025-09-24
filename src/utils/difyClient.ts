@@ -37,6 +37,9 @@ export interface Chat {
   created_by?: string;
   created_at: string;
   updated_at: string;
+  is_pinned?: boolean;
+  pinned_at?: string;
+  auto_generated_name?: boolean;
 }
 
 export class DifyClientError extends Error {
