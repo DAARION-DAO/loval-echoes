@@ -200,93 +200,59 @@ export const AuthForm = () => {
       const result = await secureSignIn(formData.email, formData.password);
 
       if (result.success) {
-        console.log('Secure auth success, checking session...');
-        // Check if we actually have a session
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        console.log('Session check after secure auth:', { session: !!session, user: session?.user?.email, error: sessionError });
-        
-        if (session?.user) {
-          toast({
-            title: 'Добро пожаловать!',
-            description: 'Вы успешно вошли в систему',
-          });
-          // Navigate after confirming session
-          setTimeout(() => {
-            navigate('/', { replace: true });
-          }, 100);
-        } else {
-          console.log('No session found after secure auth success, something is wrong');
+        // Navigate immediately - session will be set by useAuth hook
+        setTimeout(() => {
+          navigate('/', { replace: true });
+        }, 200);
+        return;
+      }
+
+      // If secure auth fails, try fallback
+      if (result.rateLimited || result.authError) {
+        return; // Don't try fallback for these specific errors
+      }
+
+      // Fallback to direct Supabase auth
+      const { error } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password,
+      });
+
+      if (error) {
+        if (error.message.includes('Invalid login credentials')) {
+          setShowResendButton(true);
+          setShowForgotPassword(true);
           toast({
             title: 'Ошибка входа',
-            description: 'Произошла ошибка при установке сессии. Попробуйте еще раз.',
+            description: 'Неверный email или пароль. Если вы недавно регистрировались, подтвердите email. Если забыли пароль, воспользуйтесь восстановлением.',
+            variant: 'destructive',
+          });
+        } else if (error.message.includes('Email not confirmed')) {
+          setShowResendButton(true);
+          toast({
+            title: 'Email не подтвержден',
+            description: 'Пожалуйста, подтвердите ваш email перед входом. Проверьте почту и папку "Спам".',
+            variant: 'destructive',
+          });
+        } else {
+          toast({
+            title: t.error,
+            description: error.message,
             variant: 'destructive',
           });
         }
         return;
       }
 
-      // If secure auth fails, fallback to direct Supabase
-      if (result.error?.includes('not found') || result.rateLimited) {
-        console.log('Falling back to direct Supabase auth');
-        
-        const { error } = await supabase.auth.signInWithPassword({
-          email: formData.email,
-          password: formData.password,
-        });
-
-        if (error) {
-          console.log('Supabase auth error:', error);
-          if (error.message.includes('Invalid login credentials')) {
-            setShowResendButton(true);
-            setShowForgotPassword(true);
-            toast({
-              title: 'Ошибка входа',
-              description: 'Неверный email или пароль. Если вы недавно регистрировались, подтвердите email. Если забыли пароль, воспользуйтесь восстановлением.',
-              variant: 'destructive',
-            });
-          } else if (error.message.includes('Email not confirmed')) {
-            setShowResendButton(true);
-            toast({
-              title: 'Email не подтвержден',
-              description: 'Пожалуйста, подтвердите ваш email перед входом. Проверьте почту и папку "Спам".',
-              variant: 'destructive',
-            });
-          } else {
-            toast({
-              title: t.error,
-              description: error.message,
-              variant: 'destructive',
-            });
-          }
-          return;
-        }
-
-        console.log('Supabase auth success, checking session...');
-        // Double-check session after direct Supabase auth
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        console.log('Session check after direct auth:', { session: !!session, user: session?.user?.email, error: sessionError });
-
-        toast({
-          title: 'Добро пожаловать!',
-          description: 'Вы успешно вошли в систему',
-        });
-        
-        // Wait for auth state to propagate
-        setTimeout(() => {
-          navigate('/', { replace: true });
-        }, 500);
-      } else {
-        // Show specific error from secure auth
-        if (result.error?.includes('Invalid login credentials')) {
-          setShowResendButton(true);
-          setShowForgotPassword(true);
-        }
-        toast({
-          title: 'Ошибка входа',
-          description: result.error || 'Ошибка при входе',
-          variant: 'destructive',
-        });
-      }
+      toast({
+        title: 'Добро пожаловать!',
+        description: 'Вы успешно вошли в систему',
+      });
+      
+      // Wait for auth state to propagate
+      setTimeout(() => {
+        navigate('/', { replace: true });
+      }, 200);
 
     } catch (error) {
       toast({

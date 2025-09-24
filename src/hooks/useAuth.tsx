@@ -28,27 +28,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        console.log('🔄 Auth state change:', event, {
-          hasSession: !!session,
-          userEmail: session?.user?.email,
-          userId: session?.user?.id
-        });
-        
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
         
         // Handle different auth events with reduced logging to prevent rate limiting
         if (event === 'SIGNED_IN') {
-          console.log('User signed in successfully');
           // Defer profile creation to avoid race conditions
           if (session?.user) {
             setTimeout(() => {
               ensureUserProfile(session.user);
             }, 1000);
           }
-        } else if (event === 'SIGNED_OUT') {
-          console.log('User signed out');
         }
       }
     );
@@ -83,8 +74,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     supabase.auth.getSession().then(({ data: { session }, error }) => {
       if (error) {
         console.error('Error getting session:', error);
-      } else {
-        console.log('Initial session check:', session?.user?.email || 'No session');
       }
       
       setSession(session);

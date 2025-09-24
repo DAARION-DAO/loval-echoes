@@ -23,15 +23,7 @@ const queryClient = new QueryClient();
 const ProtectedLayout = () => {
   const { user, loading } = useAuth();
 
-  console.log('🔒 ProtectedLayout - Auth state:', { 
-    hasUser: !!user, 
-    userEmail: user?.email,
-    loading,
-    currentPath: window.location.pathname 
-  });
-
   if (loading) {
-    console.log('🔒 ProtectedLayout - Loading...');
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <LoadingSpinner size="lg" text="Загрузка..." />
@@ -40,11 +32,9 @@ const ProtectedLayout = () => {
   }
 
   if (!user) {
-    console.log('🔒 ProtectedLayout - No user, redirecting to auth');
     return <Navigate to="/auth" replace />;
   }
 
-  console.log('🔒 ProtectedLayout - User authenticated, showing protected content');
   return (
     <Layout sidebar={<ChatSidebar />}>
       <ProtectedRoute>
@@ -65,15 +55,7 @@ const ProtectedLayout = () => {
 const PublicRoutes = () => {
   const { user, loading } = useAuth();
 
-  console.log('📍 PublicRoutes - Auth state:', { 
-    hasUser: !!user, 
-    userEmail: user?.email,
-    loading,
-    currentPath: window.location.pathname 
-  });
-
   if (loading) {
-    console.log('📍 PublicRoutes - Loading...');
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <LoadingSpinner size="lg" text="Загрузка..." />
@@ -82,11 +64,9 @@ const PublicRoutes = () => {
   }
 
   if (user) {
-    console.log('📍 PublicRoutes - User detected, redirecting to home');
     return <Navigate to="/" replace />;
   }
 
-  console.log('📍 PublicRoutes - No user, showing Auth');
   return <Auth />;
 };
 

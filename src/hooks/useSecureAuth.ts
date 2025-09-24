@@ -64,6 +64,19 @@ export const useSecureAuth = () => {
       }
 
       if (data.success) {
+        // Set the session on the client using the data returned from edge function
+        if (data.data?.session) {
+          const { error: setSessionError } = await supabase.auth.setSession({
+            access_token: data.data.session.access_token,
+            refresh_token: data.data.session.refresh_token
+          });
+          
+          if (setSessionError) {
+            console.error('Error setting session:', setSessionError);
+            return { success: false, error: 'Ошибка установки сессии' };
+          }
+        }
+        
         toast({
           title: 'Успешный вход',
           description: 'Добро пожаловать!',
@@ -160,6 +173,18 @@ export const useSecureAuth = () => {
       }
 
       if (data.success) {
+        // Set the session on the client if provided (for confirmed users)
+        if (data.data?.session) {
+          const { error: setSessionError } = await supabase.auth.setSession({
+            access_token: data.data.session.access_token,
+            refresh_token: data.data.session.refresh_token
+          });
+          
+          if (setSessionError) {
+            console.error('Error setting session after signup:', setSessionError);
+          }
+        }
+        
         // Log successful registration
         try {
           await supabase.rpc('enhanced_log_security_event', {
