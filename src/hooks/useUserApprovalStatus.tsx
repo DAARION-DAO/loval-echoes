@@ -64,15 +64,32 @@ export const useUserApprovalStatus = () => {
         }
 
         const status = data.approval_status as ApprovalStatus;
-        console.log('Current approval status:', status);
-        console.log('User profile data:', data);
+        const isMobile = /Mobile|Android|iPhone|iPad/.test(navigator.userAgent);
+        
+        console.log('🔍 useUserApprovalStatus Debug:', {
+          status,
+          profileData: data,
+          isMobile,
+          userId: user.id,
+          userAgent: navigator.userAgent,
+          cacheKey: `approval_status_${user.id}`
+        });
         
         // Additional check for mobile devices - ensure status is properly set
         if (status === 'approved') {
-          console.log('✅ User is approved and should have access to chats');
-          console.log('User agent:', navigator.userAgent);
+          console.log('✅ User is approved and should have access to chats', {
+            userId: user.id,
+            status,
+            isMobile,
+            timestamp: new Date().toISOString()
+          });
         } else {
-          console.log('❌ User not approved, status:', status);
+          console.log('❌ User not approved:', {
+            status,
+            userId: user.id,
+            isMobile,
+            timestamp: new Date().toISOString()
+          });
         }
         
         setApprovalStatus(status);
