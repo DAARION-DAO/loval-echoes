@@ -248,10 +248,10 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
   };
 
   return (
-    <div className="border-t bg-background p-4 mobile-safe-area">
+    <div className="border-t bg-background p-3 sm:p-4 mobile-safe-area">
       {/* Прогресс загрузки */}
       {uploadProgress > 0 && uploadProgress < 100 && (
-        <div className="mb-4">
+        <div className="mb-3 sm:mb-4">
           <Progress value={uploadProgress} className="h-2" />
           <p className="text-sm text-muted-foreground mt-1">Загрузка файлов...</p>
         </div>
@@ -259,18 +259,19 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
 
       {/* Прикрепленные файлы */}
       {attachedFiles.length > 0 && (
-        <div className="mb-4 flex flex-wrap gap-2">
+        <div className="mb-3 sm:mb-4 flex flex-wrap gap-2">
           {attachedFiles.map((file, index) => (
             <Badge 
               key={index} 
               variant="secondary" 
-              className="flex items-center gap-2 px-3 py-2 text-sm touch-target"
+              className="flex items-center gap-2 px-2 py-1 sm:px-3 sm:py-2 text-sm touch-target"
             >
               {getFileIcon(file)}
-              <span className="text-xs sm:text-sm max-w-20 sm:max-w-none truncate">{file.name}</span>
+              <span className="text-xs sm:text-sm max-w-16 sm:max-w-32 truncate" title={file.name}>{file.name}</span>
               <button
                 onClick={() => removeFile(index)}
-                className="ml-1 text-muted-foreground hover:text-foreground touch-target"
+                className="ml-1 text-muted-foreground hover:text-foreground touch-target min-w-4 min-h-4 flex items-center justify-center"
+                aria-label="Удалить файл"
               >
                 ×
               </button>
@@ -296,31 +297,32 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
           </div>
         )}
 
-        <div className="flex gap-2 p-3 sm:p-4">
+        <div className="flex gap-2 p-2 sm:p-3">
           {/* Textarea */}
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <Textarea
               ref={textareaRef}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder={isRecording ? 'Записываю голос...' : 'Введите сообщение...'}
-              className="min-h-[44px] max-h-32 resize-none border-0 shadow-none focus-visible:ring-0 mobile-input text-base"
+              className="min-h-[40px] sm:min-h-[44px] max-h-24 sm:max-h-32 resize-none border-0 shadow-none focus-visible:ring-0 mobile-input text-base px-3 py-2"
               disabled={isRecording}
             />
           </div>
 
           {/* Кнопки действий */}
-          <div className="flex items-end gap-1 sm:gap-2">
+          <div className="flex items-end gap-1 flex-shrink-0">
             {/* Кнопка файлов */}
             <Button
               variant="ghost"
               size="sm"
               onClick={() => fileInputRef.current?.click()}
               disabled={isStreaming}
-              className="touch-target h-11 w-11 p-0 flex-shrink-0"
+              className="touch-target h-10 w-10 sm:h-11 sm:w-11 p-0 flex-shrink-0"
+              aria-label="Прикрепить файл"
             >
-              <Paperclip className="h-5 w-5" />
+              <Paperclip className="h-4 w-4 sm:h-5 sm:w-5" />
             </Button>
 
             {/* Кнопка записи голоса */}
@@ -329,9 +331,10 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
               size="sm"
               onClick={isRecording ? stopRecording : startRecording}
               disabled={isStreaming}
-              className={`touch-target h-11 w-11 p-0 flex-shrink-0 ${isRecording ? 'text-destructive animate-pulse-soft' : ''}`}
+              className={`touch-target h-10 w-10 sm:h-11 sm:w-11 p-0 flex-shrink-0 ${isRecording ? 'text-destructive animate-pulse-soft' : ''}`}
+              aria-label={isRecording ? "Остановить запись" : "Записать голосовое сообщение"}
             >
-              {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+              {isRecording ? <MicOff className="h-4 w-4 sm:h-5 sm:w-5" /> : <Mic className="h-4 w-4 sm:h-5 sm:w-5" />}
             </Button>
 
             {/* Кнопка остановки/отправки */}
@@ -339,19 +342,21 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
               <Button
                 variant="destructive"
                 size="sm"
-                onClick={() => stopStream('current-task-id')} // TODO: получать task_id
-                className="touch-target h-11 w-11 p-0 flex-shrink-0"
+                onClick={() => stopStream('current-task-id')}
+                className="touch-target h-10 w-10 sm:h-11 sm:w-11 p-0 flex-shrink-0"
+                aria-label="Остановить генерацию"
               >
-                <Square className="h-5 w-5" />
+                <Square className="h-4 w-4 sm:h-5 sm:w-5" />
               </Button>
             ) : (
               <Button
                 onClick={handleSendMessage}
                 disabled={!message.trim() && attachedFiles.length === 0}
                 size="sm"
-                className="touch-target h-11 w-11 p-0 flex-shrink-0"
+                className="touch-target h-10 w-10 sm:h-11 sm:w-11 p-0 flex-shrink-0"
+                aria-label="Отправить сообщение"
               >
-                <Send className="h-5 w-5" />
+                <Send className="h-4 w-4 sm:h-5 sm:w-5" />
               </Button>
             )}
           </div>
@@ -370,13 +375,13 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
 
       {/* Индикатор печати */}
       {isStreaming && (
-        <div className="mt-3 flex items-center gap-3 text-sm text-muted-foreground animate-pulse-soft px-1">
+        <div className="mt-2 sm:mt-3 flex items-center gap-3 text-sm text-muted-foreground animate-pulse-soft px-1">
           <div className="flex gap-1">
             <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
             <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
             <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
           </div>
-          <span className="text-responsive-base">ЖОС Агент печатает...</span>
+          <span className="text-sm sm:text-base">ЖОС Агент печатает...</span>
         </div>
       )}
     </div>

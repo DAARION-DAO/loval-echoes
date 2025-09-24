@@ -279,51 +279,52 @@ export const ChatPage = () => {
   }
 
   return (
-    <div className="flex-1 flex flex-col h-screen">
+    <div className="flex-1 flex flex-col chat-container mobile-viewport-fix">
       {/* Шапка чата */}
-      <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-10">
-        <div className="flex items-center justify-between p-4">
-          <div className="flex items-center gap-3">
+      <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-10 flex-shrink-0">
+        <div className="flex items-center justify-between p-3 sm:p-4">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => navigate('/chats')}
-              className="md:hidden"
+              className="md:hidden touch-target flex-shrink-0"
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
             
-            <div>
-              <h1 className="font-semibold">{chat.name}</h1>
+            <div className="min-w-0 flex-1">
+              <h1 className="font-semibold text-sm sm:text-base truncate">{chat.name}</h1>
               {chat.forked_from_chat && (
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs sm:text-sm text-muted-foreground truncate">
                   ← {t.chats.forkFrom} {chat.forked_from_chat.slice(0, 8)}...
                 </p>
               )}
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
             <ParticipantsList chatId={chatId} onlineUsers={onlineUsers} />
             <Button
               variant="outline"
               size="sm"
               onClick={handlePauseNode}
-              className="flex items-center gap-1"
+              className="flex items-center gap-1 text-xs sm:text-sm touch-target"
             >
               <AlertTriangle className="h-3 w-3" />
-              Пауза/Узел
+              <span className="hidden sm:inline">Пауза/Узел</span>
+              <span className="sm:hidden">Узел</span>
             </Button>
           </div>
         </div>
       </div>
 
       {/* Лента сообщений */}
-      <ScrollArea className="flex-1">
-        <div className="p-4 space-y-4">
+      <ScrollArea className="flex-1 chat-messages custom-scrollbar">
+        <div className="p-3 sm:p-4 space-y-3 sm:space-y-4 pb-safe">
           {messages.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">{t.chats.emptyState}</p>
+            <div className="text-center py-8 sm:py-12">
+              <p className="text-muted-foreground text-sm sm:text-base">{t.chats.emptyState}</p>
             </div>
           ) : (
             messages.map((message) => (
@@ -360,9 +361,11 @@ export const ChatPage = () => {
       </ScrollArea>
 
       {/* Интерфейс ввода */}
-      <ChatInterface
-        chatId={chatId || ''}
-      />
+      <div className="flex-shrink-0">
+        <ChatInterface
+          chatId={chatId || ''}
+        />
+      </div>
     </div>
   );
 };

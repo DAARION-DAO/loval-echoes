@@ -2,97 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
-
-/* Светлая, прозрачная тема в стиле ChatGPT/Grok */
 @layer base {
   :root {
-    /* Светлая основа */
-    --background: 0 0% 100%;
-    --foreground: 210 11% 15%;
-
-    /* Карточки */
-    --card: 0 0% 100%;
-    --card-foreground: 210 11% 15%;
-
-    /* Поповеры */
-    --popover: 0 0% 100%;
-    --popover-foreground: 210 11% 15%;
-
-    /* Основной цвет - мягкий синий */
-    --primary: 214 100% 59%;
-    --primary-foreground: 0 0% 100%;
-
-    /* Вторичный - очень светлый серый */
-    --secondary: 210 17% 98%;
-    --secondary-foreground: 210 11% 15%;
-
-    /* Приглушенный */
-    --muted: 210 17% 95%;
-    --muted-foreground: 215 13% 65%;
-
-    /* Акцент */
-    --accent: 210 17% 93%;
-    --accent-foreground: 210 11% 15%;
-
-    /* Деструктивный */
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
-
-    /* Границы */
-    --border: 214 15% 91%;
-    --input: 214 15% 91%;
-    --ring: 214 100% 59%;
-
-    --radius: 0.75rem;
-
-    /* Сайдбар */
-    --sidebar-background: 210 17% 98%;
-    --sidebar-foreground: 210 11% 15%;
-    --sidebar-primary: 214 100% 59%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 17% 95%;
-    --sidebar-accent-foreground: 210 11% 15%;
-    --sidebar-border: 214 15% 91%;
-    --sidebar-ring: 214 100% 59%;
-
-    /* ЖОС специфичные цвета */
-    --zhos-banner: 45 100% 96%;
-    --zhos-banner-foreground: 45 84% 47%;
-    --zhos-banner-border: 45 100% 88%;
-    
-    --agent-message: 210 17% 98%;
-    --agent-message-border: 214 15% 91%;
-    
-    --user-message: 214 100% 97%;
-    --user-message-border: 214 100% 90%;
-    
-    --system-message: 120 60% 97%;
-    --system-message-border: 120 60% 88%;
-
-  /* Анимации и эффекты */
-    --transition-smooth: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-    --shadow-soft: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-    --shadow-medium: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    --shadow-large: 0 10px 25px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    
-    /* Touch targets - minimum 44px for accessibility */
-    --touch-target-min: 44px;
-  }
-
-  .dark {
-    /* Темная тема остается как fallback, но фокус на светлой */
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
     --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 84% 4.9%;
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
     --muted: 217.2 32.6% 17.5%;
@@ -103,14 +22,66 @@ All colors MUST be HSL.
     --destructive-foreground: 210 40% 98%;
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
+    --ring: 224.3 76.3% 94.0%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+    --radius: 0.5rem;
+    --sidebar: 222.2 84% 4.9%;
+    --sidebar-primary: 224.3 76.3% 94.0%;
+    --sidebar-primary-foreground: 222.2 84% 4.9%;
+    --sidebar-accent: 216.4 31.8% 17.1%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217.2 32.6% 17.5%;
+    --sidebar-ring: 224.3 76.3% 94.0%;
+    
+    /* Mobile-specific variables */
+    --mobile-safe-area-top: env(safe-area-inset-top);
+    --mobile-safe-area-bottom: env(safe-area-inset-bottom);
+    --mobile-safe-area-left: env(safe-area-inset-left);
+    --mobile-safe-area-right: env(safe-area-inset-right);
+    
+    /* Touch target size for mobile */
+    --touch-target-min: 44px;
+    
+    /* Shadow definitions */
+    --shadow-elegant: 0 10px 30px -10px hsl(var(--primary) / 0.3);
+    --shadow-glow: 0 0 40px hsl(var(--primary) / 0.2);
+  }
+
+  .light {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 84% 4.9%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222.2 84% 4.9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --sidebar: 0 0% 98%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 }
@@ -119,144 +90,153 @@ All colors MUST be HSL.
   * {
     @apply border-border;
   }
-
+  
   body {
-    @apply bg-background text-foreground font-sans antialiased;
+    @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
-
-  /* Скроллбары */
-  ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+  
+  /* Mobile viewport optimizations */
+  html {
+    /* Prevent zoom on input focus on iOS */
+    -webkit-text-size-adjust: 100%;
+    /* Better font rendering on mobile */
+    text-size-adjust: 100%;
   }
-
-  ::-webkit-scrollbar-track {
-    @apply bg-transparent;
+  
+  /* Mobile-safe input styling */
+  input, textarea, select {
+    /* Prevent zoom on focus for iOS */
+    font-size: 16px;
   }
-
-  ::-webkit-scrollbar-thumb {
-    @apply bg-border rounded-full;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    @apply bg-muted-foreground/30;
-  }
-
-  /* Утилиты для анимаций */
-  .animate-fade-in {
-    animation: fade-in 0.3s ease-out;
-  }
-
-  .animate-scale-in {
-    animation: scale-in 0.2s ease-out;
-  }
-
-  .animate-slide-up {
-    animation: slide-up 0.3s ease-out;
-  }
-
-  /* Hover эффекты */
-  .hover-lift {
-    transition: var(--transition-smooth);
-  }
-
-  .hover-lift:hover {
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-medium);
-  }
-
-  /* Фокус */
-  .focus-ring {
-    @apply focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
+  
+  @media (min-width: 640px) {
+    input, textarea, select {
+      font-size: 14px;
+    }
   }
 }
 
-@layer components {
-  /* Кастомные компоненты */
-  .message-bubble {
-    @apply rounded-2xl px-4 py-3 max-w-4xl break-words;
-    transition: var(--transition-smooth);
-  }
-
-  .message-bubble:hover {
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-soft);
-  }
-
-  /* Mobile optimizations */
-  .touch-target {
-    min-height: var(--touch-target-min);
-    min-width: var(--touch-target-min);
-  }
-
-  .mobile-input {
-    @apply text-base; /* Prevents zoom on iOS */
-  }
-
+@layer utilities {
+  /* Mobile-specific utilities */
   .mobile-safe-area {
-    padding-bottom: env(safe-area-inset-bottom);
-    padding-left: env(safe-area-inset-left);
-    padding-right: env(safe-area-inset-right);
+    padding-top: var(--mobile-safe-area-top);
+    padding-bottom: var(--mobile-safe-area-bottom);
+    padding-left: var(--mobile-safe-area-left);
+    padding-right: var(--mobile-safe-area-right);
   }
-
-  /* Responsive text sizes */
-  .text-responsive-lg {
-    @apply text-lg md:text-xl lg:text-2xl;
+  
+  .mobile-input {
+    /* Prevent zoom on focus */
+    font-size: 16px;
+    /* Ensure proper touch targets */
+    min-height: var(--touch-target-min);
   }
-
+  
+  .touch-target {
+    /* Ensure minimum touch target size */
+    min-width: var(--touch-target-min);
+    min-height: var(--touch-target-min);
+    /* Better touch feedback */
+    -webkit-tap-highlight-color: hsl(var(--primary) / 0.1);
+    cursor: pointer;
+  }
+  
+  .pb-safe {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+  
+  /* Responsive text utilities */
   .text-responsive-base {
-    @apply text-sm md:text-base;
+    @apply text-sm sm:text-base;
   }
-
-  .agent-message {
-    @apply bg-[hsl(var(--agent-message))] border border-[hsl(var(--agent-message-border))];
+  
+  .text-responsive-lg {
+    @apply text-base sm:text-lg;
   }
-
-  .user-message {
-    @apply bg-[hsl(var(--user-message))] border border-[hsl(var(--user-message-border))];
+  
+  /* Shadow utilities */
+  .shadow-elegant {
+    box-shadow: var(--shadow-elegant);
   }
-
-  .system-message {
-    @apply bg-[hsl(var(--system-message))] border border-[hsl(var(--system-message-border))];
+  
+  .shadow-glow {
+    box-shadow: var(--shadow-glow);
   }
-
-  .zhos-banner {
-    @apply bg-[hsl(var(--zhos-banner))] text-[hsl(var(--zhos-banner-foreground))] border border-[hsl(var(--zhos-banner-border))];
+  
+  /* Animation utilities */
+  .animate-pulse-soft {
+    animation: pulse-soft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
-}
-
-/* Кейфреймы для анимаций */
-@keyframes fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
+  
+  @keyframes pulse-soft {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: .8;
+    }
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  
+  .animate-slide-in-right {
+    animation: slide-in-right 0.3s ease-out;
   }
-}
-
-@keyframes scale-in {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
+  
+  @keyframes slide-in-right {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(0);
+    }
   }
-  to {
-    opacity: 1;
-    transform: scale(1);
+  
+  /* Mobile chat optimizations */
+  .chat-container {
+    height: 100vh;
+    height: 100dvh; /* Use dynamic viewport height when supported */
+    max-height: 100vh;
+    max-height: 100dvh;
+    overflow: hidden;
   }
-}
-
-@keyframes slide-up {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
+  
+  .chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+    /* Account for mobile keyboards */
+    max-height: calc(100vh - 200px);
+    max-height: calc(100dvh - 200px);
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  
+  /* Fix for mobile viewport issues */
+  @supports (-webkit-touch-callout: none) {
+    .mobile-viewport-fix {
+      height: -webkit-fill-available;
+    }
+  }
+  
+  /* Better scrollbars */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted)) transparent;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--muted));
+    border-radius: 3px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--muted-foreground));
   }
 }
 

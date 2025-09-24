@@ -14,6 +14,59 @@ export type Database = {
   }
   public: {
     Tables: {
+      approval_inconsistencies: {
+        Row: {
+          approval_count: number | null
+          approved_by: string[] | null
+          created_at: string | null
+          display_name: string | null
+          id: string
+          profile_status: string | null
+          rejected_by: string[] | null
+          rejection_count: number | null
+          request_status: string | null
+          required_approvals: number | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          approval_count?: number | null
+          approved_by?: string[] | null
+          created_at?: string | null
+          display_name?: string | null
+          id?: string
+          profile_status?: string | null
+          rejected_by?: string[] | null
+          rejection_count?: number | null
+          request_status?: string | null
+          required_approvals?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          approval_count?: number | null
+          approved_by?: string[] | null
+          created_at?: string | null
+          display_name?: string | null
+          id?: string
+          profile_status?: string | null
+          rejected_by?: string[] | null
+          rejection_count?: number | null
+          request_status?: string | null
+          required_approvals?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_inconsistencies_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       conversation_participants: {
         Row: {
           conversation_id: string
@@ -276,21 +329,7 @@ export type Database = {
             foreignKeyName: "fk_user_approval_requests_user_id"
             columns: ["user_id"]
             isOneToOne: true
-            referencedRelation: "approval_inconsistencies"
-            referencedColumns: ["user_id"]
-          },
-          {
-            foreignKeyName: "fk_user_approval_requests_user_id"
-            columns: ["user_id"]
-            isOneToOne: true
             referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
-          },
-          {
-            foreignKeyName: "user_approval_requests_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
-            referencedRelation: "approval_inconsistencies"
             referencedColumns: ["user_id"]
           },
           {
@@ -339,20 +378,7 @@ export type Database = {
       }
     }
     Views: {
-      approval_inconsistencies: {
-        Row: {
-          approval_count: number | null
-          approved_by: string[] | null
-          display_name: string | null
-          profile_status: string | null
-          rejected_by: string[] | null
-          rejection_count: number | null
-          request_status: string | null
-          required_approvals: number | null
-          user_id: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       calculate_required_approvals: {
@@ -377,6 +403,10 @@ export type Database = {
           p_window_minutes?: number
         }
         Returns: boolean
+      }
+      detect_approval_inconsistencies: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       enhanced_log_security_event: {
         Args: {
