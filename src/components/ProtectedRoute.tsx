@@ -55,5 +55,6 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   }
 
   // User is approved - show protected content
+  console.log('✅ ProtectedRoute: User is approved, showing content');
   return <>{children}</>;
 };

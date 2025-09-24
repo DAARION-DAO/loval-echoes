@@ -103,6 +103,9 @@ export const Participants = () => {
 
       if (profilesError) throw profilesError;
 
+      console.log('All profiles loaded:', profiles);
+      console.log('Approved profiles:', profiles?.filter(p => p.approval_status === 'approved'));
+
       setPendingRequests(pendingWithProfiles);
       setApprovedUsers(profiles?.filter(p => p.approval_status === 'approved') || []);
       setRejectedUsers(profiles?.filter(p => p.approval_status === 'rejected') || []);
