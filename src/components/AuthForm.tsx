@@ -200,14 +200,28 @@ export const AuthForm = () => {
       const result = await secureSignIn(formData.email, formData.password);
 
       if (result.success) {
-        toast({
-          title: 'Добро пожаловать!',
-          description: 'Вы успешно вошли в систему',
-        });
-        // Navigate after showing success message
-        setTimeout(() => {
-          navigate('/', { replace: true });
-        }, 100);
+        console.log('Secure auth success, checking session...');
+        // Check if we actually have a session
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        console.log('Session check after secure auth:', { session: !!session, user: session?.user?.email, error: sessionError });
+        
+        if (session?.user) {
+          toast({
+            title: 'Добро пожаловать!',
+            description: 'Вы успешно вошли в систему',
+          });
+          // Navigate after confirming session
+          setTimeout(() => {
+            navigate('/', { replace: true });
+          }, 100);
+        } else {
+          console.log('No session found after secure auth success, something is wrong');
+          toast({
+            title: 'Ошибка входа',
+            description: 'Произошла ошибка при установке сессии. Попробуйте еще раз.',
+            variant: 'destructive',
+          });
+        }
         return;
       }
 
@@ -221,6 +235,7 @@ export const AuthForm = () => {
         });
 
         if (error) {
+          console.log('Supabase auth error:', error);
           if (error.message.includes('Invalid login credentials')) {
             setShowResendButton(true);
             setShowForgotPassword(true);
@@ -246,14 +261,20 @@ export const AuthForm = () => {
           return;
         }
 
+        console.log('Supabase auth success, checking session...');
+        // Double-check session after direct Supabase auth
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        console.log('Session check after direct auth:', { session: !!session, user: session?.user?.email, error: sessionError });
+
         toast({
           title: 'Добро пожаловать!',
           description: 'Вы успешно вошли в систему',
         });
-        // Navigate after showing success message
+        
+        // Wait for auth state to propagate
         setTimeout(() => {
           navigate('/', { replace: true });
-        }, 100);
+        }, 500);
       } else {
         // Show specific error from secure auth
         if (result.error?.includes('Invalid login credentials')) {
