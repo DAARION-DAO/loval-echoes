@@ -1,31 +1,28 @@
-import { useState } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 import { 
+  Copy, 
   ThumbsUp, 
   ThumbsDown, 
-  Copy, 
-  GitBranch, 
-  Flag, 
   Play, 
   Pause,
-  ExternalLink,
-  User,
+  GitBranch,
+  Flag,
   Bot,
-  AlertCircle
+  User,
+  AlertTriangle,
+  Trash2
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogTrigger 
-} from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
-import { useTranslation } from '@/lib/i18n';
-import { difyClient, type DifyMessage } from '@/utils/difyClient';
+import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { difyClient, type DifyMessage } from '@/utils/difyClient';
+import { supabase } from '@/integrations/supabase/client';
+import { Avatar as CustomAvatar } from '@/components/Avatar';
+import { ReactionsBar } from '@/components/ReactionsBar';
 
 interface MessageBubbleProps {
   message: DifyMessage;
@@ -34,50 +31,93 @@ interface MessageBubbleProps {
   senderName?: string;
   onFork?: (messageId: string) => void;
   onReport?: (messageId: string) => void;
+  onDelete?: (messageId: string) => void;
 }
 
-export const MessageBubble = ({ 
-  message, 
-  isAgent = false, 
+export const MessageBubble: React.FC<MessageBubbleProps> = ({
+  message,
+  isAgent = false,
   isSystem = false,
   senderName,
   onFork,
-  onReport 
-}: MessageBubbleProps) => {
-  const { t } = useTranslation();
+  onReport,
+  onDelete,
+}) => {
   const { toast } = useToast();
-  const [feedbackOpen, setFeedbackOpen] = useState(false);
-  const [feedbackText, setFeedbackText] = useState('');
   const [isPlaying, setIsPlaying] = useState(false);
+  const [showActions, setShowActions] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [canDelete, setCanDelete] = useState(false);
+  const [isDeleted, setIsDeleted] = useState(false);
 
-  const handleCopyCode = (code: string) => {
-    navigator.clipboard.writeText(code);
-    toast({
-      title: t.messages.copyCode,
-      description: 'Код скопирован в буфер обмена',
-    });
+  useEffect(() => {
+    getCurrentUser();
+    checkIfDeleted();
+  }, []);
+
+  const getCurrentUser = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    setCurrentUserId(user?.id || null);
+    
+    // Проверяем права на удаление
+    if (user?.id) {
+      // Пользователь может удалять свои сообщения или если он модератор/админ
+      const isOwn = !isAgent && !isSystem; // Предполагаем что пользовательские сообщения - не от агента/системы
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('approval_status')
+        .eq('user_id', user.id)
+        .single();
+      
+      const isModerator = profile?.approval_status === 'approved';
+      setCanDelete(isOwn || isModerator);
+    }
   };
 
-  const handleFeedback = async (rating: 'like' | 'dislike') => {
+  const checkIfDeleted = async () => {
     try {
-      await difyClient.sendFeedback(message.id, rating, feedbackText);
-      setFeedbackOpen(false);
-      setFeedbackText('');
+      const { data, error } = await supabase
+        .from('messages')
+        .select('deleted_at')
+        .eq('id', message.id)
+        .single();
+      
+      if (!error && data?.deleted_at) {
+        setIsDeleted(true);
+      }
+    } catch (error) {
+      // Игнорируем ошибки проверки удаления
+    }
+  };
+
+  const handleCopyCode = useCallback((code: string) => {
+    navigator.clipboard.writeText(code);
+    toast({
+      title: 'Код скопирован',
+      description: 'Текст скопирован в буфер обмена',
+    });
+  }, [toast]);
+
+  const handleFeedback = useCallback(async (rating: 'like' | 'dislike') => {
+    try {
+      await difyClient.sendFeedback(message.id, rating);
       toast({
-        title: t.messages.feedback,
-        description: 'Обратная связь отправлена',
+        title: 'Обратная связь отправлена',
+        description: 'Спасибо за оценку!',
       });
     } catch (error) {
       console.error('Error sending feedback:', error);
       toast({
-        title: t.error,
-        description: error instanceof Error ? error.message : t.errors.unknownError,
+        title: 'Ошибка',
+        description: error instanceof Error ? error.message : 'Не удалось отправить обратную связь',
         variant: 'destructive',
       });
     }
-  };
+  }, [message.id, toast]);
 
   const handlePlayAudio = async () => {
+    if (!message.answer) return;
+    
     if (isPlaying) {
       setIsPlaying(false);
       return;
@@ -85,33 +125,83 @@ export const MessageBubble = ({
 
     try {
       setIsPlaying(true);
-      const { audioContent } = await difyClient.textToSpeech(message.answer);
       
-      // Создаем аудио элемент и воспроизводим
-      const audio = new Audio(`data:audio/mpeg;base64,${audioContent}`);
-      audio.onended = () => setIsPlaying(false);
+      // Вызываем TTS API для преобразования текста в речь
+      const result = await difyClient.textToSpeech(message.answer);
+      
+      // Создаем Blob из base64 данных
+      const audioBlob = new Blob([Uint8Array.from(atob(result.audioContent), c => c.charCodeAt(0))], {
+        type: result.contentType || 'audio/mpeg'
+      });
+      
+      // Создаем URL для аудио
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+      
+      audio.onended = () => {
+        setIsPlaying(false);
+        URL.revokeObjectURL(audioUrl);
+      };
+      
+      audio.onerror = () => {
+        setIsPlaying(false);
+        URL.revokeObjectURL(audioUrl);
+        toast({
+          title: 'Ошибка воспроизведения',
+          description: 'Не удалось воспроизвести аудио',
+          variant: 'destructive',
+        });
+      };
+      
       await audio.play();
     } catch (error) {
-      console.error('Error playing audio:', error);
       setIsPlaying(false);
+      console.error('Error playing audio:', error);
+      
+      let errorMessage = 'Не удалось преобразовать текст в речь';
+      if (error instanceof Error) {
+        if (error.message.includes('Text to speech is not enabled')) {
+          errorMessage = 'Функция озвучивания текста отключена в настройках';
+        } else if (error.message.includes('network')) {
+          errorMessage = 'Проблема с сетевым соединением';
+        }
+      }
+      
       toast({
-        title: t.error,
-        description: error instanceof Error ? error.message : t.errors.unknownError,
+        title: 'Ошибка озвучивания', 
+        description: errorMessage,
         variant: 'destructive',
       });
     }
   };
 
-  // Функция для рендера markdown с подсветкой кода
-  const renderMessage = (content: string) => {
-    // Простой парсер для выделения блоков кода
+  const handleDeleteMessage = async () => {
+    if (!onDelete || !canDelete) return;
+
+    try {
+      await onDelete(message.id);
+      setIsDeleted(true);
+      toast({
+        title: 'Сообщение удалено',
+        description: 'Сообщение было успешно удалено',
+      });
+    } catch (error) {
+      console.error('Error deleting message:', error);
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось удалить сообщение',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const renderMessage = useCallback((content: string) => {
     const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
     const parts = [];
     let lastIndex = 0;
     let match;
 
     while ((match = codeBlockRegex.exec(content)) !== null) {
-      // Добавляем текст до блока кода
       if (match.index > lastIndex) {
         parts.push(
           <span key={lastIndex}>
@@ -120,7 +210,6 @@ export const MessageBubble = ({
         );
       }
 
-      // Добавляем блок кода
       const language = match[1] || 'text';
       const code = match[2];
       parts.push(
@@ -134,7 +223,7 @@ export const MessageBubble = ({
               className="h-6 px-2 text-xs"
             >
               <Copy className="h-3 w-3 mr-1" />
-              {t.messages.copyCode}
+              Копировать
             </Button>
           </div>
           <pre className="p-3 text-sm font-mono overflow-x-auto">
@@ -146,7 +235,6 @@ export const MessageBubble = ({
       lastIndex = match.index + match[0].length;
     }
 
-    // Добавляем оставшийся текст
     if (lastIndex < content.length) {
       parts.push(
         <span key={lastIndex}>
@@ -156,47 +244,93 @@ export const MessageBubble = ({
     }
 
     return parts.length > 0 ? parts : content;
-  };
+  }, [handleCopyCode]);
 
   const getBubbleClasses = () => {
-    if (isSystem) return 'system-message';
-    if (isAgent) return 'agent-message';
-    return 'user-message';
+    if (isSystem) return 'border-orange-200 bg-orange-50/50';
+    if (isAgent) return 'border-blue-200 bg-blue-50/50';
+    return 'border-gray-200 bg-white';
   };
 
   const getIcon = () => {
-    if (isSystem) return <AlertCircle className="h-4 w-4" />;
+    if (isSystem) return <AlertTriangle className="h-4 w-4" />;
     if (isAgent) return <Bot className="h-4 w-4" />;
     return <User className="h-4 w-4" />;
   };
 
   return (
-    <div className={`message-bubble ${getBubbleClasses()} animate-fade-in`}>
-      <div className="flex gap-3">
-        <Avatar className="h-8 w-8 flex-shrink-0">
-          <AvatarFallback>
-            {getIcon()}
-          </AvatarFallback>
-        </Avatar>
+    <Card
+      className={cn(
+        'group relative max-w-4xl animate-fade-in transition-all duration-300',
+        getBubbleClasses()
+      )}
+      onMouseEnter={() => setShowActions(true)}
+      onMouseLeave={() => setShowActions(false)}
+    >
+      <div className="flex gap-3 p-4">
+        {/* Аватар */}
+        <div className="flex-shrink-0">
+          {isSystem ? (
+            <Avatar className="h-8 w-8">
+              <AvatarFallback className="text-xs bg-muted">
+                {getIcon()}
+              </AvatarFallback>
+            </Avatar>
+          ) : (
+            <CustomAvatar 
+              user={{
+                id: isAgent ? 'agent' : currentUserId || 'user',
+                display_name: senderName || (isAgent ? 'ЖОС Агент' : 'Пользователь'),
+                avatar_url: isAgent ? '/agent-avatar.png' : undefined
+              }}
+              size="md"
+            />
+          )}
+        </div>
 
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="font-medium text-sm">
-              {isSystem ? 'Система' : isAgent ? 'ЖОС Агент' : (senderName || message.sender_name || 'Участник')}
-            </span>
-            <span className="text-xs text-muted-foreground">
-              {new Date(message.created_at).toLocaleTimeString()}
-            </span>
+        {/* Контент сообщения */}
+        <div className="flex-1 min-w-0 space-y-3">
+          {/* Заголовок */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="font-medium text-sm">
+                {senderName || (isSystem ? 'Система' : (isAgent ? 'ЖОС Агент' : 'Пользователь'))}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {new Date(message.created_at).toLocaleTimeString('ru-RU', { 
+                  hour: '2-digit', 
+                  minute: '2-digit' 
+                })}
+              </span>
+            </div>
+            
+            {/* Кнопка удаления */}
+            {showActions && canDelete && !isDeleted && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={handleDeleteMessage}
+                className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                title="Удалить сообщение"
+              >
+                <Trash2 className="h-3 w-3" />
+              </Button>
+            )}
           </div>
 
-          <div className="prose prose-sm max-w-none">
-            {renderMessage(isAgent ? message.answer : message.query)}
+          {/* Текст сообщения */}
+          <div className="prose prose-sm max-w-none dark:prose-invert">
+            {isDeleted ? (
+              <em className="text-muted-foreground">Сообщение удалено</em>
+            ) : (
+              renderMessage(message.query || message.answer || '')
+            )}
           </div>
 
-          {/* Источники (RAG) */}
-          {message.retriever_resources && message.retriever_resources.length > 0 && (
-            <div className="mt-4 space-y-2">
-              <h4 className="text-xs font-medium text-muted-foreground">{t.messages.sources}</h4>
+          {/* Источники */}
+          {!isDeleted && message.retriever_resources && message.retriever_resources.length > 0 && (
+            <div className="space-y-2">
+              <h4 className="text-xs font-medium text-muted-foreground">Источники</h4>
               <div className="grid gap-2">
                 {message.retriever_resources.map((source, index) => (
                   <div key={index} className="p-2 rounded border bg-muted/30 text-xs">
@@ -216,8 +350,8 @@ export const MessageBubble = ({
           )}
 
           {/* Метаданные использования */}
-          {message.metadata?.usage && isAgent && (
-            <div className="mt-3 p-2 rounded bg-muted/20 text-xs text-muted-foreground">
+          {!isDeleted && message.metadata?.usage && isAgent && (
+            <div className="p-2 rounded bg-muted/20 text-xs text-muted-foreground">
               <div className="flex items-center gap-4">
                 {message.metadata.usage.total_tokens && (
                   <span>Токены: {message.metadata.usage.total_tokens}</span>
@@ -232,73 +366,75 @@ export const MessageBubble = ({
             </div>
           )}
 
-          {/* Действия с сообщением */}
-          <div className="flex items-center gap-1 mt-3">
-            {isAgent && (
-              <>
+          {/* Реакции */}
+          {!isDeleted && (
+            <ReactionsBar messageId={message.id} />
+          )}
+
+          {/* Действия для сообщений агента */}
+          {isAgent && message.answer && !isDeleted && (
+            <div className="flex items-center gap-2 pt-2 border-t">
+              {/* Воспроизведение аудио */}
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={handlePlayAudio}
+                className="h-8 px-3 text-xs gap-2"
+              >
+                {isPlaying ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
+                {isPlaying ? 'Пауза' : 'Озвучить'}
+              </Button>
+
+              {/* Лайк/дизлайк */}
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => handleFeedback('like')}
+                className="h-8 px-3 text-xs gap-2 text-green-600 hover:text-green-700 hover:bg-green-50"
+              >
+                <ThumbsUp className="h-3 w-3" />
+                Нравится
+              </Button>
+              
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => handleFeedback('dislike')}
+                className="h-8 px-3 text-xs gap-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+              >
+                <ThumbsDown className="h-3 w-3" />
+                Не нравится
+              </Button>
+
+              {/* Создать ветку */}
+              {onFork && (
                 <Button
-                  variant="ghost"
                   size="sm"
-                  onClick={handlePlayAudio}
-                  className="h-7 px-2 text-xs"
+                  variant="ghost"
+                  onClick={() => onFork(message.id)}
+                  className="h-8 px-3 text-xs gap-2"
                 >
-                  {isPlaying ? (
-                    <Pause className="h-3 w-3 mr-1" />
-                  ) : (
-                    <Play className="h-3 w-3 mr-1" />
-                  )}
-                  {isPlaying ? t.voice.pauseAudio : t.voice.playAudio}
+                  <GitBranch className="h-3 w-3" />
+                  Ветка
                 </Button>
+              )}
 
-                <Dialog open={feedbackOpen} onOpenChange={setFeedbackOpen}>
-                  <DialogTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-7 px-2 text-xs">
-                      <ThumbsUp className="h-3 w-3 mr-1" />
-                      {t.messages.like}
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>{t.messages.feedback}</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                      <Textarea
-                        placeholder="Опциональный комментарий..."
-                        value={feedbackText}
-                        onChange={(e) => setFeedbackText(e.target.value)}
-                      />
-                      <div className="flex gap-2">
-                        <Button onClick={() => handleFeedback('like')} className="flex-1">
-                          <ThumbsUp className="h-4 w-4 mr-2" />
-                          {t.messages.like}
-                        </Button>
-                        <Button 
-                          onClick={() => handleFeedback('dislike')} 
-                          variant="outline" 
-                          className="flex-1"
-                        >
-                          <ThumbsDown className="h-4 w-4 mr-2" />
-                          {t.messages.dislike}
-                        </Button>
-                      </div>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              </>
-            )}
-
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onFork?.(message.id)}
-              className="h-7 px-2 text-xs"
-            >
-              <GitBranch className="h-3 w-3 mr-1" />
-              {t.messages.fork}
-            </Button>
-          </div>
+              {/* Пожаловаться */}
+              {onReport && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => onReport(message.id)}
+                  className="h-8 px-3 text-xs gap-2 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                >
+                  <Flag className="h-3 w-3" />
+                  Нарушение
+                </Button>
+              )}
+            </div>
+          )}
         </div>
       </div>
-    </div>
+    </Card>
   );
 };

@@ -8,11 +8,14 @@ import { ZhosBanner } from '@/components/ZhosBanner';
 import { MessageBubble } from '@/components/MessageBubble';
 import { ChatInterface } from '@/components/ChatInterface';
 import { ParticipantsList } from '@/components/ParticipantsList';
+import { EditableChatTitle } from '@/components/EditableChatTitle';
+import { OnlineUsersBar } from '@/components/OnlineUsersBar';
 import { useTranslation } from '@/lib/i18n';
 import { difyClient, type DifyMessage, type Chat } from '@/utils/difyClient';
 import { useDifyStream } from '@/hooks/useDifyStream';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { renameChat, pinChat, deleteMessage } from '@/services/chats';
 
 export const ChatPage = () => {
   const { chatId } = useParams<{ chatId: string }>();
@@ -252,6 +255,27 @@ export const ChatPage = () => {
     }
   };
 
+  const handleRenameChat = async (chatId: string, newName: string) => {
+    await renameChat(chatId, newName);
+    // Обновляем локальное состояние
+    if (chat) {
+      setChat({ ...chat, name: newName });
+    }
+  };
+
+  const handlePinChat = async (chatId: string, pinned: boolean) => {
+    await pinChat(chatId, pinned);
+    // Обновляем локальное состояние
+    if (chat) {
+      setChat({ ...chat, is_pinned: pinned });
+    }
+  };
+
+  const handleDeleteMessage = async (messageId: string) => {
+    await deleteMessage(messageId);
+    // Сообщение будет помечено как удаленное в MessageBubble
+  };
+
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center">
@@ -294,9 +318,15 @@ export const ChatPage = () => {
             </Button>
             
             <div className="min-w-0 flex-1">
-              <h1 className="font-semibold text-sm sm:text-base truncate">{chat.name}</h1>
+              <EditableChatTitle
+                chatId={chatId || ''}
+                currentName={chat.name}
+                isPinned={chat.is_pinned}
+                onRename={handleRenameChat}
+                onPin={handlePinChat}
+              />
               {chat.forked_from_chat && (
-                <p className="text-xs sm:text-sm text-muted-foreground truncate">
+                <p className="text-xs sm:text-sm text-muted-foreground truncate mt-1">
                   ← {t.chats.forkFrom} {chat.forked_from_chat.slice(0, 8)}...
                 </p>
               )}
@@ -304,6 +334,7 @@ export const ChatPage = () => {
           </div>
 
           <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+            <OnlineUsersBar maxVisible={4} className="hidden sm:flex" />
             <ParticipantsList chatId={chatId} onlineUsers={onlineUsers} />
             <Button
               variant="outline"
@@ -335,6 +366,7 @@ export const ChatPage = () => {
                 isSystem={message.id.startsWith('pause-')}
                 onFork={handleForkMessage}
                 onReport={handleReportMessage}
+                onDelete={handleDeleteMessage}
               />
             ))
           )}
@@ -353,6 +385,7 @@ export const ChatPage = () => {
               isAgent={true}
               onFork={handleForkMessage}
               onReport={handleReportMessage}
+              onDelete={handleDeleteMessage}
             />
           )}
 

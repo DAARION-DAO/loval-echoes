@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
-import { fetchChats, ChatLite } from "@/services/chats";
+import { fetchChats, ChatLite, pinChat } from "@/services/chats";
 import { ChatEmptyState } from "@/components/ChatEmptyState";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { getErrorMessage } from "@/utils/errorMapping";
+import { Avatar } from "@/components/Avatar";
+import { Button } from "@/components/ui/button";
+import { Pin, PinOff } from "lucide-react";
 
 export function ChatsList() {
   const [loading, setLoading] = useState(true);
@@ -40,6 +43,26 @@ export function ChatsList() {
     navigate(`/chat/${id}`);
   };
 
+  const handlePinChat = async (chatId: string, currentPinned: boolean) => {
+    try {
+      await pinChat(chatId, !currentPinned);
+      await loadChats(); // Перезагружаем список чатов
+      toast({
+        title: currentPinned ? 'Чат откреплен' : 'Чат закреплен',
+        description: currentPinned 
+          ? 'Чат перемещен в общий список' 
+          : 'Чат закреплен в верхней части списка',
+      });
+    } catch (error) {
+      console.error('Error pinning chat:', error);
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось изменить статус закрепления',
+        variant: 'destructive',
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="p-4 text-sm text-muted-foreground flex items-center justify-center">
@@ -52,29 +75,91 @@ export function ChatsList() {
     return <ChatEmptyState onCreateChat={loadChats} />;
   }
 
+  // Сортируем чаты: сначала закрепленные, потом по дате
+  const sortedChats = [...items].sort((a, b) => {
+    if (a.is_pinned && !b.is_pinned) return -1;
+    if (!a.is_pinned && b.is_pinned) return 1;
+    
+    const dateA = new Date(a.updatedAt || 0).getTime();
+    const dateB = new Date(b.updatedAt || 0).getTime();
+    return dateB - dateA;
+  });
+
   return (
     <ul className="px-2 pb-4 space-y-1">
-      {items.map(chat => (
-        <li key={chat.id}>
-          <button
-            onClick={() => handleOpenChat(chat.id)}
-            className="w-full text-left px-3 py-2 rounded-lg hover:bg-muted/60 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20 group"
-          >
-            <div className="font-medium truncate group-hover:text-primary">{chat.name}</div>
-            {chat.lastMessagePreview && (
-              <div className="text-xs text-muted-foreground truncate mt-1">
-                {chat.lastMessagePreview}
+      {sortedChats.map(chat => (
+        <li key={chat.id} className="group">
+          <div className="relative rounded-lg hover:bg-muted/60 transition-colors">
+            <button
+              onClick={() => handleOpenChat(chat.id)}
+              className="w-full text-left px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/20"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <div className="font-medium truncate group-hover:text-primary flex-1 min-w-0 pr-2">
+                  {chat.is_pinned && <Pin className="inline h-3 w-3 mr-1 text-primary" />}
+                  {chat.name}
+                </div>
+                
+                {/* Кнопка закрепления */}
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handlePinChat(chat.id, chat.is_pinned || false);
+                  }}
+                  className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                  title={chat.is_pinned ? 'Открепить чат' : 'Закрепить чат'}
+                >
+                  {chat.is_pinned ? <PinOff className="h-3 w-3" /> : <Pin className="h-3 w-3" />}
+                </Button>
               </div>
-            )}
-            {chat.updatedAt && (
-              <div className="text-xs text-muted-foreground mt-1">
-                {formatDistanceToNow(new Date(chat.updatedAt), { 
-                  addSuffix: true, 
-                  locale: ru 
-                })}
+
+              {chat.lastMessagePreview && (
+                <div className="text-xs text-muted-foreground truncate mb-2">
+                  {chat.lastMessagePreview}
+                </div>
+              )}
+
+              <div className="flex items-center justify-between">
+                {/* Аватарки онлайн-участников */}
+                <div className="flex items-center gap-1">
+                  {chat.participants?.slice(0, 3).map((participant) => (
+                    <Avatar
+                      key={participant.user_id}
+                      user={{
+                        id: participant.user_id,
+                        display_name: participant.display_name,
+                        avatar_url: participant.avatar_url
+                      }}
+                      size="sm"
+                      className="border border-background"
+                    />
+                  ))}
+                  {(chat.onlineCount || 0) > 3 && (
+                    <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center text-xs font-medium">
+                      +{(chat.onlineCount || 0) - 3}
+                    </div>
+                  )}
+                  {(chat.onlineCount || 0) > 0 && (
+                    <span className="text-xs text-muted-foreground ml-2">
+                      {chat.onlineCount} онлайн
+                    </span>
+                  )}
+                </div>
+                
+                {/* Время последней активности */}
+                {chat.updatedAt && (
+                  <div className="text-xs text-muted-foreground">
+                    {formatDistanceToNow(new Date(chat.updatedAt), { 
+                      addSuffix: true, 
+                      locale: ru 
+                    })}
+                  </div>
+                )}
               </div>
-            )}
-          </button>
+            </button>
+          </div>
         </li>
       ))}
     </ul>

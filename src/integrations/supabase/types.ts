@@ -104,6 +104,7 @@ export type Database = {
       }
       conversations: {
         Row: {
+          auto_generated_name: boolean | null
           avatar_url: string | null
           created_at: string
           description: string | null
@@ -111,12 +112,15 @@ export type Database = {
           id: string
           is_archived: boolean
           is_group_chat: boolean | null
+          is_pinned: boolean | null
           name: string
+          pinned_at: string | null
           status: string
           updated_at: string
           user_id: string | null
         }
         Insert: {
+          auto_generated_name?: boolean | null
           avatar_url?: string | null
           created_at?: string
           description?: string | null
@@ -124,12 +128,15 @@ export type Database = {
           id?: string
           is_archived?: boolean
           is_group_chat?: boolean | null
+          is_pinned?: boolean | null
           name: string
+          pinned_at?: string | null
           status?: string
           updated_at?: string
           user_id?: string | null
         }
         Update: {
+          auto_generated_name?: boolean | null
           avatar_url?: string | null
           created_at?: string
           description?: string | null
@@ -137,10 +144,36 @@ export type Database = {
           id?: string
           is_archived?: boolean
           is_group_chat?: boolean | null
+          is_pinned?: boolean | null
           name?: string
+          pinned_at?: string | null
           status?: string
           updated_at?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      message_reactions: {
+        Row: {
+          created_at: string
+          emoji: string
+          id: string
+          message_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          emoji: string
+          id?: string
+          message_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          emoji?: string
+          id?: string
+          message_id?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -149,6 +182,8 @@ export type Database = {
           content: string
           conversation_id: string
           created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
           file_name: string | null
           file_size: number | null
           file_type: string | null
@@ -164,6 +199,8 @@ export type Database = {
           content: string
           conversation_id: string
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           file_name?: string | null
           file_size?: number | null
           file_type?: string | null
@@ -179,6 +216,8 @@ export type Database = {
           content?: string
           conversation_id?: string
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           file_name?: string | null
           file_size?: number | null
           file_type?: string | null

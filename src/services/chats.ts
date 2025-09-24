@@ -1,20 +1,29 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export type ChatLite = { 
-  id: string; 
-  name: string; 
-  updatedAt?: string; 
+export interface ChatLite {
+  id: string;
+  name: string;
   lastMessagePreview?: string;
+  updatedAt?: string;
+  is_pinned?: boolean;
+  pinned_at?: string;
+  auto_generated_name?: boolean;
+  participants?: Array<{
+    user_id: string;
+    display_name: string;
+    avatar_url?: string;
+  }>;
+  onlineCount?: number;
   dify_conversation_id?: string;
   forked_from_chat?: string;
-};
+}
 
 export async function fetchChats(): Promise<ChatLite[]> {
   console.log('Fetching chats directly from Supabase...');
   
   const { data: conversations, error } = await supabase
     .from('conversations')
-    .select('id, name, updated_at, created_at, dify_conversation_id, status')
+    .select('id, name, updated_at, created_at, dify_conversation_id, status, is_pinned, pinned_at, auto_generated_name')
     .eq('status', 'active')
     .order('updated_at', { ascending: false });
 
@@ -30,8 +39,13 @@ export async function fetchChats(): Promise<ChatLite[]> {
     name: conv.name,
     updatedAt: conv.updated_at,
     lastMessagePreview: '',
+    is_pinned: conv.is_pinned,
+    pinned_at: conv.pinned_at,
+    auto_generated_name: conv.auto_generated_name,
     dify_conversation_id: conv.dify_conversation_id,
     forked_from_chat: undefined,
+    participants: [],
+    onlineCount: 0,
   }));
 }
 
@@ -132,10 +146,71 @@ export async function restoreChat(chatId: string): Promise<void> {
 }
 
 // Fetch chats by status
+export const renameChat = async (chatId: string, newName: string): Promise<void> => {
+  const { error } = await supabase
+    .from('conversations')
+    .update({ 
+      name: newName,
+      auto_generated_name: false, // Отмечаем что название теперь не автогенерированное
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', chatId);
+
+  if (error) {
+    throw error;
+  }
+};
+
+export const pinChat = async (chatId: string, pinned: boolean): Promise<void> => {
+  const { error } = await supabase
+    .from('conversations')
+    .update({ 
+      is_pinned: pinned,
+      pinned_at: pinned ? new Date().toISOString() : null,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', chatId);
+
+  if (error) {
+    throw error;
+  }
+};
+
+export const deleteMessage = async (messageId: string): Promise<void> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Unauthorized');
+
+  const { error } = await supabase
+    .from('messages')
+    .update({ 
+      deleted_at: new Date().toISOString(),
+      deleted_by: user.id
+    })
+    .eq('id', messageId);
+
+  if (error) {
+    throw error;
+  }
+};
+
+// Генерация названия чата на основе первого сообщения
+export const generateChatName = (firstMessage: string): string => {
+  if (!firstMessage.trim()) return "Новый диалог";
+  
+  const cleaned = firstMessage.trim().replace(/\n+/g, ' ');
+  return cleaned.slice(0, 30) + (cleaned.length > 30 ? "..." : "");
+};
+
+// Генерация названия для ветки
+export const generateBranchName = (parentMessage: string, parentChatName: string): string => {
+  const base = parentMessage.trim().slice(0, 20);
+  return `Ветка: "${base}..." из ${parentChatName}`;
+};
+
 export async function fetchChatsByStatus(status: 'active' | 'archived' | 'deleted'): Promise<ChatLite[]> {
   const { data: conversations, error } = await supabase
     .from('conversations')
-    .select('id, name, updated_at, created_at, dify_conversation_id, status')
+    .select('id, name, updated_at, created_at, dify_conversation_id, status, is_pinned, pinned_at, auto_generated_name')
     .eq('status', status)
     .order('updated_at', { ascending: false });
 
@@ -149,7 +224,12 @@ export async function fetchChatsByStatus(status: 'active' | 'archived' | 'delete
     name: conv.name,
     updatedAt: conv.updated_at,
     lastMessagePreview: '',
+    is_pinned: conv.is_pinned,
+    pinned_at: conv.pinned_at,
+    auto_generated_name: conv.auto_generated_name,
     dify_conversation_id: conv.dify_conversation_id,
     forked_from_chat: undefined,
+    participants: [],
+    onlineCount: 0,
   }));
 }
