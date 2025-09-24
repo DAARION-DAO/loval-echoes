@@ -247,9 +247,8 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   }, [handleCopyCode]);
 
   const getBubbleClasses = () => {
-    if (isSystem) return 'border-orange-200 bg-orange-50/50';
-    if (isAgent) return 'border-blue-200 bg-blue-50/50';
-    return 'border-gray-200 bg-white';
+    // Убираем цветные фоны - все сообщения на одном фоне
+    return 'border-border bg-background';
   };
 
   const getIcon = () => {
@@ -259,37 +258,38 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   };
 
   return (
-    <Card
+    <div
       className={cn(
-        'group relative max-w-4xl animate-fade-in transition-all duration-300',
+        'group relative max-w-4xl animate-fade-in transition-all duration-300 mb-4',
+        // Позиционируем: агент слева, пользователь справа
+        isAgent ? 'ml-0 mr-auto' : 'ml-auto mr-0',
         getBubbleClasses()
       )}
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
     >
-      <div className="flex gap-3 p-4">
-        {/* Аватар */}
-        <div className="flex-shrink-0">
-          {isSystem ? (
-            <Avatar className="h-8 w-8">
-              <AvatarFallback className="text-xs bg-muted">
-                {getIcon()}
-              </AvatarFallback>
-            </Avatar>
-          ) : (
-            <CustomAvatar 
-              user={{
-                id: isAgent ? 'agent' : currentUserId || 'user',
-                display_name: senderName || (isAgent ? 'ЖОС Агент' : 'Пользователь'),
-                avatar_url: isAgent ? '/agent-avatar.png' : undefined
-              }}
-              size="md"
-            />
-          )}
-        </div>
+      <Card className={cn('border-border bg-background', isAgent ? '' : 'ml-16')}>
+        <div className={cn('flex gap-3 p-4', isAgent ? '' : 'flex-row-reverse')}>
+          {/* Аватар */}
+          <div className="flex-shrink-0">
+            {isSystem ? (
+              <div className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center">
+                <AlertTriangle className="h-4 w-4 text-white" />
+              </div>
+            ) : (
+              <CustomAvatar 
+                user={{
+                  id: isAgent ? 'agent' : currentUserId || 'user',
+                  display_name: senderName || (isAgent ? 'ЖОС Агент' : 'Пользователь'),
+                  avatar_url: isAgent ? '/favicon.ico' : undefined
+                }}
+                size="lg"
+              />
+            )}
+          </div>
 
-        {/* Контент сообщения */}
-        <div className="flex-1 min-w-0 space-y-3">
+          {/* Контент сообщения */}
+          <div className="flex-1 min-w-0 space-y-3">
           {/* Заголовок */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -373,37 +373,38 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
 
           {/* Действия для сообщений агента */}
           {isAgent && message.answer && !isDeleted && (
-            <div className="flex items-center gap-2 pt-2 border-t">
+            <div className="flex items-center gap-2 pt-2">
               {/* Воспроизведение аудио */}
               <Button
                 size="sm"
                 variant="ghost"
                 onClick={handlePlayAudio}
-                className="h-8 px-3 text-xs gap-2"
+                className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
+                title={isPlaying ? 'Пауза' : 'Озвучить'}
               >
-                {isPlaying ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
-                {isPlaying ? 'Пауза' : 'Озвучить'}
+                {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
               </Button>
 
-              {/* Лайк/дизлайк */}
+              {/* Лайк */}
               <Button
                 size="sm"
                 variant="ghost"
                 onClick={() => handleFeedback('like')}
-                className="h-8 px-3 text-xs gap-2 text-green-600 hover:text-green-700 hover:bg-green-50"
+                className="h-8 w-8 p-0 text-muted-foreground hover:text-green-600"
+                title="Нравится"
               >
-                <ThumbsUp className="h-3 w-3" />
-                Нравится
+                <ThumbsUp className="h-4 w-4" />
               </Button>
               
+              {/* Дизлайк */}
               <Button
                 size="sm"
                 variant="ghost"
                 onClick={() => handleFeedback('dislike')}
-                className="h-8 px-3 text-xs gap-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+                className="h-8 w-8 p-0 text-muted-foreground hover:text-red-600"
+                title="Не нравится"
               >
-                <ThumbsDown className="h-3 w-3" />
-                Не нравится
+                <ThumbsDown className="h-4 w-4" />
               </Button>
 
               {/* Создать ветку */}
@@ -412,29 +413,17 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                   size="sm"
                   variant="ghost"
                   onClick={() => onFork(message.id)}
-                  className="h-8 px-3 text-xs gap-2"
+                  className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
+                  title="Создать ветку"
                 >
-                  <GitBranch className="h-3 w-3" />
-                  Ветка
-                </Button>
-              )}
-
-              {/* Пожаловаться */}
-              {onReport && (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => onReport(message.id)}
-                  className="h-8 px-3 text-xs gap-2 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
-                >
-                  <Flag className="h-3 w-3" />
-                  Нарушение
+                  <GitBranch className="h-4 w-4" />
                 </Button>
               )}
             </div>
           )}
+          </div>
         </div>
-      </div>
-    </Card>
+      </Card>
+    </div>
   );
 };

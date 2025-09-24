@@ -21,14 +21,16 @@ const AVATAR_COLORS = [
   'bg-yellow-500',
   'bg-indigo-500',
   'bg-pink-500',
-  'bg-teal-500'
+  'bg-teal-500',
+  'bg-orange-500',
+  'bg-cyan-500'
 ];
 
 export const Avatar = ({ user, size = 'md', className, title }: AvatarProps) => {
   const sizeClasses = {
     sm: 'w-6 h-6 text-xs',
     md: 'w-8 h-8 text-sm', 
-    lg: 'w-12 h-12 text-base'
+    lg: 'w-8 h-8 text-sm' // Делаем lg размер 32x32px как md
   };
 
   const userName = user.display_name || user.name || 'У';
