@@ -85,15 +85,29 @@ serve(async (req) => {
 
     // Perform the actual authentication action
     let result
-    const origin = req.headers.get('origin') || req.headers.get('referer')?.split('/').slice(0, 3).join('/') || 'http://localhost:5173'
-    const redirectUrl = `${origin}/`
+    let redirectUrl = 'https://4411fba9-f975-4193-bebf-d5df27e57cfc.lovableproject.com/'
+    
+    // Try to get origin from headers, fallback to known URL
+    const origin = req.headers.get('origin') || req.headers.get('referer')
+    if (origin) {
+      try {
+        const url = new URL(origin)
+        redirectUrl = `${url.protocol}//${url.host}/`
+      } catch (e) {
+        console.log('Failed to parse origin, using default:', origin)
+      }
+    }
+
+    console.log(`Using redirect URL: ${redirectUrl}`)
 
     switch (action) {
       case 'login':
+        console.log('Attempting Supabase signInWithPassword...')
         result = await supabaseClient.auth.signInWithPassword({
           email,
           password: password!
         })
+        console.log('Supabase signIn result:', result.error ? `Error: ${result.error.message}` : 'Success')
         break
         
       case 'signup':
@@ -119,11 +133,19 @@ serve(async (req) => {
     if (result.error) {
       console.log(`Auth ${action} failed:`, result.error.message)
       
-      // SIMPLIFIED: Skip logging for now to fix immediate issue
+      // Map error messages to user-friendly versions
+      let friendlyError = result.error.message
+      if (result.error.message.includes('Invalid login credentials')) {
+        friendlyError = 'Неверный email или пароль'
+      } else if (result.error.message.includes('Email not confirmed')) {
+        friendlyError = 'Подтвердите email для входа в систему'
+      } else if (result.error.message.includes('Too many requests')) {
+        friendlyError = 'Слишком много попыток входа. Попробуйте позже'
+      }
 
       return new Response(
         JSON.stringify({ 
-          error: result.error.message,
+          error: friendlyError,
           authError: true 
         }),
         { 

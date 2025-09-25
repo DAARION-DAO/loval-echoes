@@ -208,17 +208,20 @@ export const AuthForm = () => {
       }
 
       // If secure auth fails, try fallback
-      if (result.rateLimited || result.authError) {
-        return; // Don't try fallback for these specific errors
+      if (result.rateLimited) {
+        return; // Don't try fallback for rate limited requests
       }
 
+      console.log('Secure auth failed, trying direct Supabase auth:', result.error);
+      
       // Fallback to direct Supabase auth
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data: fallbackData, error } = await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password,
       });
 
       if (error) {
+        console.log('Fallback auth also failed:', error.message);
         if (error.message.includes('Invalid login credentials')) {
           setShowResendButton(true);
           setShowForgotPassword(true);
@@ -244,6 +247,7 @@ export const AuthForm = () => {
         return;
       }
 
+      console.log('Fallback auth successful');
       toast({
         title: 'Добро пожаловать!',
         description: 'Вы успешно вошли в систему',
