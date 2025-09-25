@@ -85,7 +85,8 @@ serve(async (req) => {
 
     // Perform the actual authentication action
     let result
-    const redirectUrl = `${req.headers.get('origin') || 'https://pbsdsdexayzfoexjdlgb.supabase.co'}/`
+    const origin = req.headers.get('origin') || req.headers.get('referer')?.split('/').slice(0, 3).join('/') || 'http://localhost:5173'
+    const redirectUrl = `${origin}/`
 
     switch (action) {
       case 'login':

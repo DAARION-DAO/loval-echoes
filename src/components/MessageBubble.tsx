@@ -260,40 +260,45 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   return (
     <div
       className={cn(
-        'group relative max-w-4xl animate-fade-in transition-all duration-300 mb-6',
-        // Позиционируем: агент слева, пользователь справа
-        isAgent ? 'ml-0 mr-auto' : 'ml-auto mr-0'
+        'group relative w-full animate-fade-in transition-all duration-300 mb-3',
+        // Простое позиционирование без скрытых элементов
+        'flex'
       )}
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
     >
-      <div className={cn('flex gap-3', isAgent ? '' : 'flex-row-reverse')}>
+      <div className={cn('flex gap-3 w-full', isAgent ? 'justify-start' : 'justify-end')}>
+        
         {/* Аватар */}
-        <div className="flex-shrink-0">
+        <div className={cn('flex-shrink-0 order-1', isAgent ? 'order-1' : 'order-2')}>
           {isSystem ? (
             <div className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center">
               <AlertTriangle className="h-4 w-4 text-white" />
             </div>
+          ) : isAgent ? (
+            <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center border border-primary/30">
+              <Bot className="h-4 w-4 text-primary" />
+            </div>
           ) : (
             <CustomAvatar 
               user={{
-                id: isAgent ? 'agent' : currentUserId || 'user',
-                display_name: senderName || (isAgent ? 'Дух Общины' : 'Пользователь'),
-                avatar_url: isAgent ? '/favicon.ico' : undefined
+                id: currentUserId || 'user',
+                display_name: senderName || 'Пользователь',
+                avatar_url: undefined
               }}
-              size="lg"
+              size="md"
             />
           )}
         </div>
 
         {/* Контент сообщения */}
-        <div className={cn('flex-1 min-w-0 space-y-2', isAgent ? '' : 'text-right')}>
+        <div className={cn('flex-1 min-w-0 max-w-md space-y-1', isAgent ? 'order-2' : 'order-1')}>
           {/* Заголовок с именем и временем */}
-          <div className={cn('flex items-center gap-2', isAgent ? '' : 'flex-row-reverse')}>
+          <div className={cn('flex items-center gap-2', isAgent ? 'justify-start' : 'justify-end')}>
             <span className="font-medium text-sm text-foreground">
               {senderName || (isSystem ? 'Система' : (isAgent ? 'Дух Общины' : 'Пользователь'))}
             </span>
-            <span className="text-xs text-muted-foreground">
+            <span className="text-xs text-muted-foreground/60">
               {new Date(message.created_at).toLocaleTimeString('ru-RU', { 
                 hour: '2-digit', 
                 minute: '2-digit' 
@@ -306,7 +311,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                 size="sm"
                 variant="ghost"
                 onClick={handleDeleteMessage}
-                className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity ml-2"
+                className="h-4 w-4 p-0 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
                 title="Удалить сообщение"
               >
                 <Trash2 className="h-3 w-3" />
@@ -315,7 +320,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
           </div>
 
           {/* Текст сообщения */}
-          <div className={cn('prose prose-sm max-w-none', isAgent ? '' : 'text-left')}>
+          <div className={cn('prose prose-sm max-w-none', isAgent ? 'text-left' : 'text-right')}>
             {isDeleted ? (
               <em className="text-muted-foreground">Сообщение удалено</em>
             ) : (
@@ -369,49 +374,42 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
             <ReactionsBar messageId={message.id} />
           )}
 
-          {/* Действия для сообщений агента */}
+          {/* Компактная панель действий для сообщений агента */}
           {isAgent && message.answer && !isDeleted && (
-            <div className="flex items-center gap-2 pt-3">
-              {/* Воспроизведение аудио */}
+            <div className={cn('flex items-center gap-1 pt-2', isAgent ? 'justify-start' : 'justify-end')}>
               <Button
                 size="sm"
                 variant="ghost"
                 onClick={handlePlayAudio}
-                className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
+                className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
                 title={isPlaying ? 'Пауза' : 'Озвучить'}
               >
                 {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
               </Button>
-
-              {/* Лайк */}
               <Button
                 size="sm"
                 variant="ghost"
                 onClick={() => handleFeedback('like')}
-                className="h-8 w-8 p-0 text-muted-foreground hover:text-green-600"
+                className="h-6 w-6 p-0 text-muted-foreground hover:text-green-600"
                 title="Нравится"
               >
                 <ThumbsUp className="h-4 w-4" />
               </Button>
-              
-              {/* Дизлайк */}
               <Button
                 size="sm"
                 variant="ghost"
                 onClick={() => handleFeedback('dislike')}
-                className="h-8 w-8 p-0 text-muted-foreground hover:text-red-600"
+                className="h-6 w-6 p-0 text-muted-foreground hover:text-red-600"
                 title="Не нравится"
               >
                 <ThumbsDown className="h-4 w-4" />
               </Button>
-
-              {/* Создать ветку */}
               {onFork && (
                 <Button
                   size="sm"
                   variant="ghost"
                   onClick={() => onFork(message.id)}
-                  className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
+                  className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
                   title="Создать ветку"
                 >
                   <GitBranch className="h-4 w-4" />

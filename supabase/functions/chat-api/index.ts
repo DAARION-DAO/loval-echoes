@@ -146,7 +146,7 @@ serve(async (req) => {
         console.error('[chat-api] Error in POST /chats:', error);
         return new Response(JSON.stringify({ 
           error: 'Failed to create chat', 
-          details: error.message 
+          details: error instanceof Error ? error.message : 'Unknown error'
         }), {
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -169,7 +169,7 @@ serve(async (req) => {
     console.error('[chat-api] Unhandled error:', error);
     return new Response(JSON.stringify({ 
       error: 'Internal server error',
-      details: error.message 
+      details: error instanceof Error ? error.message : 'Unknown error'
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

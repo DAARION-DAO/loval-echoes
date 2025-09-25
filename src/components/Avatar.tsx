@@ -14,16 +14,16 @@ interface AvatarProps {
 }
 
 const AVATAR_COLORS = [
-  'bg-blue-500',
-  'bg-green-500', 
-  'bg-purple-500',
-  'bg-red-500',
+  'bg-primary',
+  'bg-secondary', 
+  'bg-accent',
+  'bg-orange-500',
   'bg-yellow-500',
   'bg-indigo-500',
   'bg-pink-500',
   'bg-teal-500',
-  'bg-orange-500',
-  'bg-cyan-500'
+  'bg-orange-600',
+  'bg-blue-600'
 ];
 
 export const Avatar = ({ user, size = 'md', className, title }: AvatarProps) => {
@@ -69,7 +69,7 @@ export const Avatar = ({ user, size = 'md', className, title }: AvatarProps) => 
   return (
     <div 
       className={cn(
-        'rounded-full flex items-center justify-center text-white font-semibold border-2 border-background',
+        'rounded-full flex items-center justify-center text-primary-foreground font-semibold border border-border shrink-0',
         backgroundColor,
         sizeClasses[size],
         className
