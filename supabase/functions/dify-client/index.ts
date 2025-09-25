@@ -250,7 +250,6 @@ serve(async (req) => {
               content: query,
               role: 'user',
               sender_name: userDisplayName,
-              user_id: currentUserId,
             });
           console.log('User message saved to database with sender:', userDisplayName);
         } catch (dbError) {
@@ -313,7 +312,7 @@ serve(async (req) => {
                       conversation_id: chatId,
                       content: completeMessage,
                       role: 'assistant',
-                      sender_name: 'ЖОС',
+                      sender_name: 'Дух Общины',
                     });
                 }
 

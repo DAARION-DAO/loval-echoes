@@ -369,52 +369,55 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
             </div>
           )}
 
-          {/* Реакции */}
-          {!isDeleted && (
-            <ReactionsBar messageId={message.id} />
-          )}
-
-          {/* Компактная панель действий для сообщений агента */}
-          {isAgent && message.answer && !isDeleted && (
-            <div className={cn('flex items-center gap-1 pt-2', isAgent ? 'justify-start' : 'justify-end')}>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={handlePlayAudio}
-                className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
-                title={isPlaying ? 'Пауза' : 'Озвучить'}
-              >
-                {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => handleFeedback('like')}
-                className="h-6 w-6 p-0 text-muted-foreground hover:text-green-600"
-                title="Нравится"
-              >
-                <ThumbsUp className="h-4 w-4" />
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => handleFeedback('dislike')}
-                className="h-6 w-6 p-0 text-muted-foreground hover:text-red-600"
-                title="Не нравится"
-              >
-                <ThumbsDown className="h-4 w-4" />
-              </Button>
-              {onFork && (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => onFork(message.id)}
-                  className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
-                  title="Создать ветку"
-                >
-                  <GitBranch className="h-4 w-4" />
-                </Button>
+          {/* Компактная панель действий - общая для всех сообщений */}
+          {!isDeleted && (message.answer || message.query) && (
+            <div className={cn('flex items-center gap-1 pt-1', isAgent ? 'justify-start' : 'justify-end')}>
+              {/* Действия для агентских сообщений */}
+              {isAgent && message.answer && (
+                <>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={handlePlayAudio}
+                    className="h-5 w-5 p-0 text-muted-foreground hover:text-foreground"
+                    title={isPlaying ? 'Пауза' : 'Озвучить'}
+                  >
+                    {isPlaying ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => handleFeedback('like')}
+                    className="h-5 w-5 p-0 text-muted-foreground hover:text-green-600"
+                    title="Нравится"
+                  >
+                    <ThumbsUp className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => handleFeedback('dislike')}
+                    className="h-5 w-5 p-0 text-muted-foreground hover:text-red-600"
+                    title="Не нравится"
+                  >
+                    <ThumbsDown className="h-3 w-3" />
+                  </Button>
+                  {onFork && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => onFork(message.id)}
+                      className="h-5 w-5 p-0 text-muted-foreground hover:text-foreground"
+                      title="Создать ветку"
+                    >
+                      <GitBranch className="h-3 w-3" />
+                    </Button>
+                  )}
+                </>
               )}
+              
+              {/* Реакции - компактно в той же линии */}
+              <ReactionsBar messageId={message.id} className="ml-1" />
             </div>
           )}
         </div>

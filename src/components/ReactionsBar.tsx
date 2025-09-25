@@ -40,12 +40,7 @@ export const ReactionsBar = ({ messageId, className }: ReactionsBarProps) => {
     try {
       const { data, error } = await supabase
         .from('message_reactions')
-        .select(`
-          id,
-          emoji,
-          user_id,
-          profiles!message_reactions_user_id_fkey(display_name)
-        `)
+        .select('id, emoji, user_id')
         .eq('message_id', messageId);
 
       if (error) throw error;
@@ -145,7 +140,7 @@ export const ReactionsBar = ({ messageId, className }: ReactionsBarProps) => {
   const reactionEntries = Object.entries(reactions);
 
   return (
-    <div className={cn("flex items-center gap-2 mt-2", className)}>
+    <div className={cn("flex items-center gap-1", className)}>
       {/* Отображаем существующие реакции */}
       {reactionEntries.map(([emoji, reaction]) => {
         const hasReacted = reaction.users?.includes(currentUserId || '');
@@ -157,13 +152,13 @@ export const ReactionsBar = ({ messageId, className }: ReactionsBarProps) => {
             variant={hasReacted ? "default" : "ghost"}
             onClick={() => handleReactionToggle(emoji)}
             className={cn(
-              "h-7 px-2 py-1 text-xs gap-1 border",
+              "h-5 px-1 py-0 text-xs gap-0.5 border",
               hasReacted 
                 ? "bg-primary/10 border-primary/20 text-primary hover:bg-primary/20" 
                 : "hover:bg-muted/50 border-border"
             )}
           >
-            <span>{emoji}</span>
+            <span className="text-xs">{emoji}</span>
             <span className="text-xs font-medium">{reaction.count}</span>
           </Button>
         );
@@ -175,15 +170,15 @@ export const ReactionsBar = ({ messageId, className }: ReactionsBarProps) => {
           size="sm"
           variant="ghost"
           onClick={() => setShowPicker(!showPicker)}
-          className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+          className="h-5 w-5 p-0 text-muted-foreground hover:text-foreground"
           title="Добавить реакцию"
         >
-          <span className="text-sm">+</span>
+          <span className="text-xs">+</span>
         </Button>
 
         {/* Панель выбора реакций */}
         {showPicker && (
-          <div className="absolute bottom-full left-0 mb-2 p-2 bg-background border rounded-lg shadow-lg z-10 flex gap-1">
+          <div className="absolute bottom-full left-0 mb-1 p-1 bg-background border rounded-md shadow-lg z-10 flex gap-0.5">
             {STANDARD_REACTIONS.map(emoji => {
               const hasReacted = reactions[emoji]?.users?.includes(currentUserId || '');
               
@@ -194,7 +189,7 @@ export const ReactionsBar = ({ messageId, className }: ReactionsBarProps) => {
                   variant="ghost"
                   onClick={() => handleReactionToggle(emoji)}
                   className={cn(
-                    "h-8 w-8 p-0 text-base hover:bg-muted/50",
+                    "h-6 w-6 p-0 text-sm hover:bg-muted/50",
                     hasReacted && "bg-primary/10 border border-primary/20"
                   )}
                 >
