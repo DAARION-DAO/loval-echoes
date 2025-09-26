@@ -152,7 +152,7 @@ export const ReactionsBar = ({ messageId, className }: ReactionsBarProps) => {
             variant={hasReacted ? "default" : "ghost"}
             onClick={() => handleReactionToggle(emoji)}
             className={cn(
-              "h-5 px-1 py-0 text-xs gap-0.5 border",
+              "h-4 px-1 py-0 text-xs gap-0.5 border rounded-full",
               hasReacted 
                 ? "bg-primary/10 border-primary/20 text-primary hover:bg-primary/20" 
                 : "hover:bg-muted/50 border-border"
@@ -170,7 +170,7 @@ export const ReactionsBar = ({ messageId, className }: ReactionsBarProps) => {
           size="sm"
           variant="ghost"
           onClick={() => setShowPicker(!showPicker)}
-          className="h-5 w-5 p-0 text-muted-foreground hover:text-foreground"
+          className="h-4 w-4 p-0 text-muted-foreground hover:text-foreground"
           title="Добавить реакцию"
         >
           <span className="text-xs">+</span>

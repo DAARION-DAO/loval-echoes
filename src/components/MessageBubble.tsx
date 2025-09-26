@@ -260,71 +260,66 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   return (
     <div
       className={cn(
-        'group relative w-full animate-fade-in transition-all duration-300 mb-3',
-        // Простое позиционирование без скрытых элементов
+        'group relative w-full animate-fade-in transition-all duration-300 py-1',
+        // Компактное позиционирование
         'flex'
       )}
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
     >
-      <div className={cn('flex gap-3 w-full', isAgent ? 'justify-start' : 'justify-end')}>
+      <div className={cn('flex gap-2 w-full leading-tight', isAgent ? 'justify-start' : 'justify-end')}>
         
-        {/* Аватар */}
+        {/* Компактный аватар */}
         <div className={cn('flex-shrink-0 order-1', isAgent ? 'order-1' : 'order-2')}>
           {isSystem ? (
-            <div className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center">
-              <AlertTriangle className="h-4 w-4 text-white" />
+            <div className="w-6 h-6 rounded-full bg-orange-500 flex items-center justify-center">
+              <AlertTriangle className="h-3 w-3 text-white" />
             </div>
           ) : isAgent ? (
-            <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center border border-primary/30">
-              <Bot className="h-4 w-4 text-primary" />
+            <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center border border-primary/30">
+              <Bot className="h-3 w-3 text-primary" />
             </div>
           ) : (
-            <CustomAvatar 
-              user={{
-                id: currentUserId || 'user',
-                display_name: senderName || 'Пользователь',
-                avatar_url: undefined
-              }}
-              size="md"
-            />
+            <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center border">
+              <User className="h-3 w-3 text-muted-foreground" />
+            </div>
           )}
         </div>
 
-        {/* Контент сообщения */}
-        <div className={cn('flex-1 min-w-0 max-w-md space-y-1', isAgent ? 'order-2' : 'order-1')}>
-          {/* Заголовок с именем и временем */}
-          <div className={cn('flex items-center gap-2', isAgent ? 'justify-start' : 'justify-end')}>
-            <span className="font-medium text-sm text-foreground">
+        {/* Компактный контент сообщения */}
+        <div className={cn('flex-1 min-w-0 max-w-md', isAgent ? 'order-2' : 'order-1')}>
+          {/* Компактный заголовок */}
+          <div className={cn('flex items-center gap-2 mb-0.5', isAgent ? 'justify-start' : 'justify-end')}>
+            <span className="font-medium text-[11px] text-muted-foreground">
               {senderName || (isSystem ? 'Система' : (isAgent ? 'Дух Общины' : 'Пользователь'))}
             </span>
-            <span className="text-xs text-muted-foreground/60">
+            <span className="text-[10px] text-muted-foreground/60">
               {new Date(message.created_at).toLocaleTimeString('ru-RU', { 
                 hour: '2-digit', 
                 minute: '2-digit' 
               })}
             </span>
             
-            {/* Кнопка удаления - только для пользовательских сообщений */}
+            {/* Компактная кнопка удаления */}
             {showActions && canDelete && !isDeleted && !isAgent && !isSystem && (
               <Button
                 size="sm"
                 variant="ghost"
                 onClick={handleDeleteMessage}
-                className="h-4 w-4 p-0 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                className="h-3 w-3 p-0 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
                 title="Удалить сообщение"
               >
-                <Trash2 className="h-3 w-3" />
+                <Trash2 className="h-2 w-2" />
               </Button>
             )}
           </div>
 
-          {/* Текст сообщения */}
+          {/* Компактный текст сообщения */}
           <div className={cn('prose prose-sm max-w-none', isAgent ? 'text-left' : 'text-right')}>
             {isDeleted ? (
-              <em className="text-muted-foreground">Сообщение удалено</em>
+              <em className="text-muted-foreground text-sm">Сообщение удалено</em>
             ) : (
-              <div className="text-foreground leading-relaxed">
+              <div className="text-foreground leading-tight text-sm">
                 {renderMessage(message.query || message.answer || '')}
               </div>
             )}
@@ -369,9 +364,9 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
             </div>
           )}
 
-          {/* Компактная панель действий - общая для всех сообщений */}
+          {/* Ультра-компактная панель действий */}
           {!isDeleted && (message.answer || message.query) && (
-            <div className={cn('flex items-center gap-1 pt-1', isAgent ? 'justify-start' : 'justify-end')}>
+            <div className={cn('flex items-center gap-0.5 pt-0.5', isAgent ? 'justify-start' : 'justify-end')}>
               {/* Действия для агентских сообщений */}
               {isAgent && message.answer && (
                 <>
@@ -379,45 +374,45 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                     size="sm"
                     variant="ghost"
                     onClick={handlePlayAudio}
-                    className="h-5 w-5 p-0 text-muted-foreground hover:text-foreground"
+                    className="h-4 w-4 p-0 text-muted-foreground hover:text-foreground"
                     title={isPlaying ? 'Пауза' : 'Озвучить'}
                   >
-                    {isPlaying ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
+                    {isPlaying ? <Pause className="h-2 w-2" /> : <Play className="h-2 w-2" />}
                   </Button>
                   <Button
                     size="sm"
                     variant="ghost"
                     onClick={() => handleFeedback('like')}
-                    className="h-5 w-5 p-0 text-muted-foreground hover:text-green-600"
+                    className="h-4 w-4 p-0 text-muted-foreground hover:text-green-600"
                     title="Нравится"
                   >
-                    <ThumbsUp className="h-3 w-3" />
+                    <ThumbsUp className="h-2 w-2" />
                   </Button>
                   <Button
                     size="sm"
                     variant="ghost"
                     onClick={() => handleFeedback('dislike')}
-                    className="h-5 w-5 p-0 text-muted-foreground hover:text-red-600"
+                    className="h-4 w-4 p-0 text-muted-foreground hover:text-red-600"
                     title="Не нравится"
                   >
-                    <ThumbsDown className="h-3 w-3" />
+                    <ThumbsDown className="h-2 w-2" />
                   </Button>
                   {onFork && (
                     <Button
                       size="sm"
                       variant="ghost"
                       onClick={() => onFork(message.id)}
-                      className="h-5 w-5 p-0 text-muted-foreground hover:text-foreground"
+                      className="h-4 w-4 p-0 text-muted-foreground hover:text-foreground"
                       title="Создать ветку"
                     >
-                      <GitBranch className="h-3 w-3" />
+                      <GitBranch className="h-2 w-2" />
                     </Button>
                   )}
                 </>
               )}
               
-              {/* Реакции - компактно в той же линии */}
-              <ReactionsBar messageId={message.id} className="ml-1" />
+              {/* Реакции - ультра-компактно */}
+              <ReactionsBar messageId={message.id} />
             </div>
           )}
         </div>
