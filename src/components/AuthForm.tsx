@@ -205,11 +205,28 @@ export const AuthForm = () => {
       });
 
       if (response.data?.success) {
+        // Set session in Supabase client to trigger auth state change
+        if (response.data.session) {
+          const { error: setSessionError } = await supabase.auth.setSession({
+            access_token: response.data.session.access_token,
+            refresh_token: response.data.session.refresh_token
+          });
+          
+          if (setSessionError) {
+            console.error('Error setting session after login-fix:', setSessionError);
+            // Continue anyway, navigation will happen via useEffect when auth state updates
+          }
+        }
+        
         toast({
           title: 'Добро пожаловать!',
           description: 'Вы успешно вошли в систему',
         });
-        navigate('/', { replace: true });
+        
+        // Give auth state time to update, then navigate
+        setTimeout(() => {
+          navigate('/', { replace: true });
+        }, 500);
         return;
       }
 
@@ -272,9 +289,10 @@ export const AuthForm = () => {
         description: 'Вы успешно вошли в систему',
       });
       
+      // Give auth state time to update, then navigate
       setTimeout(() => {
         navigate('/', { replace: true });
-      }, 200);
+      }, 500);
 
     } catch (error) {
       console.error('Login error:', error);

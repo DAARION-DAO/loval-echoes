@@ -25,21 +25,31 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
+    
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
+        if (!mounted) return;
+        
+        console.log('Auth state change:', event, session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
         
         // Handle different auth events with reduced logging to prevent rate limiting
-        if (event === 'SIGNED_IN') {
+        if (event === 'SIGNED_IN' && session?.user) {
           // Defer profile creation to avoid race conditions
-          if (session?.user) {
-            setTimeout(() => {
+          setTimeout(() => {
+            if (mounted) {
               ensureUserProfile(session.user);
-            }, 1000);
-          }
+            }
+          }, 1000);
+        }
+        
+        if (event === 'SIGNED_OUT') {
+          setSession(null);
+          setUser(null);
         }
       }
     );
@@ -70,18 +80,38 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     };
 
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
-      if (error) {
-        console.error('Error getting session:', error);
+    // THEN check for existing session with retry logic
+    const initializeSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error('Error getting session:', error);
+        }
+        
+        if (mounted) {
+          setSession(session);
+          setUser(session?.user ?? null);
+          setLoading(false);
+          
+          // If we have a session, ensure profile exists
+          if (session?.user) {
+            setTimeout(() => ensureUserProfile(session.user), 500);
+          }
+        }
+      } catch (error) {
+        console.error('Session initialization error:', error);
+        if (mounted) {
+          setLoading(false);
+        }
       }
-      
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    };
 
-    return () => subscription.unsubscribe();
+    initializeSession();
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signOut = async () => {
