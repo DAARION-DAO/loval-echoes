@@ -153,6 +153,56 @@ export type Database = {
         }
         Relationships: []
       }
+      kanban_cards: {
+        Row: {
+          assignee_id: string | null
+          column_type: Database["public"]["Enums"]["kanban_column"]
+          created_at: string
+          created_by: string | null
+          description: string | null
+          due_date: string | null
+          id: string
+          position: number
+          project_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assignee_id?: string | null
+          column_type?: Database["public"]["Enums"]["kanban_column"]
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          position?: number
+          project_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assignee_id?: string | null
+          column_type?: Database["public"]["Enums"]["kanban_column"]
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          position?: number
+          project_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kanban_cards_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       message_reactions: {
         Row: {
           created_at: string
@@ -567,7 +617,7 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      kanban_column: "backlog" | "todo" | "progress" | "review" | "done"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -694,6 +744,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      kanban_column: ["backlog", "todo", "progress", "review", "done"],
+    },
   },
 } as const
