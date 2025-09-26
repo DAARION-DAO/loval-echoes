@@ -196,7 +196,7 @@ export const AuthForm = () => {
 
     setLoading(true);
     try {
-      // Try new login-fix function first
+      // Primary method: login-fix function
       const response = await supabase.functions.invoke('login-fix', {
         body: {
           email: formData.email,
@@ -234,17 +234,8 @@ export const AuthForm = () => {
         return;
       }
 
-      // Fallback to secure auth if login-fix fails
-      const result = await secureSignIn(formData.email, formData.password);
-
-      if (result.success) {
-        setTimeout(() => {
-          navigate('/', { replace: true });
-        }, 200);
-        return;
-      }
-
-      // Final fallback to direct Supabase
+      // Fallback to direct Supabase if login-fix returns error or no response
+      console.log('login-fix failed or returned no data, falling back to direct Supabase auth');
       const { error } = await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password,
@@ -257,6 +248,13 @@ export const AuthForm = () => {
           toast({
             title: 'Ошибка входа',
             description: 'Неверный email или пароль. Если забыли пароль, воспользуйтесь восстановлением.',
+            variant: 'destructive',
+          });
+        } else if (error.message.includes('Email not confirmed')) {
+          setShowResendButton(true);
+          toast({
+            title: 'Email не подтвержден',
+            description: 'Пожалуйста, подтвердите ваш email. Проверьте почту и папку "Спам".',
             variant: 'destructive',
           });
         } else {
@@ -279,6 +277,7 @@ export const AuthForm = () => {
       }, 200);
 
     } catch (error) {
+      console.error('Login error:', error);
       toast({
         title: t.error,
         description: 'Ошибка при входе',

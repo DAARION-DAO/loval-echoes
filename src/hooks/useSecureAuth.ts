@@ -35,7 +35,8 @@ export const useSecureAuth = () => {
 
       if (error) {
         console.error('Secure sign in error:', error);
-        return { success: false, error: 'Ошибка подключения к серверу' };
+        // Return error without showing toast to allow fallback
+        return { success: false, error: 'auth-security function failed' };
       }
 
       if (data.rateLimited) {
