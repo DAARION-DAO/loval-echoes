@@ -3,5 +3,5 @@ project_id = "pbsdsdexayzfoexjdlgb"
 [functions.login-fix]
 verify_jwt = false
 
-[functions.import-history]
-verify_jwt = true
+[functions.news-reply]
+verify_jwt = false

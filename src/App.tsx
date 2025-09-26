@@ -16,6 +16,7 @@ import { NewIndex } from "./pages/NewIndex";
 import { ImportPage } from "./pages/Import";
 import { Settings } from "./pages/Settings";
 import { Participants } from "./pages/Participants";
+import NewsPage from "./pages/News";
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { Layout } from "./components/Layout";
 
@@ -46,6 +47,8 @@ const ProtectedLayout = () => {
           <Route path="/chats/:chatId" element={<ChatPage />} />
           <Route path="/participants" element={<Participants />} />
           <Route path="/import" element={<ImportPage />} />
+          <Route path="/news" element={<NewsPage />} />
+          <Route path="/settings" element={<Settings />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </ProtectedRoute>

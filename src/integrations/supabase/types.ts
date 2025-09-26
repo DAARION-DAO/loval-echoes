@@ -239,6 +239,44 @@ export type Database = {
           },
         ]
       }
+      news_feed: {
+        Row: {
+          author_id: string | null
+          created_at: string | null
+          id: string
+          is_agent: boolean | null
+          reply_to_id: string | null
+          text: string
+          updated_at: string | null
+        }
+        Insert: {
+          author_id?: string | null
+          created_at?: string | null
+          id?: string
+          is_agent?: boolean | null
+          reply_to_id?: string | null
+          text: string
+          updated_at?: string | null
+        }
+        Update: {
+          author_id?: string | null
+          created_at?: string | null
+          id?: string
+          is_agent?: boolean | null
+          reply_to_id?: string | null
+          text?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "news_feed_reply_to_id_fkey"
+            columns: ["reply_to_id"]
+            isOneToOne: false
+            referencedRelation: "news_feed"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           approval_status: string | null
@@ -247,6 +285,7 @@ export type Database = {
           display_name: string
           email: string | null
           id: string
+          news_push_enabled: boolean | null
           updated_at: string
           user_id: string
         }
@@ -257,6 +296,7 @@ export type Database = {
           display_name: string
           email?: string | null
           id?: string
+          news_push_enabled?: boolean | null
           updated_at?: string
           user_id: string
         }
@@ -267,6 +307,7 @@ export type Database = {
           display_name?: string
           email?: string | null
           id?: string
+          news_push_enabled?: boolean | null
           updated_at?: string
           user_id?: string
         }

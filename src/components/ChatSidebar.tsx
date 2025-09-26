@@ -12,7 +12,8 @@ import {
   Folder,
   Video,
   Files,
-  Users
+  Users,
+  Rss
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -372,6 +373,16 @@ export const ChatSidebar = () => {
                 {pendingCount}
               </Badge>
             )}
+          </NavLink>
+          <NavLink
+            to="/news"
+            className={({ isActive }) => cn(
+              "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
+              isActive ? "bg-muted" : "hover:bg-muted/50"
+            )}
+          >
+            <Rss className="h-4 w-4" />
+            Новостная лента
           </NavLink>
           <NavLink
             to="/chats"
