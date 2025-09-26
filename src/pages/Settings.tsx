@@ -11,16 +11,14 @@ import {
   Palette, 
   Globe, 
   Shield, 
-  Upload,
-  Moon,
-  Sun,
-  Monitor
+  Upload
 } from 'lucide-react';
 import { useTranslation, Language } from '@/lib/i18n';
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useToast } from '@/hooks/use-toast';
+import { ThemeSwitch } from '@/components/ThemeSwitch';
 
 export const Settings = () => {
   const { t, language, setLanguage } = useTranslation();
@@ -31,9 +29,6 @@ export const Settings = () => {
   const [showPrinciplesBanner, setShowPrinciplesBanner] = useState(
     localStorage.getItem('zhos-principles-banner-dismissed') !== 'true'
   );
-  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>(
-    (localStorage.getItem('theme') as 'light' | 'dark' | 'system') || 'system'
-  );
   const [displayName, setDisplayName] = useState(profile?.display_name || '');
 
   // Sync displayName with profile when it loads
@@ -43,19 +38,6 @@ export const Settings = () => {
     }
   }, [profile]);
 
-  const handleThemeChange = (newTheme: 'light' | 'dark' | 'system') => {
-    setTheme(newTheme);
-    localStorage.setItem('theme', newTheme);
-    
-    // Apply theme immediately
-    const root = window.document.documentElement;
-    if (newTheme === 'system') {
-      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-      root.classList.toggle('dark', systemTheme === 'dark');
-    } else {
-      root.classList.toggle('dark', newTheme === 'dark');
-    }
-  };
 
   const handlePrinciplesBannerToggle = (enabled: boolean) => {
     setShowPrinciplesBanner(enabled);
@@ -105,16 +87,6 @@ export const Settings = () => {
     }
   };
 
-  const getThemeIcon = (themeType: string) => {
-    switch (themeType) {
-      case 'light':
-        return <Sun className="h-4 w-4" />;
-      case 'dark':
-        return <Moon className="h-4 w-4" />;
-      default:
-        return <Monitor className="h-4 w-4" />;
-    }
-  };
 
   return (
     <div className="container max-w-2xl mx-auto p-6 space-y-6">
@@ -198,33 +170,14 @@ export const Settings = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label>{t.theme}</Label>
-            <Select value={theme} onValueChange={handleThemeChange}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="light">
-                  <div className="flex items-center gap-2">
-                    <Sun className="h-4 w-4" />
-                    {t.themeLight}
-                  </div>
-                </SelectItem>
-                <SelectItem value="dark">
-                  <div className="flex items-center gap-2">
-                    <Moon className="h-4 w-4" />
-                    {t.themeDark}
-                  </div>
-                </SelectItem>
-                <SelectItem value="system">
-                  <div className="flex items-center gap-2">
-                    <Monitor className="h-4 w-4" />
-                    {t.themeSystem}
-                  </div>
-                </SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label className="text-base">{t.theme}</Label>
+              <p className="text-sm text-muted-foreground">
+                Выберите тему оформления
+              </p>
+            </div>
+            <ThemeSwitch />
           </div>
         </CardContent>
       </Card>

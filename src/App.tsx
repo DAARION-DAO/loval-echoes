@@ -13,6 +13,7 @@ import { ChatPage } from "./pages/Chat";
 import { Auth } from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import { NewIndex } from "./pages/NewIndex";
+import { ImportPage } from "./pages/Import";
 import { Settings } from "./pages/Settings";
 import { Participants } from "./pages/Participants";
 import { ProtectedRoute } from '@/components/ProtectedRoute';
@@ -44,7 +45,7 @@ const ProtectedLayout = () => {
           <Route path="/chats/manage" element={<ChatsManagement />} />
           <Route path="/chats/:chatId" element={<ChatPage />} />
           <Route path="/participants" element={<Participants />} />
-          <Route path="/settings" element={<Settings />} />
+          <Route path="/import" element={<ImportPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </ProtectedRoute>

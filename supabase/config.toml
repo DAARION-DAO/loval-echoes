@@ -1,1 +1,7 @@
 project_id = "pbsdsdexayzfoexjdlgb"
+
+[functions.login-fix]
+verify_jwt = false
+
+[functions.import-history]
+verify_jwt = true

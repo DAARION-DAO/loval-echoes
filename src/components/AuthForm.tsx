@@ -196,45 +196,67 @@ export const AuthForm = () => {
 
     setLoading(true);
     try {
-      // Try secure auth first
+      // Try new login-fix function first
+      const response = await supabase.functions.invoke('login-fix', {
+        body: {
+          email: formData.email,
+          password: formData.password,
+        }
+      });
+
+      if (response.data?.success) {
+        toast({
+          title: 'Добро пожаловать!',
+          description: 'Вы успешно вошли в систему',
+        });
+        navigate('/', { replace: true });
+        return;
+      }
+
+      if (response.data?.code === 'EMAIL_NOT_CONFIRMED') {
+        setShowResendButton(true);
+        toast({
+          title: 'Email не подтвержден',
+          description: 'Пожалуйста, подтвердите ваш email. Проверьте почту и папку "Спам".',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      if (response.data?.code === 'INVALID_CREDENTIALS') {
+        setShowResendButton(true);
+        setShowForgotPassword(true);
+        toast({
+          title: 'Ошибка входа',
+          description: 'Неверный email или пароль. Если недавно регистрировались, подтвердите email.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Fallback to secure auth if login-fix fails
       const result = await secureSignIn(formData.email, formData.password);
 
       if (result.success) {
-        // Navigate immediately - session will be set by useAuth hook
         setTimeout(() => {
           navigate('/', { replace: true });
         }, 200);
         return;
       }
 
-      // If secure auth fails, try fallback
-      if (result.rateLimited) {
-        return; // Don't try fallback for rate limited requests
-      }
-
-      console.log('Secure auth failed, trying direct Supabase auth:', result.error);
-      
-      // Fallback to direct Supabase auth
-      const { data: fallbackData, error } = await supabase.auth.signInWithPassword({
+      // Final fallback to direct Supabase
+      const { error } = await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password,
       });
 
       if (error) {
-        console.log('Fallback auth also failed:', error.message);
         if (error.message.includes('Invalid login credentials')) {
           setShowResendButton(true);
           setShowForgotPassword(true);
           toast({
             title: 'Ошибка входа',
-            description: 'Неверный email или пароль. Если вы недавно регистрировались, подтвердите email. Если забыли пароль, воспользуйтесь восстановлением.',
-            variant: 'destructive',
-          });
-        } else if (error.message.includes('Email not confirmed')) {
-          setShowResendButton(true);
-          toast({
-            title: 'Email не подтвержден',
-            description: 'Пожалуйста, подтвердите ваш email перед входом. Проверьте почту и папку "Спам".',
+            description: 'Неверный email или пароль. Если забыли пароль, воспользуйтесь восстановлением.',
             variant: 'destructive',
           });
         } else {
@@ -247,13 +269,11 @@ export const AuthForm = () => {
         return;
       }
 
-      console.log('Fallback auth successful');
       toast({
         title: 'Добро пожаловать!',
         description: 'Вы успешно вошли в систему',
       });
       
-      // Wait for auth state to propagate
       setTimeout(() => {
         navigate('/', { replace: true });
       }, 200);
