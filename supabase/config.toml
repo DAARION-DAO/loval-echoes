@@ -32,6 +32,8 @@ port = 54322
 
 [functions.news-reply]
 
+[functions.refresh]
+
 [functions.stt-api]
 
 [functions.tts-api]
