@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useTranslation } from '@/lib/i18n';
 import { useToast } from '@/hooks/use-toast';
@@ -26,11 +27,55 @@ export const AuthForm = () => {
   const [isPasswordReset, setIsPasswordReset] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(
+    localStorage.getItem('rememberMe') === 'true'
+  );
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
+    email: localStorage.getItem('rememberedEmail') || '',
+    password: localStorage.getItem('rememberedPassword') || '',
     displayName: ''
   });
+
+  // Auto-approved users list
+  const autoApprovedUsers = [
+    'shurik.orlov@gmail.com',
+    'radosvetdamir@gmail.com', 
+    'admin@zhos.com',
+    'moderator@zhos.com',
+    'guardian@zhos.com',
+    'developer@zhos.com'
+  ];
+
+  // Auto-login on mount if remembered
+  useEffect(() => {
+    const attemptAutoLogin = async () => {
+      if (rememberMe && formData.email && formData.password && !user) {
+        console.log('Attempting auto-login for remembered user');
+        
+        // Check if user is in auto-approved list for direct login
+        if (autoApprovedUsers.includes(formData.email.toLowerCase())) {
+          try {
+            const { data, error } = await supabase.auth.signInWithPassword({
+              email: formData.email,
+              password: formData.password,
+            });
+            
+            if (data.session && !error) {
+              console.log('Auto-login successful');
+              return;
+            }
+          } catch (error) {
+            console.log('Auto-login failed, clearing remembered credentials');
+            localStorage.removeItem('rememberedEmail');
+            localStorage.removeItem('rememberedPassword');
+            localStorage.removeItem('rememberMe');
+          }
+        }
+      }
+    };
+
+    attemptAutoLogin();
+  }, []);
 
   // Redirect if user is already logged in
   useEffect(() => {
@@ -196,7 +241,44 @@ export const AuthForm = () => {
 
     setLoading(true);
     try {
-      // Primary method: login-fix function
+      // Save credentials if "Remember me" is checked
+      if (rememberMe) {
+        localStorage.setItem('rememberedEmail', formData.email);
+        localStorage.setItem('rememberedPassword', formData.password);
+        localStorage.setItem('rememberMe', 'true');
+      } else {
+        localStorage.removeItem('rememberedEmail');
+        localStorage.removeItem('rememberedPassword');
+        localStorage.removeItem('rememberMe');
+      }
+
+      // For auto-approved users, use direct Supabase auth for reliability
+      if (autoApprovedUsers.includes(formData.email.toLowerCase())) {
+        console.log('Using direct auth for auto-approved user');
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: formData.email,
+          password: formData.password,
+        });
+
+        if (error) {
+          throw error;
+        }
+
+        if (data.session) {
+          toast({
+            title: 'Добро пожаловать!',
+            description: 'Вы успешно вошли в систему',
+          });
+          
+          // Navigate after short delay to ensure auth state is set
+          setTimeout(() => {
+            navigate('/', { replace: true });
+          }, 500);
+          return;
+        }
+      }
+
+      // Primary method: login-fix function for other users
       const response = await supabase.functions.invoke('login-fix', {
         body: {
           email: formData.email,
@@ -557,6 +639,21 @@ export const AuthForm = () => {
                     required
                   />
                 </div>
+                
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="remember-me"
+                    checked={rememberMe}
+                    onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+                  />
+                  <Label 
+                    htmlFor="remember-me" 
+                    className="text-sm font-normal cursor-pointer"
+                  >
+                    Запомнить меня
+                  </Label>
+                </div>
+                
                 <Button type="submit" className="w-full" disabled={loading || secureAuthLoading}>
                   {(loading || secureAuthLoading) ? 'Вход...' : 'Войти'}
                 </Button>
