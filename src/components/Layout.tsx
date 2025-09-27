@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { Search, Plus, Menu, Home, Bell, Users, Settings as SettingsIcon, LogOut } from "lucide-react";
+import { Search, Plus, Menu, Home, Bell, Users, Settings as SettingsIcon, LogOut, FolderCheck } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useTranslation } from "@/lib/i18n";
@@ -117,6 +117,10 @@ export function Layout({ sidebar, children }: LayoutProps) {
                       {pendingCount}
                     </Badge>
                   )}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/projects')}>
+                  <FolderCheck className="mr-2 h-4 w-4" />
+                  Проекты
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate('/settings')}>
                   <SettingsIcon className="mr-2 h-4 w-4" />

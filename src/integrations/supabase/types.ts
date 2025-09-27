@@ -109,6 +109,7 @@ export type Database = {
           created_at: string
           description: string | null
           dify_conversation_id: string | null
+          docs_folder_id: string | null
           id: string
           is_archived: boolean
           is_group_chat: boolean | null
@@ -116,6 +117,7 @@ export type Database = {
           name: string
           pinned_at: string | null
           status: string
+          type: string | null
           updated_at: string
           user_id: string | null
         }
@@ -125,6 +127,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           dify_conversation_id?: string | null
+          docs_folder_id?: string | null
           id?: string
           is_archived?: boolean
           is_group_chat?: boolean | null
@@ -132,6 +135,7 @@ export type Database = {
           name: string
           pinned_at?: string | null
           status?: string
+          type?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -141,6 +145,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           dify_conversation_id?: string | null
+          docs_folder_id?: string | null
           id?: string
           is_archived?: boolean
           is_group_chat?: boolean | null
@@ -148,6 +153,7 @@ export type Database = {
           name?: string
           pinned_at?: string | null
           status?: string
+          type?: string | null
           updated_at?: string
           user_id?: string | null
         }

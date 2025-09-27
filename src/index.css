@@ -260,6 +260,12 @@
     word-wrap: break-word;
     overflow-wrap: break-word;
   }
+
+  /* Project card styles */
+  .project-card-title {
+    @apply truncate text-sm font-medium leading-tight;
+    max-width: 240px;
+  }
   
   /* Fix for text overflow in mobile dialogs */
   @media (max-width: 640px) {

@@ -407,7 +407,7 @@ export const ChatSidebar = () => {
           <NavLink
             to="/projects"
             className={({ isActive }) => cn(
-              "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors opacity-50",
+              "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
               isActive ? "bg-muted" : "hover:bg-muted/50"
             )}
           >

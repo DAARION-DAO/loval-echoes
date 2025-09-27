@@ -1,13 +1,37 @@
 project_id = "pbsdsdexayzfoexjdlgb"
 
-[functions.login-fix]
-verify_jwt = false
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
 
-[functions.news-reply]
-verify_jwt = false
+[db]
+port = 54322
 
-[functions.auth-security]
-verify_jwt = false
+[functions.projects-api]
 
 [functions.kanban-api]
-verify_jwt = true
+
+[functions.auth-security]
+
+[functions.chat-api]
+
+[functions.dify-client]
+
+[functions.feedback-api]
+
+[functions.file-api]
+
+[functions.file-validation]
+
+[functions.import-history]
+
+[functions.login-fix]
+
+[functions.news-reply]
+
+[functions.stt-api]
+
+[functions.tts-api]
