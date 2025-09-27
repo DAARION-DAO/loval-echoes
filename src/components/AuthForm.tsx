@@ -345,8 +345,8 @@ export const AuthForm = () => {
           setShowResendButton(true);
           setShowForgotPassword(true);
           toast({
-            title: 'Ошибка входа',
-            description: 'Неверный email или пароль. Если забыли пароль, воспользуйтесь восстановлением.',
+            title: 'Неверные данные для входа',
+            description: 'Email или пароль неверны. Нажмите "Забыли пароль?" для восстановления доступа.',
             variant: 'destructive',
           });
         } else if (error.message.includes('Email not confirmed')) {
