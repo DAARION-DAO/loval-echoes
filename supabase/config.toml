@@ -10,6 +10,9 @@ max_rows = 1000
 [db]
 port = 54322
 
+[functions.auth]
+verify_jwt = false
+
 [functions.projects-api]
 
 [functions.kanban-api]

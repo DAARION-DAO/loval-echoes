@@ -399,6 +399,45 @@ export type Database = {
         }
         Relationships: []
       }
+      refresh_tokens: {
+        Row: {
+          created_at: string | null
+          device_id: string | null
+          expires_at: string
+          id: string
+          ip_address: unknown | null
+          last_used_at: string | null
+          revoked_at: string | null
+          token_hash: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          device_id?: string | null
+          expires_at: string
+          id?: string
+          ip_address?: unknown | null
+          last_used_at?: string | null
+          revoked_at?: string | null
+          token_hash: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          device_id?: string | null
+          expires_at?: string
+          id?: string
+          ip_address?: unknown | null
+          last_used_at?: string | null
+          revoked_at?: string | null
+          token_hash?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       security_audit_log: {
         Row: {
           created_at: string | null
@@ -543,6 +582,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      cleanup_expired_refresh_tokens: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       detect_approval_inconsistencies: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -610,6 +653,10 @@ export type Database = {
           p_user_agent?: string
           p_user_id: string
         }
+        Returns: undefined
+      }
+      revoke_user_refresh_tokens: {
+        Args: { p_user_id: string }
         Returns: undefined
       }
       validate_file_upload_security: {

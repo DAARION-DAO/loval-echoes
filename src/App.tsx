@@ -7,7 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
-import { useAutoRefresh } from "@/hooks/useAutoRefresh";
+import { useApiInterceptor } from '@/hooks/useApiInterceptor';
 import { ChatsPage } from "./pages/Chats";
 import { ChatsManagement } from "./pages/ChatsManagement";
 import { ChatPage } from "./pages/Chat";
@@ -27,7 +27,7 @@ const queryClient = new QueryClient();
 
 const ProtectedLayout = () => {
   const { user, loading } = useAuth();
-  useAutoRefresh(); // Add automatic token refresh
+  useApiInterceptor(); // Add automatic token refresh interceptor
 
   if (loading) {
     return (

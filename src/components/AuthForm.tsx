@@ -11,6 +11,7 @@ import { useTranslation } from '@/lib/i18n';
 import { useToast } from '@/hooks/use-toast';
 import { useSecureAuth } from '@/hooks/useSecureAuth';
 import { useAuth } from '@/hooks/useAuth';
+import { authAPI } from '@/lib/authApi';
 
 export const AuthForm = () => {
   const { t } = useTranslation();
@@ -27,12 +28,10 @@ export const AuthForm = () => {
   const [isPasswordReset, setIsPasswordReset] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(
-    localStorage.getItem('rememberMe') === 'true'
-  );
+  const [rememberMe, setRememberMe] = useState(false);
   const [formData, setFormData] = useState({
-    email: localStorage.getItem('rememberedEmail') || '',
-    password: localStorage.getItem('rememberedPassword') || '',
+    email: '',
+    password: '',
     displayName: ''
   });
 
@@ -46,36 +45,20 @@ export const AuthForm = () => {
     'developer@zhos.com'
   ];
 
-  // Auto-login on mount if remembered
+  // Initialize session on mount
   useEffect(() => {
-    const attemptAutoLogin = async () => {
-      if (rememberMe && formData.email && formData.password && !user) {
-        console.log('Attempting auto-login for remembered user');
-        
-        // Check if user is in auto-approved list for direct login
-        if (autoApprovedUsers.includes(formData.email.toLowerCase())) {
-          try {
-            const { data, error } = await supabase.auth.signInWithPassword({
-              email: formData.email,
-              password: formData.password,
-            });
-            
-            if (data.session && !error) {
-              console.log('Auto-login successful');
-              return;
-            }
-          } catch (error) {
-            console.log('Auto-login failed, clearing remembered credentials');
-            localStorage.removeItem('rememberedEmail');
-            localStorage.removeItem('rememberedPassword');
-            localStorage.removeItem('rememberMe');
-          }
+    const initializeAuth = async () => {
+      if (!user) {
+        console.log('Attempting to initialize session from refresh token...');
+        const initialized = await authAPI.initializeSession();
+        if (initialized) {
+          console.log('Session initialized successfully');
         }
       }
     };
 
-    attemptAutoLogin();
-  }, []);
+    initializeAuth();
+  }, [user]);
 
   // Redirect if user is already logged in
   useEffect(() => {
@@ -241,78 +224,24 @@ export const AuthForm = () => {
 
     setLoading(true);
     try {
-      // Save credentials if "Remember me" is checked
-      if (rememberMe) {
-        localStorage.setItem('rememberedEmail', formData.email);
-        localStorage.setItem('rememberedPassword', formData.password);
-        localStorage.setItem('rememberMe', 'true');
-      } else {
-        localStorage.removeItem('rememberedEmail');
-        localStorage.removeItem('rememberedPassword');
-        localStorage.removeItem('rememberMe');
-      }
+      // Use the new auth API with refresh token support
+      const result = await authAPI.login(formData.email, formData.password, rememberMe);
 
-      // For auto-approved users, use direct Supabase auth for reliability
-      if (autoApprovedUsers.includes(formData.email.toLowerCase())) {
-        console.log('Using direct auth for auto-approved user');
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: formData.email,
-          password: formData.password,
-        });
-
-        if (error) {
-          throw error;
-        }
-
-        if (data.session) {
-          toast({
-            title: 'Добро пожаловать!',
-            description: 'Вы успешно вошли в систему',
-          });
-          
-          // Navigate after short delay to ensure auth state is set
-          setTimeout(() => {
-            navigate('/', { replace: true });
-          }, 500);
-          return;
-        }
-      }
-
-      // Primary method: login-fix function for other users
-      const response = await supabase.functions.invoke('login-fix', {
-        body: {
-          email: formData.email,
-          password: formData.password,
-        }
-      });
-
-      if (response.data?.success) {
-        // Set session in Supabase client to trigger auth state change
-        if (response.data.session) {
-          const { error: setSessionError } = await supabase.auth.setSession({
-            access_token: response.data.session.access_token,
-            refresh_token: response.data.session.refresh_token
-          });
-          
-          if (setSessionError) {
-            console.error('Error setting session after login-fix:', setSessionError);
-            // Continue anyway, navigation will happen via useEffect when auth state updates
-          }
-        }
-        
+      if (result.success) {
         toast({
           title: 'Добро пожаловать!',
           description: 'Вы успешно вошли в систему',
         });
         
-        // Give auth state time to update, then navigate
+        // Navigate after short delay to ensure auth state is set
         setTimeout(() => {
           navigate('/', { replace: true });
         }, 500);
         return;
       }
 
-      if (response.data?.code === 'EMAIL_NOT_CONFIRMED') {
+      // Handle specific error codes
+      if (result.code === 'EMAIL_NOT_CONFIRMED') {
         setShowResendButton(true);
         toast({
           title: 'Email не подтвержден',
@@ -322,59 +251,23 @@ export const AuthForm = () => {
         return;
       }
 
-      if (response.data?.code === 'INVALID_CREDENTIALS') {
+      if (result.code === 'INVALID_CREDENTIALS') {
         setShowResendButton(true);
         setShowForgotPassword(true);
         toast({
-          title: 'Ошибка входа',
-          description: 'Неверный email или пароль. Если недавно регистрировались, подтвердите email.',
+          title: 'Неверные данные для входа',
+          description: 'Email или пароль неверны. Нажмите "Забыли пароль?" для восстановления доступа.',
           variant: 'destructive',
         });
         return;
       }
 
-      // Fallback to direct Supabase if login-fix returns error or no response
-      console.log('login-fix failed or returned no data, falling back to direct Supabase auth');
-      const { error } = await supabase.auth.signInWithPassword({
-        email: formData.email,
-        password: formData.password,
-      });
-
-      if (error) {
-        if (error.message.includes('Invalid login credentials')) {
-          setShowResendButton(true);
-          setShowForgotPassword(true);
-          toast({
-            title: 'Неверные данные для входа',
-            description: 'Email или пароль неверны. Нажмите "Забыли пароль?" для восстановления доступа.',
-            variant: 'destructive',
-          });
-        } else if (error.message.includes('Email not confirmed')) {
-          setShowResendButton(true);
-          toast({
-            title: 'Email не подтвержден',
-            description: 'Пожалуйста, подтвердите ваш email. Проверьте почту и папку "Спам".',
-            variant: 'destructive',
-          });
-        } else {
-          toast({
-            title: t.error,
-            description: error.message,
-            variant: 'destructive',
-          });
-        }
-        return;
-      }
-
+      // Generic error handling
       toast({
-        title: 'Добро пожаловать!',
-        description: 'Вы успешно вошли в систему',
+        title: 'Ошибка входа',
+        description: result.message || 'Не удалось войти в систему',
+        variant: 'destructive',
       });
-      
-      // Give auth state time to update, then navigate
-      setTimeout(() => {
-        navigate('/', { replace: true });
-      }, 500);
 
     } catch (error) {
       console.error('Login error:', error);
