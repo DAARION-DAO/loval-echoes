@@ -11,6 +11,7 @@ import { useTranslation } from '@/lib/i18n';
 import { useToast } from '@/hooks/use-toast';
 import { useSecureAuth } from '@/hooks/useSecureAuth';
 import { useAuth } from '@/hooks/useAuth';
+import { useRememberMe } from '@/hooks/useRememberMe';
 
 
 export const AuthForm = () => {
@@ -19,6 +20,7 @@ export const AuthForm = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { loading: secureAuthLoading, secureSignIn, secureSignUp } = useSecureAuth();
+  const { saveCredentials, getSavedEmail, isRemembered, attemptAutoLogin } = useRememberMe();
   
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
@@ -34,6 +36,15 @@ export const AuthForm = () => {
     password: '',
     displayName: ''
   });
+
+  // Initialize form with saved email if remembered
+  useEffect(() => {
+    const savedEmail = getSavedEmail();
+    if (savedEmail) {
+      setFormData(prev => ({ ...prev, email: savedEmail }));
+      setRememberMe(true);
+    }
+  }, [getSavedEmail]);
 
   // Auto-approved users list
   const autoApprovedUsers = [
@@ -210,11 +221,11 @@ export const AuthForm = () => {
 
     setLoading(true);
     try {
-      // Use the new auth API with refresh token support
-      // Use standard Supabase Auth with remember me functionality
+      console.log('Attempting login for:', formData.email);
+      
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: formData.email,
-        password: formData.password,
+        email: formData.email.trim(),
+        password: formData.password
       });
 
       if (error) {
@@ -249,6 +260,9 @@ export const AuthForm = () => {
       }
 
       if (data.user) {
+        // Save credentials for remember me functionality
+        saveCredentials(formData.email, rememberMe);
+        
         toast({
           title: 'Добро пожаловать!',
           description: 'Вы успешно вошли в систему',

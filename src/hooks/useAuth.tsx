@@ -115,6 +115,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const signOut = async () => {
+    // Clear remembered credentials on sign out
+    localStorage.removeItem('zhos-remember-me');
+    localStorage.removeItem('zhos-user-email');
     await supabase.auth.signOut();
   };
 

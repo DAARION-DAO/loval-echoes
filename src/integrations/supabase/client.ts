@@ -13,5 +13,9 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     storage: localStorage,
     persistSession: true,
     autoRefreshToken: true,
+    debug: true,
+    storageKey: 'zhos-auth',
+    detectSessionInUrl: true,
+    flowType: 'pkce'
   }
 });
