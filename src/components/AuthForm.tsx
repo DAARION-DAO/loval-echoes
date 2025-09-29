@@ -11,7 +11,7 @@ import { useTranslation } from '@/lib/i18n';
 import { useToast } from '@/hooks/use-toast';
 import { useSecureAuth } from '@/hooks/useSecureAuth';
 import { useAuth } from '@/hooks/useAuth';
-import { authAPI } from '@/lib/authApi';
+
 
 export const AuthForm = () => {
   const { t } = useTranslation();
@@ -45,20 +45,6 @@ export const AuthForm = () => {
     'developer@zhos.com'
   ];
 
-  // Initialize session on mount
-  useEffect(() => {
-    const initializeAuth = async () => {
-      if (!user) {
-        console.log('Attempting to initialize session from refresh token...');
-        const initialized = await authAPI.initializeSession();
-        if (initialized) {
-          console.log('Session initialized successfully');
-        }
-      }
-    };
-
-    initializeAuth();
-  }, [user]);
 
   // Redirect if user is already logged in
   useEffect(() => {
@@ -225,49 +211,49 @@ export const AuthForm = () => {
     setLoading(true);
     try {
       // Use the new auth API with refresh token support
-      const result = await authAPI.login(formData.email, formData.password, rememberMe);
+      // Use standard Supabase Auth with remember me functionality
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password,
+      });
 
-      if (result.success) {
+      if (error) {
+        // Handle specific error types
+        if (error.message.includes('Email not confirmed')) {
+          setShowResendButton(true);
+          toast({
+            title: 'Email не подтвержден',
+            description: 'Пожалуйста, подтвердите ваш email. Проверьте почту и папку "Спам".',
+            variant: 'destructive',
+          });
+          return;
+        }
+
+        if (error.message.includes('Invalid login credentials') || error.message.includes('Invalid credentials')) {
+          setShowResendButton(true);
+          setShowForgotPassword(true);
+          toast({
+            title: 'Неверные данные для входа',
+            description: 'Email или пароль неверны. Нажмите "Забыли пароль?" для восстановления доступа.',
+            variant: 'destructive',
+          });
+          return;
+        }
+
+        toast({
+          title: 'Ошибка входа',
+          description: error.message,
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      if (data.user) {
         toast({
           title: 'Добро пожаловать!',
           description: 'Вы успешно вошли в систему',
         });
-        
-        // Navigate after short delay to ensure auth state is set
-        setTimeout(() => {
-          navigate('/', { replace: true });
-        }, 500);
-        return;
       }
-
-      // Handle specific error codes
-      if (result.code === 'EMAIL_NOT_CONFIRMED') {
-        setShowResendButton(true);
-        toast({
-          title: 'Email не подтвержден',
-          description: 'Пожалуйста, подтвердите ваш email. Проверьте почту и папку "Спам".',
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      if (result.code === 'INVALID_CREDENTIALS') {
-        setShowResendButton(true);
-        setShowForgotPassword(true);
-        toast({
-          title: 'Неверные данные для входа',
-          description: 'Email или пароль неверны. Нажмите "Забыли пароль?" для восстановления доступа.',
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      // Generic error handling
-      toast({
-        title: 'Ошибка входа',
-        description: result.message || 'Не удалось войти в систему',
-        variant: 'destructive',
-      });
 
     } catch (error) {
       console.error('Login error:', error);

@@ -115,9 +115,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const signOut = async () => {
-    // Use the enhanced logout that clears refresh tokens
-    const { authAPI } = await import('@/lib/authApi');
-    await authAPI.logout();
+    await supabase.auth.signOut();
   };
 
   const value = {
