@@ -208,6 +208,71 @@ export const AuthForm = () => {
     }
   };
 
+  const handleAutoRegister = async () => {
+    if (!formData.email || !formData.password) {
+      toast({
+        title: t.error,
+        description: 'Пожалуйста, заполните email и пароль',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      console.log('Starting auto-register for:', formData.email);
+      
+      const response = await supabase.functions.invoke('auto-register', {
+        body: {
+          email: formData.email.trim(),
+          password: formData.password,
+          displayName: formData.displayName || formData.email.split('@')[0]
+        }
+      });
+
+      if (response.error) {
+        toast({
+          title: 'Ошибка',
+          description: response.error.message || 'Ошибка при создании аккаунта',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      if (response.data?.error) {
+        toast({
+          title: 'Ошибка',
+          description: response.data.error,
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      if (response.data?.session) {
+        // Set the session in Supabase client
+        await supabase.auth.setSession(response.data.session);
+        
+        // Save credentials for remember me
+        saveCredentials(formData.email, true);
+        
+        toast({
+          title: 'Готово!',
+          description: 'Аккаунт создан и вход выполнен автоматически',
+        });
+      }
+
+    } catch (error) {
+      console.error('Auto-register error:', error);
+      toast({
+        title: t.error,
+        description: 'Ошибка при автоматической регистрации',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.email || !formData.password) {
@@ -243,11 +308,21 @@ export const AuthForm = () => {
         if (error.message.includes('Invalid login credentials') || error.message.includes('Invalid credentials')) {
           setShowResendButton(true);
           setShowForgotPassword(true);
-          toast({
-            title: 'Неверные данные для входа',
-            description: 'Email или пароль неверны. Нажмите "Забыли пароль?" для восстановления доступа.',
-            variant: 'destructive',
-          });
+          
+          // For auto-approved users, offer instant registration
+          if (autoApprovedUsers.includes(formData.email.toLowerCase())) {
+            toast({
+              title: 'Проблема со входом',
+              description: 'Нажмите кнопку "Мгновенный вход" ниже для автоматической настройки аккаунта',
+              variant: 'destructive',
+            });
+          } else {
+            toast({
+              title: 'Неверные данные для входа',
+              description: 'Email или пароль неверны. Нажмите "Забыли пароль?" для восстановления доступа.',
+              variant: 'destructive',
+            });
+          }
           return;
         }
 
@@ -563,7 +638,28 @@ export const AuthForm = () => {
                   </Button>
                 </div>
                 
-                {showResendButton && (
+                {showResendButton && autoApprovedUsers.includes(formData.email.toLowerCase()) && (
+                  <div className="mt-4 p-4 bg-primary/10 rounded-lg border-2 border-primary/30">
+                    <p className="text-sm font-semibold text-primary mb-2">
+                      🚀 Мгновенный вход доступен!
+                    </p>
+                    <p className="text-xs text-muted-foreground mb-3">
+                      Ваш email в списке авто-одобренных. Нажмите кнопку ниже для автоматической настройки и входа без подтверждения email.
+                    </p>
+                    <Button 
+                      type="button" 
+                      variant="default" 
+                      size="sm" 
+                      className="w-full"
+                      onClick={handleAutoRegister}
+                      disabled={loading}
+                    >
+                      {loading ? 'Настройка...' : '⚡ Мгновенный вход'}
+                    </Button>
+                  </div>
+                )}
+                
+                {showResendButton && !autoApprovedUsers.includes(formData.email.toLowerCase()) && (
                   <div className="mt-4 p-3 bg-muted/50 rounded-lg border">
                     <p className="text-sm text-muted-foreground mb-2">
                       Не можете войти? Возможно, нужно подтвердить email.
