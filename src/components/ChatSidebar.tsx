@@ -6,7 +6,6 @@ import {
   MessageCircle, 
   MoreHorizontal, 
   Edit2, 
-  Trash2,
   Archive,
   Settings,
   Folder,
@@ -91,8 +90,8 @@ export const ChatSidebar = () => {
       setLoading(true);
       const { data: conversations, error } = await supabase
         .from('conversations')
-        .select('id, name, updated_at, created_at')
-        .eq('is_archived', false)
+        .select('id, name, updated_at, created_at, status')
+        .eq('status', 'active')
         .order('updated_at', { ascending: false });
 
       if (error) {
@@ -217,42 +216,34 @@ export const ChatSidebar = () => {
   };
 
   const handleArchiveChat = async (chatId: string) => {
+    if (!confirm("Архивировать этот чат? Удалить его можно только из панели управления.")) {
+      return;
+    }
+    
     try {
-      const { archiveChat } = await import('@/services/chats');
-      await archiveChat(chatId);
+      const { error } = await supabase
+        .from('conversations')
+        .update({ status: 'archived' })
+        .eq('id', chatId);
+
+      if (error) throw error;
 
       setChats(prev => prev.filter(chat => chat.id !== chatId));
+      
+      // Если находимся в архивированном чате, переходим на список чатов
+      if (location.pathname.includes(chatId)) {
+        navigate('/chats');
+      }
+      
       toast({
-        description: "Чат добавлен в архив",
+        title: "Чат архивирован",
+        description: "Чат перемещен в архив. Удалить его можно из панели управления чатами.",
       });
     } catch (error) {
       console.error("Error archiving chat:", error);
       toast({
         title: "Ошибка",
         description: "Не удалось архивировать чат",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleDeleteChat = async (chatId: string) => {
-    if (!confirm("Вы уверены, что хотите удалить этот чат?")) {
-      return;
-    }
-    
-    try {
-      const { deleteChat } = await import('@/services/chats');
-      await deleteChat(chatId);
-
-      setChats(prev => prev.filter(chat => chat.id !== chatId));
-      toast({
-        description: "Чат удален",
-      });
-    } catch (error) {
-      console.error("Error deleting chat:", error);
-      toast({
-        title: "Ошибка",
-        description: "Не удалось удалить чат",
         variant: "destructive",
       });
     }
@@ -332,20 +323,18 @@ export const ChatSidebar = () => {
                   </div>
                 </NavLink>
                 
-                {/* Кнопка удаления - всегда видимая */}
+                {/* Кнопка архивирования */}
                 <Button
                   size="sm" 
                   variant="ghost"
-                  className="absolute right-2 top-2 h-8 w-8 p-0 z-20 bg-background/90 backdrop-blur-sm border border-border/60 hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                  className="absolute right-2 top-2 h-8 w-8 p-0 z-20 bg-background/90 backdrop-blur-sm border border-border/60 hover:bg-muted transition-colors"
                   onClick={(e) => {
                     e.preventDefault();
-                    if (window.confirm(`Точно удалить данный диалог "${chat.name}"? Это действие нельзя отменить.`)) {
-                      handleDeleteChat(chat.id);
-                    }
+                    handleArchiveChat(chat.id);
                   }}
-                  title="Удалить чат"
+                  title="Архивировать чат"
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Archive className="h-4 w-4" />
                 </Button>
               </div>
             ))}

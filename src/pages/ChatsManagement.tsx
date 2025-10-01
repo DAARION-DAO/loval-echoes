@@ -282,41 +282,44 @@ export const ChatsManagement = () => {
                               В архив
                             </Button>
                           ) : (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => archiveChats(selectedChats, false)}
-                            >
-                              <RotateCcw className="h-4 w-4 mr-2" />
-                              Восстановить
-                            </Button>
-                          )}
-
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="destructive" size="sm">
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Удалить
+                            <>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => archiveChats(selectedChats, false)}
+                              >
+                                <RotateCcw className="h-4 w-4 mr-2" />
+                                Восстановить
                               </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Удалить выбранные чаты?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Это действие необратимо. Будут удалены {selectedChats.length} чат(ов) и все их сообщения.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Отмена</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() => deleteChats(selectedChats)}
-                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                >
-                                  Удалить навсегда
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
+
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="destructive" size="sm">
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Удалить
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Удалить выбранные чаты?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Это действие необратимо. Будут удалены {selectedChats.length} чат(ов) и все их сообщения.
+                                      Все действия записываются в журнал.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Отмена</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() => deleteChats(selectedChats)}
+                                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                    >
+                                      Удалить навсегда
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </>
+                          )}
                         </div>
                       )}
                     </div>
