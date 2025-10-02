@@ -14,6 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_agent_permissions: {
+        Row: {
+          can_delete: boolean | null
+          can_read: boolean | null
+          can_tag: boolean | null
+          can_write: boolean | null
+          created_at: string
+          folder_id: string | null
+          id: string
+          project_id: string | null
+          scope: Database["public"]["Enums"]["file_scope"]
+          updated_at: string
+        }
+        Insert: {
+          can_delete?: boolean | null
+          can_read?: boolean | null
+          can_tag?: boolean | null
+          can_write?: boolean | null
+          created_at?: string
+          folder_id?: string | null
+          id?: string
+          project_id?: string | null
+          scope: Database["public"]["Enums"]["file_scope"]
+          updated_at?: string
+        }
+        Update: {
+          can_delete?: boolean | null
+          can_read?: boolean | null
+          can_tag?: boolean | null
+          can_write?: boolean | null
+          created_at?: string
+          folder_id?: string | null
+          id?: string
+          project_id?: string | null
+          scope?: Database["public"]["Enums"]["file_scope"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_agent_permissions_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "folders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_agent_permissions_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       approval_inconsistencies: {
         Row: {
           approval_count: number | null
@@ -193,6 +247,202 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      file_tags: {
+        Row: {
+          added_by: string | null
+          auto_generated: boolean | null
+          created_at: string
+          file_id: string
+          id: string
+          tag: string
+        }
+        Insert: {
+          added_by?: string | null
+          auto_generated?: boolean | null
+          created_at?: string
+          file_id: string
+          id?: string
+          tag: string
+        }
+        Update: {
+          added_by?: string | null
+          auto_generated?: boolean | null
+          created_at?: string
+          file_id?: string
+          id?: string
+          tag?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "file_tags_file_id_fkey"
+            columns: ["file_id"]
+            isOneToOne: false
+            referencedRelation: "files"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      file_versions: {
+        Row: {
+          change_note: string | null
+          created_at: string
+          file_id: string
+          id: string
+          size_bytes: number
+          storage_path: string
+          uploaded_by: string
+          version_number: number
+        }
+        Insert: {
+          change_note?: string | null
+          created_at?: string
+          file_id: string
+          id?: string
+          size_bytes: number
+          storage_path: string
+          uploaded_by: string
+          version_number: number
+        }
+        Update: {
+          change_note?: string | null
+          created_at?: string
+          file_id?: string
+          id?: string
+          size_bytes?: number
+          storage_path?: string
+          uploaded_by?: string
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "file_versions_file_id_fkey"
+            columns: ["file_id"]
+            isOneToOne: false
+            referencedRelation: "files"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      files: {
+        Row: {
+          created_at: string
+          deleted_at: string | null
+          description: string | null
+          dify_file_id: string | null
+          file_type: Database["public"]["Enums"]["file_type"]
+          folder_id: string | null
+          id: string
+          is_knowledge_base: boolean | null
+          mime_type: string | null
+          name: string
+          project_id: string | null
+          scope: Database["public"]["Enums"]["file_scope"]
+          size_bytes: number
+          storage_path: string
+          updated_at: string
+          uploaded_by: string
+        }
+        Insert: {
+          created_at?: string
+          deleted_at?: string | null
+          description?: string | null
+          dify_file_id?: string | null
+          file_type?: Database["public"]["Enums"]["file_type"]
+          folder_id?: string | null
+          id?: string
+          is_knowledge_base?: boolean | null
+          mime_type?: string | null
+          name: string
+          project_id?: string | null
+          scope?: Database["public"]["Enums"]["file_scope"]
+          size_bytes: number
+          storage_path: string
+          updated_at?: string
+          uploaded_by: string
+        }
+        Update: {
+          created_at?: string
+          deleted_at?: string | null
+          description?: string | null
+          dify_file_id?: string | null
+          file_type?: Database["public"]["Enums"]["file_type"]
+          folder_id?: string | null
+          id?: string
+          is_knowledge_base?: boolean | null
+          mime_type?: string | null
+          name?: string
+          project_id?: string | null
+          scope?: Database["public"]["Enums"]["file_scope"]
+          size_bytes?: number
+          storage_path?: string
+          updated_at?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "files_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "folders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "files_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      folders: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          name: string
+          parent_id: string | null
+          project_id: string | null
+          scope: Database["public"]["Enums"]["file_scope"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          name: string
+          parent_id?: string | null
+          project_id?: string | null
+          scope?: Database["public"]["Enums"]["file_scope"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          name?: string
+          parent_id?: string | null
+          project_id?: string | null
+          scope?: Database["public"]["Enums"]["file_scope"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "folders_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "folders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "folders_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       kanban_cards: {
         Row: {
@@ -644,6 +894,19 @@ export type Database = {
           old_status: string
         }[]
       }
+      get_ai_agent_permissions: {
+        Args: {
+          p_folder_id?: string
+          p_project_id?: string
+          p_scope: Database["public"]["Enums"]["file_scope"]
+        }
+        Returns: {
+          can_delete: boolean
+          can_read: boolean
+          can_tag: boolean
+          can_write: boolean
+        }[]
+      }
       get_conversation_participant_profiles: {
         Args: { requesting_user_id: string }
         Returns: {
@@ -659,6 +922,26 @@ export type Database = {
         Returns: {
           conversation_id: string
         }[]
+      }
+      gtrgm_compress: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gtrgm_decompress: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gtrgm_in: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gtrgm_options: {
+        Args: { "": unknown }
+        Returns: undefined
+      }
+      gtrgm_out: {
+        Args: { "": unknown }
+        Returns: unknown
       }
       is_admin: {
         Args: { user_id: string }
@@ -694,6 +977,18 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: undefined
       }
+      set_limit: {
+        Args: { "": number }
+        Returns: number
+      }
+      show_limit: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      show_trgm: {
+        Args: { "": string }
+        Returns: string[]
+      }
       validate_file_upload_security: {
         Args: {
           p_file_name: string
@@ -705,6 +1000,8 @@ export type Database = {
       }
     }
     Enums: {
+      file_scope: "community" | "project"
+      file_type: "document" | "image" | "code" | "data" | "other"
       kanban_column: "backlog" | "todo" | "progress" | "review" | "done"
     }
     CompositeTypes: {
@@ -833,6 +1130,8 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      file_scope: ["community", "project"],
+      file_type: ["document", "image", "code", "data", "other"],
       kanban_column: ["backlog", "todo", "progress", "review", "done"],
     },
   },

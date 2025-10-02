@@ -20,6 +20,7 @@ import { Participants } from "./pages/Participants";
 import NewsPage from "./pages/News";
 import Projects from "./pages/Projects";
 import ProjectDetail from "./pages/ProjectDetail";
+import KnowledgeBase from "./pages/KnowledgeBase";
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { Layout } from "./components/Layout";
 
@@ -54,6 +55,8 @@ const ProtectedLayout = () => {
           <Route path="/settings" element={<Settings />} />
           <Route path="/projects" element={<Projects />} />
           <Route path="/projects/:id" element={<ProjectDetail />} />
+          <Route path="/knowledge-base" element={<KnowledgeBase />} />
+          <Route path="/projects/:projectId/knowledge-base" element={<KnowledgeBase />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </ProtectedRoute>

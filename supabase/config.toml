@@ -37,3 +37,7 @@ port = 54322
 [functions.stt-api]
 
 [functions.tts-api]
+
+[functions.auto-register]
+
+[functions.knowledge-base-api]
