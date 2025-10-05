@@ -7,19 +7,46 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { List, LayoutGrid, Calendar as CalendarIcon, Search } from 'lucide-react';
+import { List, LayoutGrid, Calendar as CalendarIcon, Search, Plus } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { KanbanCard } from '@/components/KanbanCard';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, startOfWeek, endOfWeek } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import { useResponsive } from '@/hooks/useResponsive';
+import { DndContext, DragEndEvent, closestCorners, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { 
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+} from '@/components/ui/drawer';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { useDroppable } from '@dnd-kit/core';
 
 export default function MyTasks() {
   const { user } = useAuth();
+  const { isMobile } = useResponsive();
   const [cards, setCards] = useState<KanbanCardType[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [view, setView] = useState<'list' | 'board' | 'calendar'>('board');
+  const [isCreateDrawerOpen, setIsCreateDrawerOpen] = useState(false);
+  const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [newTaskDescription, setNewTaskDescription] = useState('');
+  
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    })
+  );
 
   useEffect(() => {
     if (user) {
@@ -132,6 +159,80 @@ export default function MyTasks() {
     }
   };
 
+  const createTask = async () => {
+    if (!newTaskTitle.trim() || !user) return;
+
+    try {
+      // Get first project for now
+      const { data: participantData } = await supabase
+        .from('conversation_participants')
+        .select('conversation_id')
+        .eq('user_id', user.id)
+        .limit(1)
+        .single();
+
+      if (!participantData) {
+        toast({
+          title: 'Ошибка',
+          description: 'Нет доступных проектов',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      const response = await fetch(`/functions/v1/kanban-api`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+        },
+        body: JSON.stringify({
+          project_id: participantData.conversation_id,
+          title: newTaskTitle,
+          description: newTaskDescription || undefined,
+          column_type: 'todo',
+          assignee_id: user.id,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create task');
+      }
+
+      const newCard = await response.json();
+      setCards(prev => [...prev, newCard]);
+      
+      setNewTaskTitle('');
+      setNewTaskDescription('');
+      setIsCreateDrawerOpen(false);
+
+      toast({
+        title: 'Успех',
+        description: 'Задача создана',
+      });
+    } catch (error) {
+      console.error('Error creating task:', error);
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось создать задачу',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    
+    if (!over || active.id === over.id) return;
+
+    const activeCard = cards.find(c => c.id === active.id);
+    const overColumn = over.id as KanbanCardType['column_type'];
+    
+    if (activeCard && ['backlog', 'todo', 'progress', 'review', 'done'].includes(overColumn)) {
+      await updateCard(activeCard.id, { column_type: overColumn });
+    }
+  };
+
   // Фильтрация задач
   const filteredCards = cards.filter(card => {
     const matchesSearch = card.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -188,9 +289,10 @@ export default function MyTasks() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-7xl mx-auto">
+    <DndContext sensors={sensors} collisionDetection={closestCorners} onDragEnd={handleDragEnd}>
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-8 pb-24">
+          <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-foreground mb-2">Ваши задачи</h1>
@@ -262,6 +364,12 @@ export default function MyTasks() {
             </Select>
 
             <div className="flex gap-2">
+              {!isMobile && (
+                <Button onClick={() => setIsCreateDrawerOpen(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Создать задачу
+                </Button>
+              )}
               <Button
                 variant={view === 'list' ? 'default' : 'outline'}
                 size="icon"
@@ -377,8 +485,8 @@ export default function MyTasks() {
           )}
 
           {view === 'board' && (
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-              {Object.entries(groupedByStatus).map(([status, cards]) => {
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 overflow-x-auto">
+              {Object.entries(groupedByStatus).map(([status, statusCards]) => {
                 const statusLabels = {
                   backlog: 'Бэклог',
                   todo: 'К выполнению',
@@ -388,13 +496,14 @@ export default function MyTasks() {
                 };
 
                 return (
-                  <div key={status} className="space-y-2">
-                    <h3 className="font-semibold text-sm flex items-center gap-2">
-                      {statusLabels[status as keyof typeof statusLabels]}
-                      <Badge variant="secondary" className="text-xs">{cards.length}</Badge>
-                    </h3>
-                    <div className="space-y-2">
-                      {cards.map(card => (
+                  <DroppableColumn 
+                    key={status} 
+                    id={status as KanbanCardType['column_type']}
+                    title={statusLabels[status as keyof typeof statusLabels]}
+                    count={statusCards.length}
+                  >
+                    <SortableContext items={statusCards.map(c => c.id)} strategy={verticalListSortingStrategy}>
+                      {statusCards.map(card => (
                         <KanbanCard
                           key={card.id}
                           card={card}
@@ -402,13 +511,13 @@ export default function MyTasks() {
                           onDelete={deleteCard}
                         />
                       ))}
-                      {cards.length === 0 && (
-                        <div className="border-2 border-dashed rounded-lg p-4 text-center text-sm text-muted-foreground">
-                          Нет задач
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                    </SortableContext>
+                    {statusCards.length === 0 && (
+                      <div className="border-2 border-dashed rounded-lg p-4 text-center text-sm text-muted-foreground">
+                        Нет задач
+                      </div>
+                    )}
+                  </DroppableColumn>
                 );
               })}
             </div>
@@ -423,6 +532,94 @@ export default function MyTasks() {
           )}
         </div>
       </div>
+
+      {/* FAB для мобильных */}
+      {isMobile && (
+        <Button
+          className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-50"
+          size="icon"
+          onClick={() => setIsCreateDrawerOpen(true)}
+        >
+          <Plus className="h-6 w-6" />
+        </Button>
+      )}
+
+      {/* Drawer для создания задачи */}
+      <Drawer open={isCreateDrawerOpen} onOpenChange={setIsCreateDrawerOpen}>
+        <DrawerContent>
+          <DrawerHeader>
+            <DrawerTitle>Новая задача</DrawerTitle>
+            <DrawerDescription>
+              Создайте новую задачу для отслеживания
+            </DrawerDescription>
+          </DrawerHeader>
+          
+          <div className="px-4 space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="task-title">Название</Label>
+              <Input
+                id="task-title"
+                value={newTaskTitle}
+                onChange={(e) => setNewTaskTitle(e.target.value)}
+                placeholder="Введите название задачи..."
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="task-description">Описание</Label>
+              <Textarea
+                id="task-description"
+                value={newTaskDescription}
+                onChange={(e) => setNewTaskDescription(e.target.value)}
+                placeholder="Добавьте описание (опционально)..."
+                rows={4}
+              />
+            </div>
+          </div>
+
+          <DrawerFooter>
+            <Button onClick={createTask} disabled={!newTaskTitle.trim()}>
+              Создать задачу
+            </Button>
+            <DrawerClose asChild>
+              <Button variant="outline">Отмена</Button>
+            </DrawerClose>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
+    </div>
+    </DndContext>
+  );
+}
+
+// Droppable Column Component
+function DroppableColumn({ 
+  id, 
+  title, 
+  count, 
+  children 
+}: { 
+  id: string; 
+  title: string; 
+  count: number; 
+  children: React.ReactNode;
+}) {
+  const { setNodeRef, isOver } = useDroppable({
+    id,
+  });
+
+  return (
+    <div 
+      ref={setNodeRef}
+      className={`space-y-2 min-h-[200px] p-3 rounded-lg transition-colors ${
+        isOver ? 'bg-accent/50' : 'bg-background'
+      }`}
+    >
+      <h3 className="font-semibold text-sm flex items-center gap-2 sticky top-0 bg-background z-10 pb-2">
+        {title}
+        <Badge variant="secondary" className="text-xs">{count}</Badge>
+      </h3>
+      {children}
     </div>
   );
 }
