@@ -37,7 +37,9 @@ export default function Projects() {
 
   const loadProjects = async () => {
     try {
-      const response = await supabase.functions.invoke('projects-api');
+      const response = await supabase.functions.invoke('projects-api', {
+        method: 'GET'
+      });
       
       if (response.error) {
         throw response.error;
