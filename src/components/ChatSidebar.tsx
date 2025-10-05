@@ -12,7 +12,9 @@ import {
   Video,
   Files,
   Users,
-  Rss
+  Rss,
+  CheckSquare,
+  FolderKanban
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -394,13 +396,23 @@ export const ChatSidebar = () => {
             Управление чатами
           </NavLink>
           <NavLink
+            to="/my/tasks"
+            className={({ isActive }) => cn(
+              "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
+              isActive ? "bg-muted" : "hover:bg-muted/50"
+            )}
+          >
+            <CheckSquare className="h-4 w-4" />
+            Ваши задачи
+          </NavLink>
+          <NavLink
             to="/projects"
             className={({ isActive }) => cn(
               "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
               isActive ? "bg-muted" : "hover:bg-muted/50"
             )}
           >
-            <Folder className="h-4 w-4" />
+            <FolderKanban className="h-4 w-4" />
             Проекты
           </NavLink>
           <NavLink

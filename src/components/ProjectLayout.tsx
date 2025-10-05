@@ -19,7 +19,7 @@ export function ProjectLayout({ projectId, projectName }: ProjectLayoutProps) {
           </TabsTrigger>
           <TabsTrigger value="kanban" className="flex items-center gap-2">
             <Kanban className="h-4 w-4" />
-            Канбан
+            Задачи
           </TabsTrigger>
           <TabsTrigger value="docs" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />

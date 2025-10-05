@@ -17,7 +17,7 @@ export function ChatTabs({ chatId, chatContent }: ChatTabsProps) {
         </TabsTrigger>
         <TabsTrigger value="kanban" className="flex items-center gap-2">
           <Kanban className="h-4 w-4" />
-          Канбан
+          Задачи
         </TabsTrigger>
       </TabsList>
       
