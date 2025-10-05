@@ -7,9 +7,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { List, LayoutGrid, Search } from 'lucide-react';
+import { List, LayoutGrid, Calendar as CalendarIcon, Search } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { KanbanCard } from '@/components/KanbanCard';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, startOfWeek, endOfWeek } from 'date-fns';
+import { ru } from 'date-fns/locale';
 
 export default function MyTasks() {
   const { user } = useAuth();
@@ -274,6 +276,13 @@ export default function MyTasks() {
               >
                 <LayoutGrid className="h-4 w-4" />
               </Button>
+              <Button
+                variant={view === 'calendar' ? 'default' : 'outline'}
+                size="icon"
+                onClick={() => setView('calendar')}
+              >
+                <CalendarIcon className="h-4 w-4" />
+              </Button>
             </div>
           </div>
 
@@ -404,6 +413,144 @@ export default function MyTasks() {
               })}
             </div>
           )}
+
+          {view === 'calendar' && (
+            <CalendarView 
+              cards={filteredCards} 
+              onUpdate={updateCard}
+              onDelete={deleteCard}
+            />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Календарный компонент
+function CalendarView({ 
+  cards, 
+  onUpdate, 
+  onDelete 
+}: { 
+  cards: KanbanCardType[]; 
+  onUpdate: (id: string, updates: Partial<KanbanCardType>) => void;
+  onDelete: (id: string) => void;
+}) {
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  
+  const monthStart = startOfMonth(currentMonth);
+  const monthEnd = endOfMonth(currentMonth);
+  const calendarStart = startOfWeek(monthStart, { locale: ru });
+  const calendarEnd = endOfWeek(monthEnd, { locale: ru });
+  
+  const days = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
+  
+  const getTasksForDay = (day: Date) => {
+    return cards.filter(card => {
+      if (!card.due_date) return false;
+      return isSameDay(new Date(card.due_date), day);
+    });
+  };
+  
+  const previousMonth = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1));
+  };
+  
+  const nextMonth = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1));
+  };
+  
+  const isToday = (day: Date) => isSameDay(day, new Date());
+  const isCurrentMonth = (day: Date) => day.getMonth() === currentMonth.getMonth();
+  
+  return (
+    <div className="space-y-4">
+      {/* Заголовок календаря */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold">
+          {format(currentMonth, 'LLLL yyyy', { locale: ru })}
+        </h2>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={previousMonth}>
+            Назад
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => setCurrentMonth(new Date())}>
+            Сегодня
+          </Button>
+          <Button variant="outline" size="sm" onClick={nextMonth}>
+            Вперед
+          </Button>
+        </div>
+      </div>
+      
+      {/* Календарная сетка */}
+      <div className="grid grid-cols-7 gap-2">
+        {/* Заголовки дней недели */}
+        {['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].map(day => (
+          <div key={day} className="text-center font-semibold text-sm p-2">
+            {day}
+          </div>
+        ))}
+        
+        {/* Дни месяца */}
+        {days.map(day => {
+          const dayTasks = getTasksForDay(day);
+          const isOverdue = dayTasks.some(task => 
+            task.column_type !== 'done' && new Date(task.due_date!) < new Date()
+          );
+          
+          return (
+            <Card 
+              key={day.toISOString()} 
+              className={`min-h-[120px] p-2 ${
+                !isCurrentMonth(day) ? 'opacity-40' : ''
+              } ${isToday(day) ? 'ring-2 ring-primary' : ''}`}
+            >
+              <div className="flex flex-col h-full">
+                <div className={`text-sm font-medium mb-2 ${
+                  isToday(day) ? 'text-primary font-bold' : ''
+                }`}>
+                  {format(day, 'd')}
+                </div>
+                
+                <div className="space-y-1 flex-1 overflow-y-auto">
+                  {dayTasks.slice(0, 3).map(task => (
+                    <div
+                      key={task.id}
+                      className={`text-xs p-1 rounded truncate cursor-pointer ${
+                        isOverdue ? 'bg-destructive/10 text-destructive' : 'bg-primary/10'
+                      }`}
+                      title={task.title}
+                    >
+                      {task.title}
+                    </div>
+                  ))}
+                  {dayTasks.length > 3 && (
+                    <div className="text-xs text-muted-foreground">
+                      +{dayTasks.length - 3} ещё
+                    </div>
+                  )}
+                </div>
+              </div>
+            </Card>
+          );
+        })}
+      </div>
+      
+      {/* Легенда */}
+      <div className="flex gap-4 text-sm text-muted-foreground">
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 rounded ring-2 ring-primary"></div>
+          <span>Сегодня</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 rounded bg-destructive/10"></div>
+          <span>Просрочено</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 rounded bg-primary/10"></div>
+          <span>Задача</span>
         </div>
       </div>
     </div>
