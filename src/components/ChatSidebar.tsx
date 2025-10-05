@@ -414,6 +414,26 @@ export const ChatSidebar = () => {
             Файлы (База знаний)
           </NavLink>
           <NavLink
+            to="/meetings"
+            className={({ isActive }) => cn(
+              "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors opacity-50",
+              isActive ? "bg-muted" : "hover:bg-muted/50"
+            )}
+          >
+            <Video className="h-4 w-4" />
+            Встречи
+          </NavLink>
+          <NavLink
+            to="/agents"
+            className={({ isActive }) => cn(
+              "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors opacity-50",
+              isActive ? "bg-muted" : "hover:bg-muted/50"
+            )}
+          >
+            <Users className="h-4 w-4" />
+            Агенты
+          </NavLink>
+          <NavLink
             to="/settings"
             className={({ isActive }) => cn(
               "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
