@@ -3,8 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { CompactName } from "./CompactName";
-import { Folder, Calendar, Users } from "lucide-react";
+import { Folder, Calendar, Users, CheckCircle2, AlertCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useProjectTaskStats } from "@/hooks/useProjectTaskStats";
 
 interface ProjectCardProps {
   project: {
@@ -29,6 +30,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
   const navigate = useNavigate();
   const participants = project.conversation_participants || [];
   const admin = participants.find(p => p.role === 'admin');
+  const { stats } = useProjectTaskStats(project.id);
   
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -73,6 +75,25 @@ export function ProjectCard({ project }: ProjectCardProps) {
       </CardHeader>
       
       <CardContent className="pt-0">
+        {/* Task Stats */}
+        {stats.total > 0 && (
+          <div className="flex items-center gap-2 mb-3 flex-wrap">
+            <Badge variant="outline" className="text-xs">
+              <CheckCircle2 className="h-3 w-3 mr-1" />
+              {stats.progress + stats.review} активных
+            </Badge>
+            {stats.overdue > 0 && (
+              <Badge variant="destructive" className="text-xs">
+                <AlertCircle className="h-3 w-3 mr-1" />
+                {stats.overdue} просрочено
+              </Badge>
+            )}
+            <Badge variant="secondary" className="text-xs">
+              {stats.done}/{stats.total} завершено
+            </Badge>
+          </div>
+        )}
+        
         <div className="flex items-center justify-between text-xs text-muted-foreground mb-3">
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-1">

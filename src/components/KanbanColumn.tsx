@@ -55,21 +55,22 @@ export function KanbanColumn({
     <Card 
       ref={setNodeRef}
       className={cn(
-        "h-fit min-h-[200px] transition-colors",
+        "h-fit min-h-[200px] transition-colors w-full md:min-w-[280px]",
         isOver && "ring-2 ring-primary",
         color
       )}
     >
       <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-sm font-medium">
-            {title} ({cards.length})
+        <div className="flex items-center justify-between gap-2">
+          <CardTitle className="text-sm font-medium truncate">
+            {title} <span className="text-muted-foreground">({cards.length})</span>
           </CardTitle>
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setIsAddingCard(true)}
-            className="h-6 w-6 p-0"
+            className="h-7 w-7 p-0 shrink-0"
+            title="Добавить задачу"
           >
             <Plus className="h-4 w-4" />
           </Button>

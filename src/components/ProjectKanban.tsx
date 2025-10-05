@@ -201,33 +201,36 @@ export function ProjectKanban({ projectId }: ProjectKanbanProps) {
   }
 
   return (
-    <div className="h-full overflow-auto">
+    <div className="h-full overflow-hidden bg-background">
       <DndContext
         collisionDetection={closestCorners}
         onDragEnd={handleDragEnd}
       >
-        <div className="grid grid-cols-5 gap-6 p-6 min-h-full">
-          {COLUMNS.map((column) => {
-            const columnCards = cards.filter(card => card.column_type === column.id);
-            
-            return (
-              <SortableContext
-                key={column.id}
-                items={columnCards.map(card => card.id)}
-                strategy={verticalListSortingStrategy}
-              >
-                <KanbanColumn
-                  id={column.id}
-                  title={column.title}
-                  color={column.color}
-                  cards={columnCards}
-                  onCreateCard={(title) => createCard(column.id, title)}
-                  onUpdateCard={updateCard}
-                  onDeleteCard={deleteCard}
-                />
-              </SortableContext>
-            );
-          })}
+        <div className="h-full overflow-x-auto overflow-y-auto md:overflow-y-hidden">
+          <div className="flex flex-col md:flex-row gap-4 p-4 h-full md:min-w-max">
+            {COLUMNS.map((column) => {
+              const columnCards = cards.filter(card => card.column_type === column.id);
+              
+              return (
+                <div key={column.id} className="w-full md:w-[320px] md:shrink-0">
+                  <SortableContext
+                    items={columnCards.map(card => card.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    <KanbanColumn
+                      id={column.id}
+                      title={column.title}
+                      color={column.color}
+                      cards={columnCards}
+                      onCreateCard={(title) => createCard(column.id, title)}
+                      onUpdateCard={updateCard}
+                      onDeleteCard={deleteCard}
+                    />
+                  </SortableContext>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </DndContext>
     </div>
