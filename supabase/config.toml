@@ -41,3 +41,6 @@ port = 54322
 [functions.auto-register]
 
 [functions.knowledge-base-api]
+
+[functions.task-flow-agent]
+verify_jwt = false

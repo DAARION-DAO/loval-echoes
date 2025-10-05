@@ -753,6 +753,77 @@ export type Database = {
         }
         Relationships: []
       }
+      task_notifications: {
+        Row: {
+          created_at: string | null
+          id: string
+          message: string
+          metadata: Json | null
+          read: boolean | null
+          task_id: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          message: string
+          metadata?: Json | null
+          read?: boolean | null
+          task_id: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          message?: string
+          metadata?: Json | null
+          read?: boolean | null
+          task_id?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_notifications_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "kanban_cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      task_telemetry: {
+        Row: {
+          created_at: string | null
+          event_type: string
+          id: string
+          metadata: Json | null
+          project_id: string | null
+          task_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          project_id?: string | null
+          task_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          project_id?: string | null
+          task_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_approval_requests: {
         Row: {
           approved_by: string[] | null
@@ -871,6 +942,16 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      create_task_notification: {
+        Args: {
+          p_message: string
+          p_metadata?: Json
+          p_task_id: string
+          p_type: string
+          p_user_id: string
+        }
+        Returns: string
+      }
       detect_approval_inconsistencies: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -972,6 +1053,16 @@ export type Database = {
           p_user_id: string
         }
         Returns: undefined
+      }
+      log_task_event: {
+        Args: {
+          p_event_type: string
+          p_metadata?: Json
+          p_project_id?: string
+          p_task_id?: string
+          p_user_id?: string
+        }
+        Returns: string
       }
       revoke_user_refresh_tokens: {
         Args: { p_user_id: string }

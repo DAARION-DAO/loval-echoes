@@ -14,6 +14,7 @@ import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, startOf
 import { ru } from 'date-fns/locale';
 import { useResponsive } from '@/hooks/useResponsive';
 import { DndContext, DragEndEvent, closestCorners, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { useTaskTelemetry } from '@/hooks/useTaskTelemetry';
 import { 
   Drawer,
   DrawerClose,
@@ -31,6 +32,7 @@ import { useDroppable } from '@dnd-kit/core';
 export default function MyTasks() {
   const { user } = useAuth();
   const { isMobile } = useResponsive();
+  const { logEvent } = useTaskTelemetry();
   const [cards, setCards] = useState<KanbanCardType[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -98,6 +100,8 @@ export default function MyTasks() {
 
   const updateCard = async (cardId: string, updates: Partial<KanbanCardType>) => {
     try {
+      const card = cards.find(c => c.id === cardId);
+      
       const response = await fetch(`/functions/v1/kanban-api/${cardId}`, {
         method: 'PATCH',
         headers: {
@@ -115,6 +119,9 @@ export default function MyTasks() {
       setCards(prev => prev.map(card => 
         card.id === cardId ? { ...card, ...updates } : card
       ));
+
+      // Логируем событие
+      logEvent('task_updated', cardId, card?.project_id, { updates });
 
       toast({
         title: 'Успех',
@@ -202,6 +209,12 @@ export default function MyTasks() {
       const newCard = await response.json();
       setCards(prev => [...prev, newCard]);
       
+      // Логируем событие
+      logEvent('task_created', newCard.id, participantData.conversation_id, {
+        title: newTaskTitle,
+        has_description: !!newTaskDescription,
+      });
+      
       setNewTaskTitle('');
       setNewTaskDescription('');
       setIsCreateDrawerOpen(false);
@@ -229,6 +242,12 @@ export default function MyTasks() {
     const overColumn = over.id as KanbanCardType['column_type'];
     
     if (activeCard && ['backlog', 'todo', 'progress', 'review', 'done'].includes(overColumn)) {
+      // Логируем перемещение
+      logEvent('task_moved', activeCard.id, activeCard.project_id, {
+        from_column: activeCard.column_type,
+        to_column: overColumn,
+      });
+      
       await updateCard(activeCard.id, { column_type: overColumn });
     }
   };
