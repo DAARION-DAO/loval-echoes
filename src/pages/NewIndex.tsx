@@ -10,7 +10,6 @@ import {
   Upload, 
   Search,
   User,
-  Bell,
   Settings
 } from 'lucide-react';
 import { PrinciplesBanner } from '@/components/PrinciplesBanner';
@@ -19,6 +18,7 @@ import { GlobalSearchDialog } from '@/components/GlobalSearchDialog';
 import { VideoIntro } from '@/components/VideoIntro';
 import { UserApprovalPanel } from '@/components/UserApprovalPanel';
 import { CommunityNewsFeed } from '@/components/CommunityNewsFeed';
+import { NewsNotificationsPopover } from '@/components/NewsNotificationsPopover';
 import { useTranslation } from '@/lib/i18n';
 import { useAuth } from '@/hooks/useAuth';
 import { useCommunityStats } from '@/hooks/useCommunityStats';
@@ -139,9 +139,7 @@ export const NewIndex = () => {
                 <Search className="h-4 w-4" />
               </Button>
               
-              <Button variant="ghost" size="sm">
-                <Bell className="h-4 w-4" />
-              </Button>
+              <NewsNotificationsPopover />
               
               <Button 
                 variant="ghost" 
