@@ -19,6 +19,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useToast } from '@/hooks/use-toast';
 import { ThemeSwitch } from '@/components/ThemeSwitch';
+import { supabase } from '@/integrations/supabase/client';
+import { Bell } from 'lucide-react';
 
 export const Settings = () => {
   const { t, language, setLanguage } = useTranslation();
@@ -30,13 +32,31 @@ export const Settings = () => {
     localStorage.getItem('zhos-principles-banner-dismissed') !== 'true'
   );
   const [displayName, setDisplayName] = useState(profile?.display_name || '');
+  const [newsPushEnabled, setNewsPushEnabled] = useState(true);
 
-  // Sync displayName with profile when it loads
+  // Sync displayName and newsPushEnabled with profile when it loads
   useEffect(() => {
     if (profile?.display_name) {
       setDisplayName(profile.display_name);
     }
-  }, [profile]);
+    
+    // Fetch news_push_enabled from profiles table
+    const fetchNewsPushSetting = async () => {
+      if (!user?.id) return;
+      
+      const { data } = await supabase
+        .from('profiles')
+        .select('news_push_enabled')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (data) {
+        setNewsPushEnabled(data.news_push_enabled ?? true);
+      }
+    };
+    
+    fetchNewsPushSetting();
+  }, [profile, user]);
 
 
   const handlePrinciplesBannerToggle = (enabled: boolean) => {
@@ -53,6 +73,34 @@ export const Settings = () => {
       await updateProfile({ display_name: displayName });
     } catch (error) {
       console.error('Error saving profile:', error);
+    }
+  };
+
+  const handleNewsPushToggle = async (enabled: boolean) => {
+    setNewsPushEnabled(enabled);
+    
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ news_push_enabled: enabled })
+        .eq('user_id', user?.id);
+
+      if (error) throw error;
+
+      toast({
+        title: enabled ? 'Push-сповіщення увімкнено' : 'Push-сповіщення вимкнено',
+        description: enabled 
+          ? 'Ви отримуватимете сповіщення про нові новини' 
+          : 'Ви більше не отримуватимете сповіщення про новини',
+      });
+    } catch (error) {
+      console.error('Error updating news push settings:', error);
+      setNewsPushEnabled(!enabled); // Revert on error
+      toast({
+        title: 'Помилка',
+        description: 'Не вдалося оновити налаштування сповіщень',
+        variant: 'destructive'
+      });
     }
   };
 
@@ -229,6 +277,24 @@ export const Settings = () => {
             <Switch
               checked={showPrinciplesBanner}
               onCheckedChange={handlePrinciplesBannerToggle}
+            />
+          </div>
+
+          <Separator />
+
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label className="text-base flex items-center gap-2">
+                <Bell className="h-4 w-4" />
+                Push-сповіщення в новинах
+              </Label>
+              <p className="text-sm text-muted-foreground">
+                Отримувати сповіщення про нові термінові новини в реальному часі
+              </p>
+            </div>
+            <Switch
+              checked={newsPushEnabled}
+              onCheckedChange={handleNewsPushToggle}
             />
           </div>
 

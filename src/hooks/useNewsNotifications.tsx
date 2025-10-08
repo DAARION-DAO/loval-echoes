@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useToast } from './use-toast';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 
 interface NewsNotification {
   id: string;
@@ -17,6 +19,7 @@ export function useNewsNotifications() {
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   // Load notifications
   const loadNotifications = async () => {
@@ -60,12 +63,21 @@ export function useNewsNotifications() {
           console.log('New notification received:', payload);
           const newNotification = payload.new as NewsNotification;
           
-          // Show toast
-          toast({
-            title: 'Новая срочная новость',
-            description: newNotification.message,
-            duration: 5000,
-          });
+      // Show interactive toast with action button
+      toast({
+        title: '📢 Нова термінова новина',
+        description: newNotification.message,
+        duration: 5000,
+        action: (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => navigate('/news')}
+          >
+            Переглянути
+          </Button>
+        )
+      });
 
           // Update state
           setNotifications(prev => [newNotification, ...prev]);
