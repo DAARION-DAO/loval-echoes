@@ -22,6 +22,7 @@ import Projects from "./pages/Projects";
 import ProjectDetail from "./pages/ProjectDetail";
 import KnowledgeBase from "./pages/KnowledgeBase";
 import MyTasks from "./pages/MyTasks";
+import Agents from "./pages/Agents";
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { Layout } from "./components/Layout";
 
@@ -59,6 +60,7 @@ const ProtectedLayout = () => {
           <Route path="/knowledge-base" element={<KnowledgeBase />} />
           <Route path="/projects/:projectId/knowledge-base" element={<KnowledgeBase />} />
           <Route path="/my/tasks" element={<MyTasks />} />
+          <Route path="/agents" element={<Agents />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </ProtectedRoute>

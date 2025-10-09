@@ -14,7 +14,8 @@ import {
   Users,
   Rss,
   CheckSquare,
-  FolderKanban
+  FolderKanban,
+  Bot
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -438,12 +439,12 @@ export const ChatSidebar = () => {
           <NavLink
             to="/agents"
             className={({ isActive }) => cn(
-              "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors opacity-50",
+              "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
               isActive ? "bg-muted" : "hover:bg-muted/50"
             )}
           >
-            <Users className="h-4 w-4" />
-            Агенты
+            <Bot className="h-4 w-4" />
+            Агенти
           </NavLink>
           <NavLink
             to="/settings"

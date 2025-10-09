@@ -14,6 +14,116 @@ export type Database = {
   }
   public: {
     Tables: {
+      agent_memberships: {
+        Row: {
+          active: boolean
+          agent_id: string
+          conversation_id: string | null
+          id: string
+          joined_at: string
+          project_id: string | null
+          role: Database["public"]["Enums"]["agent_role"]
+          scopes: string[]
+          task_id: string | null
+        }
+        Insert: {
+          active?: boolean
+          agent_id: string
+          conversation_id?: string | null
+          id?: string
+          joined_at?: string
+          project_id?: string | null
+          role?: Database["public"]["Enums"]["agent_role"]
+          scopes?: string[]
+          task_id?: string | null
+        }
+        Update: {
+          active?: boolean
+          agent_id?: string
+          conversation_id?: string | null
+          id?: string
+          joined_at?: string
+          project_id?: string | null
+          role?: Database["public"]["Enums"]["agent_role"]
+          scopes?: string[]
+          task_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_memberships_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_memberships_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_memberships_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_memberships_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "kanban_cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agents: {
+        Row: {
+          avatar_url: string | null
+          connection_type: Database["public"]["Enums"]["agent_connection_type"]
+          created_at: string
+          description: string | null
+          endpoint_url: string | null
+          id: string
+          is_preset: boolean | null
+          name: string
+          owner_user_id: string
+          public_key: string | null
+          status: Database["public"]["Enums"]["agent_status"]
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          connection_type?: Database["public"]["Enums"]["agent_connection_type"]
+          created_at?: string
+          description?: string | null
+          endpoint_url?: string | null
+          id?: string
+          is_preset?: boolean | null
+          name: string
+          owner_user_id: string
+          public_key?: string | null
+          status?: Database["public"]["Enums"]["agent_status"]
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          connection_type?: Database["public"]["Enums"]["agent_connection_type"]
+          created_at?: string
+          description?: string | null
+          endpoint_url?: string | null
+          id?: string
+          is_preset?: boolean | null
+          name?: string
+          owner_user_id?: string
+          public_key?: string | null
+          status?: Database["public"]["Enums"]["agent_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       ai_agent_permissions: {
         Row: {
           can_delete: boolean | null
@@ -653,6 +763,45 @@ export type Database = {
           },
         ]
       }
+      personal_agent_chats: {
+        Row: {
+          agent_id: string
+          conversation_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          agent_id: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          agent_id?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personal_agent_chats_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "personal_agent_chats_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           approval_status: string | null
@@ -1126,6 +1275,9 @@ export type Database = {
       }
     }
     Enums: {
+      agent_connection_type: "webhook" | "websocket" | "msp"
+      agent_role: "assistant" | "observer" | "manager"
+      agent_status: "active" | "paused" | "disconnected"
       file_scope: "community" | "project"
       file_type: "document" | "image" | "code" | "data" | "other"
       kanban_column: "backlog" | "todo" | "progress" | "review" | "done"
@@ -1256,6 +1408,9 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      agent_connection_type: ["webhook", "websocket", "msp"],
+      agent_role: ["assistant", "observer", "manager"],
+      agent_status: ["active", "paused", "disconnected"],
       file_scope: ["community", "project"],
       file_type: ["document", "image", "code", "data", "other"],
       kanban_column: ["backlog", "todo", "progress", "review", "done"],
