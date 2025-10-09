@@ -68,18 +68,31 @@ export default function KnowledgeBase() {
       if (searchQuery) params.set('q', searchQuery);
       if (projectId && scope === 'project') params.set('projectId', projectId);
       
-      const { data, error } = await supabase.functions.invoke('knowledge-base-api/search', {
-        method: 'GET',
-      });
+      const session = await supabase.auth.getSession();
+      const token = session.data.session?.access_token;
+
+      const response = await fetch(
+        `https://pbsdsdexayzfoexjdlgb.supabase.co/functions/v1/knowledge-base-api/search?${params.toString()}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBic2RzZGV4YXl6Zm9leGpkbGdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcwNzQxNjUsImV4cCI6MjA3MjY1MDE2NX0.mlCtak2aAIMRuJU3GCF0WWS4065aalvfZOm1nPHtEqI'
+          }
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || 'Failed to load files');
+      }
       
-      if (error) throw error;
-      
-      setFiles(data.files || []);
+      const data = await response.json();
+      setFiles(data || []);
     } catch (error) {
       console.error('Error loading files:', error);
       toast({
         title: "Ошибка",
-        description: "Не удалось загрузить файлы",
+        description: error instanceof Error ? error.message : "Не удалось загрузить файлы",
         variant: "destructive",
       });
     } finally {
@@ -93,13 +106,23 @@ export default function KnowledgeBase() {
       params.set('scope', scope);
       if (projectId && scope === 'project') params.set('projectId', projectId);
       
-      const { data, error } = await supabase.functions.invoke('knowledge-base-api/folders', {
-        method: 'GET',
-      });
+      const session = await supabase.auth.getSession();
+      const token = session.data.session?.access_token;
+
+      const response = await fetch(
+        `https://pbsdsdexayzfoexjdlgb.supabase.co/functions/v1/knowledge-base-api/folders?${params.toString()}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBic2RzZGV4YXl6Zm9leGpkbGdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcwNzQxNjUsImV4cCI6MjA3MjY1MDE2NX0.mlCtak2aAIMRuJU3GCF0WWS4065aalvfZOm1nPHtEqI'
+          }
+        }
+      );
+
+      if (!response.ok) throw new Error(await response.text());
       
-      if (error) throw error;
-      
-      setFolders(data.folders || []);
+      const data = await response.json();
+      setFolders(data || []);
     } catch (error) {
       console.error('Error loading folders:', error);
     }

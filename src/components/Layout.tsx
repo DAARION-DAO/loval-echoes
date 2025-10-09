@@ -85,11 +85,6 @@ export function Layout({ sidebar, children }: LayoutProps) {
               )}
             </Button>
 
-            {/* User Name Display */}
-            <div className="hidden sm:block text-sm text-foreground">
-              {profile?.display_name || 'Загрузка...'}
-            </div>
-
             {/* User Avatar Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
