@@ -28,6 +28,7 @@ export default function Agents() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [loading, setLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [catalogDialogOpen, setCatalogDialogOpen] = useState(false);
   const [newAgent, setNewAgent] = useState<{
     name: string;
     description: string;
@@ -41,6 +42,19 @@ export default function Agents() {
   });
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  const CATALOG_AGENTS = [
+    {
+      name: 'Яромир',
+      description: 'Агент співдії — контекстні підказки, синхронізація задач',
+      scopes: ['read.messages', 'write.messages', 'read.tasks', 'create.tasks']
+    },
+    {
+      name: 'Еонарх Синергетон',
+      description: 'Агент синергії — аналітика взаємодій, оптимізація процесів',
+      scopes: ['read.messages', 'read.tasks', 'create.tasks']
+    }
+  ];
 
   useEffect(() => {
     fetchAgents();
@@ -107,6 +121,109 @@ export default function Agents() {
       toast({
         title: 'Помилка',
         description: 'Не вдалося створити агента',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleInstallCatalogAgent = async (catalogAgent: typeof CATALOG_AGENTS[0]) => {
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) throw new Error('User not authenticated');
+
+      // Check if user already has this agent
+      const { data: existing } = await supabase
+        .from('agents')
+        .select('id')
+        .eq('owner_user_id', userData.user.id)
+        .eq('name', `${catalogAgent.name} (особистий)`)
+        .maybeSingle();
+
+      if (existing) {
+        toast({
+          title: 'Вже встановлено',
+          description: 'Цей агент вже є у вашому списку',
+        });
+        return;
+      }
+
+      // Create agent
+      const { data: agent, error: agentError } = await supabase
+        .from('agents')
+        .insert({
+          name: `${catalogAgent.name} (особистий)`,
+          description: catalogAgent.description,
+          owner_user_id: userData.user.id,
+          connection_type: 'msp',
+          status: 'active',
+        })
+        .select()
+        .single();
+
+      if (agentError) throw agentError;
+
+      // Create personal conversation
+      const { data: conversation, error: convError } = await supabase
+        .from('conversations')
+        .insert({
+          name: `Особистий чат з ${catalogAgent.name}`,
+          user_id: userData.user.id,
+          type: 'chat',
+          is_group_chat: false,
+          status: 'active'
+        })
+        .select()
+        .single();
+
+      if (convError) throw convError;
+
+      // Add user as participant
+      const { error: participantError } = await supabase
+        .from('conversation_participants')
+        .insert({
+          conversation_id: conversation.id,
+          user_id: userData.user.id,
+          role: 'member'
+        });
+
+      if (participantError) throw participantError;
+
+      // Create agent membership
+      const { error: membershipError } = await supabase
+        .from('agent_memberships')
+        .insert({
+          agent_id: agent.id,
+          conversation_id: conversation.id,
+          role: 'assistant',
+          scopes: catalogAgent.scopes,
+          active: true
+        });
+
+      if (membershipError) throw membershipError;
+
+      // Create personal chat record
+      const { error: personalChatError } = await supabase
+        .from('personal_agent_chats')
+        .insert({
+          user_id: userData.user.id,
+          agent_id: agent.id,
+          conversation_id: conversation.id
+        });
+
+      if (personalChatError) throw personalChatError;
+
+      toast({
+        title: 'Успішно',
+        description: `${catalogAgent.name} встановлено та готовий до роботи!`,
+      });
+
+      setCatalogDialogOpen(false);
+      fetchAgents();
+    } catch (error) {
+      console.error('Error installing catalog agent:', error);
+      toast({
+        title: 'Помилка',
+        description: 'Не вдалося встановити агента',
         variant: 'destructive',
       });
     }
@@ -194,72 +311,118 @@ export default function Agents() {
           </p>
         </div>
         
-        <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Підключити агента
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Підключити нового агента</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 mt-4">
-              <div>
-                <Label htmlFor="name">Ім'я агента</Label>
-                <Input
-                  id="name"
-                  value={newAgent.name}
-                  onChange={(e) => setNewAgent({ ...newAgent, name: e.target.value })}
-                  placeholder="Введіть ім'я агента"
-                />
+        <div className="flex gap-2">
+          <Dialog open={catalogDialogOpen} onOpenChange={setCatalogDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <Bot className="mr-2 h-4 w-4" />
+                Каталог агентів
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Каталог агентів</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 mt-4">
+                {CATALOG_AGENTS.map((agent) => (
+                  <Card key={agent.name} className="p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex gap-3">
+                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                          <Bot className="h-6 w-6 text-primary" />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-semibold mb-1">{agent.name}</h3>
+                          <p className="text-sm text-muted-foreground mb-2">{agent.description}</p>
+                          <div className="flex flex-wrap gap-1">
+                            {agent.scopes.map((scope) => (
+                              <Badge key={scope} variant="outline" className="text-xs">
+                                {scope}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      <Button 
+                        size="sm"
+                        onClick={() => handleInstallCatalogAgent(agent)}
+                      >
+                        Встановити
+                      </Button>
+                    </div>
+                  </Card>
+                ))}
               </div>
-              <div>
-                <Label htmlFor="description">Опис</Label>
-                <Textarea
-                  id="description"
-                  value={newAgent.description}
-                  onChange={(e) => setNewAgent({ ...newAgent, description: e.target.value })}
-                  placeholder="Опишіть функції агента"
-                  rows={3}
-                />
-              </div>
-              <div>
-                <Label htmlFor="connection">Тип підключення</Label>
-                <Select
-                  value={newAgent.connection_type}
-                  onValueChange={(value: 'webhook' | 'websocket' | 'msp') =>
-                    setNewAgent({ ...newAgent, connection_type: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="msp">MSP (Рекомендовано)</SelectItem>
-                    <SelectItem value="webhook">Webhook</SelectItem>
-                    <SelectItem value="websocket">WebSocket</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              {(newAgent.connection_type === 'webhook' || newAgent.connection_type === 'websocket') && (
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Підключити свій агент
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Підключити власного агента</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 mt-4">
                 <div>
-                  <Label htmlFor="endpoint">Endpoint URL</Label>
+                  <Label htmlFor="name">Ім'я агента</Label>
                   <Input
-                    id="endpoint"
-                    value={newAgent.endpoint_url}
-                    onChange={(e) => setNewAgent({ ...newAgent, endpoint_url: e.target.value })}
-                    placeholder="https://..."
+                    id="name"
+                    value={newAgent.name}
+                    onChange={(e) => setNewAgent({ ...newAgent, name: e.target.value })}
+                    placeholder="Введіть ім'я агента"
                   />
                 </div>
-              )}
-              <Button onClick={handleCreateAgent} className="w-full">
-                Створити агента
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+                <div>
+                  <Label htmlFor="description">Опис</Label>
+                  <Textarea
+                    id="description"
+                    value={newAgent.description}
+                    onChange={(e) => setNewAgent({ ...newAgent, description: e.target.value })}
+                    placeholder="Опишіть функції агента"
+                    rows={3}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="connection">Тип підключення</Label>
+                  <Select
+                    value={newAgent.connection_type}
+                    onValueChange={(value: 'webhook' | 'websocket' | 'msp') =>
+                      setNewAgent({ ...newAgent, connection_type: value })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="msp">MSP (Рекомендовано)</SelectItem>
+                      <SelectItem value="webhook">Webhook</SelectItem>
+                      <SelectItem value="websocket">WebSocket</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {(newAgent.connection_type === 'webhook' || newAgent.connection_type === 'websocket') && (
+                  <div>
+                    <Label htmlFor="endpoint">Endpoint URL</Label>
+                    <Input
+                      id="endpoint"
+                      value={newAgent.endpoint_url}
+                      onChange={(e) => setNewAgent({ ...newAgent, endpoint_url: e.target.value })}
+                      placeholder="https://..."
+                    />
+                  </div>
+                )}
+                <Button onClick={handleCreateAgent} className="w-full">
+                  Створити агента
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {agents.length === 0 ? (

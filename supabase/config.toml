@@ -44,3 +44,6 @@ port = 54322
 
 [functions.task-flow-agent]
 verify_jwt = false
+
+[functions.bootstrap-user-agent]
+verify_jwt = false
