@@ -1115,6 +1115,33 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          granted_at: string | null
+          granted_by: string | null
+          id: string
+          revoked_at: string | null
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          granted_at?: string | null
+          granted_by?: string | null
+          id?: string
+          revoked_at?: string | null
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          granted_at?: string | null
+          granted_by?: string | null
+          id?: string
+          revoked_at?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -1142,6 +1169,16 @@ export type Database = {
           p_window_minutes?: number
         }
         Returns: boolean
+      }
+      check_rate_limit_secure: {
+        Args: {
+          p_action: string
+          p_block_duration_minutes?: number
+          p_identifier: string
+          p_max_attempts?: number
+          p_window_minutes?: number
+        }
+        Returns: Json
       }
       cleanup_expired_refresh_tokens: {
         Args: Record<PropertyKey, never>
@@ -1229,6 +1266,13 @@ export type Database = {
         Args: { "": unknown }
         Returns: unknown
       }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       is_admin: {
         Args: { user_id: string }
         Returns: boolean
@@ -1299,6 +1343,7 @@ export type Database = {
       agent_connection_type: "webhook" | "websocket" | "msp"
       agent_role: "assistant" | "observer" | "manager"
       agent_status: "active" | "paused" | "disconnected"
+      app_role: "admin" | "moderator" | "user"
       file_scope: "community" | "project"
       file_type: "document" | "image" | "code" | "data" | "other"
       kanban_column: "backlog" | "todo" | "progress" | "review" | "done"
@@ -1432,6 +1477,7 @@ export const Constants = {
       agent_connection_type: ["webhook", "websocket", "msp"],
       agent_role: ["assistant", "observer", "manager"],
       agent_status: ["active", "paused", "disconnected"],
+      app_role: ["admin", "moderator", "user"],
       file_scope: ["community", "project"],
       file_type: ["document", "image", "code", "data", "other"],
       kanban_column: ["backlog", "todo", "progress", "review", "done"],

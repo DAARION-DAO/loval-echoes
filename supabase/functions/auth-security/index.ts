@@ -35,8 +35,31 @@ serve(async (req) => {
 
     console.log(`Auth security check for ${action} from ${clientIP}`)
 
-    // SIMPLIFIED: Skip rate limiting for now to fix immediate issue
-    // TODO: Re-implement rate limiting with proper permissions later
+    // Check rate limiting using security definer function
+    const { data: rateLimitResult, error: rateLimitError } = await supabaseClient
+      .rpc('check_rate_limit_secure', {
+        p_identifier: clientIP,
+        p_action: action,
+        p_max_attempts: 5,
+        p_window_minutes: 15,
+        p_block_duration_minutes: 60
+      })
+
+    if (rateLimitError) {
+      console.error('Rate limit check error:', rateLimitError)
+    } else if (rateLimitResult && !rateLimitResult.allowed) {
+      console.log(`Rate limit exceeded for ${clientIP}`)
+      return new Response(
+        JSON.stringify({ 
+          error: rateLimitResult.message || 'Слишком много попыток. Попробуйте позже',
+          rateLimited: true 
+        }),
+        { 
+          status: 429,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      )
+    }
 
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -50,11 +73,12 @@ serve(async (req) => {
       )
     }
 
-    // Password strength validation for signup
+    // Enhanced password strength validation for signup
     if (action === 'signup' && password) {
-      if (password.length < 8) {
+      // Minimum length check - increased to 12 characters
+      if (password.length < 12) {
         return new Response(
-          JSON.stringify({ error: 'Пароль должен содержать минимум 8 символов' }),
+          JSON.stringify({ error: 'Пароль должен содержать минимум 12 символов' }),
           { 
             status: 400,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -62,15 +86,52 @@ serve(async (req) => {
         )
       }
 
-      // Check for basic password complexity
+      // Check for comprehensive password complexity
       const hasUpper = /[A-Z]/.test(password)
       const hasLower = /[a-z]/.test(password)
       const hasNumber = /\d/.test(password)
+      const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password)
       
       if (!hasUpper || !hasLower || !hasNumber) {
         return new Response(
           JSON.stringify({ 
             error: 'Пароль должен содержать заглавные и строчные буквы, а также цифры' 
+          }),
+          { 
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        )
+      }
+
+      if (!hasSpecial) {
+        return new Response(
+          JSON.stringify({ 
+            error: 'Пароль должен содержать специальные символы (!@#$%^&* и т.д.)' 
+          }),
+          { 
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        )
+      }
+
+      // Block common password patterns
+      const commonPatterns = [
+        'password', 'пароль', 'welcome', 'добро пожаловать',
+        '123456', 'qwerty', 'admin', 'user', 'company', 
+        'компания', 'zhos', 'moderator'
+      ]
+      
+      const lowerPassword = password.toLowerCase()
+      const hasCommonPattern = commonPatterns.some(pattern => 
+        lowerPassword.includes(pattern.toLowerCase())
+      )
+      
+      if (hasCommonPattern) {
+        return new Response(
+          JSON.stringify({ 
+            error: 'Пароль содержит распространенные шаблоны. Используйте более уникальный пароль' 
           }),
           { 
             status: 400,
