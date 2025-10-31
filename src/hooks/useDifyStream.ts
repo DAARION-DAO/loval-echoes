@@ -22,7 +22,12 @@ export interface StreamMessage {
   };
 }
 
-export const useDifyStream = (chatId: string | null) => {
+export interface TTSMessage {
+  audio: string; // base64 encoded audio
+  message_id: string;
+}
+
+export const useDifyStream = (chatId: string | null, onTTSMessage?: (tts: TTSMessage) => void) => {
   const [currentMessage, setCurrentMessage] = useState<StreamMessage | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -57,6 +62,17 @@ export const useDifyStream = (chatId: string | null) => {
         console.log('Agent thought:', data.thought);
         break;
 
+      case 'tts_message':
+        // Обработка TTS аудио из Dify
+        console.log('TTS message received:', data);
+        if (data.audio && onTTSMessage) {
+          onTTSMessage({
+            audio: data.audio,
+            message_id: data.message_id,
+          });
+        }
+        break;
+
       case 'message_end':
         // Окончание ответа с метаданными
         setCurrentMessage(prev => prev ? {
@@ -80,7 +96,7 @@ export const useDifyStream = (chatId: string | null) => {
       default:
         console.log('Unknown stream event:', data.event, data);
     }
-  }, []);
+  }, [onTTSMessage]);
 
   const startStream = useCallback(async (query: string, files?: string[]) => {
     if (!chatId) {

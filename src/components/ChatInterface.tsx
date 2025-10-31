@@ -36,7 +36,62 @@ interface ChatInterfaceProps {
 export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
   const { t } = useTranslation();
   const { toast } = useToast();
-  const { currentMessage, isStreaming, startStream, stopStream } = useDifyStream(chatId);
+  
+  // Обработка TTS аудио из Dify stream
+  const handleTTSMessage = async (tts: { audio: string; message_id: string }) => {
+    if (!voiceModeEnabled) return; // Озвучиваем только в голосовом режиме
+    
+    console.log('Playing TTS audio from Dify stream');
+    try {
+      // Конвертируем base64 в blob
+      const binaryString = atob(tts.audio);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      const audioBlob = new Blob([bytes], { type: 'audio/mpeg' });
+      
+      // Воспроизводим аудио
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+      audioElementRef.current = audio;
+      setIsPlayingTTS(true);
+      
+      audio.onended = () => {
+        setIsPlayingTTS(false);
+        URL.revokeObjectURL(audioUrl);
+        
+        // В голосовом режиме автоматически начинаем запись после воспроизведения
+        if (voiceModeEnabled && autoStopEnabled) {
+          setTimeout(() => {
+            startRecording();
+          }, 500);
+        }
+      };
+      
+      audio.onerror = () => {
+        setIsPlayingTTS(false);
+        URL.revokeObjectURL(audioUrl);
+        toast({
+          title: 'Ошибка воспроизведения',
+          description: 'Не удалось воспроизвести аудио',
+          variant: 'destructive',
+        });
+      };
+      
+      await audio.play();
+    } catch (error) {
+      console.error('Error playing TTS audio:', error);
+      setIsPlayingTTS(false);
+      toast({
+        title: 'Ошибка озвучивания',
+        description: 'Не удалось озвучить ответ',
+        variant: 'destructive',
+      });
+    }
+  };
+  
+  const { currentMessage, isStreaming, startStream, stopStream } = useDifyStream(chatId, handleTTSMessage);
   
   const [message, setMessage] = useState('');
   const [isRecording, setIsRecording] = useState(false);
@@ -128,67 +183,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
     return buffer;
   };
 
-  // Озвучивание ответа агента через TTS
-  const playTextToSpeech = async (text: string) => {
-    if (!voiceModeEnabled || !text.trim()) return;
-
-    try {
-      setIsPlayingTTS(true);
-      
-      const { data, error } = await supabase.functions.invoke('tts-api', {
-        body: { 
-          text: text.trim(),
-          voice: 'alloy'
-        },
-      });
-
-      if (error) throw error;
-
-      if (data?.audioContent) {
-        // Декодируем base64 аудио
-        const audioData = atob(data.audioContent);
-        const arrayBuffer = new ArrayBuffer(audioData.length);
-        const view = new Uint8Array(arrayBuffer);
-        for (let i = 0; i < audioData.length; i++) {
-          view[i] = audioData.charCodeAt(i);
-        }
-        
-        // Создаем blob и воспроизводим
-        const audioBlob = new Blob([arrayBuffer], { type: 'audio/mpeg' });
-        const audioUrl = URL.createObjectURL(audioBlob);
-        
-        const audio = new Audio(audioUrl);
-        audioElementRef.current = audio;
-        
-        audio.onended = () => {
-          setIsPlayingTTS(false);
-          URL.revokeObjectURL(audioUrl);
-          
-          // В голосовом режиме автоматически начинаем запись после воспроизведения
-          if (voiceModeEnabled && autoStopEnabled) {
-            setTimeout(() => {
-              startRecording();
-            }, 500);
-          }
-        };
-        
-        audio.onerror = () => {
-          setIsPlayingTTS(false);
-          URL.revokeObjectURL(audioUrl);
-        };
-        
-        await audio.play();
-      }
-    } catch (error) {
-      console.error('Error playing TTS:', error);
-      setIsPlayingTTS(false);
-      toast({
-        title: 'Ошибка озвучивания',
-        description: 'Не удалось озвучить ответ',
-        variant: 'destructive',
-      });
-    }
-  };
+  // Озвучивание ответа агента через TTS (автоматически из Dify stream)
 
   // Останавливаем воспроизведение TTS
   const stopPlayingTTS = () => {
@@ -199,12 +194,6 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
     setIsPlayingTTS(false);
   };
 
-  // Отслеживаем новые сообщения от агента для озвучивания
-  useEffect(() => {
-    if (currentMessage?.isComplete && currentMessage.content && voiceModeEnabled && !isPlayingTTS) {
-      playTextToSpeech(currentMessage.content);
-    }
-  }, [currentMessage?.isComplete, voiceModeEnabled, isPlayingTTS]);
 
   const handleSendMessage = async () => {
     if (!message.trim() && attachedFiles.length === 0) return;
