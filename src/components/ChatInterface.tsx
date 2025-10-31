@@ -184,7 +184,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
       // Request microphone access
       stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       
-      // Определяем поддерживаемый mime type
+      // Determine the best supported MIME type (excluding OGG as Dify doesn't support it well)
       let mimeType = 'audio/webm';
       if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
         mimeType = 'audio/webm;codecs=opus';
@@ -192,8 +192,6 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
         mimeType = 'audio/webm';
       } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
         mimeType = 'audio/mp4';
-      } else if (MediaRecorder.isTypeSupported('audio/ogg;codecs=opus')) {
-        mimeType = 'audio/ogg;codecs=opus';
       }
       
       const mediaRecorder = new MediaRecorder(stream, { mimeType });
@@ -204,7 +202,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
       mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
       
       mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(chunks, { type: 'audio/webm' });
+        const audioBlob = new Blob(chunks, { type: mimeType });
         
         // Показываем индикатор обработки
         toast({
@@ -213,7 +211,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
         });
         
         try {
-          const result = await difyClient.speechToText(audioBlob);
+          const result = await difyClient.speechToText(audioBlob, mimeType);
           if (result?.text) {
             const transcribedText = result.text.trim();
             setMessage(prev => prev + (prev ? ' ' : '') + transcribedText);
@@ -240,7 +238,14 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
           console.error('Error transcribing audio:', error);
           const errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';
           
-          if (errorMessage.includes('Speech to text is not enabled')) {
+          // Check if it's a format error
+          if (errorMessage.includes('415') || errorMessage.includes('Unsupported')) {
+            toast({
+              title: 'Неподдерживаемый формат',
+              description: 'Попробуйте использовать другой браузер (Chrome, Safari или Firefox)',
+              variant: 'destructive',
+            });
+          } else if (errorMessage.includes('Speech to text is not enabled')) {
             toast({
               title: 'Голосовой ввод недоступен',
               description: 'В настоящий момент функция преобразования речи в текст отключена. Используйте текстовый ввод.',

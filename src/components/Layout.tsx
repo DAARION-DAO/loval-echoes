@@ -16,6 +16,7 @@ import { useTranslation } from "@/lib/i18n";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { usePendingApprovals } from "@/hooks/usePendingApprovals";
+import { NewsNotificationsPopover } from "@/components/NewsNotificationsPopover";
 
 interface LayoutProps {
   sidebar: React.ReactNode;
@@ -67,14 +68,17 @@ export function Layout({ sidebar, children }: LayoutProps) {
               <Home className="h-4 w-4" />
             </Button>
             
-            {/* Notifications Button */}
+            {/* News Notifications */}
+            <NewsNotificationsPopover />
+            
+            {/* Participants Notifications Button */}
             <Button
               variant="ghost"
               size="sm"
               onClick={() => navigate('/participants')}
               className="p-2 relative"
             >
-              <Bell className="h-4 w-4" />
+              <Users className="h-4 w-4" />
               {pendingCount > 0 && (
                 <Badge 
                   variant="destructive" 

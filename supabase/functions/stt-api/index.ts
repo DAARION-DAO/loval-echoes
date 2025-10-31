@@ -30,10 +30,16 @@ serve(async (req) => {
       return new Response('Unauthorized', { status: 401, headers: corsHeaders });
     }
 
-    const { audio } = await req.json();
+    const { audio, mimeType } = await req.json();
 
     if (!audio) {
       return new Response('No audio data provided', { status: 400, headers: corsHeaders });
+    }
+
+    const DIFY_API_KEY = Deno.env.get('DIFY_API_KEY');
+    if (!DIFY_API_KEY) {
+      console.error('DIFY_API_KEY not configured');
+      return new Response('Server configuration error', { status: 500, headers: corsHeaders });
     }
 
     // Конвертируем base64 в blob
@@ -43,17 +49,38 @@ serve(async (req) => {
       bytes[i] = binaryString.charCodeAt(i);
     }
 
-    // Создаем FormData для отправки в Dify
+    // Normalize mimeType and determine file extension
     // Dify поддерживает: mp3, mp4, mpeg, mpga, m4a, wav, webm
+    let normalizedType = mimeType || 'audio/webm';
+    let fileName = 'audio.webm';
+    
+    if (normalizedType.includes('webm')) {
+      normalizedType = 'audio/webm';
+      fileName = 'audio.webm';
+    } else if (normalizedType.includes('mp4')) {
+      normalizedType = 'audio/mp4';
+      fileName = 'audio.m4a';
+    } else if (normalizedType.includes('mpeg') || normalizedType.includes('mp3')) {
+      normalizedType = 'audio/mpeg';
+      fileName = 'audio.mp3';
+    } else if (normalizedType.includes('wav')) {
+      normalizedType = 'audio/wav';
+      fileName = 'audio.wav';
+    }
+
+    // Создаем FormData для отправки в Dify
     const formData = new FormData();
-    const blob = new Blob([bytes], { type: 'audio/webm' });
-    formData.append('file', blob, 'audio.webm');
+    // Use File instead of Blob to ensure proper Content-Type
+    const audioFile = new File([bytes], fileName, { type: normalizedType });
+    formData.append('file', audioFile, fileName);
+
+    console.log(`Processing audio: type=${normalizedType}, size=${bytes.length}, fileName=${fileName}`);
 
     // Отправляем в Dify STT API
     const response = await fetch('https://api.dify.ai/v1/audio-to-text', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${Deno.env.get('DIFY_API_KEY')}`,
+        'Authorization': `Bearer ${DIFY_API_KEY}`,
       },
       body: formData,
     });
@@ -61,6 +88,16 @@ serve(async (req) => {
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`Dify STT API error: ${response.status} ${errorText}`);
+      
+      if (response.status === 415) {
+        return new Response(
+          JSON.stringify({ 
+            error: `Unsupported audio format: ${normalizedType}. Please try a different browser.` 
+          }), 
+          { status: 415, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
       throw new Error(`STT API error: ${response.status}`);
     }
 

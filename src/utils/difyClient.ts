@@ -332,7 +332,7 @@ export class DifyClient {
     }
   }
 
-  async speechToText(audioBlob: Blob): Promise<{ text: string }> {
+  async speechToText(audioBlob: Blob, mimeType?: string): Promise<{ text: string }> {
     try {
       // Конвертируем blob в base64 безопасно для больших файлов
       const arrayBuffer = await audioBlob.arrayBuffer();
@@ -351,7 +351,10 @@ export class DifyClient {
       const response = await fetch(`https://pbsdsdexayzfoexjdlgb.supabase.co/functions/v1/stt-api`, {
         method: 'POST',
         headers,
-        body: JSON.stringify({ audio: base64Audio }),
+        body: JSON.stringify({ 
+          audio: base64Audio,
+          mimeType: mimeType || audioBlob.type || 'audio/webm'
+        }),
       });
       
       if (!response.ok) {
