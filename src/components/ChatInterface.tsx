@@ -184,14 +184,17 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
       // Request microphone access
       stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       
-      // Determine the best supported MIME type (excluding OGG as Dify doesn't support it well)
-      let mimeType = 'audio/webm';
-      if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+      // Determine the best supported MIME type
+      // Priority: WAV (universal) > MP4 (Safari) > WebM (Chrome/Firefox)
+      let mimeType = 'audio/wav';
+      if (MediaRecorder.isTypeSupported('audio/wav')) {
+        mimeType = 'audio/wav';
+      } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
+        mimeType = 'audio/mp4';
+      } else if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
         mimeType = 'audio/webm;codecs=opus';
       } else if (MediaRecorder.isTypeSupported('audio/webm')) {
         mimeType = 'audio/webm';
-      } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
-        mimeType = 'audio/mp4';
       }
       
       const mediaRecorder = new MediaRecorder(stream, { mimeType });

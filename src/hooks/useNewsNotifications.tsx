@@ -65,7 +65,7 @@ export function useNewsNotifications() {
           
       // Show interactive toast with action button
       toast({
-        title: '📢 Нова термінова новина',
+        title: '📢 Новое срочное сообщение',
         description: newNotification.message,
         duration: 5000,
         action: (
@@ -74,7 +74,7 @@ export function useNewsNotifications() {
             variant="outline"
             onClick={() => navigate('/news')}
           >
-            Переглянути
+            Посмотреть
           </Button>
         )
       });

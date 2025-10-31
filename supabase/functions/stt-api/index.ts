@@ -51,10 +51,13 @@ serve(async (req) => {
 
     // Normalize mimeType and determine file extension
     // Dify поддерживает: mp3, mp4, mpeg, mpga, m4a, wav, webm
-    let normalizedType = mimeType || 'audio/webm';
-    let fileName = 'audio.webm';
+    let normalizedType = mimeType || 'audio/wav';
+    let fileName = 'audio.wav';
     
-    if (normalizedType.includes('webm')) {
+    if (normalizedType.includes('wav')) {
+      normalizedType = 'audio/wav';
+      fileName = 'audio.wav';
+    } else if (normalizedType.includes('webm')) {
       normalizedType = 'audio/webm';
       fileName = 'audio.webm';
     } else if (normalizedType.includes('mp4')) {
@@ -63,9 +66,6 @@ serve(async (req) => {
     } else if (normalizedType.includes('mpeg') || normalizedType.includes('mp3')) {
       normalizedType = 'audio/mpeg';
       fileName = 'audio.mp3';
-    } else if (normalizedType.includes('wav')) {
-      normalizedType = 'audio/wav';
-      fileName = 'audio.wav';
     }
 
     // Создаем FormData для отправки в Dify
