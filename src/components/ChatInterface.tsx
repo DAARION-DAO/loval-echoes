@@ -7,16 +7,24 @@ import {
   Square,
   RotateCcw,
   ImageIcon,
-  FileText
+  FileText,
+  Activity
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { useTranslation } from '@/lib/i18n';
 import { difyClient } from '@/utils/difyClient';
 import { useDifyStream } from '@/hooks/useDifyStream';
 import { useToast } from '@/hooks/use-toast';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 
 interface ChatInterfaceProps {
   chatId: string;
@@ -32,10 +40,18 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
   const [isDragging, setIsDragging] = useState(false);
+  const [audioLevel, setAudioLevel] = useState(0);
+  const [autoStopEnabled, setAutoStopEnabled] = useState(true);
   
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const processorRef = useRef<ScriptProcessorNode | null>(null);
+  const silenceStartRef = useRef<number>(0);
+  const recordingStartRef = useRef<number>(0);
+  const animationFrameRef = useRef<number>(0);
 
   // Автоматическое изменение высоты textarea
   useEffect(() => {
@@ -184,8 +200,61 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
       // Request microphone access
       stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       
+      // Setup Voice Activity Detection (VAD)
+      const audioContext = new AudioContext();
+      const analyser = audioContext.createAnalyser();
+      const microphone = audioContext.createMediaStreamSource(stream);
+      const processor = audioContext.createScriptProcessor(2048, 1, 1);
+      
+      audioContextRef.current = audioContext;
+      analyserRef.current = analyser;
+      processorRef.current = processor;
+      
+      analyser.fftSize = 2048;
+      microphone.connect(analyser);
+      analyser.connect(processor);
+      processor.connect(audioContext.destination);
+      
+      // VAD Configuration
+      const SILENCE_THRESHOLD = 0.02;
+      const SILENCE_DURATION = 2500; // 2.5 seconds
+      const MIN_RECORDING_TIME = 1000; // minimum 1 second
+      
+      recordingStartRef.current = Date.now();
+      silenceStartRef.current = 0;
+      
+      // Audio level monitoring and silence detection
+      processor.onaudioprocess = (e) => {
+        const buffer = e.inputBuffer.getChannelData(0);
+        const rms = Math.sqrt(buffer.reduce((sum, val) => sum + val * val, 0) / buffer.length);
+        
+        // Update visual audio level
+        setAudioLevel(Math.min(rms * 100, 100));
+        
+        if (autoStopEnabled) {
+          const currentTime = Date.now();
+          const recordingDuration = currentTime - recordingStartRef.current;
+          
+          if (rms < SILENCE_THRESHOLD) {
+            if (silenceStartRef.current === 0) {
+              silenceStartRef.current = currentTime;
+            } else {
+              const silenceDuration = currentTime - silenceStartRef.current;
+              
+              // Auto-stop if silence detected for long enough and minimum recording time passed
+              if (silenceDuration > SILENCE_DURATION && recordingDuration > MIN_RECORDING_TIME) {
+                console.log('Auto-stopping recording due to silence');
+                stopRecording();
+              }
+            }
+          } else {
+            // Reset silence timer when sound detected
+            silenceStartRef.current = 0;
+          }
+        }
+      };
+      
       // Determine the best supported MIME type
-      // Priority: WAV (universal) > MP4 (Safari) > WebM (Chrome/Firefox)
       let mimeType = 'audio/wav';
       if (MediaRecorder.isTypeSupported('audio/wav')) {
         mimeType = 'audio/wav';
@@ -339,6 +408,27 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
+      setAudioLevel(0);
+      
+      // Cleanup audio processing
+      if (processorRef.current) {
+        processorRef.current.disconnect();
+        processorRef.current = null;
+      }
+      if (analyserRef.current) {
+        analyserRef.current.disconnect();
+        analyserRef.current = null;
+      }
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+        audioContextRef.current = null;
+      }
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+      
+      silenceStartRef.current = 0;
+      recordingStartRef.current = 0;
     }
   };
 
@@ -362,6 +452,23 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
 
   return (
     <div className="border-t bg-background p-3 sm:p-4 mobile-safe-area">
+      {/* Индикатор уровня звука при записи */}
+      {isRecording && (
+        <div className="mb-3 sm:mb-4 flex items-center gap-3">
+          <div className="flex-1">
+            <div className="h-2 bg-muted rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-primary transition-all duration-75"
+                style={{ width: `${audioLevel}%` }}
+              />
+            </div>
+          </div>
+          <span className="text-xs text-muted-foreground whitespace-nowrap">
+            {autoStopEnabled ? 'Автостоп вкл.' : 'Говорите...'}
+          </span>
+        </div>
+      )}
+
       {/* Прогресс загрузки */}
       {uploadProgress > 0 && uploadProgress < 100 && (
         <div className="mb-3 sm:mb-4">
@@ -437,6 +544,39 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
             >
               <Paperclip className="h-4 w-4 sm:h-5 sm:w-5" />
             </Button>
+
+            {/* Кнопка настроек голоса */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={isStreaming || isRecording}
+                  className="touch-target h-10 w-10 sm:h-11 sm:w-11 p-0 flex-shrink-0"
+                  aria-label="Настройки голосового ввода"
+                >
+                  <Activity className="h-4 w-4 sm:h-5 sm:w-5" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-64">
+                <div className="space-y-4">
+                  <h4 className="font-medium text-sm">Настройки голосового ввода</h4>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="auto-stop" className="text-sm">
+                      Автостоп при паузе
+                    </Label>
+                    <Switch
+                      id="auto-stop"
+                      checked={autoStopEnabled}
+                      onCheckedChange={setAutoStopEnabled}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Автоматически останавливать запись после 2.5 секунд тишины
+                  </p>
+                </div>
+              </PopoverContent>
+            </Popover>
 
             {/* Кнопка записи голоса */}
             <Button
