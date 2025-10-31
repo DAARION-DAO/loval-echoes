@@ -36,23 +36,24 @@ serve(async (req) => {
       return new Response('No text provided', { status: 400, headers: corsHeaders });
     }
 
-    // Отправляем в Dify TTS API
-    const response = await fetch('https://api.dify.ai/v1/text-to-audio', {
+    // Используем OpenAI TTS API
+    const response = await fetch('https://api.openai.com/v1/audio/speech', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${Deno.env.get('DIFY_API_KEY')}`,
+        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        text,
-        voice,
-        streaming: false,
+        model: 'tts-1',
+        input: text,
+        voice: voice,
+        response_format: 'mp3',
       }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`Dify TTS API error: ${response.status} ${errorText}`);
+      console.error(`OpenAI TTS API error: ${response.status} ${errorText}`);
       throw new Error(`TTS API error: ${response.status}`);
     }
 

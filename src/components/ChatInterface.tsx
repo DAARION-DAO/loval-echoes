@@ -362,7 +362,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
       
       // VAD Configuration
       const SILENCE_THRESHOLD = 0.02;
-      const SILENCE_DURATION = 2500; // 2.5 seconds
+      const SILENCE_DURATION = 2500; // 2.5 seconds as requested
       const MIN_RECORDING_TIME = 1000; // minimum 1 second
       
       recordingStartRef.current = Date.now();

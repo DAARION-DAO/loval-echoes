@@ -109,24 +109,35 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Эта функция вызывается только изнутри (из триггеров)
-    // Проверяем, что это внутренний вызов
+    // Эта функция может быть вызвана внутренне или с авторизацией
     const apiKey = req.headers.get('x-api-key');
-    if (apiKey !== Deno.env.get('INTERNAL_API_KEY')) {
-      return new Response('Unauthorized', { status: 401, headers: corsHeaders });
+    const isInternalCall = apiKey === Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    
+    // Если это не внутренний вызов, требуется авторизация
+    if (!isInternalCall) {
+      const authHeader = req.headers.get('authorization');
+      if (!authHeader) {
+        return new Response('Unauthorized', { status: 401, headers: corsHeaders });
+      }
     }
 
-    const { userId, title, body, url, tag } = await req.json();
+    const requestBody = await req.json();
+    const { userId, title, body: messageBody, url, tag } = requestBody;
+    
+    // Если userId не указан, отправляем всем (только для внутренних вызовов)
+    const sendToAll = !userId && isInternalCall;
 
-    if (!userId) {
-      return new Response('userId required', { status: 400, headers: corsHeaders });
+    // Получаем подписки
+    let query = supabase.from('push_subscriptions').select('*');
+    
+    if (!sendToAll) {
+      if (!userId) {
+        return new Response('userId required', { status: 400, headers: corsHeaders });
+      }
+      query = query.eq('user_id', userId);
     }
-
-    // Получаем все подписки пользователя
-    const { data: subscriptions, error } = await supabase
-      .from('push_subscriptions')
-      .select('*')
-      .eq('user_id', userId);
+    
+    const { data: subscriptions, error } = await query;
 
     if (error) {
       console.error('Error fetching subscriptions:', error);
@@ -150,7 +161,7 @@ serve(async (req) => {
     // Отправляем push-уведомления на все устройства
     const payload = JSON.stringify({
       title: title || '📢 Новое сообщение',
-      body: body || 'У вас новое уведомление',
+      body: messageBody || 'У вас новое уведомление',
       icon: '/favicon.ico',
       badge: '/favicon.ico',
       url: url || '/news',

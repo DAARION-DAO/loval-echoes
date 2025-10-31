@@ -109,7 +109,7 @@ export const CommunityNewsFeed = () => {
 
       toast({
         title: 'Срочная новость отправлена',
-        description: 'Уведомления будут показаны всем участникам',
+        description: 'Push-уведомления отправлены всем участникам',
       });
       setMessage('');
     } catch (error) {

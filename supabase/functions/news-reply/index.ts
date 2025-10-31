@@ -34,6 +34,31 @@ serve(async (req) => {
       });
     }
 
+    // 1.5. Send push notifications to all users
+    try {
+      const pushResponse = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/push-send`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+        },
+        body: JSON.stringify({
+          title: '📢 Срочная новость',
+          body: text.slice(0, 100) + (text.length > 100 ? '...' : ''),
+          url: '/news',
+        }),
+      });
+      
+      if (!pushResponse.ok) {
+        console.warn('Failed to send push notifications:', await pushResponse.text());
+      } else {
+        console.log('Push notifications sent successfully');
+      }
+    } catch (pushError) {
+      console.warn('Error sending push notifications:', pushError);
+      // Don't fail the whole request if push fails
+    }
+
     // 2. Check if agent should respond (only on @ЖОС mentions)
     const isAddressedToAgent = text.includes('@ЖОС') || text.includes('@Agent') || text.includes('@agent');
     
