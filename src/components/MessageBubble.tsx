@@ -100,7 +100,17 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
 
   const handleFeedback = useCallback(async (rating: 'like' | 'dislike') => {
     try {
-      await difyClient.sendFeedback(message.id, rating);
+      // Используем dify_message_id для feedback
+      if (!message.dify_message_id) {
+        toast({
+          title: 'Невозможно отправить отзыв',
+          description: 'Это сообщение не поддерживает обратную связь',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      await difyClient.sendFeedback(message.dify_message_id, rating);
       toast({
         title: 'Обратная связь отправлена',
         description: 'Спасибо за оценку!',
@@ -113,7 +123,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         variant: 'destructive',
       });
     }
-  }, [message.id, toast]);
+  }, [message.dify_message_id, toast]);
 
   const handlePlayAudio = async () => {
     if (!message.answer) return;
@@ -379,24 +389,29 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                   >
                     {isPlaying ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
                   </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => handleFeedback('like')}
-                    className="h-5 w-5 p-0 text-muted-foreground hover:text-green-600"
-                    title="Нравится"
-                  >
-                    <ThumbsUp className="h-2.5 w-2.5" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => handleFeedback('dislike')}
-                    className="h-5 w-5 p-0 text-muted-foreground hover:text-red-600"
-                    title="Не нравится"
-                  >
-                    <ThumbsDown className="h-2.5 w-2.5" />
-                  </Button>
+                  {/* Показываем кнопки feedback только если есть dify_message_id */}
+                  {message.dify_message_id && (
+                    <>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleFeedback('like')}
+                        className="h-5 w-5 p-0 text-muted-foreground hover:text-green-600"
+                        title="Нравится"
+                      >
+                        <ThumbsUp className="h-2.5 w-2.5" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleFeedback('dislike')}
+                        className="h-5 w-5 p-0 text-muted-foreground hover:text-red-600"
+                        title="Не нравится"
+                      >
+                        <ThumbsDown className="h-2.5 w-2.5" />
+                      </Button>
+                    </>
+                  )}
                   {onFork && (
                     <Button
                       size="sm"

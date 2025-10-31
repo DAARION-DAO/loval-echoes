@@ -304,7 +304,7 @@ serve(async (req) => {
 
                 // Save complete response to database when finished
                 if (data.event === 'message_end' && completeMessage) {
-                  console.log('Saving agent response to database:', completeMessage);
+                  console.log('Saving agent response to database:', completeMessage, 'with messageId:', messageId);
                   
                   await supabase
                     .from('messages')
@@ -313,6 +313,7 @@ serve(async (req) => {
                       content: completeMessage,
                       role: 'assistant',
                       sender_name: 'Дух Общины',
+                      dify_message_id: messageId, // Save Dify message ID for feedback
                     });
                 }
 

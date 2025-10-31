@@ -6,6 +6,7 @@ export interface DifyMessage {
   query: string;
   answer: string;
   sender_name?: string;
+  dify_message_id?: string; // ID сообщения из Dify API для feedback
   feedback?: {
     rating: 'like' | 'dislike';
     content?: string;
@@ -187,6 +188,7 @@ export class DifyClient {
         query: msg.role === 'user' ? msg.content : '',
         answer: msg.role === 'assistant' ? msg.content : '',
         sender_name: msg.sender_name,
+        dify_message_id: msg.dify_message_id, // Добавляем Dify message ID
         created_at: msg.created_at,
       }));
 
