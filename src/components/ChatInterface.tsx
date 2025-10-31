@@ -145,8 +145,44 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
   };
 
   const startRecording = async () => {
+    let stream: MediaStream | null = null;
+    
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Pre-flight Check 1: Secure Context
+      if (!window.isSecureContext) {
+        toast({
+          title: 'Требуется безопасное соединение',
+          description: 'Для доступа к микрофону необходимо HTTPS соединение',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Pre-flight Check 2: Browser Compatibility
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        toast({
+          title: 'Браузер не поддерживается',
+          description: 'Ваш браузер не поддерживает запись голоса. Обновите браузер или используйте Chrome/Firefox',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Pre-flight Check 3: Device Availability
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const hasAudioInput = devices.some(device => device.kind === 'audioinput');
+      
+      if (!hasAudioInput) {
+        toast({
+          title: 'Микрофон не найден',
+          description: 'Подключите микрофон и попробуйте снова',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Request microphone access
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
       
@@ -205,8 +241,10 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
           }
         }
         
-        // Останавливаем stream
-        stream.getTracks().forEach(track => track.stop());
+        // Cleanup stream in success path
+        if (stream) {
+          stream.getTracks().forEach(track => track.stop());
+        }
       };
       
       mediaRecorder.start();
@@ -214,11 +252,64 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
       
     } catch (error) {
       console.error('Error starting recording:', error);
-      toast({
-        title: t.error,
-        description: 'Не удалось получить доступ к микрофону',
-        variant: 'destructive',
-      });
+      
+      // Cleanup stream in error path
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+      
+      // Specific error handling
+      if (error instanceof DOMException) {
+        switch (error.name) {
+          case 'NotAllowedError':
+            toast({
+              title: 'Доступ запрещён',
+              description: 'Разрешите доступ к микрофону в настройках браузера и перезагрузите страницу',
+              variant: 'destructive',
+            });
+            break;
+          case 'NotFoundError':
+            toast({
+              title: 'Микрофон не найден',
+              description: 'Подключите микрофон и попробуйте снова',
+              variant: 'destructive',
+            });
+            break;
+          case 'NotReadableError':
+            toast({
+              title: 'Микрофон занят',
+              description: 'Микрофон используется другим приложением. Закройте другие приложения и попробуйте снова',
+              variant: 'destructive',
+            });
+            break;
+          case 'SecurityError':
+            toast({
+              title: 'Ошибка безопасности',
+              description: 'Проверьте настройки безопасности браузера и разрешения сайта',
+              variant: 'destructive',
+            });
+            break;
+          case 'NotSupportedError':
+            toast({
+              title: 'Не поддерживается',
+              description: 'Ваш браузер не поддерживает требуемые аудио настройки',
+              variant: 'destructive',
+            });
+            break;
+          default:
+            toast({
+              title: 'Ошибка записи',
+              description: `Не удалось начать запись: ${error.message}`,
+              variant: 'destructive',
+            });
+        }
+      } else {
+        toast({
+          title: 'Ошибка',
+          description: 'Не удалось получить доступ к микрофону',
+          variant: 'destructive',
+        });
+      }
     }
   };
 
