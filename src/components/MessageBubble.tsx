@@ -125,64 +125,12 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
     }
   }, [message.dify_message_id, toast]);
 
+  // TTS now handled automatically through Dify stream - Play button disabled
   const handlePlayAudio = async () => {
-    if (!message.answer) return;
-    
-    if (isPlaying) {
-      setIsPlaying(false);
-      return;
-    }
-
-    try {
-      setIsPlaying(true);
-      
-      // Вызываем TTS API для преобразования текста в речь
-      const result = await difyClient.textToSpeech(message.answer);
-      
-      // Создаем Blob из base64 данных
-      const audioBlob = new Blob([Uint8Array.from(atob(result.audioContent), c => c.charCodeAt(0))], {
-        type: result.contentType || 'audio/mpeg'
-      });
-      
-      // Создаем URL для аудио
-      const audioUrl = URL.createObjectURL(audioBlob);
-      const audio = new Audio(audioUrl);
-      
-      audio.onended = () => {
-        setIsPlaying(false);
-        URL.revokeObjectURL(audioUrl);
-      };
-      
-      audio.onerror = () => {
-        setIsPlaying(false);
-        URL.revokeObjectURL(audioUrl);
-        toast({
-          title: 'Ошибка воспроизведения',
-          description: 'Не удалось воспроизвести аудио',
-          variant: 'destructive',
-        });
-      };
-      
-      await audio.play();
-    } catch (error) {
-      setIsPlaying(false);
-      console.error('Error playing audio:', error);
-      
-      let errorMessage = 'Не удалось преобразовать текст в речь';
-      if (error instanceof Error) {
-        if (error.message.includes('Text to speech is not enabled')) {
-          errorMessage = 'Функция озвучивания текста отключена в настройках';
-        } else if (error.message.includes('network')) {
-          errorMessage = 'Проблема с сетевым соединением';
-        }
-      }
-      
-      toast({
-        title: 'Ошибка озвучивания', 
-        description: errorMessage,
-        variant: 'destructive',
-      });
-    }
+    toast({
+      title: 'Озвучивание отключено',
+      description: 'Включите голосовой режим в настройках для автоматического озвучивания ответов',
+    });
   };
 
   const handleDeleteMessage = async () => {

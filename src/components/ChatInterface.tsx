@@ -102,6 +102,8 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
   const [autoStopEnabled, setAutoStopEnabled] = useState(true);
   const [voiceModeEnabled, setVoiceModeEnabled] = useState(false);
   const [isPlayingTTS, setIsPlayingTTS] = useState(false);
+  const [isAutoStopped, setIsAutoStopped] = useState(false);
+  const [silenceProgress, setSilenceProgress] = useState(0);
   
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -294,6 +296,38 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
     handleFileSelect(e.dataTransfer.files);
   };
 
+  const stopRecording = () => {
+    if (!isRecording || !mediaRecorderRef.current) return;
+    
+    console.log('Stopping recording...');
+    setIsRecording(false);
+    
+    // Если это автостоп, устанавливаем флаг
+    if (autoStopEnabled) {
+      setIsAutoStopped(true);
+    }
+    
+    mediaRecorderRef.current.stop();
+    mediaRecorderRef.current = null;
+    setSilenceProgress(0);
+    
+    // Clean up audio processing
+    if (processorRef.current) {
+      processorRef.current.disconnect();
+      processorRef.current = null;
+    }
+    if (analyserRef.current) {
+      analyserRef.current.disconnect();
+      analyserRef.current = null;
+    }
+    if (audioContextRef.current) {
+      audioContextRef.current.close();
+      audioContextRef.current = null;
+    }
+    
+    setAudioLevel(0);
+  };
+
   const startRecording = async () => {
     let stream: MediaStream | null = null;
     
@@ -374,6 +408,8 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
               silenceStartRef.current = currentTime;
             } else {
               const silenceDuration = currentTime - silenceStartRef.current;
+              const progress = Math.min((silenceDuration / SILENCE_DURATION) * 100, 100);
+              setSilenceProgress(progress);
               
               // Auto-stop if silence detected for long enough and minimum recording time passed
               if (silenceDuration > SILENCE_DURATION && recordingDuration > MIN_RECORDING_TIME) {
@@ -384,6 +420,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
           } else {
             // Reset silence timer when sound detected
             silenceStartRef.current = 0;
+            setSilenceProgress(0);
           }
         }
       };
@@ -441,12 +478,13 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
               description: voiceModeEnabled ? 'Отправляем сообщение...' : 'Текст добавлен в поле ввода',
             });
             
-            // Автоматически отправляем только в голосовом режиме
-            if (voiceModeEnabled && transcribedText) {
-              setTimeout(() => {
-                handleSendMessage();
-              }, 500);
-            }
+        // Автоматически отправляем в голосовом режиме или при автостопе
+        if ((voiceModeEnabled || autoStopEnabled) && transcribedText) {
+          setTimeout(() => {
+            handleSendMessage();
+            setIsAutoStopped(false);
+          }, 500);
+        }
           } else {
             toast({
               title: 'Голос не распознан',
@@ -549,34 +587,6 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
           variant: 'destructive',
         });
       }
-    }
-  };
-
-  const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop();
-      setIsRecording(false);
-      setAudioLevel(0);
-      
-      // Cleanup audio processing
-      if (processorRef.current) {
-        processorRef.current.disconnect();
-        processorRef.current = null;
-      }
-      if (analyserRef.current) {
-        analyserRef.current.disconnect();
-        analyserRef.current = null;
-      }
-      if (audioContextRef.current) {
-        audioContextRef.current.close();
-        audioContextRef.current = null;
-      }
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-      
-      silenceStartRef.current = 0;
-      recordingStartRef.current = 0;
     }
   };
 

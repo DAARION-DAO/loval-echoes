@@ -78,6 +78,7 @@ serve(async (req) => {
     // Use File instead of Blob to ensure proper Content-Type
     const audioFile = new File([bytes], fileName, { type: normalizedType });
     formData.append('file', audioFile, fileName);
+    formData.append('user', 'daarion-community-system');
 
     console.log(`Processing audio: type=${normalizedType}, size=${bytes.length}, fileName=${fileName}`);
 
@@ -92,7 +93,14 @@ serve(async (req) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`Dify STT API error: ${response.status} ${errorText}`);
+      console.error(`Dify STT API error: ${response.status}`, {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorText,
+        fileName,
+        mimeType: normalizedType,
+        fileSize: bytes.length
+      });
       
       if (response.status === 415) {
         return new Response(

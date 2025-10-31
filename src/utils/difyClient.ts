@@ -370,25 +370,7 @@ export class DifyClient {
     }
   }
 
-  async textToSpeech(text: string, voice = 'alloy'): Promise<{ audioContent: string; contentType: string }> {
-    try {
-      const headers = await this.getAuthHeaders();
-      const response = await fetch(`https://pbsdsdexayzfoexjdlgb.supabase.co/functions/v1/tts-api`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ text, voice }),
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${await response.text()}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('Error converting text to speech:', error);
-      throw new DifyClientError(error instanceof Error ? error.message : 'Failed to convert text to speech');
-    }
-  }
+  // textToSpeech removed - now using Dify TTS through stream events
 
   // Подписка на стрим сообщений для чата
   subscribeToChat(chatId: string, onMessage: (data: any) => void) {
