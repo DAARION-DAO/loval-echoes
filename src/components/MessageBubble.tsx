@@ -366,7 +366,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
 
           {/* Ультра-компактная панель действий */}
           {!isDeleted && (message.answer || message.query) && (
-            <div className={cn('flex items-center gap-0.5 pt-0.5', isAgent ? 'justify-start' : 'justify-end')}>
+            <div className={cn('flex items-center gap-1 pt-1', isAgent ? 'justify-start' : 'justify-end')}>
               {/* Действия для агентских сообщений */}
               {isAgent && message.answer && (
                 <>
@@ -374,38 +374,38 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                     size="sm"
                     variant="ghost"
                     onClick={handlePlayAudio}
-                    className="h-4 w-4 p-0 text-muted-foreground hover:text-foreground"
-                    title={isPlaying ? 'Пауза' : 'Озвучить'}
+                    className="h-6 w-6 p-0 text-muted-foreground hover:text-primary hover:bg-primary/10"
+                    title={isPlaying ? 'Остановить' : 'Озвучить текст'}
                   >
-                    {isPlaying ? <Pause className="h-2 w-2" /> : <Play className="h-2 w-2" />}
+                    {isPlaying ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
                   </Button>
                   <Button
                     size="sm"
                     variant="ghost"
                     onClick={() => handleFeedback('like')}
-                    className="h-4 w-4 p-0 text-muted-foreground hover:text-green-600"
+                    className="h-5 w-5 p-0 text-muted-foreground hover:text-green-600"
                     title="Нравится"
                   >
-                    <ThumbsUp className="h-2 w-2" />
+                    <ThumbsUp className="h-2.5 w-2.5" />
                   </Button>
                   <Button
                     size="sm"
                     variant="ghost"
                     onClick={() => handleFeedback('dislike')}
-                    className="h-4 w-4 p-0 text-muted-foreground hover:text-red-600"
+                    className="h-5 w-5 p-0 text-muted-foreground hover:text-red-600"
                     title="Не нравится"
                   >
-                    <ThumbsDown className="h-2 w-2" />
+                    <ThumbsDown className="h-2.5 w-2.5" />
                   </Button>
                   {onFork && (
                     <Button
                       size="sm"
                       variant="ghost"
                       onClick={() => onFork(message.id)}
-                      className="h-4 w-4 p-0 text-muted-foreground hover:text-foreground"
+                      className="h-5 w-5 p-0 text-muted-foreground hover:text-foreground"
                       title="Создать ветку"
                     >
-                      <GitBranch className="h-2 w-2" />
+                      <GitBranch className="h-2.5 w-2.5" />
                     </Button>
                   )}
                 </>

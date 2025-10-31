@@ -11,7 +11,14 @@ import { useNewsNotifications } from '@/hooks/useNewsNotifications';
 import { useNavigate } from 'react-router-dom';
 
 export const NewsNotificationsPopover = () => {
-  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNewsNotifications();
+  const { 
+    notifications, 
+    unreadCount, 
+    markAsRead, 
+    markAllAsRead,
+    pushEnabled,
+    requestPushPermission 
+  } = useNewsNotifications();
   const navigate = useNavigate();
 
   const handleNotificationClick = (newsId: string, notificationId: string) => {
@@ -50,17 +57,39 @@ export const NewsNotificationsPopover = () => {
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-80 p-0" align="end">
-        <div className="flex items-center justify-between p-4 border-b">
-          <h3 className="font-semibold">Уведомления</h3>
-          {unreadCount > 0 && (
+        <div className="flex flex-col gap-2 p-4 border-b">
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold">Уведомления</h3>
+            {unreadCount > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={markAllAsRead}
+                className="text-xs h-7"
+              >
+                Отметить все
+              </Button>
+            )}
+          </div>
+          
+          {/* Push notification toggle */}
+          {!pushEnabled && 'Notification' in window && (
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
-              onClick={markAllAsRead}
-              className="text-xs h-7"
+              onClick={requestPushPermission}
+              className="w-full text-xs"
             >
-              Отметить все
+              <Bell className="h-3 w-3 mr-2" />
+              Включить push-уведомления
             </Button>
+          )}
+          
+          {pushEnabled && (
+            <div className="text-xs text-muted-foreground flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-green-500" />
+              Push-уведомления включены
+            </div>
           )}
         </div>
         <ScrollArea className="h-[400px]">

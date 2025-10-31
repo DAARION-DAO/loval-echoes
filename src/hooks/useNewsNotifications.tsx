@@ -17,9 +17,70 @@ export function useNewsNotifications() {
   const [notifications, setNotifications] = useState<NewsNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [pushEnabled, setPushEnabled] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // Request push notification permission
+  const requestPushPermission = async () => {
+    if (!('Notification' in window)) {
+      console.log('Браузер не поддерживает уведомления');
+      return false;
+    }
+
+    try {
+      const permission = await Notification.requestPermission();
+      const enabled = permission === 'granted';
+      setPushEnabled(enabled);
+      
+      if (enabled) {
+        toast({
+          title: '✅ Уведомления включены',
+          description: 'Вы будете получать push-уведомления о новых срочных сообщениях',
+        });
+      }
+      
+      return enabled;
+    } catch (error) {
+      console.error('Error requesting notification permission:', error);
+      return false;
+    }
+  };
+
+  // Show browser push notification
+  const showPushNotification = (title: string, message: string) => {
+    if (!pushEnabled || Notification.permission !== 'granted') return;
+
+    try {
+      const notification = new Notification(title, {
+        body: message,
+        icon: '/favicon.ico',
+        badge: '/favicon.ico',
+        tag: 'news-notification',
+        requireInteraction: false,
+        silent: false,
+      });
+
+      notification.onclick = () => {
+        window.focus();
+        navigate('/news');
+        notification.close();
+      };
+
+      // Auto-close after 10 seconds
+      setTimeout(() => notification.close(), 10000);
+    } catch (error) {
+      console.error('Error showing push notification:', error);
+    }
+  };
+
+  // Check if push is already enabled
+  useEffect(() => {
+    if ('Notification' in window) {
+      setPushEnabled(Notification.permission === 'granted');
+    }
+  }, []);
 
   // Load notifications
   const loadNotifications = async () => {
@@ -63,21 +124,27 @@ export function useNewsNotifications() {
           console.log('New notification received:', payload);
           const newNotification = payload.new as NewsNotification;
           
-      // Show interactive toast with action button
-      toast({
-        title: '📢 Новое срочное сообщение',
-        description: newNotification.message,
-        duration: 5000,
-        action: (
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => navigate('/news')}
-          >
-            Посмотреть
-          </Button>
-        )
-      });
+          // Show browser push notification first
+          showPushNotification(
+            '📢 Новое срочное сообщение',
+            newNotification.message
+          );
+
+          // Then show interactive toast with action button
+          toast({
+            title: '📢 Новое срочное сообщение',
+            description: newNotification.message,
+            duration: 5000,
+            action: (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => navigate('/news')}
+              >
+                Посмотреть
+              </Button>
+            )
+          });
 
           // Update state
           setNotifications(prev => [newNotification, ...prev]);
@@ -136,6 +203,8 @@ export function useNewsNotifications() {
     loading,
     markAsRead,
     markAllAsRead,
-    refresh: loadNotifications
+    refresh: loadNotifications,
+    pushEnabled,
+    requestPushPermission
   };
 }
