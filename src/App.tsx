@@ -25,11 +25,13 @@ import MyTasks from "./pages/MyTasks";
 import Agents from "./pages/Agents";
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { Layout } from "./components/Layout";
+import { useSessionTimeout } from "./hooks/useSessionTimeout";
 
 const queryClient = new QueryClient();
 
 const ProtectedLayout = () => {
   const { user, loading } = useAuth();
+  useSessionTimeout();
 
   if (loading) {
     return (
