@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useToast } from './use-toast';
@@ -18,32 +18,141 @@ export function useNewsNotifications() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [pushEnabled, setPushEnabled] = useState(false);
+  const [serviceWorkerReady, setServiceWorkerReady] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  // Регистрация Service Worker
+  const registerServiceWorker = useCallback(async () => {
+    if (!('serviceWorker' in navigator)) {
+      console.log('Service Workers не поддерживаются');
+      return null;
+    }
+
+    try {
+      const registration = await navigator.serviceWorker.register('/sw.js');
+      console.log('Service Worker зарегистрирован:', registration.scope);
+      
+      // Ждем когда SW станет активным
+      await navigator.serviceWorker.ready;
+      setServiceWorkerReady(true);
+      
+      return registration;
+    } catch (error) {
+      console.error('Ошибка регистрации Service Worker:', error);
+      return null;
+    }
+  }, []);
+
+  // Подписка на push-уведомления
+  const subscribeToPush = useCallback(async (registration: ServiceWorkerRegistration) => {
+    if (!user) return false;
+
+    try {
+      // Проверяем существующую подписку
+      let subscription = await registration.pushManager.getSubscription();
+      
+      if (!subscription) {
+        // Создаем новую подписку
+        // ВАЖНО: Здесь нужен публичный VAPID ключ
+        // Для демо используем заглушку, в production нужен настоящий ключ
+        const vapidPublicKey = 'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U';
+        
+        subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+        });
+      }
+
+      // Сохраняем подписку на сервере
+      const deviceId = localStorage.getItem('deviceId') || crypto.randomUUID();
+      localStorage.setItem('deviceId', deviceId);
+
+      const { error } = await supabase.functions.invoke('push-subscribe', {
+        body: {
+          action: 'subscribe',
+          subscription: subscription.toJSON(),
+          deviceId,
+        },
+      });
+
+      if (error) throw error;
+
+      setPushEnabled(true);
+      toast({
+        title: '✅ Push-уведомления включены',
+        description: 'Вы будете получать уведомления даже при закрытой вкладке',
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Ошибка подписки на push:', error);
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось включить push-уведомления',
+        variant: 'destructive',
+      });
+      return false;
+    }
+  }, [user, toast]);
+
+  // Helper для конвертации VAPID ключа
+  const urlBase64ToUint8Array = (base64String: string): BufferSource => {
+    const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+  };
+
   // Request push notification permission
   const requestPushPermission = async () => {
     if (!('Notification' in window)) {
-      console.log('Браузер не поддерживает уведомления');
+      toast({
+        title: 'Не поддерживается',
+        description: 'Ваш браузер не поддерживает уведомления',
+        variant: 'destructive',
+      });
       return false;
     }
 
     try {
       const permission = await Notification.requestPermission();
-      const enabled = permission === 'granted';
-      setPushEnabled(enabled);
       
-      if (enabled) {
+      if (permission !== 'granted') {
         toast({
-          title: '✅ Уведомления включены',
-          description: 'Вы будете получать push-уведомления о новых срочных сообщениях',
+          title: 'Доступ запрещен',
+          description: 'Разрешите уведомления в настройках браузера',
+          variant: 'destructive',
         });
+        return false;
       }
+
+      // Регистрируем Service Worker
+      const registration = await registerServiceWorker();
+      if (!registration) {
+        toast({
+          title: 'Ошибка',
+          description: 'Не удалось зарегистрировать Service Worker',
+          variant: 'destructive',
+        });
+        return false;
+      }
+
+      // Подписываемся на push
+      return await subscribeToPush(registration);
       
-      return enabled;
     } catch (error) {
       console.error('Error requesting notification permission:', error);
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось включить уведомления',
+        variant: 'destructive',
+      });
       return false;
     }
   };
@@ -75,12 +184,19 @@ export function useNewsNotifications() {
     }
   };
 
-  // Check if push is already enabled
+  // Инициализация Service Worker при загрузке
   useEffect(() => {
-    if ('Notification' in window) {
-      setPushEnabled(Notification.permission === 'granted');
-    }
-  }, []);
+    const init = async () => {
+      if ('Notification' in window && Notification.permission === 'granted') {
+        const registration = await registerServiceWorker();
+        if (registration) {
+          const subscription = await registration.pushManager.getSubscription();
+          setPushEnabled(!!subscription);
+        }
+      }
+    };
+    init();
+  }, [registerServiceWorker]);
 
   // Load notifications
   const loadNotifications = async () => {

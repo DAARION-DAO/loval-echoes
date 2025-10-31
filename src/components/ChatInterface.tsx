@@ -8,7 +8,9 @@ import {
   RotateCcw,
   ImageIcon,
   FileText,
-  Activity
+  Activity,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -20,6 +22,7 @@ import { useTranslation } from '@/lib/i18n';
 import { difyClient } from '@/utils/difyClient';
 import { useDifyStream } from '@/hooks/useDifyStream';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import {
   Popover,
   PopoverContent,
@@ -33,7 +36,7 @@ interface ChatInterfaceProps {
 export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
   const { t } = useTranslation();
   const { toast } = useToast();
-  const { isStreaming, startStream, stopStream } = useDifyStream(chatId);
+  const { currentMessage, isStreaming, startStream, stopStream } = useDifyStream(chatId);
   
   const [message, setMessage] = useState('');
   const [isRecording, setIsRecording] = useState(false);
@@ -42,6 +45,8 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [audioLevel, setAudioLevel] = useState(0);
   const [autoStopEnabled, setAutoStopEnabled] = useState(true);
+  const [voiceModeEnabled, setVoiceModeEnabled] = useState(false);
+  const [isPlayingTTS, setIsPlayingTTS] = useState(false);
   
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -52,6 +57,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
   const silenceStartRef = useRef<number>(0);
   const recordingStartRef = useRef<number>(0);
   const animationFrameRef = useRef<number>(0);
+  const audioElementRef = useRef<HTMLAudioElement | null>(null);
 
   // Автоматическое изменение высоты textarea
   useEffect(() => {
@@ -60,6 +66,84 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
   }, [message]);
+
+  // Озвучивание ответа агента через TTS
+  const playTextToSpeech = async (text: string) => {
+    if (!voiceModeEnabled || !text.trim()) return;
+
+    try {
+      setIsPlayingTTS(true);
+      
+      const { data, error } = await supabase.functions.invoke('tts-api', {
+        body: { 
+          text: text.trim(),
+          voice: 'alloy'
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.audioContent) {
+        // Декодируем base64 аудио
+        const audioData = atob(data.audioContent);
+        const arrayBuffer = new ArrayBuffer(audioData.length);
+        const view = new Uint8Array(arrayBuffer);
+        for (let i = 0; i < audioData.length; i++) {
+          view[i] = audioData.charCodeAt(i);
+        }
+        
+        // Создаем blob и воспроизводим
+        const audioBlob = new Blob([arrayBuffer], { type: 'audio/mpeg' });
+        const audioUrl = URL.createObjectURL(audioBlob);
+        
+        const audio = new Audio(audioUrl);
+        audioElementRef.current = audio;
+        
+        audio.onended = () => {
+          setIsPlayingTTS(false);
+          URL.revokeObjectURL(audioUrl);
+          
+          // В голосовом режиме автоматически начинаем запись после воспроизведения
+          if (voiceModeEnabled && autoStopEnabled) {
+            setTimeout(() => {
+              startRecording();
+            }, 500);
+          }
+        };
+        
+        audio.onerror = () => {
+          setIsPlayingTTS(false);
+          URL.revokeObjectURL(audioUrl);
+        };
+        
+        await audio.play();
+      }
+    } catch (error) {
+      console.error('Error playing TTS:', error);
+      setIsPlayingTTS(false);
+      toast({
+        title: 'Ошибка озвучивания',
+        description: 'Не удалось озвучить ответ',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  // Останавливаем воспроизведение TTS
+  const stopPlayingTTS = () => {
+    if (audioElementRef.current) {
+      audioElementRef.current.pause();
+      audioElementRef.current = null;
+    }
+    setIsPlayingTTS(false);
+  };
+
+  // Отслеживаем новые сообщения от агента для озвучивания
+  useEffect(() => {
+    if (currentMessage?.isComplete && currentMessage.content && voiceModeEnabled && !isPlayingTTS) {
+      playTextToSpeech(currentMessage.content);
+    }
+  }, [currentMessage?.isComplete, voiceModeEnabled, isPlayingTTS]);
 
   const handleSendMessage = async () => {
     if (!message.trim() && attachedFiles.length === 0) return;
@@ -254,21 +338,23 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
         }
       };
       
-      // Determine the best supported MIME type
-      let mimeType = 'audio/wav';
-      if (MediaRecorder.isTypeSupported('audio/wav')) {
-        mimeType = 'audio/wav';
-      } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
-        mimeType = 'audio/mp4';
-      } else if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
-        mimeType = 'audio/webm;codecs=opus';
-      } else if (MediaRecorder.isTypeSupported('audio/webm')) {
-        mimeType = 'audio/webm';
-      }
-      
-      const mediaRecorder = new MediaRecorder(stream, { mimeType });
-      mediaRecorderRef.current = mediaRecorder;
-      console.log('Recording with MIME type:', mimeType);
+    // Determine the best supported MIME type - prioritize WAV
+    let mimeType = 'audio/wav';
+    if (MediaRecorder.isTypeSupported('audio/wav')) {
+      mimeType = 'audio/wav';
+    } else if (MediaRecorder.isTypeSupported('audio/webm;codecs=pcm')) {
+      mimeType = 'audio/webm;codecs=pcm';
+    } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
+      mimeType = 'audio/mp4';
+    } else if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+      mimeType = 'audio/webm;codecs=opus';
+    } else if (MediaRecorder.isTypeSupported('audio/webm')) {
+      mimeType = 'audio/webm';
+    }
+    
+    const mediaRecorder = new MediaRecorder(stream, { mimeType });
+    mediaRecorderRef.current = mediaRecorder;
+    console.log('Recording with MIME type:', mimeType);
       
       const chunks: Blob[] = [];
       mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
@@ -561,6 +647,23 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
               <PopoverContent className="w-64">
                 <div className="space-y-4">
                   <h4 className="font-medium text-sm">Настройки голосового ввода</h4>
+                  
+                  {/* Голосовой режим */}
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="voice-mode" className="text-sm">
+                      Голосовой режим
+                    </Label>
+                    <Switch
+                      id="voice-mode"
+                      checked={voiceModeEnabled}
+                      onCheckedChange={setVoiceModeEnabled}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Автоматическая запись и озвучивание ответов
+                  </p>
+                  
+                  {/* Автостоп */}
                   <div className="flex items-center justify-between">
                     <Label htmlFor="auto-stop" className="text-sm">
                       Автостоп при паузе
@@ -578,17 +681,29 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
               </PopoverContent>
             </Popover>
 
-            {/* Кнопка записи голоса */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={isRecording ? stopRecording : startRecording}
-              disabled={isStreaming}
-              className={`touch-target h-10 w-10 sm:h-11 sm:w-11 p-0 flex-shrink-0 ${isRecording ? 'text-destructive animate-pulse-soft' : ''}`}
-              aria-label={isRecording ? "Остановить запись" : "Записать голосовое сообщение"}
-            >
-              {isRecording ? <MicOff className="h-4 w-4 sm:h-5 sm:w-5" /> : <Mic className="h-4 w-4 sm:h-5 sm:w-5" />}
-            </Button>
+            {/* Кнопка записи голоса / остановки TTS */}
+            {isPlayingTTS ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={stopPlayingTTS}
+                className="touch-target h-10 w-10 sm:h-11 sm:w-11 p-0 flex-shrink-0 text-primary animate-pulse-soft"
+                aria-label="Остановить воспроизведение"
+              >
+                <VolumeX className="h-4 w-4 sm:h-5 sm:w-5" />
+              </Button>
+            ) : (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={isRecording ? stopRecording : startRecording}
+                disabled={isStreaming}
+                className={`touch-target h-10 w-10 sm:h-11 sm:w-11 p-0 flex-shrink-0 ${isRecording ? 'text-destructive animate-pulse-soft' : ''}`}
+                aria-label={isRecording ? "Остановить запись" : "Записать голосовое сообщение"}
+              >
+                {isRecording ? <MicOff className="h-4 w-4 sm:h-5 sm:w-5" /> : <Mic className="h-4 w-4 sm:h-5 sm:w-5" />}
+              </Button>
+            )}
 
             {/* Кнопка остановки/отправки */}
             {isStreaming ? (
@@ -626,7 +741,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
         className="hidden"
       />
 
-      {/* Индикатор печати */}
+      {/* Индикатор печати или озвучивания */}
       {isStreaming && (
         <div className="mt-2 sm:mt-3 flex items-center gap-3 text-sm text-muted-foreground animate-pulse-soft px-1">
           <div className="flex gap-1">
@@ -635,6 +750,13 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
             <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
           </div>
           <span className="text-sm sm:text-base">ЖОС Агент печатает...</span>
+        </div>
+      )}
+      
+      {isPlayingTTS && (
+        <div className="mt-2 sm:mt-3 flex items-center gap-3 text-sm text-primary animate-pulse-soft px-1">
+          <Volume2 className="h-4 w-4" />
+          <span className="text-sm sm:text-base">Озвучиваю ответ...</span>
         </div>
       )}
     </div>
