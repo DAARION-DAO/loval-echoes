@@ -67,6 +67,67 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
     }
   }, [message]);
 
+  // Конвертация аудио blob в WAV формат
+  const convertToWav = async (blob: Blob): Promise<Blob> => {
+    const arrayBuffer = await blob.arrayBuffer();
+    const audioContext = new AudioContext({ sampleRate: 16000 });
+    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+    
+    // Конвертируем в PCM WAV
+    const wavBuffer = audioBufferToWav(audioBuffer);
+    await audioContext.close();
+    
+    return new Blob([wavBuffer], { type: 'audio/wav' });
+  };
+
+  // Конвертация AudioBuffer в WAV формат
+  const audioBufferToWav = (audioBuffer: AudioBuffer): ArrayBuffer => {
+    const numChannels = 1; // моно
+    const sampleRate = audioBuffer.sampleRate;
+    const format = 1; // PCM
+    const bitDepth = 16;
+    
+    const bytesPerSample = bitDepth / 8;
+    const blockAlign = numChannels * bytesPerSample;
+    
+    const data = audioBuffer.getChannelData(0);
+    const dataLength = data.length * bytesPerSample;
+    const buffer = new ArrayBuffer(44 + dataLength);
+    const view = new DataView(buffer);
+    
+    // WAV header
+    const writeString = (offset: number, string: string) => {
+      for (let i = 0; i < string.length; i++) {
+        view.setUint8(offset + i, string.charCodeAt(i));
+      }
+    };
+    
+    writeString(0, 'RIFF');
+    view.setUint32(4, 36 + dataLength, true);
+    writeString(8, 'WAVE');
+    writeString(12, 'fmt ');
+    view.setUint32(16, 16, true);
+    view.setUint16(20, format, true);
+    view.setUint16(22, numChannels, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * blockAlign, true);
+    view.setUint16(32, blockAlign, true);
+    view.setUint16(34, bitDepth, true);
+    writeString(36, 'data');
+    view.setUint32(40, dataLength, true);
+    
+    // PCM данные
+    const volume = 0.8;
+    let offset = 44;
+    for (let i = 0; i < data.length; i++) {
+      const sample = Math.max(-1, Math.min(1, data[i] * volume));
+      view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+      offset += 2;
+    }
+    
+    return buffer;
+  };
+
   // Озвучивание ответа агента через TTS
   const playTextToSpeech = async (text: string) => {
     if (!voiceModeEnabled || !text.trim()) return;
@@ -360,31 +421,43 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
       mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
       
       mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(chunks, { type: mimeType });
+        let audioBlob = new Blob(chunks, { type: mimeType });
         
         // Показываем индикатор обработки
         toast({
           title: 'Обработка голоса',
-          description: 'Транскрибируем аудио...',
+          description: 'Конвертируем аудио...',
         });
         
         try {
-          const result = await difyClient.speechToText(audioBlob, mimeType);
+          // Конвертируем в WAV если это не WAV
+          if (!mimeType.includes('wav')) {
+            console.log('Converting audio to WAV format...');
+            audioBlob = await convertToWav(audioBlob);
+            console.log('Audio converted to WAV');
+          }
+          
+          toast({
+            title: 'Обработка голоса',
+            description: 'Транскрибируем аудио...',
+          });
+          
+          const result = await difyClient.speechToText(audioBlob, 'audio/wav');
           if (result?.text) {
             const transcribedText = result.text.trim();
             setMessage(prev => prev + (prev ? ' ' : '') + transcribedText);
             
             toast({
               title: 'Голос распознан',
-              description: 'Отправляем сообщение...',
+              description: voiceModeEnabled ? 'Отправляем сообщение...' : 'Текст добавлен в поле ввода',
             });
             
-            // Автоматически отправляем голосовое сообщение
-            setTimeout(() => {
-              if (transcribedText) {
+            // Автоматически отправляем только в голосовом режиме
+            if (voiceModeEnabled && transcribedText) {
+              setTimeout(() => {
                 handleSendMessage();
-              }
-            }, 500);
+              }, 500);
+            }
           } else {
             toast({
               title: 'Голос не распознан',
@@ -399,8 +472,8 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
           // Check if it's a format error
           if (errorMessage.includes('415') || errorMessage.includes('Unsupported')) {
             toast({
-              title: 'Неподдерживаемый формат',
-              description: 'Попробуйте использовать другой браузер (Chrome, Safari или Firefox)',
+              title: 'Ошибка формата аудио',
+              description: 'Не удалось конвертировать аудио. Попробуйте другой браузер.',
               variant: 'destructive',
             });
           } else if (errorMessage.includes('Speech to text is not enabled')) {
