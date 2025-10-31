@@ -51,6 +51,7 @@ serve(async (req) => {
 
     // Normalize mimeType and determine file extension
     // Dify поддерживает: mp3, mp4, mpeg, mpga, m4a, wav, webm
+    // IMPORTANT: For MP4 containers from Safari/iOS, use audio/m4a MIME type
     let normalizedType = mimeType || 'audio/wav';
     let fileName = 'audio.wav';
     
@@ -61,7 +62,11 @@ serve(async (req) => {
       normalizedType = 'audio/webm';
       fileName = 'audio.webm';
     } else if (normalizedType.includes('mp4')) {
-      normalizedType = 'audio/mp4';
+      // Safari/iOS records as MP4, but Dify expects M4A MIME type
+      normalizedType = 'audio/m4a';
+      fileName = 'audio.m4a';
+    } else if (normalizedType.includes('m4a')) {
+      normalizedType = 'audio/m4a';
       fileName = 'audio.m4a';
     } else if (normalizedType.includes('mpeg') || normalizedType.includes('mp3')) {
       normalizedType = 'audio/mpeg';
