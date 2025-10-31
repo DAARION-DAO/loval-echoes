@@ -44,6 +44,7 @@ serve(async (req) => {
     }
 
     // Создаем FormData для отправки в Dify
+    // Dify поддерживает: mp3, mp4, mpeg, mpga, m4a, wav, webm
     const formData = new FormData();
     const blob = new Blob([bytes], { type: 'audio/webm' });
     formData.append('file', blob, 'audio.webm');

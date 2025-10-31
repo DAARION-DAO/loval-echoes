@@ -895,7 +895,7 @@ export type Database = {
           device_id: string | null
           expires_at: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           last_used_at: string | null
           revoked_at: string | null
           token_hash: string
@@ -907,7 +907,7 @@ export type Database = {
           device_id?: string | null
           expires_at: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           last_used_at?: string | null
           revoked_at?: string | null
           token_hash: string
@@ -919,7 +919,7 @@ export type Database = {
           device_id?: string | null
           expires_at?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           last_used_at?: string | null
           revoked_at?: string | null
           token_hash?: string
@@ -934,7 +934,7 @@ export type Database = {
           event_data: Json | null
           event_type: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           user_agent: string | null
           user_id: string | null
         }
@@ -943,7 +943,7 @@ export type Database = {
           event_data?: Json | null
           event_type: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           user_agent?: string | null
           user_id?: string | null
         }
@@ -952,7 +952,7 @@ export type Database = {
           event_data?: Json | null
           event_type?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           user_agent?: string | null
           user_id?: string | null
         }
@@ -1147,10 +1147,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      calculate_required_approvals: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
+      calculate_required_approvals: { Args: never; Returns: number }
       check_enhanced_rate_limit: {
         Args: {
           p_action: string
@@ -1180,10 +1177,7 @@ export type Database = {
         }
         Returns: Json
       }
-      cleanup_expired_refresh_tokens: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      cleanup_expired_refresh_tokens: { Args: never; Returns: undefined }
       create_task_notification: {
         Args: {
           p_message: string
@@ -1194,10 +1188,7 @@ export type Database = {
         }
         Returns: string
       }
-      detect_approval_inconsistencies: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      detect_approval_inconsistencies: { Args: never; Returns: undefined }
       enhanced_log_security_event: {
         Args: {
           p_event_data?: Json
@@ -1210,7 +1201,7 @@ export type Database = {
         Returns: undefined
       }
       fix_approval_inconsistencies: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           fixed_user_id: string
           new_status: string
@@ -1236,35 +1227,12 @@ export type Database = {
           user_id: string
         }[]
       }
-      get_user_approval_status: {
-        Args: { user_id: string }
-        Returns: string
-      }
+      get_user_approval_status: { Args: { user_id: string }; Returns: string }
       get_user_conversations: {
         Args: { user_id: string }
         Returns: {
           conversation_id: string
         }[]
-      }
-      gtrgm_compress: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      gtrgm_decompress: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      gtrgm_in: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      gtrgm_options: {
-        Args: { "": unknown }
-        Returns: undefined
-      }
-      gtrgm_out: {
-        Args: { "": unknown }
-        Returns: unknown
       }
       has_role: {
         Args: {
@@ -1273,26 +1241,14 @@ export type Database = {
         }
         Returns: boolean
       }
-      is_admin: {
-        Args: { user_id: string }
-        Returns: boolean
-      }
+      is_admin: { Args: { user_id: string }; Returns: boolean }
       is_conversation_participant: {
         Args: { conversation_id: string; user_id: string }
         Returns: boolean
       }
-      is_moderator: {
-        Args: { user_id: string }
-        Returns: boolean
-      }
-      is_user_admin_simple: {
-        Args: { user_id: string }
-        Returns: boolean
-      }
-      is_user_approved: {
-        Args: { user_id: string }
-        Returns: boolean
-      }
+      is_moderator: { Args: { user_id: string }; Returns: boolean }
+      is_user_admin_simple: { Args: { user_id: string }; Returns: boolean }
+      is_user_approved: { Args: { user_id: string }; Returns: boolean }
       log_security_event: {
         Args: {
           p_event_data?: Json
@@ -1317,18 +1273,8 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: undefined
       }
-      set_limit: {
-        Args: { "": number }
-        Returns: number
-      }
-      show_limit: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      show_trgm: {
-        Args: { "": string }
-        Returns: string[]
-      }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
       validate_file_upload_security: {
         Args: {
           p_file_name: string
