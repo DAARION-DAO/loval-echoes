@@ -10,8 +10,6 @@ import { Phone, PhoneOff, Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
-const APP_ID = 'YAROMIR';
-
 interface AgoraVoiceCallProps {
   channelName: string;
   onLeave?: () => void;
@@ -30,6 +28,7 @@ export const AgoraVoiceCall: React.FC<AgoraVoiceCallProps> = ({
   const clientRef = useRef<IAgoraRTCClient | null>(null);
   const localAudioTrackRef = useRef<ILocalAudioTrack | null>(null);
   const [userId, setUserId] = useState<string>('');
+  const [appId, setAppId] = useState<string>('');
 
   useEffect(() => {
     initAgora();
@@ -91,11 +90,25 @@ export const AgoraVoiceCall: React.FC<AgoraVoiceCallProps> = ({
     if (!clientRef.current || !userId) return;
 
     try {
-      // Генерируем токен (в продакшене нужно получать с сервера)
-      const token = null; // Для тестирования без токена
+      toast({
+        title: 'Подключение...',
+        description: 'Получение токена доступа',
+      });
 
-      // Присоединяемся к каналу
-      await clientRef.current.join(APP_ID, channelName, token, userId);
+      // Получаем токен с сервера
+      const { data: tokenData, error: tokenError } = await supabase.functions.invoke('agora-token', {
+        body: { channelName, role: 'publisher' }
+      });
+
+      if (tokenError || !tokenData) {
+        throw new Error(tokenError?.message || 'Не удалось получить токен');
+      }
+
+      const { token, appId: serverAppId } = tokenData;
+      setAppId(serverAppId);
+
+      // Присоединяемся к каналу с токеном
+      await clientRef.current.join(serverAppId, channelName, token, userId);
 
       // Создаем локальный аудио трек
       const audioTrack = await AgoraRTC.createMicrophoneAudioTrack();
