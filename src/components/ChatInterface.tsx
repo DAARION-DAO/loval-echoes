@@ -202,7 +202,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
     if (isStreaming) return;
 
     try {
-      let fileIds: string[] = [];
+      const fileIds: string[] = [];
       
       // Загружаем файлы если есть
       if (attachedFiles.length > 0) {
