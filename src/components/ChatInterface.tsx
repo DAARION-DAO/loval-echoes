@@ -39,9 +39,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
   
   // Обработка TTS аудио из Dify stream
   const handleTTSMessage = async (tts: { audio: string; message_id: string }) => {
-    if (!voiceModeEnabled) return; // Озвучиваем только в голосовом режиме
-    
-    console.log('Playing TTS audio from Dify stream');
+    console.log('Playing TTS audio from Dify stream, voice mode:', voiceModeEnabled);
     try {
       // Конвертируем base64 в blob
       const binaryString = atob(tts.audio);
@@ -124,6 +122,66 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
     }
   }, [message]);
 
+  // Автоматическое озвучивание завершенного ответа агента в голосовом режиме
+  useEffect(() => {
+    if (!currentMessage?.isComplete || !voiceModeEnabled || isPlayingTTS) return;
+    
+    const speakResponse = async () => {
+      try {
+        console.log('Озвучивание ответа агента через TTS API...');
+        
+        const { data, error } = await supabase.functions.invoke('tts-api', {
+          body: { 
+            text: currentMessage.content,
+            voice: 'alloy'
+          }
+        });
+        
+        if (error) {
+          console.error('TTS API error:', error);
+          return;
+        }
+        
+        // Конвертируем base64 в blob и воспроизводим
+        const binaryString = atob(data.audioContent);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        const audioBlob = new Blob([bytes], { type: 'audio/mpeg' });
+        
+        const audioUrl = URL.createObjectURL(audioBlob);
+        const audio = new Audio(audioUrl);
+        audioElementRef.current = audio;
+        setIsPlayingTTS(true);
+        
+        audio.onended = () => {
+          setIsPlayingTTS(false);
+          URL.revokeObjectURL(audioUrl);
+          
+          // В голосовом режиме автоматически начинаем запись после воспроизведения
+          if (voiceModeEnabled && autoStopEnabled) {
+            setTimeout(() => {
+              startRecording();
+            }, 500);
+          }
+        };
+        
+        audio.onerror = () => {
+          setIsPlayingTTS(false);
+          URL.revokeObjectURL(audioUrl);
+        };
+        
+        await audio.play();
+      } catch (error) {
+        console.error('Error in TTS playback:', error);
+        setIsPlayingTTS(false);
+      }
+    };
+    
+    speakResponse();
+  }, [currentMessage?.isComplete, voiceModeEnabled, autoStopEnabled, isPlayingTTS]);
+
   // Конвертация аудио blob в WAV формат
   const convertToWav = async (blob: Blob): Promise<Blob> => {
     const arrayBuffer = await blob.arrayBuffer();
@@ -197,8 +255,9 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
   };
 
 
-  const handleSendMessage = async () => {
-    if (!message.trim() && attachedFiles.length === 0) return;
+  const handleSendMessage = async (textToSend?: string) => {
+    const messageText = textToSend || message;
+    if (!messageText.trim() && attachedFiles.length === 0) return;
     if (isStreaming) return;
 
     try {
@@ -222,7 +281,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
       }
 
       // Отправляем сообщение
-      await startStream(message, fileIds);
+      await startStream(messageText, fileIds);
       
       // Очищаем форму
       setMessage('');
@@ -471,20 +530,28 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
           const result = await difyClient.speechToText(audioBlob, 'audio/wav');
           if (result?.text) {
             const transcribedText = result.text.trim();
-            setMessage(prev => prev + (prev ? ' ' : '') + transcribedText);
             
-            toast({
-              title: 'Голос распознан',
-              description: voiceModeEnabled ? 'Отправляем сообщение...' : 'Текст добавлен в поле ввода',
-            });
-            
-        // Автоматически отправляем в голосовом режиме или при автостопе
-        if ((voiceModeEnabled || autoStopEnabled) && transcribedText) {
-          setTimeout(() => {
-            handleSendMessage();
-            setIsAutoStopped(false);
-          }, 500);
-        }
+            // В голосовом режиме или при автостопе отправляем автоматически
+            if ((voiceModeEnabled || isAutoStopped) && transcribedText) {
+              toast({
+                title: 'Голос распознан',
+                description: 'Отправляем сообщение...',
+              });
+              
+              // Отправляем напрямую транскрибированный текст
+              setTimeout(() => {
+                handleSendMessage(transcribedText);
+                setIsAutoStopped(false);
+              }, 300);
+            } else {
+              // Добавляем текст в поле ввода для ручной отправки
+              setMessage(prev => prev + (prev ? ' ' : '') + transcribedText);
+              
+              toast({
+                title: 'Голос распознан',
+                description: 'Текст добавлен в поле ввода',
+              });
+            }
           } else {
             toast({
               title: 'Голос не распознан',
@@ -790,7 +857,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
               </Button>
             ) : (
               <Button
-                onClick={handleSendMessage}
+                onClick={() => handleSendMessage()}
                 disabled={!message.trim() && attachedFiles.length === 0}
                 size="sm"
                 className="touch-target h-10 w-10 sm:h-11 sm:w-11 p-0 flex-shrink-0"
