@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': 'https://pbsdsdexayzfoexjdlgb.supabase.co',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
@@ -25,8 +25,36 @@ serve(async (req) => {
   try {
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      {
+        global: {
+          headers: { Authorization: req.headers.get('Authorization')! },
+        },
+      }
     );
+
+    // Verify user authentication
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+    
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Check if user has admin role (only admins can trigger task flow agent)
+    const { data: isAdmin } = await supabaseClient.rpc('has_role', {
+      _user_id: user.id,
+      _role: 'admin'
+    });
+
+    if (!isAdmin) {
+      return new Response(
+        JSON.stringify({ error: 'Forbidden: Admin role required' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     const now = new Date();
     const twentyFourHoursFromNow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
@@ -35,21 +63,9 @@ serve(async (req) => {
 
     console.log('Task Flow Agent: Starting scan...');
 
-    // Получаем все задачи
-    const { data: tasks, error: tasksError } = await supabaseClient
-      .from('kanban_cards')
-      .select('*')
-      .is('due_date', null)
-      .neq('column_type', 'done');
-
-    if (tasksError) {
-      console.error('Error fetching tasks:', tasksError);
-      throw tasksError;
-    }
-
     let notificationsCreated = 0;
 
-    // 1. Проверка дедлайнов (T-24h)
+    // 1. Check deadlines (T-24h)
     const { data: dueSoonTasks } = await supabaseClient
       .from('kanban_cards')
       .select('*')
@@ -59,7 +75,7 @@ serve(async (req) => {
       .lt('updated_at', fortyEightHoursAgo.toISOString());
 
     for (const task of dueSoonTasks || []) {
-      // Уведомление исполнителю
+      // Notify assignee
       if (task.assignee_id) {
         await supabaseClient.rpc('create_task_notification', {
           p_task_id: task.id,
@@ -71,7 +87,7 @@ serve(async (req) => {
         notificationsCreated++;
       }
 
-      // Уведомление создателю
+      // Notify creator
       if (task.created_by && task.created_by !== task.assignee_id) {
         await supabaseClient.rpc('create_task_notification', {
           p_task_id: task.id,
@@ -84,7 +100,7 @@ serve(async (req) => {
       }
     }
 
-    // 2. Задачи без исполнителя >24h
+    // 2. Tasks without assignee >24h
     const { data: unassignedTasks } = await supabaseClient
       .from('kanban_cards')
       .select('*')
@@ -105,7 +121,7 @@ serve(async (req) => {
       }
     }
 
-    // 3. Задачи "На проверке" >72h
+    // 3. Tasks "In review" >72h
     const { data: reviewTasks } = await supabaseClient
       .from('kanban_cards')
       .select('*')
@@ -125,7 +141,7 @@ serve(async (req) => {
       }
     }
 
-    // 4. Автоматические переходы статусов - просроченные задачи
+    // 4. Auto status transitions - overdue tasks
     const { data: overdueTasks } = await supabaseClient
       .from('kanban_cards')
       .select('*')
@@ -133,7 +149,7 @@ serve(async (req) => {
       .neq('column_type', 'done');
 
     for (const task of overdueTasks || []) {
-      // Создаем уведомление о просрочке
+      // Create overdue notification
       if (task.assignee_id) {
         await supabaseClient.rpc('create_task_notification', {
           p_task_id: task.id,
@@ -145,7 +161,7 @@ serve(async (req) => {
         notificationsCreated++;
       }
 
-      // Логируем событие
+      // Log event
       await supabaseClient.rpc('log_task_event', {
         p_event_type: 'task_overdue',
         p_task_id: task.id,
@@ -153,6 +169,17 @@ serve(async (req) => {
         p_metadata: { due_date: task.due_date },
       });
     }
+
+    // Log admin action
+    await supabaseClient.rpc('enhanced_log_security_event', {
+      p_user_id: user.id,
+      p_event_type: 'task_flow_agent_executed',
+      p_event_data: {
+        notifications_created: notificationsCreated,
+        timestamp: now.toISOString()
+      },
+      p_severity: 'info'
+    });
 
     console.log(`Task Flow Agent: Created ${notificationsCreated} notifications`);
 

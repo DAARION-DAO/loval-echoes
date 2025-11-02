@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': 'https://pbsdsdexayzfoexjdlgb.supabase.co',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
@@ -42,19 +42,59 @@ serve(async (req) => {
   try {
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
       {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
+        global: {
+          headers: { Authorization: req.headers.get('Authorization')! },
+        },
       }
     );
 
+    // Verify user authentication
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+    
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Check if user has admin role (only admins can bootstrap agents)
+    const { data: isAdmin } = await supabaseClient.rpc('has_role', {
+      _user_id: user.id,
+      _role: 'admin'
+    });
+
+    if (!isAdmin) {
+      return new Response(
+        JSON.stringify({ error: 'Forbidden: Admin role required' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const { userId, userEmail, displayName } = await req.json();
 
-    if (!userId) {
-      throw new Error('userId is required');
+    // Input validation
+    if (!userId || typeof userId !== 'string') {
+      return new Response(
+        JSON.stringify({ error: 'Invalid userId' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (!userEmail || typeof userEmail !== 'string' || !userEmail.includes('@') || userEmail.length > 255) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid userEmail' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (!displayName || typeof displayName !== 'string' || displayName.length > 100) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid displayName (max 100 chars)' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     console.log(`Bootstrapping agent for user ${userId} (${userEmail})`);
@@ -172,6 +212,19 @@ serve(async (req) => {
     }
 
     console.log(`Successfully bootstrapped agent for user ${userId}`);
+
+    // Log the bootstrap action
+    await supabaseClient.rpc('enhanced_log_security_event', {
+      p_user_id: user.id,
+      p_event_type: 'user_agent_bootstrapped',
+      p_event_data: {
+        target_user_id: userId,
+        agent_id: agent.id,
+        conversation_id: conversation.id,
+        agent_template: templateName
+      },
+      p_severity: 'info'
+    });
 
     return new Response(
       JSON.stringify({

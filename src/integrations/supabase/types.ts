@@ -1276,6 +1276,10 @@ export type Database = {
           conversation_id: string
         }[]
       }
+      grant_admin_role: {
+        Args: { p_granted_by: string; p_user_id: string }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1310,6 +1314,10 @@ export type Database = {
           p_user_id?: string
         }
         Returns: string
+      }
+      revoke_admin_role: {
+        Args: { p_revoked_by: string; p_user_id: string }
+        Returns: undefined
       }
       revoke_user_refresh_tokens: {
         Args: { p_user_id: string }

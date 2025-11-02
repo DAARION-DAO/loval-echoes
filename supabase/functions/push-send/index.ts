@@ -3,7 +3,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': 'https://pbsdsdexayzfoexjdlgb.supabase.co',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
@@ -106,34 +106,59 @@ serve(async (req) => {
   try {
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      {
+        global: {
+          headers: { Authorization: req.headers.get('Authorization')! },
+        },
+      }
     );
 
-    // Эта функция может быть вызвана внутренне или с авторизацией
-    const apiKey = req.headers.get('x-api-key');
-    const isInternalCall = apiKey === Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    // Verify user authentication
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
     
-    // Если это не внутренний вызов, требуется авторизация
-    if (!isInternalCall) {
-      const authHeader = req.headers.get('authorization');
-      if (!authHeader) {
-        return new Response('Unauthorized', { status: 401, headers: corsHeaders });
-      }
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Check if user has admin role (only admins can send push notifications)
+    const { data: isAdmin } = await supabase.rpc('has_role', {
+      _user_id: user.id,
+      _role: 'admin'
+    });
+
+    if (!isAdmin) {
+      return new Response(
+        JSON.stringify({ error: 'Forbidden: Admin role required' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const requestBody = await req.json();
     const { userId, title, body: messageBody, url, tag } = requestBody;
-    
-    // Если userId не указан, отправляем всем (только для внутренних вызовов)
-    const sendToAll = !userId && isInternalCall;
 
-    // Получаем подписки
+    // Input validation
+    if (!title || typeof title !== 'string' || title.length > 200) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid title (max 200 chars)' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (!messageBody || typeof messageBody !== 'string' || messageBody.length > 1000) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid body (max 1000 chars)' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Get push subscriptions
     let query = supabase.from('push_subscriptions').select('*');
     
-    if (!sendToAll) {
-      if (!userId) {
-        return new Response('userId required', { status: 400, headers: corsHeaders });
-      }
+    if (userId) {
       query = query.eq('user_id', userId);
     }
     
@@ -206,6 +231,19 @@ serve(async (req) => {
         failedEndpoints.push(subscription.endpoint);
       }
     }
+
+    // Log the admin action
+    await supabase.rpc('enhanced_log_security_event', {
+      p_user_id: user.id,
+      p_event_type: 'push_notification_sent',
+      p_event_data: {
+        target_user_id: userId,
+        title,
+        recipients_count: successCount,
+        failed_count: failedEndpoints.length
+      },
+      p_severity: 'info'
+    });
 
     return new Response(JSON.stringify({ 
       success: true,
