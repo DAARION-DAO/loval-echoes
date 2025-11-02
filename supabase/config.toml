@@ -43,14 +43,14 @@ port = 54322
 [functions.knowledge-base-api]
 
 [functions.task-flow-agent]
-verify_jwt = false
+verify_jwt = true
 
 [functions.bootstrap-user-agent]
-verify_jwt = false
+verify_jwt = true
 
 [functions.push-subscribe]
 
 [functions.push-send]
-verify_jwt = false
+verify_jwt = true
 
 [functions.agora-token]
