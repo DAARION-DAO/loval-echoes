@@ -1323,8 +1323,6 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: undefined
       }
-      show_limit: { Args: never; Returns: number }
-      show_trgm: { Args: { "": string }; Returns: string[] }
       validate_file_upload_security: {
         Args: {
           p_file_name: string
