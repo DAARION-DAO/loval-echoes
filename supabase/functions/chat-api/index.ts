@@ -1,26 +1,56 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
+import { getCorsHeaders, handleCors } from '../_shared/cors.ts';
+import { SafeTextSchema, validateInput } from '../_shared/validation.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+// Validation schemas
+const CreateChatSchema = z.object({
+  name: SafeTextSchema(200, 0).optional(), // name is optional
+});
 
 serve(async (req) => {
   console.log(`[chat-api] Request: ${req.method} ${req.url}`);
   
-  // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+  // Handle CORS
+  const corsResult = handleCors(req);
+  if (corsResult instanceof Response) {
+    return corsResult;
   }
+  const { headers, origin } = corsResult;
 
   try {
-    // Initialize Supabase client
+    // JWT верифікація - отримуємо користувача з токену
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: 'Відсутній токен авторизації' }), { 
+        status: 401, 
+        headers: { ...headers, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Створюємо клієнт з ANON_KEY та JWT токеном
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      {
+        global: {
+          headers: { Authorization: authHeader },
+        },
+      }
     );
+
+    // Верифікуємо користувача
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      console.log('[chat-api] Auth error:', authError);
+      return new Response(JSON.stringify({ error: 'Невірний або прострочений токен' }), { 
+        status: 401, 
+        headers: { ...headers, 'Content-Type': 'application/json' }
+      });
+    }
 
     const url = new URL(req.url);
     const method = req.method;
@@ -32,35 +62,13 @@ serve(async (req) => {
     // GET /chats - List all chats
     if (method === 'GET' && pathSegments.length === 3) { // functions/v1/chat-api
       console.log('[chat-api] Handling GET /chats');
-      
-      const authHeader = req.headers.get('authorization');
-      const token = authHeader?.replace('Bearer ', '');
-      
-      if (!token) {
-        console.log('[chat-api] No auth token provided');
-        return new Response(JSON.stringify({ error: 'Unauthorized' }), { 
-          status: 401, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
-      }
-      
-      // Get user from token
-      const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-      
-      if (authError || !user) {
-        console.log('[chat-api] Auth error:', authError);
-        return new Response(JSON.stringify({ error: 'Invalid token' }), { 
-          status: 401, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
-      }
 
       try {
-        // Fetch conversations from database
+        // Fetch conversations from database (з RLS захистом)
         const { data: conversations, error } = await supabase
           .from('conversations')
           .select('id, name, updated_at, created_at, dify_conversation_id')
-          .eq('user_id', user.id)
+          .eq('user_id', user.id) // RLS забезпечить що користувач бачить тільки свої чати
           .order('updated_at', { ascending: false });
 
         if (error) {
@@ -80,14 +88,14 @@ serve(async (req) => {
         console.log(`[chat-api] Found ${chats.length} chats for user ${user.id}`);
         
         return new Response(JSON.stringify(chats), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          headers: { ...headers, 'Content-Type': 'application/json' },
         });
         
       } catch (error) {
         console.error('[chat-api] Error fetching chats:', error);
         return new Response(JSON.stringify({ error: 'Failed to fetch chats' }), {
           status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          headers: { ...headers, 'Content-Type': 'application/json' },
         });
       }
     }
@@ -98,35 +106,27 @@ serve(async (req) => {
       
       try {
         const body = await req.json();
-        const { name } = body;
         
-        const authHeader = req.headers.get('authorization');
-        const token = authHeader?.replace('Bearer ', '');
-        
-        if (!token) {
-          console.log('[chat-api] No auth token for POST');
-          return new Response(JSON.stringify({ error: 'Unauthorized' }), { 
-            status: 401, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-          });
-        }
-        
-        const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-        
-        if (authError || !user) {
-          console.log('[chat-api] Auth error creating chat:', authError);
-          return new Response(JSON.stringify({ error: 'Invalid token' }), { 
-            status: 401, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        // Валідація вводу
+        const validationResult = validateInput(CreateChatSchema, body);
+        if (!validationResult.success) {
+          return new Response(JSON.stringify({ 
+            error: 'Помилка валідації',
+            details: validationResult.error.errors 
+          }), {
+            status: 400,
+            headers: { ...headers, 'Content-Type': 'application/json' }
           });
         }
 
-        // Create new conversation
+        const { name } = validationResult.data;
+
+        // Create new conversation (з RLS захистом)
         const { data: newChat, error } = await supabase
           .from('conversations')
           .insert({
             name: name || 'Новый чат',
-            user_id: user.id,
+            user_id: user.id, // RLS забезпечить що користувач може створювати тільки свої чати
           })
           .select('id, name, created_at, updated_at')
           .single();
@@ -139,7 +139,7 @@ serve(async (req) => {
         console.log('[chat-api] Created new chat:', newChat);
 
         return new Response(JSON.stringify(newChat), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          headers: { ...headers, 'Content-Type': 'application/json' },
         });
         
       } catch (error) {
@@ -149,7 +149,7 @@ serve(async (req) => {
           details: error instanceof Error ? error.message : 'Unknown error'
         }), {
           status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          headers: { ...headers, 'Content-Type': 'application/json' },
         });
       }
     }
@@ -162,7 +162,7 @@ serve(async (req) => {
       path: pathSegments 
     }), { 
       status: 404, 
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      headers: { ...headers, 'Content-Type': 'application/json' }
     });
 
   } catch (error) {
@@ -172,7 +172,7 @@ serve(async (req) => {
       details: error instanceof Error ? error.message : 'Unknown error'
     }), {
       status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...headers, 'Content-Type': 'application/json' },
     });
   }
 });

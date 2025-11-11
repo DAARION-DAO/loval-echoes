@@ -11,36 +11,52 @@ max_rows = 1000
 port = 54322
 
 [functions.projects-api]
+verify_jwt = true
 
 [functions.kanban-api]
+verify_jwt = true
 
 [functions.auth-security]
+verify_jwt = true
 
 [functions.chat-api]
+verify_jwt = true
 
 [functions.dify-client]
+verify_jwt = true
 
 [functions.feedback-api]
+verify_jwt = true
 
 [functions.file-api]
+verify_jwt = true
 
 [functions.file-validation]
+verify_jwt = true
 
 [functions.import-history]
+verify_jwt = true
 
 [functions.login-fix]
+verify_jwt = true
 
 [functions.news-reply]
+verify_jwt = true
 
 [functions.refresh]
+verify_jwt = true
 
 [functions.stt-api]
+verify_jwt = true
 
 [functions.tts-api]
+verify_jwt = true
 
 [functions.auto-register]
+verify_jwt = true
 
 [functions.knowledge-base-api]
+verify_jwt = true
 
 [functions.task-flow-agent]
 verify_jwt = true
@@ -49,8 +65,10 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.push-subscribe]
+verify_jwt = true
 
 [functions.push-send]
 verify_jwt = true
 
 [functions.agora-token]
+verify_jwt = true
