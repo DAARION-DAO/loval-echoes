@@ -1,33 +1,64 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { getCorsHeaders, handleCors } from '../_shared/cors.ts'
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts"
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
-
-interface AuthRequest {
-  action: 'login' | 'signup' | 'password_reset'
-  email: string
-  password?: string
-  displayName?: string
-  ipAddress?: string
-  userAgent?: string
-}
+// Валідація вводу
+const AuthRequestSchema = z.object({
+  action: z.enum(['login', 'signup', 'password_reset']),
+  email: z.string().email('Невірний формат email'),
+  password: z.string().optional(),
+  displayName: z.string().max(100).optional(),
+  ipAddress: z.string().optional(),
+  userAgent: z.string().optional(),
+}).refine(
+  (data) => {
+    // Password required for login and signup
+    if ((data.action === 'login' || data.action === 'signup') && !data.password) {
+      return false;
+    }
+    return true;
+  },
+  {
+    message: 'Пароль обов\'язковий для входу та реєстрації',
+    path: ['password'],
+  }
+);
 
 serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
+  // Handle CORS
+  const corsResult = handleCors(req);
+  if (corsResult instanceof Response) {
+    return corsResult;
   }
+  const { headers } = corsResult;
 
   try {
+    // Для auth-security service role key потрібен для створення користувачів
+    // Але додаємо валідацію та CORS захист
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const { action, email, password, displayName, ipAddress, userAgent }: AuthRequest = await req.json()
+    // Валідація вводу
+    const body = await req.json();
+    const validationResult = AuthRequestSchema.safeParse(body);
+    
+    if (!validationResult.success) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'Помилка валідації',
+          details: validationResult.error.errors 
+        }),
+        { 
+          status: 400,
+          headers: { ...headers, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    const { action, email, password, displayName, ipAddress, userAgent } = validationResult.data;
 
     // Get client IP if not provided
     const clientIP = ipAddress || req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown'
@@ -56,19 +87,7 @@ serve(async (req) => {
         }),
         { 
           status: 429,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      )
-    }
-
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(email)) {
-      return new Response(
-        JSON.stringify({ error: 'Неверный формат email адреса' }),
-        { 
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          headers: { ...headers, 'Content-Type': 'application/json' }
         }
       )
     }
@@ -81,7 +100,7 @@ serve(async (req) => {
           JSON.stringify({ error: 'Пароль должен содержать минимум 12 символов' }),
           { 
             status: 400,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            headers: { ...headers, 'Content-Type': 'application/json' }
           }
         )
       }
@@ -99,7 +118,7 @@ serve(async (req) => {
           }),
           { 
             status: 400,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            headers: { ...headers, 'Content-Type': 'application/json' }
           }
         )
       }
@@ -111,7 +130,7 @@ serve(async (req) => {
           }),
           { 
             status: 400,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            headers: { ...headers, 'Content-Type': 'application/json' }
           }
         )
       }
@@ -135,18 +154,17 @@ serve(async (req) => {
           }),
           { 
             status: 400,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            headers: { ...headers, 'Content-Type': 'application/json' }
           }
         )
       }
     }
 
-    // SIMPLIFIED: Skip logging for now to fix immediate issue
     console.log(`Processing ${action} for ${email} from ${clientIP}`)
 
     // Perform the actual authentication action
     let result
-    let redirectUrl = 'https://4411fba9-f975-4193-bebf-d5df27e57cfc.lovableproject.com/'
+    let redirectUrl = 'https://pbsdsdexayzfoexjdlgb.supabase.co/'
     
     // Try to get origin from headers, fallback to known URL
     const origin = req.headers.get('origin') || req.headers.get('referer')
@@ -211,12 +229,11 @@ serve(async (req) => {
         }),
         { 
           status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          headers: { ...headers, 'Content-Type': 'application/json' }
         }
       )
     }
 
-    // SIMPLIFIED: Skip logging for now to fix immediate issue
     console.log(`Auth ${action} successful for ${email}`)
 
     return new Response(
@@ -226,7 +243,7 @@ serve(async (req) => {
       }),
       { 
         status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        headers: { ...headers, 'Content-Type': 'application/json' }
       }
     )
 
@@ -239,7 +256,7 @@ serve(async (req) => {
       }),
       { 
         status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        headers: { ...headers, 'Content-Type': 'application/json' }
       }
     )
   }

@@ -1,24 +1,62 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { getCorsHeaders, handleCors } from '../_shared/cors.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const MAX_FILE_SIZE_MB = 25;
 
+// Валідація типів файлів
+const ALLOWED_FILE_TYPES = [
+  'text/plain',
+  'text/markdown',
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+];
+
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+  // Handle CORS
+  const corsResult = handleCors(req);
+  if (corsResult instanceof Response) {
+    return corsResult;
   }
+  const { headers } = corsResult;
 
   try {
+    // JWT верифікація
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Відсутній токен авторизації' }),
+        { status: 401, headers: { ...headers, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Створюємо клієнт з ANON_KEY та JWT токеном
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      {
+        global: {
+          headers: { Authorization: authHeader },
+        },
+      }
     );
+
+    // Верифікуємо користувача
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Невірний або прострочений токен' }),
+        { status: 401, headers: { ...headers, 'Content-Type': 'application/json' } }
+      );
+    }
 
     const url = new URL(req.url);
     const method = req.method;
@@ -26,55 +64,51 @@ serve(async (req) => {
 
     // POST /upload - загрузка файла
     if (method === 'POST' && pathParts[0] === 'upload') {
-      const authHeader = req.headers.get('authorization');
-      const token = authHeader?.replace('Bearer ', '');
-      const { data: { user } } = await supabase.auth.getUser(token);
-      
-      if (!user) {
-        return new Response('Unauthorized', { status: 401, headers: corsHeaders });
-      }
-
       const formData = await req.formData();
       const file = formData.get('file') as File;
       
       if (!file) {
-        return new Response('No file provided', { status: 400, headers: corsHeaders });
+        return new Response(
+          JSON.stringify({ error: 'Файл не надано' }),
+          { status: 400, headers: { ...headers, 'Content-Type': 'application/json' } }
+        );
       }
 
-      // Проверка размера файла
+      // Валідація розміру файла
       const fileSizeMB = file.size / (1024 * 1024);
       if (fileSizeMB > MAX_FILE_SIZE_MB) {
-        return new Response(`File too large. Maximum size: ${MAX_FILE_SIZE_MB}MB`, {
-          status: 400,
-          headers: corsHeaders,
-        });
+        return new Response(
+          JSON.stringify({ 
+            error: `Файл занадто великий. Максимальний розмір: ${MAX_FILE_SIZE_MB}MB` 
+          }),
+          {
+            status: 400,
+            headers: { ...headers, 'Content-Type': 'application/json' },
+          }
+        );
       }
 
-      // Проверка типа файла
-      const allowedTypes = [
-        'text/plain',
-        'text/markdown',
-        'application/pdf',
-        'application/msword',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'image/jpeg',
-        'image/png',
-        'image/webp',
-        'image/gif',
-      ];
-
-      if (!allowedTypes.includes(file.type)) {
-        return new Response('File type not allowed', {
-          status: 400,
-          headers: corsHeaders,
-        });
+      // Валідація типу файла
+      if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+        return new Response(
+          JSON.stringify({ error: 'Тип файлу не дозволений' }),
+          {
+            status: 400,
+            headers: { ...headers, 'Content-Type': 'application/json' },
+          }
+        );
       }
 
-      // Передаем файл в Dify
+      // Передаем файл в Dify (використовуємо service role тільки для виклику іншої функції)
+      const serviceSupabase = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      );
+
       const difyFormData = new FormData();
       difyFormData.append('file', file);
 
-      const response = await supabase.functions.invoke('dify-client', {
+      const response = await serviceSupabase.functions.invoke('dify-client', {
         body: {
           action: 'upload_file',
           formData: difyFormData,
@@ -85,7 +119,7 @@ serve(async (req) => {
         throw new Error(response.error.message);
       }
 
-      // Логирование
+      // Логирование (з RLS захистом через user context)
       await supabase
         .from('audit_log')
         .insert({
@@ -100,7 +134,7 @@ serve(async (req) => {
         });
 
       return new Response(JSON.stringify(response.data), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...headers, 'Content-Type': 'application/json' },
       });
     }
 
@@ -108,12 +142,13 @@ serve(async (req) => {
     if (method === 'GET' && pathParts.length === 2 && pathParts[1] === 'preview') {
       const fileId = pathParts[0];
       
-      const authHeader = req.headers.get('authorization');
-      const token = authHeader?.replace('Bearer ', '');
-      const { data: { user } } = await supabase.auth.getUser(token);
-      
-      if (!user) {
-        return new Response('Unauthorized', { status: 401, headers: corsHeaders });
+      // Валідація UUID
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(fileId)) {
+        return new Response(
+          JSON.stringify({ error: 'Невірний формат ID файлу' }),
+          { status: 400, headers: { ...headers, 'Content-Type': 'application/json' } }
+        );
       }
 
       try {
@@ -133,7 +168,7 @@ serve(async (req) => {
 
         return new Response(data, {
           headers: {
-            ...corsHeaders,
+            ...headers,
             'Content-Type': contentType,
             'Cache-Control': 'public, max-age=3600',
           },
@@ -141,17 +176,29 @@ serve(async (req) => {
 
       } catch (error) {
         console.error('Error getting file preview:', error);
-        return new Response('File not found', { status: 404, headers: corsHeaders });
+        return new Response(
+          JSON.stringify({ error: 'Файл не знайдено' }),
+          { status: 404, headers: { ...headers, 'Content-Type': 'application/json' } }
+        );
       }
     }
 
-    return new Response('Not found', { status: 404, headers: corsHeaders });
+    return new Response(
+      JSON.stringify({ error: 'Маршрут не знайдено' }),
+      { status: 404, headers: { ...headers, 'Content-Type': 'application/json' } }
+    );
 
   } catch (error) {
     console.error('Error in file-api:', error);
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return new Response(
+      JSON.stringify({ 
+        error: 'Внутрішня помилка сервера',
+        details: error instanceof Error ? error.message : 'Unknown error' 
+      }),
+      {
+        status: 500,
+        headers: { ...headers, 'Content-Type': 'application/json' },
+      }
+    );
   }
 });

@@ -1,10 +1,17 @@
 // Shared CORS utility for all edge functions
-// Замініть на ваші production домени
+// Дозволені домени для CORS
 export const ALLOWED_ORIGINS = [
+  // Supabase проект
   'https://pbsdsdexayzfoexjdlgb.supabase.co',
-  // Додайте ваш production домен тут:
+  // Local development
+  'http://localhost:8080',
+  'http://localhost:5173',
+  'http://127.0.0.1:8080',
+  'http://127.0.0.1:5173',
+  // Додайте ваші production домени тут:
   // 'https://your-app.com',
   // 'https://www.your-app.com',
+  // 'https://app.your-domain.com',
 ];
 
 export const getCorsHeaders = (origin: string | null) => {
