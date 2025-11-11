@@ -601,14 +601,17 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
             description: 'Транскрибируем аудио...',
           });
           
+          console.log('Calling speechToText API with blob size:', audioBlob.size, 'type:', mimeType);
           const result = await difyClient.speechToText(audioBlob, 'audio/wav');
+          console.log('SpeechToText result:', result);
+          
           if (result?.text) {
             const transcribedText = result.text.trim();
+            console.log('Transcribed text:', transcribedText);
             
-            // В голосовом режиме или при автостопе отправляем автоматически
-            // Якщо автостоп спрацював, завжди відправляємо автоматично
+            // Відправляємо повідомлення ТІЛЬКИ якщо це був автостоп (після 2.5 секунд мовчання)
             if (wasAutoStopped && transcribedText) {
-              console.log('Auto-stopped recording, sending message automatically:', transcribedText);
+              console.log('Auto-stopped recording (2.5s silence), sending message automatically:', transcribedText);
               toast({
                 title: 'Голос распознан',
                 description: 'Отправляем сообщение...',
@@ -624,21 +627,9 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
                 }
                 setIsAutoStopped(false);
               }, 300);
-            } else if (currentVoiceMode && transcribedText) {
-              // В голосовом режиме также отправляем автоматически
-              console.log('Voice mode enabled, sending message automatically:', transcribedText);
-              toast({
-                title: 'Голос распознан',
-                description: 'Отправляем сообщение...',
-              });
-              
-              setTimeout(() => {
-                if (handleSendMessageRef.current) {
-                  handleSendMessageRef.current(transcribedText);
-                }
-              }, 300);
             } else {
-              // Добавляем текст в поле ввода для ручной отправки
+              // Якщо запис зупинено вручну (не автостоп), додаємо текст в поле вводу
+              console.log('Recording stopped manually, adding text to input field');
               setMessage(prev => prev + (prev ? ' ' : '') + transcribedText);
               
               toast({
@@ -647,6 +638,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
               });
             }
           } else {
+            console.warn('No text in speechToText result:', result);
             toast({
               title: 'Голос не распознан',
               description: 'Попробуйте говорить четче или проверьте микрофон',
@@ -656,6 +648,13 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
         } catch (error) {
           console.error('Error transcribing audio:', error);
           const errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';
+          console.error('Full error details:', {
+            error,
+            message: errorMessage,
+            stack: error instanceof Error ? error.stack : undefined,
+            audioBlobSize: audioBlob.size,
+            mimeType,
+          });
           
           // Check if it's a format error
           if (errorMessage.includes('415') || errorMessage.includes('Unsupported')) {
