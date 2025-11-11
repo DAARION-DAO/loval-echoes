@@ -1,10 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { getCorsHeaders, handleCors } from '../_shared/cors.ts'
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts"
 
 // Auto-approved users who can use instant registration
 const autoApprovedEmails = [
@@ -16,13 +13,46 @@ const autoApprovedEmails = [
   'developer@zhos.com'
 ]
 
+// Валідація вводу
+const AutoRegisterSchema = z.object({
+  email: z.string().email('Невірний формат email'),
+  password: z.string()
+    .min(12, 'Пароль має містити мінімум 12 символів')
+    .max(200, 'Пароль занадто довгий')
+    .refine(
+      (pwd) => /[A-Z]/.test(pwd) && /[a-z]/.test(pwd) && /\d/.test(pwd),
+      'Пароль має містити великі та малі літери, а також цифри'
+    ),
+  displayName: z.string().max(100).optional(),
+});
+
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
+  // Handle CORS
+  const corsResult = handleCors(req);
+  if (corsResult instanceof Response) {
+    return corsResult;
   }
+  const { headers } = corsResult;
 
   try {
-    const { email, password, displayName } = await req.json()
+    // Валідація вводу
+    const body = await req.json();
+    const validationResult = AutoRegisterSchema.safeParse(body);
+    
+    if (!validationResult.success) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'Помилка валідації',
+          details: validationResult.error.errors 
+        }),
+        { 
+          status: 400,
+          headers: { ...headers, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    const { email, password, displayName } = validationResult.data;
 
     // Check if email is in auto-approved list
     if (!autoApprovedEmails.includes(email.toLowerCase())) {
@@ -32,11 +62,12 @@ serve(async (req) => {
         }),
         { 
           status: 403,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          headers: { ...headers, 'Content-Type': 'application/json' }
         }
       )
     }
 
+    // Service role потрібен для admin операцій (створення користувачів)
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
@@ -52,7 +83,7 @@ serve(async (req) => {
 
     // Try to find existing user by email
     const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers()
-    const existingUser = existingUsers?.users.find(u => u.email === email)
+    const existingUser = existingUsers?.users.find(u => u.email?.toLowerCase() === email.toLowerCase())
 
     if (existingUser) {
       console.log(`Found existing user: ${existingUser.id}`)
@@ -72,7 +103,7 @@ serve(async (req) => {
           JSON.stringify({ error: `Ошибка обновления пользователя: ${updateError.message}` }),
           { 
             status: 500,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            headers: { ...headers, 'Content-Type': 'application/json' }
           }
         )
       }
@@ -113,7 +144,7 @@ serve(async (req) => {
           JSON.stringify({ error: `Ошибка создания пользователя: ${createError.message}` }),
           { 
             status: 500,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            headers: { ...headers, 'Content-Type': 'application/json' }
           }
         )
       }
@@ -156,7 +187,7 @@ serve(async (req) => {
         }),
         { 
           status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          headers: { ...headers, 'Content-Type': 'application/json' }
         }
       )
     }
@@ -171,7 +202,7 @@ serve(async (req) => {
       }),
       { 
         status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        headers: { ...headers, 'Content-Type': 'application/json' }
       }
     )
 
@@ -180,11 +211,12 @@ serve(async (req) => {
     
     return new Response(
       JSON.stringify({ 
-        error: 'Внутренняя ошибка сервера' 
+        error: 'Внутренняя ошибка сервера',
+        details: error instanceof Error ? error.message : 'Unknown error'
       }),
       { 
         status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        headers: { ...headers, 'Content-Type': 'application/json' }
       }
     )
   }
