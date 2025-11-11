@@ -20,7 +20,10 @@ import { useUserProfile } from '@/hooks/useUserProfile';
 import { useToast } from '@/hooks/use-toast';
 import { ThemeSwitch } from '@/components/ThemeSwitch';
 import { supabase } from '@/integrations/supabase/client';
-import { Bell } from 'lucide-react';
+import { Bell, MessageSquare, CheckCircle2, XCircle } from 'lucide-react';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export const Settings = () => {
   const { t, language, setLanguage } = useTranslation();
@@ -32,31 +35,50 @@ export const Settings = () => {
     localStorage.getItem('zhos-principles-banner-dismissed') !== 'true'
   );
   const [displayName, setDisplayName] = useState(profile?.display_name || '');
-  const [newsPushEnabled, setNewsPushEnabled] = useState(true);
+  
+  // Push notifications hook
+  const {
+    pushEnabled,
+    permissionStatus,
+    settings: pushSettings,
+    requestPermission,
+    saveSettings: savePushSettings,
+  } = usePushNotifications();
+  
+  const [chats, setChats] = useState<Array<{ id: string; name: string }>>([]);
+  const [loadingChats, setLoadingChats] = useState(false);
 
-  // Sync displayName and newsPushEnabled with profile when it loads
+  // Sync displayName with profile when it loads
   useEffect(() => {
     if (profile?.display_name) {
       setDisplayName(profile.display_name);
     }
-    
-    // Fetch news_push_enabled from profiles table
-    const fetchNewsPushSetting = async () => {
-      if (!user?.id) return;
+  }, [profile]);
+
+  // Load chats for push notification selection
+  useEffect(() => {
+    const loadChats = async () => {
+      if (!user) return;
       
-      const { data } = await supabase
-        .from('profiles')
-        .select('news_push_enabled')
-        .eq('user_id', user.id)
-        .single();
-      
-      if (data) {
-        setNewsPushEnabled(data.news_push_enabled ?? true);
+      try {
+        setLoadingChats(true);
+        const { data, error } = await supabase
+          .from('conversations')
+          .select('id, name')
+          .order('updated_at', { ascending: false })
+          .limit(50);
+
+        if (error) throw error;
+        setChats(data || []);
+      } catch (error) {
+        console.error('Error loading chats:', error);
+      } finally {
+        setLoadingChats(false);
       }
     };
-    
-    fetchNewsPushSetting();
-  }, [profile, user]);
+
+    loadChats();
+  }, [user]);
 
 
   const handlePrinciplesBannerToggle = (enabled: boolean) => {
@@ -77,31 +99,16 @@ export const Settings = () => {
   };
 
   const handleNewsPushToggle = async (enabled: boolean) => {
-    setNewsPushEnabled(enabled);
+    await savePushSettings({ news_enabled: enabled });
+  };
+
+  const handleChatToggle = (chatId: string, enabled: boolean) => {
+    const currentChats = pushSettings.chat_notifications || [];
+    const newChats = enabled
+      ? [...currentChats, chatId]
+      : currentChats.filter(id => id !== chatId);
     
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ news_push_enabled: enabled })
-        .eq('user_id', user?.id);
-
-      if (error) throw error;
-
-      toast({
-        title: enabled ? 'Push-сповіщення увімкнено' : 'Push-сповіщення вимкнено',
-        description: enabled 
-          ? 'Ви отримуватимете сповіщення про нові новини' 
-          : 'Ви більше не отримуватимете сповіщення про новини',
-      });
-    } catch (error) {
-      console.error('Error updating news push settings:', error);
-      setNewsPushEnabled(!enabled); // Revert on error
-      toast({
-        title: 'Помилка',
-        description: 'Не вдалося оновити налаштування сповіщень',
-        variant: 'destructive'
-      });
-    }
+    savePushSettings({ chat_notifications: newChats });
   };
 
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -282,20 +289,101 @@ export const Settings = () => {
 
           <Separator />
 
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label className="text-base flex items-center gap-2">
-                <Bell className="h-4 w-4" />
-                Push-сповіщення в новинах
-              </Label>
-              <p className="text-sm text-muted-foreground">
-                Отримувати сповіщення про нові термінові новини в реальному часі
-              </p>
+          {/* Push Notifications Section */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label className="text-base flex items-center gap-2">
+                  <Bell className="h-4 w-4" />
+                  Push-сповіщення
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Налаштування push-сповіщень для браузера
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                {permissionStatus === 'granted' ? (
+                  <CheckCircle2 className="h-5 w-5 text-green-500" />
+                ) : permissionStatus === 'denied' ? (
+                  <XCircle className="h-5 w-5 text-red-500" />
+                ) : null}
+                {!pushEnabled && permissionStatus !== 'denied' && (
+                  <Button size="sm" onClick={requestPermission}>
+                    Увімкнути
+                  </Button>
+                )}
+              </div>
             </div>
-            <Switch
-              checked={newsPushEnabled}
-              onCheckedChange={handleNewsPushToggle}
-            />
+
+            {permissionStatus === 'denied' && (
+              <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-md text-sm text-red-600 dark:text-red-400">
+                Доступ заборонено. Дозвольте сповіщення в налаштуваннях браузера.
+              </div>
+            )}
+
+            {pushEnabled && (
+              <>
+                <Separator />
+                
+                {/* News Feed Notifications */}
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label className="text-base flex items-center gap-2">
+                      <Bell className="h-4 w-4" />
+                      Новостна стрічка
+                    </Label>
+                    <p className="text-sm text-muted-foreground">
+                      Отримувати сповіщення про нові термінові новини
+                    </p>
+                  </div>
+                  <Switch
+                    checked={pushSettings.news_enabled}
+                    onCheckedChange={handleNewsPushToggle}
+                  />
+                </div>
+
+                <Separator />
+
+                {/* Chat Notifications */}
+                <div className="space-y-3">
+                  <div className="space-y-0.5">
+                    <Label className="text-base flex items-center gap-2">
+                      <MessageSquare className="h-4 w-4" />
+                      Сповіщення з чатів
+                    </Label>
+                    <p className="text-sm text-muted-foreground">
+                      Оберіть чати, з яких ви хочете отримувати сповіщення
+                    </p>
+                  </div>
+                  
+                  {loadingChats ? (
+                    <div className="text-sm text-muted-foreground">Завантаження чатів...</div>
+                  ) : chats.length === 0 ? (
+                    <div className="text-sm text-muted-foreground">У вас поки немає чатів</div>
+                  ) : (
+                    <ScrollArea className="h-48 border rounded-md p-3">
+                      <div className="space-y-2">
+                        {chats.map((chat) => (
+                          <div key={chat.id} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`chat-${chat.id}`}
+                              checked={pushSettings.chat_notifications?.includes(chat.id) || false}
+                              onCheckedChange={(checked) => handleChatToggle(chat.id, checked as boolean)}
+                            />
+                            <Label
+                              htmlFor={`chat-${chat.id}`}
+                              className="text-sm font-normal cursor-pointer flex-1"
+                            >
+                              {chat.name || `Чат ${chat.id.slice(0, 8)}`}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  )}
+                </div>
+              </>
+            )}
           </div>
 
           <Separator />

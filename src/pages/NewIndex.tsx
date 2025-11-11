@@ -24,6 +24,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useCommunityStats } from '@/hooks/useCommunityStats';
 import { toast } from '@/hooks/use-toast';
 import { createChat } from '@/services/chats';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 
 export const NewIndex = () => {
   const { t } = useTranslation();
@@ -34,6 +35,9 @@ export const NewIndex = () => {
   const [searchDialogOpen, setSearchDialogOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [showVideoIntro, setShowVideoIntro] = useState(true);
+  
+  // Initialize push notifications (will auto-request permission)
+  usePushNotifications();
 
   const handleCreateSubmit = async (data: CreateFormData) => {
     if (isCreating) return;
