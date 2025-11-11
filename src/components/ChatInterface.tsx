@@ -37,6 +37,17 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
   const { t } = useTranslation();
   const { toast } = useToast();
   
+  // Оголошуємо всі state змінні перед їх використанням
+  const [voiceModeEnabled, setVoiceModeEnabled] = useState(true); // Увімкнено за замовчуванням
+  const [autoStopEnabled, setAutoStopEnabled] = useState(true);
+  const [isPlayingTTS, setIsPlayingTTS] = useState(false);
+  const [isAutoStopped, setIsAutoStopped] = useState(false);
+  const [silenceProgress, setSilenceProgress] = useState(0);
+  const audioElementRef = useRef<HTMLAudioElement | null>(null);
+  const isAutoStoppedRef = useRef<boolean>(false);
+  const handleSendMessageRef = useRef<((textToSend?: string) => Promise<void>) | null>(null);
+  const startRecordingRef = useRef<(() => Promise<void>) | null>(null);
+  
   // Обработка TTS аудио из Dify stream
   const handleTTSMessage = useCallback(async (tts: { audio: string; message_id: string }) => {
     console.log('Playing TTS audio from Dify stream, voice mode:', voiceModeEnabled);
@@ -66,7 +77,10 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
         if (shouldAutoRecord) {
           console.log('TTS from Dify stream ended, starting recording automatically...');
           setTimeout(() => {
-            startRecording();
+            // Використовуємо ref для доступу до startRecording
+            if (startRecordingRef.current) {
+              startRecordingRef.current();
+            }
           }, 500);
         }
       };
@@ -138,11 +152,6 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [audioLevel, setAudioLevel] = useState(0);
-  const [autoStopEnabled, setAutoStopEnabled] = useState(true);
-  const [voiceModeEnabled, setVoiceModeEnabled] = useState(true); // Увімкнено за замовчуванням
-  const [isPlayingTTS, setIsPlayingTTS] = useState(false);
-  const [isAutoStopped, setIsAutoStopped] = useState(false);
-  const [silenceProgress, setSilenceProgress] = useState(0);
   
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -153,9 +162,6 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
   const silenceStartRef = useRef<number>(0);
   const recordingStartRef = useRef<number>(0);
   const animationFrameRef = useRef<number>(0);
-  const audioElementRef = useRef<HTMLAudioElement | null>(null);
-  const isAutoStoppedRef = useRef<boolean>(false); // Ref для збереження стану автостопу
-  const handleSendMessageRef = useRef<((textToSend?: string) => Promise<void>) | null>(null);
 
   // Автоматическое изменение высоты textarea
   useEffect(() => {
@@ -235,7 +241,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
     };
     
     speakResponse();
-  }, [currentMessage?.isComplete, currentMessage?.content, voiceModeEnabled, autoStopEnabled, isPlayingTTS, startRecording]);
+  }, [currentMessage?.isComplete, currentMessage?.content, voiceModeEnabled, autoStopEnabled, isPlayingTTS]);
 
   // Конвертация аудио blob в WAV формат
   const convertToWav = async (blob: Blob): Promise<Blob> => {
@@ -743,7 +749,12 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
         });
       }
     }
-  }, [toast, autoStopEnabled, voiceModeEnabled]);
+  }, [toast, autoStopEnabled, voiceModeEnabled, handleSendMessage]);
+
+  // Зберігаємо startRecording в ref для використання в async callbacks
+  useEffect(() => {
+    startRecordingRef.current = startRecording;
+  }, [startRecording]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
