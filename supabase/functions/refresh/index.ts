@@ -1,16 +1,14 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-refresh-token',
-}
+import { getCorsHeaders, handleCors } from '../_shared/cors.ts'
 
 serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+  // Handle CORS
+  const corsResult = handleCors(req);
+  if (corsResult instanceof Response) {
+    return corsResult;
   }
+  const { headers } = corsResult;
 
   try {
     const refreshToken = req.headers.get('x-refresh-token');
@@ -44,7 +42,7 @@ serve(async (req) => {
         message: 'Сессия истекла, необходимо войти заново'
       }), { 
         status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        headers: { ...headers, 'Content-Type': 'application/json' }
       });
     }
 
@@ -55,7 +53,7 @@ serve(async (req) => {
       success: true
     }), { 
       status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      headers: { ...headers, 'Content-Type': 'application/json' }
     });
 
   } catch (error) {
@@ -66,7 +64,7 @@ serve(async (req) => {
       message: 'Внутренняя ошибка сервера'
     }), { 
       status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      headers: { ...headers, 'Content-Type': 'application/json' }
     });
   }
 })

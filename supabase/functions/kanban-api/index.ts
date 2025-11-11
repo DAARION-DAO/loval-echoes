@@ -1,10 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { getCorsHeaders, handleCors } from '../_shared/cors.ts';
 
 interface KanbanCard {
   id?: string;
@@ -19,10 +15,12 @@ interface KanbanCard {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+  // Handle CORS
+  const corsResult = handleCors(req);
+  if (corsResult instanceof Response) {
+    return corsResult;
   }
+  const { headers } = corsResult;
 
   try {
     const supabaseClient = createClient(
@@ -41,7 +39,7 @@ serve(async (req) => {
         JSON.stringify({ error: 'Unauthorized' }),
         { 
           status: 401, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          headers: { ...headers, 'Content-Type': 'application/json' } 
         }
       );
     }
@@ -58,7 +56,7 @@ serve(async (req) => {
             JSON.stringify({ error: 'project_id is required' }),
             { 
               status: 400, 
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+              headers: { ...headers, 'Content-Type': 'application/json' } 
             }
           );
         }
@@ -79,7 +77,7 @@ serve(async (req) => {
             JSON.stringify({ error: 'Failed to fetch cards' }),
             { 
               status: 500, 
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+              headers: { ...headers, 'Content-Type': 'application/json' } 
             }
           );
         }
@@ -88,7 +86,7 @@ serve(async (req) => {
           JSON.stringify({ data: cards }),
           { 
             status: 200, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+            headers: { ...headers, 'Content-Type': 'application/json' } 
           }
         );
       }
@@ -101,7 +99,7 @@ serve(async (req) => {
             JSON.stringify({ error: 'project_id and title are required' }),
             { 
               status: 400, 
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+              headers: { ...headers, 'Content-Type': 'application/json' } 
             }
           );
         }
@@ -138,7 +136,7 @@ serve(async (req) => {
             JSON.stringify({ error: 'Failed to create card' }),
             { 
               status: 500, 
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+              headers: { ...headers, 'Content-Type': 'application/json' } 
             }
           );
         }
@@ -147,7 +145,7 @@ serve(async (req) => {
           JSON.stringify({ data: newCard }),
           { 
             status: 201, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+            headers: { ...headers, 'Content-Type': 'application/json' } 
           }
         );
       }
@@ -158,7 +156,7 @@ serve(async (req) => {
             JSON.stringify({ error: 'Card ID is required' }),
             { 
               status: 400, 
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+              headers: { ...headers, 'Content-Type': 'application/json' } 
             }
           );
         }
@@ -198,7 +196,7 @@ serve(async (req) => {
             JSON.stringify({ error: 'Failed to update card' }),
             { 
               status: 500, 
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+              headers: { ...headers, 'Content-Type': 'application/json' } 
             }
           );
         }
@@ -207,7 +205,7 @@ serve(async (req) => {
           JSON.stringify({ data: updatedCard }),
           { 
             status: 200, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+            headers: { ...headers, 'Content-Type': 'application/json' } 
           }
         );
       }
@@ -218,7 +216,7 @@ serve(async (req) => {
             JSON.stringify({ error: 'Card ID is required' }),
             { 
               status: 400, 
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+              headers: { ...headers, 'Content-Type': 'application/json' } 
             }
           );
         }
@@ -234,7 +232,7 @@ serve(async (req) => {
             JSON.stringify({ error: 'Failed to delete card' }),
             { 
               status: 500, 
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+              headers: { ...headers, 'Content-Type': 'application/json' } 
             }
           );
         }
@@ -243,7 +241,7 @@ serve(async (req) => {
           JSON.stringify({ success: true }),
           { 
             status: 200, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+            headers: { ...headers, 'Content-Type': 'application/json' } 
           }
         );
       }
@@ -253,7 +251,7 @@ serve(async (req) => {
           JSON.stringify({ error: 'Method not allowed' }),
           { 
             status: 405, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+            headers: { ...headers, 'Content-Type': 'application/json' } 
           }
         );
     }
@@ -263,7 +261,7 @@ serve(async (req) => {
       JSON.stringify({ error: 'Internal server error' }),
       { 
         status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        headers: { ...headers, 'Content-Type': 'application/json' } 
       }
     );
   }

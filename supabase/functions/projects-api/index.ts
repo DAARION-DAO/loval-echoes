@@ -1,16 +1,14 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { getCorsHeaders, handleCors } from '../_shared/cors.ts';
 
 serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+  // Handle CORS
+  const corsResult = handleCors(req);
+  if (corsResult instanceof Response) {
+    return corsResult;
   }
+  const { headers } = corsResult;
 
   try {
     const supabaseClient = createClient(
@@ -29,7 +27,7 @@ serve(async (req) => {
       console.error('Authentication error:', authError);
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+        { status: 401, headers: { 'Content-Type': 'application/json', ...headers } }
       );
     }
 
@@ -64,14 +62,14 @@ serve(async (req) => {
           console.error('Error fetching projects:', error);
           return new Response(
             JSON.stringify({ error: 'Failed to fetch projects' }),
-            { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+            { status: 500, headers: { 'Content-Type': 'application/json', ...headers } }
           );
         }
 
         console.log('Projects fetched:', projects?.length);
         return new Response(
           JSON.stringify({ projects }),
-          { headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+          { headers: { 'Content-Type': 'application/json', ...headers } }
         );
       }
     }
@@ -84,7 +82,7 @@ serve(async (req) => {
       if (!name) {
         return new Response(
           JSON.stringify({ error: 'Project name is required' }),
-          { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+          { status: 400, headers: { 'Content-Type': 'application/json', ...headers } }
         );
       }
 
@@ -107,7 +105,7 @@ serve(async (req) => {
         console.error('Error creating project:', projectError);
         return new Response(
           JSON.stringify({ error: 'Failed to create project' }),
-          { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+          { status: 500, headers: { 'Content-Type': 'application/json', ...headers } }
         );
       }
 
@@ -131,27 +129,27 @@ serve(async (req) => {
         await supabaseClient.from('conversations').delete().eq('id', project.id);
         return new Response(
           JSON.stringify({ error: 'Failed to add participants' }),
-          { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+          { status: 500, headers: { 'Content-Type': 'application/json', ...headers } }
         );
       }
 
       console.log('Project created successfully:', project.id);
       return new Response(
         JSON.stringify({ project }),
-        { headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+        { headers: { 'Content-Type': 'application/json', ...headers } }
       );
     }
 
     return new Response(
       JSON.stringify({ error: 'Method not allowed' }),
-      { status: 405, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      { status: 405, headers: { 'Content-Type': 'application/json', ...headers } }
     );
 
   } catch (error) {
     console.error('Unexpected error:', error);
     return new Response(
       JSON.stringify({ error: 'Internal server error' }),
-      { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      { status: 500, headers: { 'Content-Type': 'application/json', ...headers } }
     );
   }
 });

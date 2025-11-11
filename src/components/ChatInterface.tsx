@@ -656,23 +656,51 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
             mimeType,
           });
           
+          // Перевіряємо чи це помилка від API
+          let apiError = null;
+          if (error instanceof Error && error.message.includes('HTTP')) {
+            try {
+              const match = error.message.match(/HTTP (\d+): (.+)/);
+              if (match) {
+                const status = parseInt(match[1]);
+                const errorText = match[2];
+                apiError = { status, text: errorText };
+                console.error('API Error:', apiError);
+              }
+            } catch (e) {
+              // Ignore parsing errors
+            }
+          }
+          
           // Check if it's a format error
-          if (errorMessage.includes('415') || errorMessage.includes('Unsupported')) {
+          if (errorMessage.includes('415') || errorMessage.includes('Unsupported') || (apiError && apiError.status === 415)) {
             toast({
               title: 'Ошибка формата аудио',
               description: 'Не удалось конвертировать аудио. Попробуйте другой браузер.',
               variant: 'destructive',
             });
-          } else if (errorMessage.includes('Speech to text is not enabled')) {
+          } else if (errorMessage.includes('Speech to text is not enabled') || (apiError && apiError.status === 403)) {
             toast({
               title: 'Голосовой ввод недоступен',
               description: 'В настоящий момент функция преобразования речи в текст отключена. Используйте текстовый ввод.',
               variant: 'destructive',
             });
+          } else if (apiError && apiError.status === 401) {
+            toast({
+              title: 'Ошибка авторизации',
+              description: 'Не удалось авторизоваться. Попробуйте перезайти.',
+              variant: 'destructive',
+            });
+          } else if (apiError && apiError.status >= 500) {
+            toast({
+              title: 'Ошибка сервера',
+              description: 'Сервер временно недоступен. Попробуйте позже.',
+              variant: 'destructive',
+            });
           } else {
             toast({
               title: 'Ошибка голосового ввода',
-              description: 'Не удалось распознать речь. Попробуйте еще раз.',
+              description: apiError?.text || 'Не удалось распознать речь. Попробуйте еще раз.',
               variant: 'destructive',
             });
           }
