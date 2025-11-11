@@ -143,7 +143,13 @@ export const CommunityChat = () => {
         },
         (payload) => {
           console.log('[CommunityChat] New message received via realtime:', payload.new);
-          const newMessage = payload.new as any;
+          const newMessage = payload.new as {
+            id: string;
+            content: string;
+            sender_name?: string;
+            created_at: string;
+            role?: string;
+          };
           
           const communityMessage: CommunityMessage = {
             id: newMessage.id,

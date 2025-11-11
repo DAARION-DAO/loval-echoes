@@ -108,7 +108,7 @@ export const ChatSidebar = () => {
       }));
       
       setChats(chats);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error loading chats:", error);
       toast({
         title: "Ошибка",

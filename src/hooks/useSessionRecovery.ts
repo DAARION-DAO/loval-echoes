@@ -61,9 +61,10 @@ export const useSessionRecovery = () => {
 
   useEffect(() => {
     // Handle auth errors and expired tokens
-    const handleAuthError = (error: any) => {
-      if (error?.message?.includes('JWT expired') || 
-          error?.message?.includes('refresh_token_not_found')) {
+    const handleAuthError = (error: unknown) => {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage.includes('JWT expired') || 
+          errorMessage.includes('refresh_token_not_found')) {
         console.log('Session expired, redirecting to login...');
         
         toast({

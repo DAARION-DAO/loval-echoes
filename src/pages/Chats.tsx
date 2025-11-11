@@ -41,9 +41,10 @@ export const ChatsPage = () => {
       setLoading(true);
       const chatList = await fetchChats();
       setChats(chatList);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading chats:', error);
-      const friendlyMessage = mapDifyError(error.message || 'Unknown error');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const friendlyMessage = mapDifyError(errorMessage);
       toast({
         title: "Ошибка",
         description: friendlyMessage,
@@ -64,9 +65,10 @@ export const ChatsPage = () => {
         title: "Чат создан",
         description: 'Чат создан успешно',
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating chat:', error);
-      const friendlyMessage = mapDifyError(error.message || 'Unknown error');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const friendlyMessage = mapDifyError(errorMessage);
       toast({
         title: "Ошибка",
         description: friendlyMessage,

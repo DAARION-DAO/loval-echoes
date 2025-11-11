@@ -8,21 +8,24 @@ import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 
+import { lazy, Suspense } from "react";
 import { ChatsPage } from "./pages/Chats";
-import { ChatsManagement } from "./pages/ChatsManagement";
-import { ChatPage } from "./pages/Chat";
 import { Auth } from "./pages/Auth";
-import NotFound from "./pages/NotFound";
 import { NewIndex } from "./pages/NewIndex";
-import { ImportPage } from "./pages/Import";
-import { Settings } from "./pages/Settings";
-import { Participants } from "./pages/Participants";
-import NewsPage from "./pages/News";
-import Projects from "./pages/Projects";
-import ProjectDetail from "./pages/ProjectDetail";
-import KnowledgeBase from "./pages/KnowledgeBase";
-import MyTasks from "./pages/MyTasks";
-import Agents from "./pages/Agents";
+
+// Lazy load heavy components
+const ChatsManagement = lazy(() => import("./pages/ChatsManagement").then(m => ({ default: m.ChatsManagement })));
+const ChatPage = lazy(() => import("./pages/Chat").then(m => ({ default: m.ChatPage })));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const ImportPage = lazy(() => import("./pages/Import").then(m => ({ default: m.ImportPage })));
+const Settings = lazy(() => import("./pages/Settings").then(m => ({ default: m.Settings })));
+const Participants = lazy(() => import("./pages/Participants").then(m => ({ default: m.Participants })));
+const NewsPage = lazy(() => import("./pages/News"));
+const Projects = lazy(() => import("./pages/Projects"));
+const ProjectDetail = lazy(() => import("./pages/ProjectDetail"));
+const KnowledgeBase = lazy(() => import("./pages/KnowledgeBase"));
+const MyTasks = lazy(() => import("./pages/MyTasks"));
+const Agents = lazy(() => import("./pages/Agents"));
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { Layout } from "./components/Layout";
 import { useSessionTimeout } from "./hooks/useSessionTimeout";
@@ -48,23 +51,25 @@ const ProtectedLayout = () => {
   return (
     <Layout sidebar={<ChatSidebar />}>
       <ProtectedRoute>
-        <Routes>
-          <Route path="/" element={<NewIndex />} />
-          <Route path="/chats" element={<ChatsPage />} />
-          <Route path="/chats/manage" element={<ChatsManagement />} />
-          <Route path="/chats/:chatId" element={<ChatPage />} />
-          <Route path="/participants" element={<Participants />} />
-          <Route path="/import" element={<ImportPage />} />
-          <Route path="/news" element={<NewsPage />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/projects" element={<Projects />} />
-          <Route path="/projects/:id" element={<ProjectDetail />} />
-          <Route path="/knowledge-base" element={<KnowledgeBase />} />
-          <Route path="/projects/:projectId/knowledge-base" element={<KnowledgeBase />} />
-          <Route path="/my/tasks" element={<MyTasks />} />
-          <Route path="/agents" element={<Agents />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <Suspense fallback={<LoadingSpinner size="lg" text="Загрузка..." />}>
+          <Routes>
+            <Route path="/" element={<NewIndex />} />
+            <Route path="/chats" element={<ChatsPage />} />
+            <Route path="/chats/manage" element={<ChatsManagement />} />
+            <Route path="/chats/:chatId" element={<ChatPage />} />
+            <Route path="/participants" element={<Participants />} />
+            <Route path="/import" element={<ImportPage />} />
+            <Route path="/news" element={<NewsPage />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/projects" element={<Projects />} />
+            <Route path="/projects/:id" element={<ProjectDetail />} />
+            <Route path="/knowledge-base" element={<KnowledgeBase />} />
+            <Route path="/projects/:projectId/knowledge-base" element={<KnowledgeBase />} />
+            <Route path="/my/tasks" element={<MyTasks />} />
+            <Route path="/agents" element={<Agents />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
       </ProtectedRoute>
     </Layout>
   );

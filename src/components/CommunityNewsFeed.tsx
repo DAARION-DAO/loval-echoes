@@ -69,7 +69,7 @@ export const CommunityNewsFeed = () => {
       if (error) throw error;
 
       const userIds = rawMessages?.filter(m => !m.is_agent && m.author_id).map(m => m.author_id) || [];
-      let profilesData: any[] = [];
+      let profilesData: Array<{ user_id: string; display_name: string; avatar_url?: string }> = [];
       
       if (userIds.length > 0) {
         const { data: profiles } = await supabase

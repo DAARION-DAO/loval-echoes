@@ -186,7 +186,7 @@ export function ProjectKanban({ projectId }: ProjectKanbanProps) {
       const newPosition = cardsInColumn.length;
       
       await updateCard(cardId, {
-        column_type: newColumnId as any,
+        column_type: newColumnId,
         position: newPosition,
       });
     }

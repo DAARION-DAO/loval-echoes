@@ -10,7 +10,7 @@ import { Shield, AlertTriangle, Activity, Users, FileText, Eye } from 'lucide-re
 interface SecurityEvent {
   id: string;
   event_type: string;
-  event_data: Record<string, any>;
+  event_data: Record<string, unknown>;
   created_at: string;
   user_id?: string;
   ip_address?: string;

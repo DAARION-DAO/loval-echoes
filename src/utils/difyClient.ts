@@ -153,7 +153,7 @@ export class DifyClient {
     try {
       const { error } = await supabase
         .from('conversations')
-        .update({ is_archived: true } as any)
+        .update({ is_archived: true })
         .eq('id', chatId);
       
       if (error) {
@@ -373,7 +373,7 @@ export class DifyClient {
   // textToSpeech removed - now using Dify TTS through stream events
 
   // Подписка на стрим сообщений для чата
-  subscribeToChat(chatId: string, onMessage: (data: any) => void) {
+  subscribeToChat(chatId: string, onMessage: (data: { event: string; [key: string]: unknown }) => void) {
     const channel = supabase.channel(`chat:${chatId}`)
       .on('broadcast', { event: 'dify_stream' }, ({ payload }) => {
         onMessage(payload);

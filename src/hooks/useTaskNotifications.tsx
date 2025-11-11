@@ -9,7 +9,7 @@ interface TaskNotification {
   message: string;
   read: boolean;
   created_at: string;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
 }
 
 export function useTaskNotifications() {

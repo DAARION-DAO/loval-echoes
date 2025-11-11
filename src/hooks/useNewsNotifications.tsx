@@ -86,7 +86,7 @@ export function useNewsNotifications() {
       });
 
       return true;
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Ошибка подписки на push:', error);
       toast({
         title: 'Ошибка',
@@ -146,7 +146,7 @@ export function useNewsNotifications() {
       // Подписываемся на push
       return await subscribeToPush(registration);
       
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error requesting notification permission:', error);
       toast({
         title: 'Ошибка',

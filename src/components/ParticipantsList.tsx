@@ -48,12 +48,15 @@ export const ParticipantsList = ({ chatId, onlineUsers }: ParticipantsListProps)
         return;
       }
 
-      const participantsList: Participant[] = (participantData || []).map(p => ({
-        user_id: p.user_id,
-        display_name: (p.profiles as any)?.display_name || 'Участник',
-        avatar_url: (p.profiles as any)?.avatar_url,
-        isOnline: onlineUsers.includes((p.profiles as any)?.display_name || 'Участник'),
-      }));
+      const participantsList: Participant[] = (participantData || []).map(p => {
+        const profile = p.profiles as { display_name?: string; avatar_url?: string } | null;
+        return {
+          user_id: p.user_id,
+          display_name: profile?.display_name || 'Участник',
+          avatar_url: profile?.avatar_url,
+          isOnline: onlineUsers.includes(profile?.display_name || 'Участник'),
+        };
+      });
 
       setParticipants(participantsList);
     } catch (error) {

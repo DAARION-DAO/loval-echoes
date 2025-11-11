@@ -33,7 +33,18 @@ export const useDifyStream = (chatId: string | null, onTTSMessage?: (tts: TTSMes
   const [error, setError] = useState<string | null>(null);
   const unsubscribeRef = useRef<(() => void) | null>(null);
 
-  const handleStreamData = useCallback((data: any) => {
+  interface StreamData {
+    event: string;
+    message_id?: string;
+    answer?: string;
+    id?: string;
+    thought?: string;
+    audio?: string;
+    metadata?: StreamMessage['metadata'];
+    message?: string;
+  }
+
+  const handleStreamData = useCallback((data: StreamData) => {
     console.log('Stream data received:', data);
 
     switch (data.event) {

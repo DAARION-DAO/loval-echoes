@@ -1,0 +1,29 @@
+{
+  "name": "ЖОС Мессенджер",
+  "short_name": "ЖОС",
+  "description": "Платформа для открытого общения и совместной работы сообщества",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#000000",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ],
+  "categories": ["social", "communication", "productivity"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Новый чат",
+      "short_name": "Чат",
+      "description": "Создать новый чат",
+      "url": "/chats",
+      "icons": [{ "src": "/favicon.ico", "sizes": "96x96" }]
+    }
+  ]
+}
+

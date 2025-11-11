@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { FileUploadDialog } from "@/components/FileUploadDialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -58,6 +59,7 @@ export default function KnowledgeBase() {
   const [folders, setFolders] = useState<KBFolder[]>([]);
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
 
   const loadFiles = async () => {
     try {
@@ -205,7 +207,7 @@ export default function KnowledgeBase() {
     <Layout
       sidebar={
         <div className="p-4">
-          <Tabs value={scope} onValueChange={(v) => setScope(v as any)}>
+          <Tabs value={scope} onValueChange={(v) => setScope(v as 'community' | 'project')}>
             <TabsList className="grid w-full grid-cols-2 mb-4">
               <TabsTrigger value="community">Сообщество</TabsTrigger>
               <TabsTrigger value="project">Проекты</TabsTrigger>
@@ -259,7 +261,7 @@ export default function KnowledgeBase() {
               </Button>
             </div>
             
-            <Button>
+            <Button onClick={() => setUploadDialogOpen(true)}>
               <Upload className="h-4 w-4 mr-2" />
               Загрузить
             </Button>
@@ -416,6 +418,18 @@ export default function KnowledgeBase() {
             )}
         </ScrollArea>
       </div>
+
+      <FileUploadDialog
+        open={uploadDialogOpen}
+        onClose={() => setUploadDialogOpen(false)}
+        onUploadComplete={() => {
+          loadFiles();
+          loadFolders();
+        }}
+        projectId={projectId}
+        folderId={selectedFolder || undefined}
+        scope={scope}
+      />
     </Layout>
   );
 }

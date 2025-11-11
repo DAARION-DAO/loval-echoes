@@ -23,7 +23,7 @@ export function ChatsList() {
       const chats = await fetchChats();
       console.log('Loaded chats:', chats);
       setItems(chats);
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('Error loading chats:', e);
       toast({
         variant: "destructive",

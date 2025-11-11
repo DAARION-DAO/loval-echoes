@@ -25,7 +25,7 @@ export const OnlineUsersBar: React.FC<OnlineUsersBarProps> = ({
   const [totalOnline, setTotalOnline] = useState(0);
 
   useEffect(() => {
-    let presenceChannel: any = null;
+    let presenceChannel: ReturnType<typeof supabase.channel> | null = null;
 
     const setupPresence = async () => {
       try {
@@ -71,11 +71,11 @@ export const OnlineUsersBar: React.FC<OnlineUsersBarProps> = ({
           setTotalOnline(users.length);
         });
 
-        presenceChannel.on('presence', { event: 'join' }, ({ key, newPresences }: any) => {
+        presenceChannel.on('presence', { event: 'join' }, ({ key, newPresences }: { key: string; newPresences: unknown[] }) => {
           console.log('User joined:', key, newPresences);
         });
 
-        presenceChannel.on('presence', { event: 'leave' }, ({ key, leftPresences }: any) => {
+        presenceChannel.on('presence', { event: 'leave' }, ({ key, leftPresences }: { key: string; leftPresences: unknown[] }) => {
           console.log('User left:', key, leftPresences);
         });
 
