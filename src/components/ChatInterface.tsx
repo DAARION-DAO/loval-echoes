@@ -93,6 +93,43 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
     }
   }, [voiceModeEnabled, autoStopEnabled, toast]);
   
+  // Перевіряємо scope чату для визначення чи доступний головний агент
+  const [chatScope, setChatScope] = useState<'community' | 'project' | 'personal' | null>(null);
+  const [isMainAgentAvailable, setIsMainAgentAvailable] = useState(true);
+  
+  useEffect(() => {
+    const checkChatScope = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('conversations')
+          .select('scope')
+          .eq('id', chatId)
+          .single();
+
+        if (error) {
+          console.warn('Error checking chat scope:', error);
+          // За замовчуванням вважаємо що агент доступний
+          setChatScope('community');
+          setIsMainAgentAvailable(true);
+          return;
+        }
+
+        const scope = (data?.scope as 'community' | 'project' | 'personal') || 'community';
+        setChatScope(scope);
+        // Головний агент доступний тільки для community та project чатів
+        setIsMainAgentAvailable(scope !== 'personal');
+      } catch (error) {
+        console.error('Error checking chat scope:', error);
+        setChatScope('community');
+        setIsMainAgentAvailable(true);
+      }
+    };
+
+    if (chatId) {
+      checkChatScope();
+    }
+  }, [chatId]);
+  
   const { currentMessage, isStreaming, startStream, stopStream } = useDifyStream(chatId, handleTTSMessage);
   
   const [message, setMessage] = useState('');
@@ -273,7 +310,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
   };
 
 
-  const handleSendMessage = async (textToSend?: string) => {
+  const handleSendMessage = useCallback(async (textToSend?: string) => {
     const messageText = textToSend || message;
     if (!messageText.trim() && attachedFiles.length === 0) return;
     if (isStreaming) return;
@@ -313,7 +350,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
         variant: 'destructive',
       });
     }
-  }, [message, attachedFiles, isStreaming, startStream, toast, t]);
+  }, [message, attachedFiles, isStreaming, startStream, toast, t, difyClient]);
 
   // Зберігаємо handleSendMessage в ref для використання в async callbacks
   useEffect(() => {
@@ -909,10 +946,11 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
             ) : (
               <Button
                 onClick={() => handleSendMessage()}
-                disabled={!message.trim() && attachedFiles.length === 0}
+                disabled={(!message.trim() && attachedFiles.length === 0) || !isMainAgentAvailable}
                 size="sm"
                 className="touch-target h-10 w-10 sm:h-11 sm:w-11 p-0 flex-shrink-0"
                 aria-label="Отправить сообщение"
+                title={!isMainAgentAvailable ? 'Головний агент не доступний в приватних чатах' : 'Отправить сообщение'}
               >
                 <Send className="h-4 w-4 sm:h-5 sm:w-5" />
               </Button>

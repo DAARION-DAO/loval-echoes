@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { difyClient } from '@/utils/difyClient';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface StreamMessage {
   id: string;
@@ -117,6 +118,24 @@ export const useDifyStream = (chatId: string | null, onTTSMessage?: (tts: TTSMes
     }
 
     try {
+      // Перевіряємо scope чату - головний агент підключений тільки до community та project чатів
+      const { data: conversation, error: convError } = await supabase
+        .from('conversations')
+        .select('scope')
+        .eq('id', chatId)
+        .single();
+
+      if (convError) {
+        console.warn('Error checking conversation scope:', convError);
+        // Продовжуємо якщо не вдалося перевірити scope (fallback)
+      } else if (conversation?.scope === 'personal') {
+        // Приватні чати не підключаються до головного агента
+        console.log('Personal chat detected, skipping main agent connection');
+        setError('Головний агент не доступний в приватних чатах');
+        setIsStreaming(false);
+        return;
+      }
+
       setError(null);
       setIsStreaming(true);
       setCurrentMessage(null);
