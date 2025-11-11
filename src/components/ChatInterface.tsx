@@ -765,6 +765,15 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
 
   return (
     <div className="border-t bg-background p-3 sm:p-4 mobile-safe-area">
+      {/* Повідомлення про недоступність головного агента в приватних чатах */}
+      {!isMainAgentAvailable && chatScope === 'personal' && (
+        <div className="mb-3 sm:mb-4 p-3 bg-muted/50 border border-muted rounded-lg">
+          <p className="text-sm text-muted-foreground">
+            💬 Головний агент (Dify) не доступний в приватних чатах. Використовуйте спільні або проєктні чати для роботи з агентом.
+          </p>
+        </div>
+      )}
+      
       {/* Индикатор уровня звука при записи */}
       {isRecording && (
         <div className="mb-3 sm:mb-4 flex items-center gap-3">
