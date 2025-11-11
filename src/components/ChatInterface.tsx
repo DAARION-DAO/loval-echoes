@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { 
   Send, 
   Paperclip, 
@@ -38,7 +38,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
   const { toast } = useToast();
   
   // Обработка TTS аудио из Dify stream
-  const handleTTSMessage = async (tts: { audio: string; message_id: string }) => {
+  const handleTTSMessage = useCallback(async (tts: { audio: string; message_id: string }) => {
     console.log('Playing TTS audio from Dify stream, voice mode:', voiceModeEnabled);
     try {
       // Конвертируем base64 в blob
@@ -55,12 +55,16 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
       audioElementRef.current = audio;
       setIsPlayingTTS(true);
       
+      // Зберігаємо поточні значення для використання в callback
+      const shouldAutoRecord = voiceModeEnabled && autoStopEnabled;
+      
       audio.onended = () => {
         setIsPlayingTTS(false);
         URL.revokeObjectURL(audioUrl);
         
         // В голосовом режиме автоматически начинаем запись после воспроизведения
-        if (voiceModeEnabled && autoStopEnabled) {
+        if (shouldAutoRecord) {
+          console.log('TTS from Dify stream ended, starting recording automatically...');
           setTimeout(() => {
             startRecording();
           }, 500);
@@ -87,7 +91,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
         variant: 'destructive',
       });
     }
-  };
+  }, [voiceModeEnabled, autoStopEnabled, toast]);
   
   const { currentMessage, isStreaming, startStream, stopStream } = useDifyStream(chatId, handleTTSMessage);
   
@@ -98,7 +102,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [audioLevel, setAudioLevel] = useState(0);
   const [autoStopEnabled, setAutoStopEnabled] = useState(true);
-  const [voiceModeEnabled, setVoiceModeEnabled] = useState(false);
+  const [voiceModeEnabled, setVoiceModeEnabled] = useState(true); // Увімкнено за замовчуванням
   const [isPlayingTTS, setIsPlayingTTS] = useState(false);
   const [isAutoStopped, setIsAutoStopped] = useState(false);
   const [silenceProgress, setSilenceProgress] = useState(0);
@@ -113,6 +117,8 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
   const recordingStartRef = useRef<number>(0);
   const animationFrameRef = useRef<number>(0);
   const audioElementRef = useRef<HTMLAudioElement | null>(null);
+  const isAutoStoppedRef = useRef<boolean>(false); // Ref для збереження стану автостопу
+  const handleSendMessageRef = useRef<((textToSend?: string) => Promise<void>) | null>(null);
 
   // Автоматическое изменение высоты textarea
   useEffect(() => {
@@ -123,12 +129,20 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
   }, [message]);
 
   // Автоматическое озвучивание завершенного ответа агента в голосовом режиме
+  // Примітка: TTS з Dify stream обробляється через handleTTSMessage
+  // Цей useEffect для fallback якщо TTS не прийшов через stream
   useEffect(() => {
-    if (!currentMessage?.isComplete || !voiceModeEnabled || isPlayingTTS) return;
+    // Перевіряємо чи є TTS вже оброблений через stream
+    if (!currentMessage?.isComplete || isPlayingTTS) return;
     
+    // Якщо voiceModeEnabled вимкнено, не озвучуємо
+    if (!voiceModeEnabled) return;
+    
+    // Перевіряємо чи вже є TTS audio в метаданих (оброблено через handleTTSMessage)
+    // Якщо немає, використовуємо fallback через tts-api
     const speakResponse = async () => {
       try {
-        console.log('Озвучивание ответа агента через TTS API...');
+        console.log('Озвучивание ответа агента через TTS API (fallback)...');
         
         const { data, error } = await supabase.functions.invoke('tts-api', {
           body: { 
@@ -155,12 +169,16 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
         audioElementRef.current = audio;
         setIsPlayingTTS(true);
         
+        // Зберігаємо значення для використання в callback
+        const shouldAutoRecord = voiceModeEnabled && autoStopEnabled;
+        
         audio.onended = () => {
           setIsPlayingTTS(false);
           URL.revokeObjectURL(audioUrl);
           
           // В голосовом режиме автоматически начинаем запись после воспроизведения
-          if (voiceModeEnabled && autoStopEnabled) {
+          if (shouldAutoRecord) {
+            console.log('TTS playback ended (fallback), starting recording automatically...');
             setTimeout(() => {
               startRecording();
             }, 500);
@@ -180,7 +198,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
     };
     
     speakResponse();
-  }, [currentMessage?.isComplete, voiceModeEnabled, autoStopEnabled, isPlayingTTS]);
+  }, [currentMessage?.isComplete, currentMessage?.content, voiceModeEnabled, autoStopEnabled, isPlayingTTS, startRecording]);
 
   // Конвертация аудио blob в WAV формат
   const convertToWav = async (blob: Blob): Promise<Blob> => {
@@ -295,7 +313,12 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
         variant: 'destructive',
       });
     }
-  };
+  }, [message, attachedFiles, isStreaming, startStream, toast, t]);
+
+  // Зберігаємо handleSendMessage в ref для використання в async callbacks
+  useEffect(() => {
+    handleSendMessageRef.current = handleSendMessage;
+  }, [handleSendMessage]);
 
   const handleFileSelect = (files: FileList | null) => {
     if (!files) return;
@@ -355,15 +378,19 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
     handleFileSelect(e.dataTransfer.files);
   };
 
-  const stopRecording = () => {
+  const stopRecording = (isAutoStop = false) => {
     if (!isRecording || !mediaRecorderRef.current) return;
     
-    console.log('Stopping recording...');
+    console.log('Stopping recording...', { isAutoStop });
     setIsRecording(false);
     
-    // Если это автостоп, устанавливаем флаг
-    if (autoStopEnabled) {
+    // Встановлюємо флаг тільки якщо це був автостоп
+    if (isAutoStop) {
       setIsAutoStopped(true);
+      isAutoStoppedRef.current = true; // Зберігаємо в ref для використання в onstop callback
+    } else {
+      setIsAutoStopped(false);
+      isAutoStoppedRef.current = false;
     }
     
     mediaRecorderRef.current.stop();
@@ -387,7 +414,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
     setAudioLevel(0);
   };
 
-  const startRecording = async () => {
+  const startRecording = useCallback(async () => {
     let stream: MediaStream | null = null;
     
     try {
@@ -473,7 +500,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
               // Auto-stop if silence detected for long enough and minimum recording time passed
               if (silenceDuration > SILENCE_DURATION && recordingDuration > MIN_RECORDING_TIME) {
                 console.log('Auto-stopping recording due to silence');
-                stopRecording();
+                stopRecording(true); // Передаємо true щоб позначити що це автостоп
               }
             }
           } else {
@@ -508,6 +535,10 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
       mediaRecorder.onstop = async () => {
         let audioBlob = new Blob(chunks, { type: mimeType });
         
+        // Використовуємо ref для перевірки автостопу (через замикання)
+        const wasAutoStopped = isAutoStoppedRef.current;
+        const currentVoiceMode = voiceModeEnabled; // Зберігаємо значення для використання в async callback
+        
         // Показываем индикатор обработки
         toast({
           title: 'Обработка голоса',
@@ -532,16 +563,36 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
             const transcribedText = result.text.trim();
             
             // В голосовом режиме или при автостопе отправляем автоматически
-            if ((voiceModeEnabled || isAutoStopped) && transcribedText) {
+            // Якщо автостоп спрацював, завжди відправляємо автоматично
+            if (wasAutoStopped && transcribedText) {
+              console.log('Auto-stopped recording, sending message automatically:', transcribedText);
               toast({
                 title: 'Голос распознан',
                 description: 'Отправляем сообщение...',
               });
               
+              // Скидаємо ref
+              isAutoStoppedRef.current = false;
+              
               // Отправляем напрямую транскрибированный текст
               setTimeout(() => {
-                handleSendMessage(transcribedText);
+                if (handleSendMessageRef.current) {
+                  handleSendMessageRef.current(transcribedText);
+                }
                 setIsAutoStopped(false);
+              }, 300);
+            } else if (currentVoiceMode && transcribedText) {
+              // В голосовом режиме также отправляем автоматически
+              console.log('Voice mode enabled, sending message automatically:', transcribedText);
+              toast({
+                title: 'Голос распознан',
+                description: 'Отправляем сообщение...',
+              });
+              
+              setTimeout(() => {
+                if (handleSendMessageRef.current) {
+                  handleSendMessageRef.current(transcribedText);
+                }
               }, 300);
             } else {
               // Добавляем текст в поле ввода для ручной отправки
@@ -655,7 +706,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
         });
       }
     }
-  };
+  }, [toast, autoStopEnabled, voiceModeEnabled]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {

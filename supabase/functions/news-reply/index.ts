@@ -34,25 +34,64 @@ serve(async (req) => {
       });
     }
 
-    // 1.5. Send push notifications to all users
+    // 1.5. Create news_notifications for all users and send push notifications
     try {
-      const pushResponse = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/push-send`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-        },
-        body: JSON.stringify({
-          title: '📢 Срочная новость',
-          body: text.slice(0, 100) + (text.length > 100 ? '...' : ''),
-          url: '/news',
-        }),
-      });
-      
-      if (!pushResponse.ok) {
-        console.warn('Failed to send push notifications:', await pushResponse.text());
-      } else {
-        console.log('Push notifications sent successfully');
+      // Get the inserted message ID
+      const { data: insertedMessage } = await supabase
+        .from('news_feed')
+        .select('id')
+        .eq('author_id', author_id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (insertedMessage) {
+        // Get all users who have push enabled
+        const { data: users } = await supabase
+          .from('profiles')
+          .select('user_id, news_push_enabled')
+          .eq('news_push_enabled', true);
+
+        if (users && users.length > 0) {
+          // Create notification records for all users
+          const notifications = users.map(user => ({
+            user_id: user.user_id,
+            news_id: insertedMessage.id,
+            message: text.slice(0, 200) + (text.length > 200 ? '...' : ''),
+            read: false,
+          }));
+
+          const { error: notifError } = await supabase
+            .from('news_notifications')
+            .insert(notifications);
+
+          if (notifError) {
+            console.warn('Error creating notifications:', notifError);
+          } else {
+            console.log(`Created ${notifications.length} notification records`);
+          }
+        }
+
+        // Send push notifications
+        const pushResponse = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/push-send`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+          },
+          body: JSON.stringify({
+            title: '📢 Срочная новость',
+            body: text.slice(0, 100) + (text.length > 100 ? '...' : ''),
+            url: '/news',
+            tag: 'news-notification',
+          }),
+        });
+        
+        if (!pushResponse.ok) {
+          console.warn('Failed to send push notifications:', await pushResponse.text());
+        } else {
+          console.log('Push notifications sent successfully');
+        }
       }
     } catch (pushError) {
       console.warn('Error sending push notifications:', pushError);

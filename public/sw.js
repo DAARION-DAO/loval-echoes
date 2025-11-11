@@ -99,7 +99,7 @@ self.addEventListener('message', (event) => {
   console.log('[SW] Message received:', event.data);
   
   if (event.data?.type === 'SKIP_WAITING') {
-    self.skipWaitil();
+    self.skipWaiting();
   }
 });
 
