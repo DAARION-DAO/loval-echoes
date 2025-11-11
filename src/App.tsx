@@ -26,6 +26,7 @@ const ProjectDetail = lazy(() => import("./pages/ProjectDetail"));
 const KnowledgeBase = lazy(() => import("./pages/KnowledgeBase"));
 const MyTasks = lazy(() => import("./pages/MyTasks"));
 const Agents = lazy(() => import("./pages/Agents"));
+const Integrations = lazy(() => import("./pages/Integrations"));
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { Layout } from "./components/Layout";
 import { useSessionTimeout } from "./hooks/useSessionTimeout";
@@ -67,6 +68,7 @@ const ProtectedLayout = () => {
             <Route path="/projects/:projectId/knowledge-base" element={<KnowledgeBase />} />
             <Route path="/my/tasks" element={<MyTasks />} />
             <Route path="/agents" element={<Agents />} />
+            <Route path="/integrations" element={<Integrations />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>

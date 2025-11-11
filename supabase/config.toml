@@ -72,3 +72,9 @@ verify_jwt = true
 
 [functions.agora-token]
 verify_jwt = true
+
+[functions.integration-connect]
+verify_jwt = true
+
+[functions.integration-disconnect]
+verify_jwt = true
