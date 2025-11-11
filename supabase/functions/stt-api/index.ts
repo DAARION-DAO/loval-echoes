@@ -1,45 +1,94 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
+import { getCorsHeaders, handleCors } from '../_shared/cors.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+// Валідація вводу
+const STTRequestSchema = z.object({
+  audio: z.string().min(1, 'Аудіо дані обов\'язкові'),
+  mimeType: z.string().optional(),
+});
+
+const MAX_AUDIO_SIZE_BASE64 = 25 * 1024 * 1024; // 25MB в base64
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+  // Handle CORS
+  const corsResult = handleCors(req);
+  if (corsResult instanceof Response) {
+    return corsResult;
   }
+  const { headers } = corsResult;
 
   try {
+    // JWT верифікація
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Відсутній токен авторизації' }),
+        { status: 401, headers: { ...headers, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Створюємо клієнт з ANON_KEY та JWT токеном
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      {
+        global: {
+          headers: { Authorization: authHeader },
+        },
+      }
     );
 
-    if (req.method !== 'POST') {
-      return new Response('Method not allowed', { status: 405, headers: corsHeaders });
-    }
-
-    const authHeader = req.headers.get('authorization');
-    const token = authHeader?.replace('Bearer ', '');
-    const { data: { user } } = await supabase.auth.getUser(token);
+    // Верифікуємо користувача
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
     
-    if (!user) {
-      return new Response('Unauthorized', { status: 401, headers: corsHeaders });
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Невірний або прострочений токен' }),
+        { status: 401, headers: { ...headers, 'Content-Type': 'application/json' } }
+      );
     }
 
-    const { audio, mimeType } = await req.json();
+    if (req.method !== 'POST') {
+      return new Response(
+        JSON.stringify({ error: 'Метод не дозволений' }),
+        { status: 405, headers: { ...headers, 'Content-Type': 'application/json' } }
+      );
+    }
 
-    if (!audio) {
-      return new Response('No audio data provided', { status: 400, headers: corsHeaders });
+    // Валідація вводу
+    const body = await req.json();
+    const validationResult = STTRequestSchema.safeParse(body);
+    
+    if (!validationResult.success) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'Помилка валідації',
+          details: validationResult.error.errors 
+        }),
+        { status: 400, headers: { ...headers, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { audio, mimeType } = validationResult.data;
+
+    // Перевірка розміру аудіо
+    if (audio.length > MAX_AUDIO_SIZE_BASE64) {
+      return new Response(
+        JSON.stringify({ error: 'Аудіо файл занадто великий. Максимум 25MB' }),
+        { status: 400, headers: { ...headers, 'Content-Type': 'application/json' } }
+      );
     }
 
     const DIFY_API_KEY = Deno.env.get('DIFY_API_KEY');
     if (!DIFY_API_KEY) {
       console.error('DIFY_API_KEY not configured');
-      return new Response('Server configuration error', { status: 500, headers: corsHeaders });
+      return new Response(
+        JSON.stringify({ error: 'Помилка конфігурації сервера' }),
+        { status: 500, headers: { ...headers, 'Content-Type': 'application/json' } }
+      );
     }
 
     // Конвертируем base64 в blob
@@ -50,8 +99,6 @@ serve(async (req) => {
     }
 
     // Normalize mimeType and determine file extension
-    // Dify поддерживает: mp3, mp4, mpeg, mpga, m4a, wav, webm
-    // IMPORTANT: For MP4 containers from Safari/iOS, use audio/m4a MIME type
     let normalizedType = mimeType || 'audio/wav';
     let fileName = 'audio.wav';
     
@@ -62,7 +109,6 @@ serve(async (req) => {
       normalizedType = 'audio/webm';
       fileName = 'audio.webm';
     } else if (normalizedType.includes('mp4')) {
-      // Safari/iOS records as MP4, but Dify expects M4A MIME type
       normalizedType = 'audio/m4a';
       fileName = 'audio.m4a';
     } else if (normalizedType.includes('m4a')) {
@@ -75,7 +121,6 @@ serve(async (req) => {
 
     // Создаем FormData для отправки в Dify
     const formData = new FormData();
-    // Use File instead of Blob to ensure proper Content-Type
     const audioFile = new File([bytes], fileName, { type: normalizedType });
     formData.append('file', audioFile, fileName);
     formData.append('user', 'daarion-community-system');
@@ -105,9 +150,9 @@ serve(async (req) => {
       if (response.status === 415) {
         return new Response(
           JSON.stringify({ 
-            error: `Unsupported audio format: ${normalizedType}. Please try a different browser.` 
+            error: `Непідтримуваний формат аудіо: ${normalizedType}. Спробуйте інший браузер.` 
           }), 
-          { status: 415, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          { status: 415, headers: { ...headers, 'Content-Type': 'application/json' } }
         );
       }
       
@@ -116,7 +161,7 @@ serve(async (req) => {
 
     const result = await response.json();
 
-    // Логирование
+    // Логирование (з RLS захистом)
     await supabase
       .from('security_audit_log')
       .insert({
@@ -128,14 +173,20 @@ serve(async (req) => {
       });
 
     return new Response(JSON.stringify(result), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...headers, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
     console.error('Error in stt-api:', error);
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return new Response(
+      JSON.stringify({ 
+        error: 'Внутрішня помилка сервера',
+        details: error instanceof Error ? error.message : 'Unknown error' 
+      }),
+      {
+        status: 500,
+        headers: { ...headers, 'Content-Type': 'application/json' },
+      }
+    );
   }
 });

@@ -1,11 +1,8 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { getCorsHeaders, handleCors } from '../_shared/cors.ts';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 interface DifyResponse {
   answer?: string;
@@ -155,15 +152,63 @@ class DifyClient {
   }
 }
 
+// Валідаційні схеми
+const SendMessageSchema = z.object({
+  conversationId: z.string().nullable().optional(),
+  query: z.string().min(1).max(10000),
+  files: z.array(z.string()).optional(),
+  chatId: z.string().uuid().optional(),
+});
+
+const FeedbackSchema = z.object({
+  messageId: z.string().min(1),
+  rating: z.enum(['like', 'dislike']),
+  content: z.string().max(500).optional(),
+});
+
 serve(async (req) => {
   console.log(`[dify-client] ${req.method} ${req.url}`);
   
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+  // Handle CORS
+  const corsResult = handleCors(req);
+  if (corsResult instanceof Response) {
+    return corsResult;
   }
+  const { headers } = corsResult;
 
   try {
-    const supabase = createClient(
+    // JWT верифікація
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Відсутній токен авторизації' }),
+        { status: 401, headers: { ...headers, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Створюємо клієнт з ANON_KEY та JWT токеном для користувацьких операцій
+    const userSupabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      {
+        global: {
+          headers: { Authorization: authHeader },
+        },
+      }
+    );
+
+    // Верифікуємо користувача
+    const { data: { user }, error: authError } = await userSupabase.auth.getUser();
+    
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Невірний або прострочений токен' }),
+        { status: 401, headers: { ...headers, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Service role клієнт тільки для специфічних операцій (broadcast, тощо)
+    const serviceSupabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
@@ -176,7 +221,8 @@ serve(async (req) => {
       try {
         requestBody = await req.json();
       } catch (e) {
-        console.log('No JSON body to parse');
+        // Може бути FormData для upload_file
+        console.log('No JSON body to parse, might be FormData');
       }
     }
     
@@ -186,78 +232,53 @@ serve(async (req) => {
 
     switch (action) {
       case 'send_message': {
-        const { conversationId, query, files, chatId, action } = requestBody as any;
+        // Валідація вводу
+        const validationResult = SendMessageSchema.safeParse(requestBody);
+        if (!validationResult.success) {
+          return new Response(
+            JSON.stringify({ 
+              error: 'Помилка валідації',
+              details: validationResult.error.errors 
+            }),
+            { status: 400, headers: { ...headers, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        const { conversationId, query, files, chatId } = validationResult.data;
         
         console.log('Processing send_message:', { chatId, conversationId, query: query.substring(0, 50) });
         
-        // First, save user message to database
+        // Збереження повідомлення користувача (з RLS захистом)
         try {
-          // Get user info from Authorization header
-          const authHeader = req.headers.get('authorization');
-          let currentUserId = null;
-          let userDisplayName = 'Участник';
-
-          if (authHeader) {
-            try {
-              // Create a user-context Supabase client to get proper user session
-              const userSupabase = createClient(
-                Deno.env.get('SUPABASE_URL') ?? '',
-                Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-                {
-                  global: {
-                    headers: {
-                      Authorization: authHeader
-                    }
-                  }
-                }
-              );
-
-              const { data: { user }, error: userError } = await userSupabase.auth.getUser();
-              
-              if (!userError && user) {
-                currentUserId = user.id;
-                console.log('Found user:', user.id, user.email);
-                
-                // Get user display name from profiles table
-                const { data: profile, error: profileError } = await supabase
-                  .from('profiles')
-                  .select('display_name')
-                  .eq('user_id', user.id)
-                  .single();
-                
-                if (!profileError && profile?.display_name) {
-                  userDisplayName = profile.display_name;
-                  console.log('Found display name:', userDisplayName);
-                } else {
-                  // Fallback to user metadata or email
-                  userDisplayName = user.user_metadata?.display_name || 
-                                   user.email?.split('@')[0] || 
-                                   'Участник';
-                  console.log('Using fallback display name:', userDisplayName);
-                }
-              } else {
-                console.error('Error getting user from auth:', userError);
-              }
-            } catch (authError) {
-              console.error('Error processing auth:', authError);
-            }
-          }
+          // Отримуємо display_name користувача
+          const { data: profile } = await userSupabase
+            .from('profiles')
+            .select('display_name')
+            .eq('user_id', user.id)
+            .single();
           
-          await supabase
-            .from('messages')
-            .insert({
-              conversation_id: chatId,
-              content: query,
-              role: 'user',
-              sender_name: userDisplayName,
-            });
-          console.log('User message saved to database with sender:', userDisplayName);
+          const userDisplayName = profile?.display_name || 
+                                 user.user_metadata?.display_name || 
+                                 user.email?.split('@')[0] || 
+                                 'Участник';
+          
+          if (chatId) {
+            await userSupabase
+              .from('messages')
+              .insert({
+                conversation_id: chatId,
+                content: query,
+                role: 'user',
+                sender_name: userDisplayName,
+              });
+            console.log('User message saved to database with sender:', userDisplayName);
+          }
         } catch (dbError) {
           console.error('Error saving user message:', dbError);
         }
         
         // Start streaming response from Dify
-        const response = await difyClient.sendMessageStream(conversationId, query, files);
+        const response = await difyClient.sendMessageStream(conversationId || null, query, files);
         
         if (!response.body) {
           throw new Error('No response body from Dify');
@@ -286,14 +307,15 @@ serve(async (req) => {
                 console.log('Dify stream event:', data.event, data);
 
                 // Extract conversation_id from first message
-                if (!actualConversationId && data.conversation_id) {
+                if (!actualConversationId && data.conversation_id && chatId) {
                   actualConversationId = data.conversation_id;
                   
-                  // Update chat with dify_conversation_id
-                  await supabase
+                  // Update chat with dify_conversation_id (з RLS захистом)
+                  await userSupabase
                     .from('conversations')
                     .update({ dify_conversation_id: actualConversationId })
-                    .eq('id', chatId);
+                    .eq('id', chatId)
+                    .eq('user_id', user.id); // Додаткова перевірка через RLS
                 }
 
                 // Accumulate agent response
@@ -302,24 +324,24 @@ serve(async (req) => {
                   messageId = data.message_id || data.id;
                 }
 
-                // Save complete response to database when finished
-                if (data.event === 'message_end' && completeMessage) {
+                // Save complete response to database when finished (з RLS захистом)
+                if (data.event === 'message_end' && completeMessage && chatId) {
                   console.log('Saving agent response to database:', completeMessage, 'with messageId:', messageId);
                   
-                  await supabase
+                  await userSupabase
                     .from('messages')
                     .insert({
                       conversation_id: chatId,
                       content: completeMessage,
                       role: 'assistant',
                       sender_name: 'Дух Общины',
-                      dify_message_id: messageId, // Save Dify message ID for feedback
+                      dify_message_id: messageId,
                     });
                 }
 
-                // Broadcast to all clients via Supabase Realtime
+                // Broadcast to all clients via Supabase Realtime (використовуємо service role для broadcast)
                 try {
-                  const channel = supabase.channel(`chat:${chatId}`);
+                  const channel = serviceSupabase.channel(`chat:${chatId}`);
                   await channel.subscribe();
                   await channel.send({
                     type: 'broadcast',
@@ -339,7 +361,7 @@ serve(async (req) => {
         }
 
         return new Response(JSON.stringify({ success: true }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          headers: { ...headers, 'Content-Type': 'application/json' },
         });
       }
 
@@ -349,7 +371,7 @@ serve(async (req) => {
         const data = await response.json();
         
         return new Response(JSON.stringify(data), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          headers: { ...headers, 'Content-Type': 'application/json' },
         });
       }
 
@@ -359,17 +381,29 @@ serve(async (req) => {
         const data = await response.json();
         
         return new Response(JSON.stringify(data), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          headers: { ...headers, 'Content-Type': 'application/json' },
         });
       }
 
       case 'send_feedback': {
-        const { messageId, rating, content } = requestBody as any;
+        // Валідація вводу
+        const validationResult = FeedbackSchema.safeParse(requestBody);
+        if (!validationResult.success) {
+          return new Response(
+            JSON.stringify({ 
+              error: 'Помилка валідації',
+              details: validationResult.error.errors 
+            }),
+            { status: 400, headers: { ...headers, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        const { messageId, rating, content } = validationResult.data;
         const response = await difyClient.sendFeedback(messageId, rating, content);
         const data = await response.json();
         
         return new Response(JSON.stringify(data), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          headers: { ...headers, 'Content-Type': 'application/json' },
         });
       }
 
@@ -379,7 +413,7 @@ serve(async (req) => {
         const data = await response.json();
         
         return new Response(JSON.stringify(data), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          headers: { ...headers, 'Content-Type': 'application/json' },
         });
       }
 
@@ -389,7 +423,7 @@ serve(async (req) => {
         const data = await response.json();
         
         return new Response(JSON.stringify(data), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          headers: { ...headers, 'Content-Type': 'application/json' },
         });
       }
 
@@ -399,7 +433,7 @@ serve(async (req) => {
         const data = await response.json();
         
         return new Response(JSON.stringify(data), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          headers: { ...headers, 'Content-Type': 'application/json' },
         });
       }
 
@@ -409,19 +443,28 @@ serve(async (req) => {
         const data = await response.json();
         
         return new Response(JSON.stringify(data), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          headers: { ...headers, 'Content-Type': 'application/json' },
         });
       }
 
       default:
-        return new Response('Invalid action', { status: 400, headers: corsHeaders });
+        return new Response(
+          JSON.stringify({ error: 'Невірна дія' }),
+          { status: 400, headers: { ...headers, 'Content-Type': 'application/json' } }
+        );
     }
 
   } catch (error) {
     console.error('Error in dify-client:', error);
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return new Response(
+      JSON.stringify({ 
+        error: 'Внутрішня помилка сервера',
+        details: error instanceof Error ? error.message : 'Unknown error' 
+      }),
+      {
+        status: 500,
+        headers: { ...headers, 'Content-Type': 'application/json' },
+      }
+    );
   }
 });
