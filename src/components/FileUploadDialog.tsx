@@ -16,7 +16,7 @@ interface FileUploadDialogProps {
   onUploadComplete?: () => void;
   projectId?: string;
   folderId?: string;
-  scope?: 'community' | 'project';
+  scope?: 'community' | 'project' | 'personal';
 }
 
 export const FileUploadDialog = ({

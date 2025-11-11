@@ -5,7 +5,8 @@ import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 // Валідація вводу
 const IntegrationConnectSchema = z.object({
-  type: z.enum(['telegram', 'whatsapp', 'email', 'calendar', 'slack', 'discord']),
+  type: z.enum(['telegram', 'whatsapp', 'email', 'calendar', 'slack', 'discord', 'google_drive', 'google_docs', 'chatgpt', 'deepseek']),
+  scope: z.enum(['team', 'personal']).default('personal'),
   config: z.record(z.string(), z.unknown()),
 });
 
@@ -62,7 +63,7 @@ serve(async (req) => {
       );
     }
 
-    const { type, config } = validationResult.data;
+    const { type, scope, config } = validationResult.data;
 
     // Валідація конфігурації залежно від типу
     let isValid = false;
@@ -89,6 +90,19 @@ serve(async (req) => {
       case 'discord':
         isValid = !!config.webhook_url && typeof config.webhook_url === 'string';
         errorMessage = 'Webhook URL обов\'язковий';
+        break;
+      case 'google_drive':
+      case 'google_docs':
+        isValid = !!config.client_id && !!config.client_secret && typeof config.client_id === 'string';
+        errorMessage = 'Client ID та Client Secret обов\'язкові для Google інтеграцій';
+        break;
+      case 'chatgpt':
+        isValid = !!config.api_key && typeof config.api_key === 'string';
+        errorMessage = 'API key обов\'язковий для ChatGPT';
+        break;
+      case 'deepseek':
+        isValid = !!config.api_key && typeof config.api_key === 'string';
+        errorMessage = 'API key обов\'язковий для DeepSeek';
         break;
     }
 
@@ -145,13 +159,14 @@ serve(async (req) => {
       .upsert({
         user_id: user.id,
         type: type,
+        scope: scope,
         enabled: true,
         connected: true,
         config: config,
         last_sync: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       }, {
-        onConflict: 'user_id,type',
+        onConflict: 'user_id,type,scope',
       })
       .select()
       .single();

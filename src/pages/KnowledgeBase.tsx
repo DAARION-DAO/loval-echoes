@@ -42,7 +42,7 @@ interface KBFolder {
   name: string;
   parent_id?: string;
   project_id?: string;
-  scope: 'community' | 'project';
+  scope: 'community' | 'project' | 'personal';
 }
 
 export default function KnowledgeBase() {
@@ -50,8 +50,8 @@ export default function KnowledgeBase() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { toast } = useToast();
   
-  const [scope, setScope] = useState<'community' | 'project'>(
-    (searchParams.get('scope') as 'community' | 'project') || 'community'
+  const [scope, setScope] = useState<'community' | 'project' | 'personal'>(
+    (searchParams.get('scope') as 'community' | 'project' | 'personal') || 'community'
   );
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
@@ -207,10 +207,11 @@ export default function KnowledgeBase() {
     <Layout
       sidebar={
         <div className="p-4">
-          <Tabs value={scope} onValueChange={(v) => setScope(v as 'community' | 'project')}>
-            <TabsList className="grid w-full grid-cols-2 mb-4">
-              <TabsTrigger value="community">Сообщество</TabsTrigger>
-              <TabsTrigger value="project">Проекты</TabsTrigger>
+          <Tabs value={scope} onValueChange={(v) => setScope(v as 'community' | 'project' | 'personal')}>
+            <TabsList className="grid w-full grid-cols-3 mb-4">
+              <TabsTrigger value="community">Спільна</TabsTrigger>
+              <TabsTrigger value="project">Проєкти</TabsTrigger>
+              <TabsTrigger value="personal">Особиста</TabsTrigger>
             </TabsList>
           </Tabs>
           

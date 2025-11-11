@@ -11,16 +11,19 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { User, Users } from 'lucide-react';
 
 interface Agent {
   id: string;
   name: string;
   description: string | null;
   avatar_url: string | null;
-  owner_user_id: string;
+  owner_user_id: string | null; // null для спільного агента
   connection_type: 'webhook' | 'websocket' | 'msp';
   status: 'active' | 'paused' | 'disconnected';
   is_preset: boolean;
+  scope: 'community' | 'personal'; // community = спільний, personal = приватний
   created_at: string;
 }
 
@@ -34,12 +37,15 @@ export default function Agents() {
     description: string;
     connection_type: 'webhook' | 'websocket' | 'msp';
     endpoint_url: string;
+    scope: 'community' | 'personal';
   }>({
     name: '',
     description: '',
     connection_type: 'msp',
     endpoint_url: '',
+    scope: 'personal',
   });
+  const [scopeFilter, setScopeFilter] = useState<'all' | 'community' | 'personal'>('all');
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -62,9 +68,14 @@ export default function Agents() {
 
   const fetchAgents = async () => {
     try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) return;
+
+      // Завантажуємо спільних агентів (scope = 'community') та приватних (scope = 'personal' AND owner_user_id = user.id)
       const { data, error } = await supabase
         .from('agents')
         .select('*')
+        .or(`scope.eq.community,and(scope.eq.personal,owner_user_id.eq.${userData.user.id})`)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -102,8 +113,10 @@ export default function Agents() {
           description: newAgent.description || null,
           connection_type: newAgent.connection_type,
           endpoint_url: newAgent.endpoint_url || null,
-          owner_user_id: userData.user.id,
+          owner_user_id: newAgent.scope === 'personal' ? userData.user.id : null,
+          scope: newAgent.scope,
           status: 'active',
+          is_preset: false,
         });
 
       if (error) throw error;
@@ -438,8 +451,28 @@ export default function Agents() {
           </Button>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {agents.map((agent) => (
+        <>
+          {/* Фільтр за scope */}
+          <div className="mb-6">
+        <Tabs value={scopeFilter} onValueChange={(v) => setScopeFilter(v as 'all' | 'community' | 'personal')}>
+              <TabsList>
+                <TabsTrigger value="all">Всі</TabsTrigger>
+                <TabsTrigger value="community">
+                  <Users className="h-4 w-4 mr-2" />
+                  Спільні
+                </TabsTrigger>
+                <TabsTrigger value="personal">
+                  <User className="h-4 w-4 mr-2" />
+                  Приватні
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {agents
+          .filter(agent => scopeFilter === 'all' || agent.scope === scopeFilter)
+          .map((agent) => (
             <Card key={agent.id} className="p-6 hover:shadow-lg transition-shadow">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
@@ -464,8 +497,23 @@ export default function Agents() {
                 </p>
               )}
 
-              <div className="text-xs text-muted-foreground mb-4">
-                Тип: {agent.connection_type.toUpperCase()}
+              <div className="flex items-center gap-2 mb-4 flex-wrap">
+                <Badge variant={agent.scope === 'community' ? 'default' : 'outline'}>
+                  {agent.scope === 'community' ? (
+                    <>
+                      <Users className="h-3 w-3 mr-1" />
+                      Спільний
+                    </>
+                  ) : (
+                    <>
+                      <User className="h-3 w-3 mr-1" />
+                      Приватний
+                    </>
+                  )}
+                </Badge>
+                <span className="text-xs text-muted-foreground">
+                  Тип: {agent.connection_type.toUpperCase()}
+                </span>
               </div>
 
               <div className="flex gap-2">
@@ -504,6 +552,7 @@ export default function Agents() {
             </Card>
           ))}
         </div>
+        </>
       )}
     </div>
   );

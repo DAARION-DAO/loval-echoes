@@ -5,7 +5,8 @@ import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 // Валідація вводу
 const IntegrationDisconnectSchema = z.object({
-  type: z.enum(['telegram', 'whatsapp', 'email', 'calendar', 'slack', 'discord']),
+  type: z.enum(['telegram', 'whatsapp', 'email', 'calendar', 'slack', 'discord', 'google_drive', 'google_docs', 'chatgpt', 'deepseek']),
+  scope: z.enum(['team', 'personal']).optional(),
 });
 
 serve(async (req) => {
@@ -61,10 +62,10 @@ serve(async (req) => {
       );
     }
 
-    const { type } = validationResult.data;
+    const { type, scope } = validationResult.data;
 
     // Оновлюємо інтеграцію в базі даних
-    const { error } = await supabase
+    let query = supabase
       .from('user_integrations')
       .update({
         enabled: false,
@@ -74,6 +75,12 @@ serve(async (req) => {
       })
       .eq('user_id', user.id)
       .eq('type', type);
+    
+    if (scope) {
+      query = query.eq('scope', scope);
+    }
+
+    const { error } = await query;
 
     if (error) {
       console.error('Error disconnecting integration:', error);

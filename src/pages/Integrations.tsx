@@ -19,7 +19,13 @@ import {
   ExternalLink,
   Bot,
   Calendar,
-  Zap
+  Zap,
+  HardDrive,
+  FileText,
+  Sparkles,
+  Brain,
+  Users,
+  User
 } from 'lucide-react';
 import {
   Dialog,
@@ -30,20 +36,23 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface Integration {
   id: string;
-  type: 'telegram' | 'whatsapp' | 'email' | 'calendar' | 'slack' | 'discord';
+  type: 'telegram' | 'whatsapp' | 'email' | 'calendar' | 'slack' | 'discord' | 'google_drive' | 'google_docs' | 'chatgpt' | 'deepseek';
   name: string;
   description: string;
   icon: React.ReactNode;
   enabled: boolean;
   connected: boolean;
+  scope: 'team' | 'personal';
   config?: Record<string, unknown>;
   lastSync?: string;
 }
 
-const INTEGRATIONS: Omit<Integration, 'id' | 'enabled' | 'connected' | 'config' | 'lastSync'>[] = [
+const INTEGRATIONS: Omit<Integration, 'id' | 'enabled' | 'connected' | 'config' | 'lastSync' | 'scope'>[] = [
   {
     type: 'telegram',
     name: 'Telegram',
@@ -80,6 +89,30 @@ const INTEGRATIONS: Omit<Integration, 'id' | 'enabled' | 'connected' | 'config' 
     description: 'Підключіть Discord сервер для обміну повідомленнями',
     icon: <Bot className="h-5 w-5" />,
   },
+  {
+    type: 'google_drive',
+    name: 'Google Drive',
+    description: 'Синхронізуйте файли з Google Drive для доступу в базі знань',
+    icon: <HardDrive className="h-5 w-5" />,
+  },
+  {
+    type: 'google_docs',
+    name: 'Google Docs',
+    description: 'Інтегруйте Google Docs для автоматичного імпорту документів',
+    icon: <FileText className="h-5 w-5" />,
+  },
+  {
+    type: 'chatgpt',
+    name: 'ChatGPT API',
+    description: 'Підключіть OpenAI ChatGPT API для розширених можливостей AI',
+    icon: <Sparkles className="h-5 w-5" />,
+  },
+  {
+    type: 'deepseek',
+    name: 'DeepSeek',
+    description: 'Інтеграція з DeepSeek AI для альтернативних AI можливостей',
+    icon: <Brain className="h-5 w-5" />,
+  },
 ];
 
 export default function Integrations() {
@@ -90,6 +123,8 @@ export default function Integrations() {
   const [configuring, setConfiguring] = useState<string | null>(null);
   const [configDialogOpen, setConfigDialogOpen] = useState<string | null>(null);
   const [configValues, setConfigValues] = useState<Record<string, string>>({});
+  const [selectedScope, setSelectedScope] = useState<'team' | 'personal'>('personal');
+  const [scopeFilter, setScopeFilter] = useState<'all' | 'team' | 'personal'>('all');
 
   useEffect(() => {
     if (user) {
@@ -137,15 +172,32 @@ export default function Integrations() {
       data?.forEach(dbInt => {
         const baseInt = INTEGRATIONS.find(i => i.type === dbInt.type);
         if (baseInt) {
-          integrationsMap.set(dbInt.type, {
+          integrationsMap.set(`${dbInt.type}-${dbInt.scope || 'personal'}`, {
             ...baseInt,
             id: dbInt.id,
             enabled: dbInt.enabled || false,
             connected: dbInt.connected || false,
+            scope: (dbInt.scope as 'team' | 'personal') || 'personal',
             config: dbInt.config as Record<string, unknown> | undefined,
             lastSync: dbInt.last_sync,
           });
         }
+      });
+
+      // Додаємо базові інтеграції для кожного scope, якщо вони не існують
+      INTEGRATIONS.forEach(int => {
+        ['team', 'personal'].forEach(scope => {
+          const key = `${int.type}-${scope}`;
+          if (!integrationsMap.has(key)) {
+            integrationsMap.set(key, {
+              ...int,
+              id: crypto.randomUUID(),
+              enabled: false,
+              connected: false,
+              scope: scope as 'team' | 'personal',
+            });
+          }
+        });
       });
 
       setIntegrations(Array.from(integrationsMap.values()));
@@ -182,12 +234,13 @@ export default function Integrations() {
         .upsert({
           user_id: user.id,
           type: integration.type,
+          scope: integration.scope,
           enabled: newEnabled,
           connected: integration.connected,
           config: integration.config,
           updated_at: new Date().toISOString(),
         }, {
-          onConflict: 'user_id,type',
+          onConflict: 'user_id,type,scope',
         });
 
       if (error) {
@@ -229,6 +282,7 @@ export default function Integrations() {
       const { data, error } = await supabase.functions.invoke('integration-connect', {
         body: {
           type: integration.type,
+          scope: selectedScope,
           config: configValues,
         },
       });
@@ -243,13 +297,14 @@ export default function Integrations() {
         .upsert({
           user_id: user.id,
           type: integration.type,
+          scope: selectedScope,
           enabled: true,
           connected: true,
           config: { ...integration.config, ...configValues },
           last_sync: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         }, {
-          onConflict: 'user_id,type',
+          onConflict: 'user_id,type,scope',
         });
 
       if (dbError) {
@@ -311,7 +366,8 @@ export default function Integrations() {
           updated_at: new Date().toISOString(),
         })
         .eq('user_id', user.id)
-        .eq('type', integration.type);
+        .eq('type', integration.type)
+        .eq('scope', integration.scope);
 
       if (dbError) {
         throw dbError;
@@ -376,6 +432,28 @@ export default function Integrations() {
           { key: 'webhook_url', label: 'Webhook URL', type: 'text', placeholder: 'https://discord.com/api/webhooks/...' },
           { key: 'server_id', label: 'Server ID', type: 'text', placeholder: 'ID сервера (опціонально)' },
         ];
+      case 'google_drive':
+        return [
+          { key: 'client_id', label: 'Client ID', type: 'text', placeholder: 'Google OAuth Client ID' },
+          { key: 'client_secret', label: 'Client Secret', type: 'password', placeholder: 'Google OAuth Client Secret' },
+          { key: 'refresh_token', label: 'Refresh Token', type: 'password', placeholder: 'OAuth Refresh Token' },
+        ];
+      case 'google_docs':
+        return [
+          { key: 'client_id', label: 'Client ID', type: 'text', placeholder: 'Google OAuth Client ID' },
+          { key: 'client_secret', label: 'Client Secret', type: 'password', placeholder: 'Google OAuth Client Secret' },
+          { key: 'refresh_token', label: 'Refresh Token', type: 'password', placeholder: 'OAuth Refresh Token' },
+        ];
+      case 'chatgpt':
+        return [
+          { key: 'api_key', label: 'API Key', type: 'password', placeholder: 'OpenAI API Key' },
+          { key: 'model', label: 'Model', type: 'select', options: ['gpt-4', 'gpt-4-turbo', 'gpt-3.5-turbo'], placeholder: 'gpt-4' },
+        ];
+      case 'deepseek':
+        return [
+          { key: 'api_key', label: 'API Key', type: 'password', placeholder: 'DeepSeek API Key' },
+          { key: 'model', label: 'Model', type: 'select', options: ['deepseek-chat', 'deepseek-coder'], placeholder: 'deepseek-chat' },
+        ];
       default:
         return [];
     }
@@ -399,6 +477,38 @@ export default function Integrations() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
+            {/* Вибір scope */}
+            <div className="space-y-2">
+              <Label>Область застосування</Label>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant={selectedScope === 'personal' ? 'default' : 'outline'}
+                  onClick={() => setSelectedScope('personal')}
+                  className="flex-1"
+                  size="sm"
+                >
+                  <User className="h-4 w-4 mr-2" />
+                  Приватна
+                </Button>
+                <Button
+                  type="button"
+                  variant={selectedScope === 'team' ? 'default' : 'outline'}
+                  onClick={() => setSelectedScope('team')}
+                  className="flex-1"
+                  size="sm"
+                >
+                  <Users className="h-4 w-4 mr-2" />
+                  Командна
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {selectedScope === 'personal' 
+                  ? 'Інтеграція буде доступна тільки вам'
+                  : 'Інтеграція буде доступна всій команді'}
+              </p>
+            </div>
+            
             {fields.map(field => (
               <div key={field.key} className="space-y-2">
                 <Label htmlFor={field.key}>{field.label}</Label>
@@ -480,11 +590,31 @@ export default function Integrations() {
         <Settings2 className="h-4 w-4" />
         <AlertDescription>
           Інтеграції дозволяють синхронізувати повідомлення з іншими платформами та автоматизувати роботу.
+          Ви можете створити інтеграції для команди (доступні всім) або приватні (тільки для вас).
         </AlertDescription>
       </Alert>
 
+      {/* Фільтр за scope */}
+      <div className="mb-6 flex items-center gap-4">
+        <Tabs value={scopeFilter} onValueChange={(v) => setScopeFilter(v as 'all' | 'team' | 'personal')}>
+          <TabsList>
+            <TabsTrigger value="all">Всі</TabsTrigger>
+            <TabsTrigger value="team">
+              <Users className="h-4 w-4 mr-2" />
+              Командні
+            </TabsTrigger>
+            <TabsTrigger value="personal">
+              <User className="h-4 w-4 mr-2" />
+              Приватні
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {integrations.map((integration) => (
+        {integrations
+          .filter(int => scopeFilter === 'all' || int.scope === scopeFilter)
+          .map((integration) => (
           <Card key={integration.id} className="relative">
             <CardHeader>
               <div className="flex items-start justify-between">
@@ -498,7 +628,7 @@ export default function Integrations() {
                   </div>
                   <div>
                     <CardTitle className="text-lg">{integration.name}</CardTitle>
-                    <div className="flex items-center gap-2 mt-1">
+                    <div className="flex items-center gap-2 mt-1 flex-wrap">
                       {integration.connected ? (
                         <Badge variant="default" className="bg-green-500">
                           <CheckCircle2 className="h-3 w-3 mr-1" />
@@ -510,6 +640,19 @@ export default function Integrations() {
                           Не підключено
                         </Badge>
                       )}
+                      <Badge variant={integration.scope === 'team' ? 'default' : 'outline'}>
+                        {integration.scope === 'team' ? (
+                          <>
+                            <Users className="h-3 w-3 mr-1" />
+                            Командна
+                          </>
+                        ) : (
+                          <>
+                            <User className="h-3 w-3 mr-1" />
+                            Приватна
+                          </>
+                        )}
+                      </Badge>
                     </div>
                   </div>
                 </div>
@@ -543,7 +686,10 @@ export default function Integrations() {
                 <div className="flex gap-2">
                   {!integration.connected ? (
                     <Button
-                      onClick={() => setConfigDialogOpen(integration.id)}
+                      onClick={() => {
+                        setSelectedScope(integration.scope);
+                        setConfigDialogOpen(integration.id);
+                      }}
                       disabled={configuring === integration.id}
                       className="flex-1"
                       size="sm"
