@@ -970,7 +970,14 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={isRecording ? stopRecording : startRecording}
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (isRecording) {
+                    stopRecording();
+                  } else {
+                    startRecording();
+                  }
+                }}
                 disabled={isStreaming}
                 className={`touch-target h-10 w-10 sm:h-11 sm:w-11 p-0 flex-shrink-0 ${isRecording ? 'text-destructive animate-pulse-soft' : ''}`}
                 aria-label={isRecording ? "Остановить запись" : "Записать голосовое сообщение"}
