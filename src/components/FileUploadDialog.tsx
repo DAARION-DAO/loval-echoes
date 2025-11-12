@@ -126,7 +126,7 @@ export const FileUploadDialog = ({
             storage_path: fileName,
             description: descriptions[file.name] || null,
             is_knowledge_base: true, // Auto-add to knowledge base
-            user_id: user.id,
+            uploaded_by: user.id, // Використовуємо uploaded_by замість user_id
             project_id: projectId || null,
             folder_id: folderId || null,
             scope: scope,
