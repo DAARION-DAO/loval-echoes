@@ -8,16 +8,19 @@ export const ALLOWED_ORIGINS = [
   'http://localhost:5173',
   'http://127.0.0.1:8080',
   'http://127.0.0.1:5173',
-  // Додайте ваші production домени тут:
-  // 'https://your-app.com',
-  // 'https://www.your-app.com',
-  // 'https://app.your-domain.com',
+  // Production domains
+  'https://microdao.lovable.app',
 ];
 
+// Check if origin is from a Lovable preview domain
+const isLovablePreview = (origin: string): boolean =>
+  /^https:\/\/[a-z0-9-]+\.lovable\.app$/.test(origin);
+
 export const getCorsHeaders = (origin: string | null) => {
-  const allowedOrigin = origin && ALLOWED_ORIGINS.includes(origin) 
-    ? origin 
-    : ALLOWED_ORIGINS[0]; // Fallback to first allowed origin
+  const isAllowed = origin && (
+    ALLOWED_ORIGINS.includes(origin) || isLovablePreview(origin)
+  );
+  const allowedOrigin = isAllowed ? origin : ALLOWED_ORIGINS[0];
   
   return {
     'Access-Control-Allow-Origin': allowedOrigin,

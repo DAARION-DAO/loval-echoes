@@ -112,36 +112,9 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
   const [isMainAgentAvailable, setIsMainAgentAvailable] = useState(true);
   
   useEffect(() => {
-    const checkChatScope = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('conversations')
-          .select('scope')
-          .eq('id', chatId)
-          .single();
-
-        if (error) {
-          console.warn('Error checking chat scope:', error);
-          // За замовчуванням вважаємо що агент доступний
-          setChatScope('community');
-          setIsMainAgentAvailable(true);
-          return;
-        }
-
-        const scope = (data?.scope as 'community' | 'project' | 'personal') || 'community';
-        setChatScope(scope);
-        // Головний агент доступний тільки для community та project чатів
-        setIsMainAgentAvailable(scope !== 'personal');
-      } catch (error) {
-        console.error('Error checking chat scope:', error);
-        setChatScope('community');
-        setIsMainAgentAvailable(true);
-      }
-    };
-
-    if (chatId) {
-      checkChatScope();
-    }
+    // Scope column not yet available in conversations table - default to community
+    setChatScope('community');
+    setIsMainAgentAvailable(true);
   }, [chatId]);
   
   const { currentMessage, isStreaming, startStream, stopStream } = useDifyStream(chatId, handleTTSMessage);

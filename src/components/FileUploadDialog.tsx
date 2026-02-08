@@ -16,7 +16,7 @@ interface FileUploadDialogProps {
   onUploadComplete?: () => void;
   projectId?: string;
   folderId?: string;
-  scope?: 'community' | 'project' | 'personal';
+  scope?: 'community' | 'project';
 }
 
 export const FileUploadDialog = ({
@@ -110,7 +110,7 @@ export const FileUploadDialog = ({
           .getPublicUrl(fileName);
 
         // Determine file type
-        let fileType = 'document';
+        let fileType: 'document' | 'image' | 'code' | 'data' | 'other' = 'document';
         if (file.type.startsWith('image/')) fileType = 'image';
         else if (file.type.includes('json') || file.type.includes('csv')) fileType = 'data';
         else if (file.type.includes('text') || file.name.endsWith('.md')) fileType = 'code';
@@ -125,11 +125,11 @@ export const FileUploadDialog = ({
             size_bytes: file.size,
             storage_path: fileName,
             description: descriptions[file.name] || null,
-            is_knowledge_base: true, // Auto-add to knowledge base
-            uploaded_by: user.id, // Використовуємо uploaded_by замість user_id
+            is_knowledge_base: true,
+            uploaded_by: user.id,
             project_id: projectId || null,
             folder_id: folderId || null,
-            scope: scope,
+            scope: scope || 'community',
           })
           .select()
           .single();

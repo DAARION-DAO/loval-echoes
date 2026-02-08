@@ -198,51 +198,28 @@ export function usePushNotifications() {
     }
   }, [registerServiceWorker, subscribeToPush, toast]);
 
-  // Загрузка настроек push-уведомлений
+  // Загрузка настроек push-уведомлений (localStorage)
   const loadSettings = useCallback(async () => {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
-        .from('push_notification_settings')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
-
-      if (error && error.code !== 'PGRST116') { // PGRST116 = not found
-        throw error;
-      }
-
-      if (data) {
-        setSettings({
-          news_enabled: data.news_enabled ?? true,
-          chat_notifications: data.chat_notifications || [],
-        });
+      const saved = localStorage.getItem(`push_settings_${user.id}`);
+      if (saved) {
+        const parsed = JSON.parse(saved) as PushNotificationSettings;
+        setSettings(parsed);
       }
     } catch (error) {
       console.error('Error loading push settings:', error);
     }
   }, [user]);
 
-  // Сохранение настроек
+  // Сохранение настроек (localStorage)
   const saveSettings = useCallback(async (newSettings: Partial<PushNotificationSettings>) => {
     if (!user) return false;
 
     try {
       const updatedSettings = { ...settings, ...newSettings };
-      
-      const { error } = await supabase
-        .from('push_notification_settings')
-        .upsert({
-          user_id: user.id,
-          news_enabled: updatedSettings.news_enabled,
-          chat_notifications: updatedSettings.chat_notifications,
-          updated_at: new Date().toISOString(),
-        }, {
-          onConflict: 'user_id',
-        });
-
-      if (error) throw error;
+      localStorage.setItem(`push_settings_${user.id}`, JSON.stringify(updatedSettings));
 
       setSettings(updatedSettings);
       toast({

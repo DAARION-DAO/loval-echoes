@@ -166,6 +166,34 @@ const FeedbackSchema = z.object({
   content: z.string().max(500).optional(),
 });
 
+const GetMessagesSchema = z.object({
+  action: z.literal('get_messages').optional(),
+  conversationId: z.string().min(1).max(255),
+  cursor: z.string().max(255).optional(),
+});
+
+const StopGenerationSchema = z.object({
+  action: z.literal('stop_generation').optional(),
+  taskId: z.string().min(1).max(255),
+});
+
+const ListConversationsSchema = z.object({
+  action: z.literal('list_conversations').optional(),
+  limit: z.number().int().min(1).max(100).optional(),
+  cursor: z.string().max(255).optional(),
+});
+
+const RenameConversationSchema = z.object({
+  action: z.literal('rename_conversation').optional(),
+  conversationId: z.string().min(1).max(255),
+  name: z.string().min(1).max(200),
+});
+
+const DeleteConversationSchema = z.object({
+  action: z.literal('delete_conversation').optional(),
+  conversationId: z.string().min(1).max(255),
+});
+
 serve(async (req) => {
   console.log(`[dify-client] ${req.method} ${req.url}`);
   
@@ -366,8 +394,15 @@ serve(async (req) => {
       }
 
       case 'get_messages': {
-        const { conversationId, cursor } = requestBody as any;
-        const response = await difyClient.getMessages(conversationId, cursor);
+        const gmResult = GetMessagesSchema.safeParse(requestBody);
+        if (!gmResult.success) {
+          return new Response(
+            JSON.stringify({ error: 'Помилка валідації', details: gmResult.error.errors }),
+            { status: 400, headers: { ...headers, 'Content-Type': 'application/json' } }
+          );
+        }
+        const { conversationId: gmConvId, cursor: gmCursor } = gmResult.data;
+        const response = await difyClient.getMessages(gmConvId, gmCursor);
         const data = await response.json();
         
         return new Response(JSON.stringify(data), {
@@ -376,8 +411,14 @@ serve(async (req) => {
       }
 
       case 'stop_generation': {
-        const { taskId } = requestBody as any;
-        const response = await difyClient.stopGeneration(taskId);
+        const sgResult = StopGenerationSchema.safeParse(requestBody);
+        if (!sgResult.success) {
+          return new Response(
+            JSON.stringify({ error: 'Помилка валідації', details: sgResult.error.errors }),
+            { status: 400, headers: { ...headers, 'Content-Type': 'application/json' } }
+          );
+        }
+        const response = await difyClient.stopGeneration(sgResult.data.taskId);
         const data = await response.json();
         
         return new Response(JSON.stringify(data), {
@@ -418,8 +459,14 @@ serve(async (req) => {
       }
 
       case 'list_conversations': {
-        const { limit, cursor } = requestBody as any;
-        const response = await difyClient.listConversations(limit, cursor);
+        const lcResult = ListConversationsSchema.safeParse(requestBody);
+        if (!lcResult.success) {
+          return new Response(
+            JSON.stringify({ error: 'Помилка валідації', details: lcResult.error.errors }),
+            { status: 400, headers: { ...headers, 'Content-Type': 'application/json' } }
+          );
+        }
+        const response = await difyClient.listConversations(lcResult.data.limit, lcResult.data.cursor);
         const data = await response.json();
         
         return new Response(JSON.stringify(data), {
@@ -428,8 +475,14 @@ serve(async (req) => {
       }
 
       case 'rename_conversation': {
-        const { conversationId, name } = requestBody as any;
-        const response = await difyClient.renameConversation(conversationId, name);
+        const rcResult = RenameConversationSchema.safeParse(requestBody);
+        if (!rcResult.success) {
+          return new Response(
+            JSON.stringify({ error: 'Помилка валідації', details: rcResult.error.errors }),
+            { status: 400, headers: { ...headers, 'Content-Type': 'application/json' } }
+          );
+        }
+        const response = await difyClient.renameConversation(rcResult.data.conversationId, rcResult.data.name);
         const data = await response.json();
         
         return new Response(JSON.stringify(data), {
@@ -438,8 +491,14 @@ serve(async (req) => {
       }
 
       case 'delete_conversation': {
-        const { conversationId } = requestBody as any;
-        const response = await difyClient.deleteConversation(conversationId);
+        const dcResult = DeleteConversationSchema.safeParse(requestBody);
+        if (!dcResult.success) {
+          return new Response(
+            JSON.stringify({ error: 'Помилка валідації', details: dcResult.error.errors }),
+            { status: 400, headers: { ...headers, 'Content-Type': 'application/json' } }
+          );
+        }
+        const response = await difyClient.deleteConversation(dcResult.data.conversationId);
         const data = await response.json();
         
         return new Response(JSON.stringify(data), {

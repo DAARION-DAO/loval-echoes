@@ -118,23 +118,8 @@ export const useDifyStream = (chatId: string | null, onTTSMessage?: (tts: TTSMes
     }
 
     try {
-      // Перевіряємо scope чату - головний агент підключений тільки до community та project чатів
-      const { data: conversation, error: convError } = await supabase
-        .from('conversations')
-        .select('scope')
-        .eq('id', chatId)
-        .single();
-
-      if (convError) {
-        console.warn('Error checking conversation scope:', convError);
-        // Продовжуємо якщо не вдалося перевірити scope (fallback)
-      } else if (conversation?.scope === 'personal') {
-        // Приватні чати не підключаються до головного агента
-        console.log('Personal chat detected, skipping main agent connection');
-        setError('Головний агент не доступний в приватних чатах');
-        setIsStreaming(false);
-        return;
-      }
+      // Scope column not yet available in conversations table
+      // Agent is available for all chats by default
 
       setError(null);
       setIsStreaming(true);

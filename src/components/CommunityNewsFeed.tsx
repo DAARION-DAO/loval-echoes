@@ -19,7 +19,7 @@ interface NewsMessage {
   profiles?: {
     user_id: string;
     display_name: string;
-    avatar_url: string | null;
+    avatar_url?: string | null;
   } | null;
 }
 
