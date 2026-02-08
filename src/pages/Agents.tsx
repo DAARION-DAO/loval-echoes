@@ -19,11 +19,10 @@ interface Agent {
   name: string;
   description: string | null;
   avatar_url: string | null;
-  owner_user_id: string | null; // null для спільного агента
+  owner_user_id: string | null;
   connection_type: 'webhook' | 'websocket' | 'msp';
   status: 'active' | 'paused' | 'disconnected';
-  is_preset: boolean;
-  scope: 'community' | 'personal'; // community = спільний, personal = приватний
+  is_preset: boolean | null;
   created_at: string;
 }
 
@@ -32,18 +31,11 @@ export default function Agents() {
   const [loading, setLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [catalogDialogOpen, setCatalogDialogOpen] = useState(false);
-  const [newAgent, setNewAgent] = useState<{
-    name: string;
-    description: string;
-    connection_type: 'webhook' | 'websocket' | 'msp';
-    endpoint_url: string;
-    scope: 'community' | 'personal';
-  }>({
+  const [newAgent, setNewAgent] = useState({
     name: '',
     description: '',
-    connection_type: 'msp',
+    connection_type: 'msp' as 'webhook' | 'websocket' | 'msp',
     endpoint_url: '',
-    scope: 'personal',
   });
   const [scopeFilter, setScopeFilter] = useState<'all' | 'community' | 'personal'>('all');
   const { toast } = useToast();
@@ -71,15 +63,13 @@ export default function Agents() {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) return;
 
-      // Завантажуємо спільних агентів (scope = 'community') та приватних (scope = 'personal' AND owner_user_id = user.id)
       const { data, error } = await supabase
         .from('agents')
         .select('*')
-        .or(`scope.eq.community,and(scope.eq.personal,owner_user_id.eq.${userData.user.id})`)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setAgents(data || []);
+      setAgents((data || []) as Agent[]);
     } catch (error) {
       console.error('Error fetching agents:', error);
       toast({
@@ -113,8 +103,7 @@ export default function Agents() {
           description: newAgent.description || null,
           connection_type: newAgent.connection_type,
           endpoint_url: newAgent.endpoint_url || null,
-          owner_user_id: newAgent.scope === 'personal' ? userData.user.id : null,
-          scope: newAgent.scope,
+          owner_user_id: userData.user.id,
           status: 'active',
           is_preset: false,
         });
@@ -127,7 +116,7 @@ export default function Agents() {
       });
 
       setCreateDialogOpen(false);
-      setNewAgent({ name: '', description: '', connection_type: 'msp', endpoint_url: '' });
+      setNewAgent({ name: '', description: '', connection_type: 'msp' as 'webhook' | 'websocket' | 'msp', endpoint_url: '' });
       fetchAgents();
     } catch (error) {
       console.error('Error creating agent:', error);
@@ -471,7 +460,11 @@ export default function Agents() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {agents
-          .filter(agent => scopeFilter === 'all' || agent.scope === scopeFilter)
+          .filter(agent => {
+            if (scopeFilter === 'all') return true;
+            const agentScope = agent.owner_user_id ? 'personal' : 'community';
+            return agentScope === scopeFilter;
+          })
           .map((agent) => (
             <Card key={agent.id} className="p-6 hover:shadow-lg transition-shadow">
               <div className="flex items-start justify-between mb-4">
@@ -498,8 +491,8 @@ export default function Agents() {
               )}
 
               <div className="flex items-center gap-2 mb-4 flex-wrap">
-                <Badge variant={agent.scope === 'community' ? 'default' : 'outline'}>
-                  {agent.scope === 'community' ? (
+                <Badge variant={!agent.owner_user_id ? 'default' : 'outline'}>
+                  {!agent.owner_user_id ? (
                     <>
                       <Users className="h-3 w-3 mr-1" />
                       Спільний

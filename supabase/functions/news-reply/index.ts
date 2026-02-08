@@ -1,25 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
-
-// CORS configuration - замінити на конкретні домени
-const ALLOWED_ORIGINS = [
-  'https://pbsdsdexayzfoexjdlgb.supabase.co',
-  // Додати ваш production домен тут
-  // 'https://your-app.com',
-];
-
-const corsHeaders = (origin: string | null) => {
-  const allowedOrigin = origin && ALLOWED_ORIGINS.includes(origin) 
-    ? origin 
-    : ALLOWED_ORIGINS[0]; // Fallback to first allowed origin
-  
-  return {
-    'Access-Control-Allow-Origin': allowedOrigin,
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-    'Access-Control-Allow-Credentials': 'true',
-  };
-};
+import { handleCors } from '../_shared/cors.ts';
 
 // Валідація вводу
 const NewsReplySchema = z.object({
@@ -34,12 +16,11 @@ const NewsReplySchema = z.object({
 });
 
 serve(async (req) => {
-  const origin = req.headers.get('origin');
-  const headers = corsHeaders(origin);
-
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers });
+  const corsResult = handleCors(req);
+  if (corsResult instanceof Response) {
+    return corsResult;
   }
+  const headers = corsResult.headers;
 
   try {
     // JWT верифікація - отримуємо користувача з токену

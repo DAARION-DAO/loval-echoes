@@ -75,26 +75,33 @@ serve(async (req) => {
 
     const { messageId, rating, content } = validationResult.data;
 
-    // Відправляємо feedback в Dify через service role (для виклику іншої функції)
-    const serviceSupabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    // Відправляємо feedback в Dify через user JWT (без service role)
+    const difyResponse = await fetch(
+      `${Deno.env.get('SUPABASE_URL')}/functions/v1/dify-client`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': authHeader,
+          'Content-Type': 'application/json',
+          'apikey': Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+        },
+        body: JSON.stringify({
+          action: 'send_feedback',
+          messageId,
+          rating,
+          content,
+        }),
+      }
     );
 
-    const response = await serviceSupabase.functions.invoke('dify-client', {
-      body: {
-        action: 'send_feedback',
-        messageId,
-        rating,
-        content,
-      },
-    });
-
-    if (response.error) {
-      throw new Error(response.error.message);
+    if (!difyResponse.ok) {
+      const errorData = await difyResponse.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Failed to send feedback');
     }
 
-    // Логирование (з RLS захистом)
+    const responseData = await difyResponse.json();
+
+    // Логирування (з RLS захистом)
     await supabase
       .from('audit_log')
       .insert({
@@ -107,7 +114,7 @@ serve(async (req) => {
         },
       });
 
-    return new Response(JSON.stringify(response.data), {
+    return new Response(JSON.stringify(responseData), {
       headers: { ...headers, 'Content-Type': 'application/json' },
     });
 

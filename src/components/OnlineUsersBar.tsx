@@ -57,12 +57,12 @@ export const OnlineUsersBar: React.FC<OnlineUsersBarProps> = ({
           for (const userId in state) {
             const userPresences = state[userId];
             if (userPresences.length > 0) {
-              const presence = userPresences[0];
+              const presence = userPresences[0] as Record<string, unknown>;
               users.push({
                 user_id: userId,
-                display_name: presence.display_name || 'Участник',
-                avatar_url: presence.avatar_url,
-                email: presence.email
+                display_name: (presence.display_name as string) || 'Участник',
+                avatar_url: presence.avatar_url as string | undefined,
+                email: presence.email as string | undefined,
               });
             }
           }

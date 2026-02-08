@@ -186,7 +186,7 @@ export function ProjectKanban({ projectId }: ProjectKanbanProps) {
       const newPosition = cardsInColumn.length;
       
       await updateCard(cardId, {
-        column_type: newColumnId,
+        column_type: newColumnId as "backlog" | "todo" | "progress" | "review" | "done",
         position: newPosition,
       });
     }

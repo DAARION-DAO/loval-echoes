@@ -138,69 +138,28 @@ export default function Integrations() {
     try {
       setLoading(true);
       
-      // Завантажуємо інтеграції користувача з бази даних
-      const { data, error } = await supabase
-        .from('user_integrations')
-        .select('*')
-        .eq('user_id', user.id);
-
-      if (error) {
-        // Якщо таблиця не існує, створюємо базові інтеграції
-        console.log('Integrations table might not exist, creating default integrations');
-        const defaultIntegrations = INTEGRATIONS.map(int => ({
-          ...int,
-          id: crypto.randomUUID(),
-          enabled: false,
-          connected: false,
-        }));
-        setIntegrations(defaultIntegrations);
-        return;
-      }
-
-      // Об'єднуємо з базовими інтеграціями
-      const integrationsMap = new Map<string, Integration>();
+      // Load saved integrations from localStorage (user_integrations table not yet created)
+      const saved = localStorage.getItem(`user_integrations_${user.id}`);
+      const savedData: Record<string, { enabled: boolean; connected: boolean; scope: string; config?: Record<string, unknown>; lastSync?: string }> = saved ? JSON.parse(saved) : {};
       
+      const allIntegrations: Integration[] = [];
       INTEGRATIONS.forEach(int => {
-        integrationsMap.set(int.type, {
-          ...int,
-          id: crypto.randomUUID(),
-          enabled: false,
-          connected: false,
-        });
-      });
-
-      data?.forEach(dbInt => {
-        const baseInt = INTEGRATIONS.find(i => i.type === dbInt.type);
-        if (baseInt) {
-          integrationsMap.set(`${dbInt.type}-${dbInt.scope || 'personal'}`, {
-            ...baseInt,
-            id: dbInt.id,
-            enabled: dbInt.enabled || false,
-            connected: dbInt.connected || false,
-            scope: (dbInt.scope as 'team' | 'personal') || 'personal',
-            config: dbInt.config as Record<string, unknown> | undefined,
-            lastSync: dbInt.last_sync,
+        ['team', 'personal'].forEach(scopeVal => {
+          const key = `${int.type}-${scopeVal}`;
+          const savedInt = savedData[key];
+          allIntegrations.push({
+            ...int,
+            id: key,
+            enabled: savedInt?.enabled || false,
+            connected: savedInt?.connected || false,
+            scope: scopeVal as 'team' | 'personal',
+            config: savedInt?.config,
+            lastSync: savedInt?.lastSync,
           });
-        }
-      });
-
-      // Додаємо базові інтеграції для кожного scope, якщо вони не існують
-      INTEGRATIONS.forEach(int => {
-        ['team', 'personal'].forEach(scope => {
-          const key = `${int.type}-${scope}`;
-          if (!integrationsMap.has(key)) {
-            integrationsMap.set(key, {
-              ...int,
-              id: crypto.randomUUID(),
-              enabled: false,
-              connected: false,
-              scope: scope as 'team' | 'personal',
-            });
-          }
         });
       });
 
-      setIntegrations(Array.from(integrationsMap.values()));
+      setIntegrations(allIntegrations);
     } catch (error) {
       console.error('Error loading integrations:', error);
       toast({
@@ -228,24 +187,18 @@ export default function Integrations() {
 
       const newEnabled = !integration.enabled;
 
-      // Оновлюємо в базі даних
-      const { error } = await supabase
-        .from('user_integrations')
-        .upsert({
-          user_id: user.id,
-          type: integration.type,
-          scope: integration.scope,
-          enabled: newEnabled,
-          connected: integration.connected,
-          config: integration.config,
-          updated_at: new Date().toISOString(),
-        }, {
-          onConflict: 'user_id,type,scope',
-        });
-
-      if (error) {
-        throw error;
-      }
+      // Save to localStorage
+      const savedKey = `user_integrations_${user.id}`;
+      const saved = localStorage.getItem(savedKey);
+      const savedData = saved ? JSON.parse(saved) : {};
+      const intKey = `${integration.type}-${integration.scope}`;
+      savedData[intKey] = {
+        enabled: newEnabled,
+        connected: integration.connected,
+        scope: integration.scope,
+        config: integration.config,
+      };
+      localStorage.setItem(savedKey, JSON.stringify(savedData));
 
       // Оновлюємо локальний стан
       setIntegrations(prev =>
@@ -291,25 +244,19 @@ export default function Integrations() {
         throw error;
       }
 
-      // Оновлюємо в базі даних
-      const { error: dbError } = await supabase
-        .from('user_integrations')
-        .upsert({
-          user_id: user.id,
-          type: integration.type,
-          scope: selectedScope,
-          enabled: true,
-          connected: true,
-          config: { ...integration.config, ...configValues },
-          last_sync: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        }, {
-          onConflict: 'user_id,type,scope',
-        });
-
-      if (dbError) {
-        throw dbError;
-      }
+      // Save to localStorage
+      const savedKey = `user_integrations_${user.id}`;
+      const saved = localStorage.getItem(savedKey);
+      const savedData = saved ? JSON.parse(saved) : {};
+      const intKey = `${integration.type}-${selectedScope}`;
+      savedData[intKey] = {
+        enabled: true,
+        connected: true,
+        scope: selectedScope,
+        config: { ...integration.config, ...configValues },
+        lastSync: new Date().toISOString(),
+      };
+      localStorage.setItem(savedKey, JSON.stringify(savedData));
 
       // Оновлюємо локальний стан
       setIntegrations(prev =>
@@ -356,22 +303,17 @@ export default function Integrations() {
         throw error;
       }
 
-      // Оновлюємо в базі даних
-      const { error: dbError } = await supabase
-        .from('user_integrations')
-        .update({
-          enabled: false,
-          connected: false,
-          config: null,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('user_id', user.id)
-        .eq('type', integration.type)
-        .eq('scope', integration.scope);
-
-      if (dbError) {
-        throw dbError;
-      }
+      // Save to localStorage
+      const savedKey = `user_integrations_${user.id}`;
+      const saved = localStorage.getItem(savedKey);
+      const savedData = saved ? JSON.parse(saved) : {};
+      const intKey = `${integration.type}-${integration.scope}`;
+      savedData[intKey] = {
+        enabled: false,
+        connected: false,
+        scope: integration.scope,
+      };
+      localStorage.setItem(savedKey, JSON.stringify(savedData));
 
       // Оновлюємо локальний стан
       setIntegrations(prev =>
