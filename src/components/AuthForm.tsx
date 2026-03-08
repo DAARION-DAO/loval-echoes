@@ -44,7 +44,7 @@ export const AuthForm = () => {
       setFormData(prev => ({ ...prev, email: savedEmail }));
       setRememberMe(true);
     }
-  }, [getSavedEmail]);
+  }, []);
 
   // Redirect if user is already logged in
   useEffect(() => {
