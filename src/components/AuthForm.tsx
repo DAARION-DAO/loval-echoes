@@ -46,6 +46,26 @@ export const AuthForm = () => {
     }
   }, []);
 
+  // Restore remembered session on mount
+  useEffect(() => {
+    let active = true;
+
+    const restoreSession = async () => {
+      if (!isRemembered()) return;
+
+      const restored = await attemptAutoLogin();
+      if (restored && active) {
+        navigate('/', { replace: true });
+      }
+    };
+
+    restoreSession();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
   // Redirect if user is already logged in
   useEffect(() => {
     if (user) {
