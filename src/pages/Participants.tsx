@@ -29,7 +29,6 @@ interface UserProfile {
   user_id: string;
   display_name: string;
   avatar_url?: string;
-  email?: string;
   approval_status: string;
   created_at: string;
 }
