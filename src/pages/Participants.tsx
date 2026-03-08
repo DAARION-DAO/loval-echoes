@@ -22,7 +22,6 @@ interface ApprovalRequest {
   total_existing_users: number;
   display_name: string;
   avatar_url?: string;
-  email?: string;
 }
 
 interface UserProfile {
