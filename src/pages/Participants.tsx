@@ -22,6 +22,7 @@ interface ApprovalRequest {
   total_existing_users: number;
   display_name: string;
   avatar_url?: string;
+  email?: string;
 }
 
 interface UserProfile {
@@ -29,6 +30,7 @@ interface UserProfile {
   user_id: string;
   display_name: string;
   avatar_url?: string;
+  email?: string;
   approval_status: string;
   created_at: string;
 }
@@ -77,7 +79,7 @@ export const Participants = () => {
         const userIds = rawPending.map(r => r.user_id);
         const { data: profiles, error: profilesError } = await supabase
           .from('profiles')
-          .select('user_id, display_name, avatar_url')
+          .select('user_id, display_name, avatar_url, email')
           .in('user_id', userIds);
 
         if (profilesError) throw profilesError;
@@ -88,6 +90,7 @@ export const Participants = () => {
             ...request,
             display_name: profile?.display_name || 'Пользователь',
             avatar_url: profile?.avatar_url ?? undefined,
+            email: profile?.email ?? undefined,
           });
         }
       }
@@ -331,6 +334,9 @@ export const Participants = () => {
                           <CardTitle className="text-lg">
                             {request.display_name}
                           </CardTitle>
+                          {request.email && (
+                            <p className="text-sm text-muted-foreground font-mono">{request.email}</p>
+                          )}
                           <p className="text-sm text-muted-foreground">
                             Подал заявку: {formatDate(request.created_at)}
                           </p>
@@ -417,6 +423,9 @@ export const Participants = () => {
                       </Avatar>
                       <div className="flex-1">
                         <h3 className="font-medium">{user.display_name}</h3>
+                        {user.email && (
+                          <p className="text-xs text-muted-foreground font-mono">{user.email}</p>
+                        )}
                         <p className="text-sm text-muted-foreground">
                           Вступил: {formatDate(user.created_at)}
                         </p>
@@ -448,6 +457,9 @@ export const Participants = () => {
                       </Avatar>
                       <div className="flex-1">
                         <h3 className="font-medium">{user.display_name}</h3>
+                        {user.email && (
+                          <p className="text-xs text-muted-foreground font-mono">{user.email}</p>
+                        )}
                         <p className="text-sm text-muted-foreground">
                           Заявка отклонена: {formatDate(user.created_at)}
                         </p>
