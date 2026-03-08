@@ -79,7 +79,7 @@ export const Participants = () => {
         const userIds = rawPending.map(r => r.user_id);
         const { data: profiles, error: profilesError } = await supabase
           .from('profiles')
-          .select('user_id, display_name, avatar_url')
+          .select('user_id, display_name, avatar_url, email')
           .in('user_id', userIds);
 
         if (profilesError) throw profilesError;
@@ -90,6 +90,7 @@ export const Participants = () => {
             ...request,
             display_name: profile?.display_name || 'Пользователь',
             avatar_url: profile?.avatar_url ?? undefined,
+            email: profile?.email ?? undefined,
           });
         }
       }
