@@ -87,8 +87,7 @@ export const Participants = () => {
           pendingWithProfiles.push({
             ...request,
             display_name: profile?.display_name || 'Пользователь',
-            avatar_url: profile?.avatar_url,
-            email: profile?.email
+            avatar_url: profile?.avatar_url ?? undefined,
           });
         }
       }
