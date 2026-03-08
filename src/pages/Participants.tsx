@@ -417,11 +417,6 @@ export const Participants = () => {
                       </Avatar>
                       <div className="flex-1">
                         <h3 className="font-medium">{user.display_name}</h3>
-                        {user.email && (
-                          <p className="text-xs text-muted-foreground font-mono">
-                            {user.email}
-                          </p>
-                        )}
                         <p className="text-sm text-muted-foreground">
                           Вступил: {formatDate(user.created_at)}
                         </p>
