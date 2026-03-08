@@ -689,6 +689,7 @@ export const AuthForm = () => {
           </Tabs>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 };
