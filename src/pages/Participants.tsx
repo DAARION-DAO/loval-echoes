@@ -334,6 +334,9 @@ export const Participants = () => {
                           <CardTitle className="text-lg">
                             {request.display_name}
                           </CardTitle>
+                          {request.email && (
+                            <p className="text-sm text-muted-foreground font-mono">{request.email}</p>
+                          )}
                           <p className="text-sm text-muted-foreground">
                             Подал заявку: {formatDate(request.created_at)}
                           </p>
