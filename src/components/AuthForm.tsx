@@ -503,11 +503,34 @@ export const AuthForm = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted/20 p-4">
-      <Card className="w-full max-w-md shadow-elegant">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">ЖОС Мессенджер</CardTitle>
-          <CardDescription>
-            Добро пожаловать в сообщество живой операционной системы
+      <div className="w-full max-w-md space-y-4">
+        {/* Temporary help banner */}
+        <div className="rounded-lg border border-accent/30 bg-accent/10 p-4 text-center space-y-2">
+          <p className="text-sm font-medium text-foreground">
+            🔑 Не вдається увійти?
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Якщо ви забули пароль або маєте проблеми зі входом — скористайтесь відновленням паролю.
+          </p>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setShowForgotPassword(true);
+              const signinTab = document.querySelector('[value="signin"]') as HTMLButtonElement;
+              if (signinTab) signinTab.click();
+            }}
+          >
+            Відновити пароль
+          </Button>
+        </div>
+
+        <Card className="shadow-elegant">
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl font-bold">ЖОС Мессенджер</CardTitle>
+            <CardDescription>
+              Добро пожаловать в сообщество живой операционной системы
           </CardDescription>
         </CardHeader>
         <CardContent>
