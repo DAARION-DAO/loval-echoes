@@ -34,7 +34,7 @@ import { useSessionTimeout } from "./hooks/useSessionTimeout";
 const queryClient = new QueryClient();
 
 const ProtectedLayout = () => {
-  const { loading } = useAuth();
+  const { user, loading } = useAuth();
   useSessionTimeout();
 
   if (loading) {
@@ -43,6 +43,10 @@ const ProtectedLayout = () => {
         <LoadingSpinner size="lg" text="Загрузка..." />
       </div>
     );
+  }
+
+  if (!user) {
+    return <Navigate to="/auth" replace />;
   }
 
   return (
