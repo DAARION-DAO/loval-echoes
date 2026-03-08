@@ -46,7 +46,7 @@ const ProtectedLayout = () => {
   }
 
   if (!user) {
-    return <Navigate to="/auth" replace />;
+    // Guest access enabled for team preview usage
   }
 
   return (
