@@ -34,7 +34,7 @@ import { useSessionTimeout } from "./hooks/useSessionTimeout";
 const queryClient = new QueryClient();
 
 const ProtectedLayout = () => {
-  const { user, loading } = useAuth();
+  const { loading } = useAuth();
   useSessionTimeout();
 
   if (loading) {
@@ -43,10 +43,6 @@ const ProtectedLayout = () => {
         <LoadingSpinner size="lg" text="Загрузка..." />
       </div>
     );
-  }
-
-  if (!user) {
-    // Guest access enabled for team preview usage
   }
 
   return (
