@@ -1,1 +1,10 @@
 project_id = "hjquragwfmcrljanmhtt"
+
+[functions.auth-security]
+verify_jwt = false
+
+[functions.login-fix]
+verify_jwt = false
+
+[functions.auto-register]
+verify_jwt = false
