@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "13.0.4"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -252,6 +252,36 @@ export type Database = {
           },
         ]
       }
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string | null
+          details: Json | null
+          id: string
+          target_id: string | null
+          target_type: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          target_id?: string | null
+          target_type?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          target_id?: string | null
+          target_type?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       chat_action_logs: {
         Row: {
           action: string
@@ -325,59 +355,70 @@ export type Database = {
       conversations: {
         Row: {
           auto_generated_name: boolean | null
-          avatar_url: string | null
           created_at: string
+          created_by: string | null
           description: string | null
           dify_conversation_id: string | null
-          docs_folder_id: string | null
+          forked_from_chat: string | null
+          forked_from_message_id: string | null
           id: string
-          is_archived: boolean
+          is_archived: boolean | null
           is_group_chat: boolean | null
           is_pinned: boolean | null
           name: string
           pinned_at: string | null
-          status: string
+          status: string | null
           type: string | null
           updated_at: string
           user_id: string | null
         }
         Insert: {
           auto_generated_name?: boolean | null
-          avatar_url?: string | null
           created_at?: string
+          created_by?: string | null
           description?: string | null
           dify_conversation_id?: string | null
-          docs_folder_id?: string | null
+          forked_from_chat?: string | null
+          forked_from_message_id?: string | null
           id?: string
-          is_archived?: boolean
+          is_archived?: boolean | null
           is_group_chat?: boolean | null
           is_pinned?: boolean | null
           name: string
           pinned_at?: string | null
-          status?: string
+          status?: string | null
           type?: string | null
           updated_at?: string
           user_id?: string | null
         }
         Update: {
           auto_generated_name?: boolean | null
-          avatar_url?: string | null
           created_at?: string
+          created_by?: string | null
           description?: string | null
           dify_conversation_id?: string | null
-          docs_folder_id?: string | null
+          forked_from_chat?: string | null
+          forked_from_message_id?: string | null
           id?: string
-          is_archived?: boolean
+          is_archived?: boolean | null
           is_group_chat?: boolean | null
           is_pinned?: boolean | null
           name?: string
           pinned_at?: string | null
-          status?: string
+          status?: string | null
           type?: string | null
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "conversations_forked_from_chat_fkey"
+            columns: ["forked_from_chat"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       file_tags: {
         Row: {
@@ -831,10 +872,11 @@ export type Database = {
           approval_status: string | null
           avatar_url: string | null
           created_at: string
-          display_name: string
+          display_name: string | null
           email: string | null
           id: string
           news_push_enabled: boolean | null
+          role: string | null
           updated_at: string
           user_id: string
         }
@@ -842,10 +884,11 @@ export type Database = {
           approval_status?: string | null
           avatar_url?: string | null
           created_at?: string
-          display_name: string
+          display_name?: string | null
           email?: string | null
           id?: string
           news_push_enabled?: boolean | null
+          role?: string | null
           updated_at?: string
           user_id: string
         }
@@ -853,11 +896,39 @@ export type Database = {
           approval_status?: string | null
           avatar_url?: string | null
           created_at?: string
-          display_name?: string
+          display_name?: string | null
           email?: string | null
           id?: string
           news_push_enabled?: boolean | null
+          role?: string | null
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      push_notification_settings: {
+        Row: {
+          chat_notifications: string[] | null
+          created_at: string | null
+          id: string
+          news_enabled: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          chat_notifications?: string[] | null
+          created_at?: string | null
+          id?: string
+          news_enabled?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          chat_notifications?: string[] | null
+          created_at?: string | null
+          id?: string
+          news_enabled?: boolean | null
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []
@@ -1105,22 +1176,7 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "fk_user_approval_requests_user_id"
-            columns: ["user_id"]
-            isOneToOne: true
-            referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
-          },
-          {
-            foreignKeyName: "user_approval_requests_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
-            referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
-          },
-        ]
+        Relationships: []
       }
       user_approvals: {
         Row: {
@@ -1157,6 +1213,42 @@ export type Database = {
           },
         ]
       }
+      user_integrations: {
+        Row: {
+          config: Json | null
+          connected: boolean | null
+          created_at: string | null
+          enabled: boolean | null
+          id: string
+          last_sync: string | null
+          type: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          config?: Json | null
+          connected?: boolean | null
+          created_at?: string | null
+          enabled?: boolean | null
+          id?: string
+          last_sync?: string | null
+          type: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          config?: Json | null
+          connected?: boolean | null
+          created_at?: string | null
+          enabled?: boolean | null
+          id?: string
+          last_sync?: string | null
+          type?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           granted_at: string | null
@@ -1190,16 +1282,6 @@ export type Database = {
     }
     Functions: {
       calculate_required_approvals: { Args: never; Returns: number }
-      check_enhanced_rate_limit: {
-        Args: {
-          p_action: string
-          p_block_duration_minutes?: number
-          p_identifier: string
-          p_max_attempts?: number
-          p_window_minutes?: number
-        }
-        Returns: boolean
-      }
       check_rate_limit: {
         Args: {
           p_action: string
@@ -1208,16 +1290,6 @@ export type Database = {
           p_window_minutes?: number
         }
         Returns: boolean
-      }
-      check_rate_limit_secure: {
-        Args: {
-          p_action: string
-          p_block_duration_minutes?: number
-          p_identifier: string
-          p_max_attempts?: number
-          p_window_minutes?: number
-        }
-        Returns: Json
       }
       cleanup_expired_refresh_tokens: { Args: never; Returns: undefined }
       create_task_notification: {
@@ -1230,26 +1302,7 @@ export type Database = {
         }
         Returns: string
       }
-      detect_approval_inconsistencies: { Args: never; Returns: undefined }
-      enhanced_log_security_event: {
-        Args: {
-          p_event_data?: Json
-          p_event_type: string
-          p_ip_address?: unknown
-          p_severity?: string
-          p_user_agent?: string
-          p_user_id: string
-        }
-        Returns: undefined
-      }
-      fix_approval_inconsistencies: {
-        Args: never
-        Returns: {
-          fixed_user_id: string
-          new_status: string
-          old_status: string
-        }[]
-      }
+      fix_approval_inconsistencies: { Args: never; Returns: undefined }
       get_ai_agent_permissions: {
         Args: {
           p_folder_id?: string
@@ -1264,20 +1317,20 @@ export type Database = {
         }[]
       }
       get_conversation_participant_profiles: {
-        Args: { requesting_user_id: string }
+        Args: { p_requesting_user_id: string }
         Returns: {
           user_id: string
         }[]
       }
-      get_user_approval_status: { Args: { user_id: string }; Returns: string }
+      get_user_approval_status: { Args: { p_user_id: string }; Returns: string }
       get_user_conversations: {
-        Args: { user_id: string }
+        Args: { p_user_id: string }
         Returns: {
           conversation_id: string
         }[]
       }
       grant_admin_role: {
-        Args: { p_granted_by: string; p_user_id: string }
+        Args: { p_granted_by?: string; p_user_id: string }
         Returns: undefined
       }
       has_role: {
@@ -1287,14 +1340,13 @@ export type Database = {
         }
         Returns: boolean
       }
-      is_admin: { Args: { user_id: string }; Returns: boolean }
+      is_admin: { Args: { p_user_id: string }; Returns: boolean }
       is_conversation_participant: {
-        Args: { conversation_id: string; user_id: string }
+        Args: { p_conversation_id: string; p_user_id: string }
         Returns: boolean
       }
-      is_moderator: { Args: { user_id: string }; Returns: boolean }
-      is_user_admin_simple: { Args: { user_id: string }; Returns: boolean }
-      is_user_approved: { Args: { user_id: string }; Returns: boolean }
+      is_moderator: { Args: { p_user_id: string }; Returns: boolean }
+      is_user_approved: { Args: { p_user_id: string }; Returns: boolean }
       log_security_event: {
         Args: {
           p_event_data?: Json
@@ -1315,22 +1367,10 @@ export type Database = {
         }
         Returns: string
       }
-      revoke_admin_role: {
-        Args: { p_revoked_by: string; p_user_id: string }
-        Returns: undefined
-      }
+      revoke_admin_role: { Args: { p_user_id: string }; Returns: undefined }
       revoke_user_refresh_tokens: {
         Args: { p_user_id: string }
         Returns: undefined
-      }
-      validate_file_upload_security: {
-        Args: {
-          p_file_name: string
-          p_file_size: number
-          p_file_type: string
-          p_user_id?: string
-        }
-        Returns: Json
       }
     }
     Enums: {

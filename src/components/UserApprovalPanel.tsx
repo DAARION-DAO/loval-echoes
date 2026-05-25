@@ -63,16 +63,7 @@ export const UserApprovalPanel = ({ className = '' }: UserApprovalPanelProps) =>
 
       // Step 1: Fix any data inconsistencies automatically
       try {
-        const { data: fixedUsers, error: fixError } = await supabase
-          .rpc('fix_approval_inconsistencies');
-        
-        if (!fixError && fixedUsers && fixedUsers.length > 0) {
-          console.log('Fixed approval inconsistencies for users:', fixedUsers);
-          toast({
-            title: 'Данные синхронизированы',
-            description: `Исправлены несоответствия для ${fixedUsers.length} пользователей`,
-          });
-        }
+        await supabase.rpc('fix_approval_inconsistencies');
       } catch (fixError) {
         console.warn('Could not auto-fix inconsistencies:', fixError);
         // Continue loading requests even if auto-fix fails
