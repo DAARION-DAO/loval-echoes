@@ -227,6 +227,13 @@ export type Database = {
           conversation_id: string
         }[]
       }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       is_admin: { Args: { p_user_id: string }; Returns: boolean }
       is_conversation_participant: {
         Args: { p_conversation_id: string; p_user_id: string }
@@ -236,7 +243,13 @@ export type Database = {
       is_user_approved: { Args: { p_user_id: string }; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      agent_connection_type: "webhook" | "websocket" | "msp"
+      agent_role: "assistant" | "observer" | "manager"
+      agent_status: "active" | "paused" | "disconnected"
+      app_role: "admin" | "moderator" | "user"
+      file_scope: "community" | "project"
+      file_type: "document" | "image" | "code" | "data" | "other"
+      kanban_column: "backlog" | "todo" | "progress" | "review" | "done"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -363,6 +376,14 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      agent_connection_type: ["webhook", "websocket", "msp"],
+      agent_role: ["assistant", "observer", "manager"],
+      agent_status: ["active", "paused", "disconnected"],
+      app_role: ["admin", "moderator", "user"],
+      file_scope: ["community", "project"],
+      file_type: ["document", "image", "code", "data", "other"],
+      kanban_column: ["backlog", "todo", "progress", "review", "done"],
+    },
   },
 } as const
