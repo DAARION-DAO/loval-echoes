@@ -30,7 +30,8 @@ export const AuthForm = () => {
   const [isPasswordReset, setIsPasswordReset] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(false);
+  // Always remember the device. Session is cleared only on explicit sign-out.
+  const rememberMe = true;
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -42,25 +43,18 @@ export const AuthForm = () => {
     const savedEmail = getSavedEmail();
     if (savedEmail) {
       setFormData(prev => ({ ...prev, email: savedEmail }));
-      setRememberMe(true);
     }
   }, []);
 
-  // Restore remembered session on mount
+  // Always try to restore the session on mount — device is remembered by default
   useEffect(() => {
     let active = true;
-
-    const restoreSession = async () => {
-      if (!isRemembered()) return;
-
+    (async () => {
       const restored = await attemptAutoLogin();
       if (restored && active) {
         navigate('/', { replace: true });
       }
-    };
-
-    restoreSession();
-
+    })();
     return () => {
       active = false;
     };
@@ -565,20 +559,10 @@ export const AuthForm = () => {
                   />
                 </div>
                 
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="remember-me"
-                    checked={rememberMe}
-                    onCheckedChange={(checked) => setRememberMe(checked as boolean)}
-                  />
-                  <Label 
-                    htmlFor="remember-me" 
-                    className="text-sm font-normal cursor-pointer"
-                  >
-                    Запомнить меня
-                  </Label>
-                </div>
-                
+                <p className="text-xs text-muted-foreground text-center">
+                  🔒 Цей пристрій буде запам'ятовано. Вхід потрібен лише після виходу.
+                </p>
+
                 <Button type="submit" className="w-full" disabled={loading || secureAuthLoading}>
                   {(loading || secureAuthLoading) ? 'Вход...' : 'Войти'}
                 </Button>
