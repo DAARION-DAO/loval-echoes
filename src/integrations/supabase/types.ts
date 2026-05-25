@@ -54,43 +54,52 @@ export type Database = {
           auto_generated_name: boolean | null
           created_at: string
           created_by: string | null
+          description: string | null
           dify_conversation_id: string | null
           forked_from_chat: string | null
           forked_from_message_id: string | null
           id: string
+          is_group_chat: boolean | null
           is_pinned: boolean | null
           name: string
           pinned_at: string | null
           status: string | null
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           auto_generated_name?: boolean | null
           created_at?: string
           created_by?: string | null
+          description?: string | null
           dify_conversation_id?: string | null
           forked_from_chat?: string | null
           forked_from_message_id?: string | null
           id?: string
+          is_group_chat?: boolean | null
           is_pinned?: boolean | null
           name: string
           pinned_at?: string | null
           status?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           auto_generated_name?: boolean | null
           created_at?: string
           created_by?: string | null
+          description?: string | null
           dify_conversation_id?: string | null
           forked_from_chat?: string | null
           forked_from_message_id?: string | null
           id?: string
+          is_group_chat?: boolean | null
           is_pinned?: boolean | null
           name?: string
           pinned_at?: string | null
           status?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: [
           {
