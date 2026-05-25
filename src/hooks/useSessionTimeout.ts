@@ -8,7 +8,7 @@ export const useSessionTimeout = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    let idleTimeout: NodeJS.Timeout;
+    let idleTimeout: ReturnType<typeof setTimeout>;
 
     const resetIdleTimer = () => {
       clearTimeout(idleTimeout);
