@@ -362,11 +362,13 @@ export type Database = {
           forked_from_chat: string | null
           forked_from_message_id: string | null
           id: string
+          is_archived: boolean | null
           is_group_chat: boolean | null
           is_pinned: boolean | null
           name: string
           pinned_at: string | null
           status: string | null
+          type: string | null
           updated_at: string
           user_id: string | null
         }
@@ -379,11 +381,13 @@ export type Database = {
           forked_from_chat?: string | null
           forked_from_message_id?: string | null
           id?: string
+          is_archived?: boolean | null
           is_group_chat?: boolean | null
           is_pinned?: boolean | null
           name: string
           pinned_at?: string | null
           status?: string | null
+          type?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -396,11 +400,13 @@ export type Database = {
           forked_from_chat?: string | null
           forked_from_message_id?: string | null
           id?: string
+          is_archived?: boolean | null
           is_group_chat?: boolean | null
           is_pinned?: boolean | null
           name?: string
           pinned_at?: string | null
           status?: string | null
+          type?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -1276,11 +1282,56 @@ export type Database = {
     }
     Functions: {
       calculate_required_approvals: { Args: never; Returns: number }
+      check_rate_limit: {
+        Args: {
+          p_action: string
+          p_identifier: string
+          p_max_attempts?: number
+          p_window_minutes?: number
+        }
+        Returns: boolean
+      }
+      cleanup_expired_refresh_tokens: { Args: never; Returns: undefined }
+      create_task_notification: {
+        Args: {
+          p_message: string
+          p_metadata?: Json
+          p_task_id: string
+          p_type: string
+          p_user_id: string
+        }
+        Returns: string
+      }
+      fix_approval_inconsistencies: { Args: never; Returns: undefined }
+      get_ai_agent_permissions: {
+        Args: {
+          p_folder_id?: string
+          p_project_id?: string
+          p_scope: Database["public"]["Enums"]["file_scope"]
+        }
+        Returns: {
+          can_delete: boolean
+          can_read: boolean
+          can_tag: boolean
+          can_write: boolean
+        }[]
+      }
+      get_conversation_participant_profiles: {
+        Args: { p_requesting_user_id: string }
+        Returns: {
+          user_id: string
+        }[]
+      }
+      get_user_approval_status: { Args: { p_user_id: string }; Returns: string }
       get_user_conversations: {
         Args: { p_user_id: string }
         Returns: {
           conversation_id: string
         }[]
+      }
+      grant_admin_role: {
+        Args: { p_granted_by?: string; p_user_id: string }
+        Returns: undefined
       }
       has_role: {
         Args: {
@@ -1296,6 +1347,31 @@ export type Database = {
       }
       is_moderator: { Args: { p_user_id: string }; Returns: boolean }
       is_user_approved: { Args: { p_user_id: string }; Returns: boolean }
+      log_security_event: {
+        Args: {
+          p_event_data?: Json
+          p_event_type: string
+          p_ip_address?: unknown
+          p_user_agent?: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
+      log_task_event: {
+        Args: {
+          p_event_type: string
+          p_metadata?: Json
+          p_project_id?: string
+          p_task_id?: string
+          p_user_id?: string
+        }
+        Returns: string
+      }
+      revoke_admin_role: { Args: { p_user_id: string }; Returns: undefined }
+      revoke_user_refresh_tokens: {
+        Args: { p_user_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       agent_connection_type: "webhook" | "websocket" | "msp"
