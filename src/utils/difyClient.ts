@@ -278,6 +278,15 @@ export class DifyClient {
         .from('conversations')
         .update({ updated_at: new Date().toISOString() })
         .eq('id', chatId);
+
+      // Trigger AI Agent response
+      const { error: invokeError } = await supabase.functions.invoke('ai-agent-chat', {
+        body: { chatId, useRag: true }
+      });
+
+      if (invokeError) {
+        console.error('Failed to trigger AI agent:', invokeError.message);
+      }
       
     } catch (error) {
       console.error('Error sending message:', error);

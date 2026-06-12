@@ -97,7 +97,7 @@ serve(async (req) => {
   }
 
   try {
-    const { fileId } = await req.json();
+    const { fileId, chunkSize = 1000, chunkOverlap = 200 } = await req.json();
     if (!fileId) {
       return new Response(JSON.stringify({ error: 'Missing fileId in request' }), {
         status: 400,
@@ -133,7 +133,7 @@ serve(async (req) => {
       });
     }
 
-    console.log(`[embed-document] Indexing file: ${file.name} (type: ${file.file_type})`);
+    console.log(`[embed-document] Indexing file: ${file.name} (type: ${file.file_type}, chunkSize: ${chunkSize}, overlap: ${chunkOverlap})`);
 
     // Update status to indexing
     await supabase
@@ -192,7 +192,7 @@ serve(async (req) => {
     }
 
     // 4. Split into chunks
-    const chunks = splitText(text);
+    const chunks = splitText(text, chunkSize, chunkOverlap);
     console.log(`[embed-document] Generated ${chunks.length} chunks for ${file.name}`);
 
     // Clean up existing chunks for this file if any (re-indexing support)

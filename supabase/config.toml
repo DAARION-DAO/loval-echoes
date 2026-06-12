@@ -14,3 +14,6 @@ verify_jwt = false
 
 [functions.rag-search]
 verify_jwt = false
+
+[functions.ai-agent-chat]
+verify_jwt = false

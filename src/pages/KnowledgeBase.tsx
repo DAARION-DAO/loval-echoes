@@ -16,6 +16,8 @@ import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { FileUploadDialog } from "@/components/FileUploadDialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -63,28 +65,21 @@ export default function KnowledgeBase() {
   const [loading, setLoading] = useState(true);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [indexingFileId, setIndexingFileId] = useState<string | null>(null);
+  const [configDialogOpen, setConfigDialogOpen] = useState(false);
+  const [selectedFileForConfig, setSelectedFileForConfig] = useState<string | null>(null);
+  const [chunkSize, setChunkSize] = useState(1000);
+  const [chunkOverlap, setChunkOverlap] = useState(200);
 
-  const indexFile = async (fileId: string) => {
+  const indexFile = async (fileId: string, size = 1000, overlap = 200) => {
     try {
       setIndexingFileId(fileId);
-      const session = await supabase.auth.getSession();
-      const token = session.data.session?.access_token;
       
-      const response = await fetch(
-        `https://pbsdsdexayzfoexjdlgb.supabase.co/functions/v1/embed-document`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ fileId })
-        }
-      );
+      const { data, error } = await supabase.functions.invoke('embed-document', {
+        body: { fileId, chunkSize: size, chunkOverlap: overlap }
+      });
 
-      if (!response.ok) {
-        const errText = await response.text();
-        throw new Error(errText || 'Failed to index file');
+      if (error) {
+        throw new Error(error.message || 'Failed to index file');
       }
 
       toast({
@@ -105,6 +100,18 @@ export default function KnowledgeBase() {
     }
   };
 
+  const handleOpenConfigDialog = (fileId: string) => {
+    setSelectedFileForConfig(fileId);
+    setConfigDialogOpen(true);
+  };
+
+  const handleStartIndexing = () => {
+    if (selectedFileForConfig) {
+      indexFile(selectedFileForConfig, chunkSize, chunkOverlap);
+      setConfigDialogOpen(false);
+    }
+  };
+
   const loadFiles = async () => {
     try {
       setLoading(true);
@@ -114,25 +121,14 @@ export default function KnowledgeBase() {
       if (searchQuery) params.set('q', searchQuery);
       if (projectId && scope === 'project') params.set('projectId', projectId);
       
-      const session = await supabase.auth.getSession();
-      const token = session.data.session?.access_token;
+      const { data, error } = await supabase.functions.invoke(`knowledge-base-api/search?${params.toString()}`, {
+        method: 'GET'
+      });
 
-      const response = await fetch(
-        `https://pbsdsdexayzfoexjdlgb.supabase.co/functions/v1/knowledge-base-api/search?${params.toString()}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBic2RzZGV4YXl6Zm9leGpkbGdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcwNzQxNjUsImV4cCI6MjA3MjY1MDE2NX0.mlCtak2aAIMRuJU3GCF0WWS4065aalvfZOm1nPHtEqI'
-          }
-        }
-      );
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || 'Failed to load files');
+      if (error) {
+        throw new Error(error.message || 'Failed to load files');
       }
       
-      const data = await response.json();
       setFiles(data || []);
     } catch (error) {
       console.error('Error loading files:', error);
@@ -152,22 +148,12 @@ export default function KnowledgeBase() {
       params.set('scope', scope);
       if (projectId && scope === 'project') params.set('projectId', projectId);
       
-      const session = await supabase.auth.getSession();
-      const token = session.data.session?.access_token;
+      const { data, error } = await supabase.functions.invoke(`knowledge-base-api/folders?${params.toString()}`, {
+        method: 'GET'
+      });
 
-      const response = await fetch(
-        `https://pbsdsdexayzfoexjdlgb.supabase.co/functions/v1/knowledge-base-api/folders?${params.toString()}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBic2RzZGV4YXl6Zm9leGpkbGdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcwNzQxNjUsImV4cCI6MjA3MjY1MDE2NX0.mlCtak2aAIMRuJU3GCF0WWS4065aalvfZOm1nPHtEqI'
-          }
-        }
-      );
-
-      if (!response.ok) throw new Error(await response.text());
+      if (error) throw new Error(error.message);
       
-      const data = await response.json();
       setFolders(data || []);
     } catch (error) {
       console.error('Error loading folders:', error);
@@ -345,7 +331,7 @@ export default function KnowledgeBase() {
                               )}
                             </DropdownMenuItem>
                             <DropdownMenuItem 
-                              onClick={() => indexFile(file.id)}
+                              onClick={() => handleOpenConfigDialog(file.id)}
                               disabled={indexingFileId === file.id || file.indexing_status === 'indexing'}
                             >
                               <Database className="h-4 w-4 mr-2" />
@@ -395,7 +381,7 @@ export default function KnowledgeBase() {
                             Ошибка
                           </Badge>
                         ) : (
-                          <Badge variant="outline" className="mb-2 cursor-pointer hover:bg-muted" onClick={() => indexFile(file.id)}>
+                          <Badge variant="outline" className="mb-2 cursor-pointer hover:bg-muted" onClick={() => handleOpenConfigDialog(file.id)}>
                             <Database className="h-3 w-3 mr-1" />
                             Индексировать ШІ
                           </Badge>
@@ -463,7 +449,7 @@ export default function KnowledgeBase() {
                             Ошибка
                           </Badge>
                         ) : (
-                          <Badge variant="outline" className="cursor-pointer hover:bg-muted" onClick={() => indexFile(file.id)}>
+                          <Badge variant="outline" className="cursor-pointer hover:bg-muted" onClick={() => handleOpenConfigDialog(file.id)}>
                             <Database className="h-3 w-3 mr-1" />
                             Индексировать ШІ
                           </Badge>
@@ -491,7 +477,7 @@ export default function KnowledgeBase() {
                             )}
                           </DropdownMenuItem>
                           <DropdownMenuItem 
-                            onClick={() => indexFile(file.id)}
+                            onClick={() => handleOpenConfigDialog(file.id)}
                             disabled={indexingFileId === file.id || file.indexing_status === 'indexing'}
                           >
                             <Database className="h-4 w-4 mr-2" />
@@ -530,6 +516,51 @@ export default function KnowledgeBase() {
         folderId={selectedFolder || undefined}
         scope={scope}
       />
+
+      <Dialog open={configDialogOpen} onOpenChange={setConfigDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Настройки индексации ШІ</DialogTitle>
+            <DialogDescription>
+              Укажите размер чанков и перекрытие для разбиения документа. Это поможет оптимизировать качество RAG-поиска.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="chunkSize" className="text-right">
+                Размер чанка
+              </Label>
+              <Input
+                id="chunkSize"
+                type="number"
+                value={chunkSize}
+                onChange={(e) => setChunkSize(Number(e.target.value))}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="chunkOverlap" className="text-right">
+                Перекрытие
+              </Label>
+              <Input
+                id="chunkOverlap"
+                type="number"
+                value={chunkOverlap}
+                onChange={(e) => setChunkOverlap(Number(e.target.value))}
+                className="col-span-3"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfigDialogOpen(false)}>
+              Отмена
+            </Button>
+            <Button onClick={handleStartIndexing}>
+              Индексировать
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 }
