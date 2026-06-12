@@ -180,13 +180,9 @@ export const deleteMessage = async (messageId: string): Promise<void> => {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Unauthorized');
 
-  const { error } = await supabase
-    .from('messages')
-    .update({ 
-      deleted_at: new Date().toISOString(),
-      deleted_by: user.id
-    })
-    .eq('id', messageId);
+  const { error } = await supabase.rpc('soft_delete_message', {
+    p_message_id: messageId,
+  });
 
   if (error) {
     throw error;
