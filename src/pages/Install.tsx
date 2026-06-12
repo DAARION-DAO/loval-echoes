@@ -172,9 +172,7 @@ export function Install() {
               <span className="hidden sm:inline">Назад</span>
             </Button>
             <div className="h-5 w-px bg-border/50 hidden sm:block" />
-            <div className="bg-gradient-to-br from-primary to-primary/70 text-primary-foreground h-8 w-8 rounded-lg flex items-center justify-center font-extrabold text-sm shadow-md">
-              D
-            </div>
+            <img src="/daarion-logo.jpg" alt="DAARION" className="h-8 w-8 rounded-lg object-cover shadow-md" />
             <span className="font-bold text-base tracking-tight">DAARION Edge Client</span>
           </div>
 
@@ -509,7 +507,14 @@ npm run tauri build`}</code>
               GitHub (Edge Client)
             </a>
           </div>
-          <div className="text-xs text-muted-foreground">© {new Date().getFullYear()} DAARION.city — Всі права захищено.</div>
+          <div className="text-xs text-muted-foreground flex items-center justify-center gap-1.5 flex-wrap">
+            <span>© {new Date().getFullYear()}</span>
+            <a href="https://daarion.city/" target="_blank" rel="noopener noreferrer" className="hover:underline flex items-center gap-1 text-foreground/80 font-medium transition-all">
+              <img src="/daarion-logo.jpg" alt="DAARION.city" className="h-4 w-4 rounded-sm object-cover" />
+              <span>DAARION.city</span>
+            </a>
+            <span>— Всі права захищено.</span>
+          </div>
           <div className="text-[10px] text-muted-foreground/60">Побудовано для гнучкої координації та живих спільнот.</div>
         </div>
       </footer>

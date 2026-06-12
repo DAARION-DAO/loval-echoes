@@ -712,7 +712,14 @@ export function Start() {
               GitHub (Edge Client)
             </a>
           </div>
-          <div className="text-xs text-muted-foreground">© {new Date().getFullYear()} DAARION.city — Всі права захищено.</div>
+          <div className="text-xs text-muted-foreground flex items-center justify-center gap-1.5 flex-wrap">
+            <span>© {new Date().getFullYear()}</span>
+            <a href="https://daarion.city/" target="_blank" rel="noopener noreferrer" className="hover:underline flex items-center gap-1 text-foreground/80 font-medium transition-all">
+              <img src="/daarion-logo.jpg" alt="DAARION.city" className="h-4 w-4 rounded-sm object-cover" />
+              <span>DAARION.city</span>
+            </a>
+            <span>— Всі права захищено.</span>
+          </div>
           <div className="text-[10px] text-muted-foreground/60">Побудовано для гнучкої координації та живих спільнот.</div>
         </div>
       </footer>
