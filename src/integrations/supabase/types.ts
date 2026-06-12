@@ -1776,6 +1776,14 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_public_profiles: {
+        Args: { p_user_ids: string[] }
+        Returns: {
+          avatar_url: string
+          display_name: string
+          user_id: string
+        }[]
+      }
       get_user_approval_status: { Args: { p_user_id: string }; Returns: string }
       get_user_conversations: {
         Args: { p_user_id: string }
