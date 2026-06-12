@@ -240,11 +240,11 @@ export const UserApprovalPanel = ({ className = '' }: UserApprovalPanelProps) =>
           throw statusError;
         }
 
-        // Update the user's profile status
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({ approval_status: profileStatus })
-          .eq('user_id', request.user_id);
+        // Update the user's profile status via admin RPC (column-level RLS forbids direct update)
+        const { error: profileError } = await supabase.rpc('admin_set_approval_status', {
+          p_user_id: request.user_id,
+          p_status: profileStatus,
+        });
 
         if (profileError) {
           console.error('Profile update error:', profileError);
