@@ -29,7 +29,7 @@ export const useCommunityStats = () => {
       // Параллельно получаем все статистики
       const [profilesResult, chatsResult, messagesResult, onlineResult] = await Promise.all([
         // Общее количество пользователей
-        supabase.from('profiles').select('id', { count: 'exact', head: true }),
+        supabase.from('community_members').select('id', { count: 'exact', head: true }).eq('status', 'approved'),
         // Общее количество чатов (не архивированных)
         supabase.from('conversations').select('id', { count: 'exact', head: true }).eq('is_archived', false),
         // Сообщения за сегодня

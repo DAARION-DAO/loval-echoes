@@ -73,11 +73,11 @@ export const CommunityNewsFeed = () => {
       
       if (userIds.length > 0) {
         const { data: profiles } = await supabase
-          .from('profiles')
-          .select('user_id, display_name, avatar_url')
-          .in('user_id', userIds);
+          .rpc('get_public_profiles', {
+            p_user_ids: userIds
+          });
         
-        profilesData = profiles || [];
+        profilesData = (profiles || []) as any;
       }
 
       const messagesWithProfiles = rawMessages?.map(message => ({
