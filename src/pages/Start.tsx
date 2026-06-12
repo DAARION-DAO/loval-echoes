@@ -8,6 +8,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { Badge } from '@/components/ui/badge';
+import { supabase } from '@/integrations/supabase/client';
+import { useActiveCommunity } from '@/hooks/useActiveCommunity';
 import { 
   Users, 
   MessageSquare, 
@@ -27,10 +30,8 @@ export function Start() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  
-  // Local state for checking if user has community
-  const [hasCommunity, setHasCommunity] = useState<boolean>(false);
-  const [loading, setLoading] = useState(true);
+  const { memberships, loading: communityLoading, refresh, setActiveCommunityId } = useActiveCommunity();
+  const [submitting, setSubmitting] = useState(false);
 
   // Onboarding form state
   const [commName, setCommName] = useState('');
@@ -38,14 +39,8 @@ export function Start() {
   const [commDesc, setCommDesc] = useState('');
 
   useEffect(() => {
-    // Check if community is set in localStorage
-    const saved = localStorage.getItem('zhos-community');
-    if (saved) {
-      setHasCommunity(true);
-    } else {
-      setHasCommunity(false);
-      
-      // Prefill from draft if guest saved community name earlier
+    // Prefill from guest draft if available
+    if (!user) {
       const draft = localStorage.getItem('zhos-onboarding-draft');
       if (draft) {
         try {
@@ -57,8 +52,20 @@ export function Start() {
           console.error('Error parsing onboarding draft:', e);
         }
       }
+    } else {
+      // Prefill onboarding from draft after signup
+      const draft = localStorage.getItem('zhos-onboarding-draft');
+      if (draft && !commName) {
+        try {
+          const parsed = JSON.parse(draft);
+          setCommName(parsed.name || '');
+          setCommType(parsed.type || 'team');
+          setCommDesc(parsed.description || '');
+        } catch (e) {
+          console.error('Error parsing onboarding draft:', e);
+        }
+      }
     }
-    setLoading(false);
   }, [user]);
 
   // Handle guest submission: Save draft & redirect to signup
@@ -87,7 +94,7 @@ export function Start() {
   };
 
   // Handle authenticated onboarding submission
-  const handleOnboardingSubmit = (e: React.FormEvent) => {
+  const handleOnboardingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!commName.trim()) {
       toast({
@@ -97,31 +104,54 @@ export function Start() {
       });
       return;
     }
+    if (!user) return;
+    setSubmitting(true);
+    try {
+      const { data: community, error: insErr } = await supabase
+        .from('communities')
+        .insert({
+          name: commName.trim(),
+          type: commType,
+          description: commDesc.trim() || null,
+          owner_id: user.id,
+        })
+        .select()
+        .single();
+      if (insErr) throw insErr;
 
-    const newCommunity = {
-      id: `comm-${Date.now()}`,
-      name: commName,
-      type: commType,
-      description: commDesc,
-      owner_id: user?.id,
-      created_at: new Date().toISOString()
-    };
+      const { error: memErr } = await supabase
+        .from('community_members')
+        .insert({
+          community_id: community.id,
+          user_id: user.id,
+          role: 'owner',
+          status: 'approved',
+        });
+      if (memErr) throw memErr;
 
-    localStorage.setItem('zhos-community', JSON.stringify(newCommunity));
-    // Clear draft
-    localStorage.removeItem('zhos-onboarding-draft');
-    
-    toast({
-      title: "Спільноту створено!",
-      description: `Вітаємо у вашому новому просторі "${commName}"`
-    });
+      localStorage.removeItem('zhos-onboarding-draft');
+      localStorage.removeItem('zhos-community');
+      setActiveCommunityId(community.id);
+      await refresh();
 
-    setHasCommunity(true);
-    // Reload page or force navigation to dashboard
-    window.location.reload();
+      toast({
+        title: "Спільноту створено!",
+        description: `Вітаємо у вашому новому просторі "${commName}"`,
+      });
+      navigate('/dashboard', { replace: true });
+    } catch (err: any) {
+      console.error('Onboarding error:', err);
+      toast({
+        title: 'Помилка створення спільноти',
+        description: err?.message || 'Спробуйте ще раз',
+        variant: 'destructive',
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  if (loading) {
+  if (communityLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-primary"></div>
@@ -130,7 +160,7 @@ export function Start() {
   }
 
   // Render onboarding screen if user is authenticated but has no community
-  if (user && !hasCommunity) {
+  if (user && memberships.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background flex items-center justify-center p-4 sm:p-6 md:p-8">
         <Card className="w-full max-w-lg border-border/80 bg-card/65 backdrop-blur-md shadow-elegant">
@@ -184,8 +214,8 @@ export function Start() {
                 />
               </div>
 
-              <Button type="submit" className="w-full flex items-center justify-center gap-2 mt-2 py-5 font-semibold text-base">
-                Продовжити
+              <Button type="submit" disabled={submitting} className="w-full flex items-center justify-center gap-2 mt-2 py-5 font-semibold text-base">
+                {submitting ? 'Створення...' : 'Продовжити'}
                 <ArrowRight className="h-5 w-5" />
               </Button>
             </form>

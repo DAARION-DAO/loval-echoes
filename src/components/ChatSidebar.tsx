@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { useActiveCommunity } from '@/hooks/useActiveCommunity';
 import { 
   Search, 
   Plus, 
@@ -275,6 +276,7 @@ export const ChatSidebar = () => {
   return (
     <div className="h-full flex flex-col">
       <div className="px-3 py-3 border-b">
+        <ActiveCommunityHeader />
         <div className="flex items-center gap-2 mb-3">
           <Input 
             placeholder="Поиск чатов..."
@@ -483,4 +485,14 @@ export const ChatSidebar = () => {
 
     </div>
   );
-};
+}
+
+function ActiveCommunityHeader() {
+  const { activeCommunity } = useActiveCommunity();
+  if (!activeCommunity) return null;
+  return (
+    <div className="mb-2 px-1 text-xs font-semibold tracking-wide text-muted-foreground truncate">
+      {activeCommunity.name}
+    </div>
+  );
+}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { useActiveCommunity } from '@/hooks/useActiveCommunity';
 import { 
   Bot, 
   RefreshCw, 
@@ -30,114 +31,62 @@ interface PromptVersion {
   updated_at: string;
 }
 
-const DEFAULT_VERSIONS: PromptVersion[] = [
-  {
-    id: 'sys-v1',
-    prompt_type: 'system',
-    version_name: 'v1',
-    content: 'Ви є системним ШІ-помічником для MicroDAO спільноти. Допомагайте координувати завдання, розписувати проекти та відповідати на запитання з бази знань.',
-    is_active: true,
-    created_at: '2026-06-01T12:00:00.000Z',
-    updated_at: '2026-06-01T12:00:00.000Z'
-  },
-  {
-    id: 'sys-v2',
-    prompt_type: 'system',
-    version_name: 'v2',
-    content: 'Ви — ШІ-координатор нашої спільноти. Ваша мета — допомагати учасникам вирішувати задачі, супроводжувати роботу над проектами та надавати доступ до знань у зручній формі.',
-    is_active: false,
-    created_at: '2026-06-10T14:30:00.000Z',
-    updated_at: '2026-06-10T14:30:00.000Z'
-  },
-  {
-    id: 'resp-v1',
-    prompt_type: 'responses',
-    version_name: 'v1',
-    content: 'Відповідайте лаконічно, структуровано, використовуйте списки та маркування. Мова відповідей — українська.',
-    is_active: true,
-    created_at: '2026-06-02T10:00:00.000Z',
-    updated_at: '2026-06-02T10:00:00.000Z'
-  },
-  {
-    id: 'fall-v1',
-    prompt_type: 'fallback',
-    version_name: 'v1',
-    content: 'Якщо у базі знань немає відповіді на запитання, ввічливо повідомте про це та порадьте звернутися до адміністраторів або створити нову задачу.',
-    is_active: true,
-    created_at: '2026-06-03T09:00:00.000Z',
-    updated_at: '2026-06-03T09:00:00.000Z'
-  }
-];
-
 export function PromptEditor() {
   const { user } = useAuth();
   const { toast } = useToast();
-  
-  // Tab state
+  const { activeCommunity, activeCommunityId, isCommunityAdmin, loading: communityLoading } = useActiveCommunity();
+
   const [activeTab, setActiveTab] = useState<'system' | 'responses' | 'fallback'>('system');
-  
-  // Editor state
   const [versionName, setVersionName] = useState('');
   const [promptContent, setPromptContent] = useState('');
   const [selectedVersionId, setSelectedVersionId] = useState<string | null>(null);
-  
-  // Prompt versions list
   const [versions, setVersions] = useState<PromptVersion[]>([]);
-  const [isAdmin, setIsAdmin] = useState(true); // Default to true, updated below
+  const [loadingVersions, setLoadingVersions] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
-  // Check admin role
-  useEffect(() => {
-    const checkRole = async () => {
-      if (!user) return;
-      try {
-        const { data, error } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', user.id)
-          .maybeSingle();
-          
-        if (data) {
-          setIsAdmin(data.role === 'admin');
-        }
-      } catch (err) {
-        console.error('Error checking user roles:', err);
-      }
-    };
-    checkRole();
-  }, [user]);
+  const isAdmin = isCommunityAdmin;
 
-  // Load versions from localStorage or set defaults
-  const loadVersions = () => {
-    const stored = localStorage.getItem('zhos-prompt-versions');
-    if (stored) {
-      try {
-        setVersions(JSON.parse(stored));
-      } catch (e) {
-        setVersions(DEFAULT_VERSIONS);
-      }
-    } else {
-      setVersions(DEFAULT_VERSIONS);
-      localStorage.setItem('zhos-prompt-versions', JSON.stringify(DEFAULT_VERSIONS));
+  const loadVersions = useCallback(async () => {
+    if (!activeCommunityId) {
+      setVersions([]);
+      return;
     }
-  };
+    setLoadingVersions(true);
+    setLoadError(null);
+    try {
+      const { data, error } = await supabase
+        .from('agent_prompt_versions')
+        .select('id, prompt_type, version_name, content, is_active, created_at, updated_at')
+        .eq('community_id', activeCommunityId)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      setVersions((data ?? []) as PromptVersion[]);
+    } catch (err: any) {
+      console.error('Load versions error:', err);
+      setLoadError(err?.message || 'Не вдалося завантажити версії');
+    } finally {
+      setLoadingVersions(false);
+    }
+  }, [activeCommunityId]);
 
   useEffect(() => {
     loadVersions();
-  }, []);
+  }, [loadVersions]);
 
   // Set initial editor content based on activeTab and active version
   useEffect(() => {
     const activeVersion = versions.find(v => v.prompt_type === activeTab && v.is_active);
     if (activeVersion) {
       setPromptContent(activeVersion.content);
-      // Generate a new version name suggestions
       const typeVersions = versions.filter(v => v.prompt_type === activeTab);
       const nextVersionNum = typeVersions.length + 1;
       setVersionName(`v${nextVersionNum}`);
       setSelectedVersionId(activeVersion.id);
     } else {
+      const typeVersions = versions.filter(v => v.prompt_type === activeTab);
       setPromptContent('');
-      setVersionName('v1');
+      setVersionName(`v${typeVersions.length + 1}`);
       setSelectedVersionId(null);
     }
   }, [activeTab, versions]);
@@ -151,13 +100,10 @@ export function PromptEditor() {
     : promptContent.trim() !== '';
 
   const handleRefresh = () => {
-    loadVersions();
-    toast({
-      description: "Дані оновлено",
-    });
+    loadVersions().then(() => toast({ description: 'Дані оновлено' }));
   };
 
-  const handleSaveVersion = () => {
+  const handleSaveVersion = async () => {
     if (!promptContent.trim()) return;
     if (!versionName.trim()) {
       toast({
@@ -167,48 +113,58 @@ export function PromptEditor() {
       });
       return;
     }
-
-    const newVersion: PromptVersion = {
-      id: `${activeTab}-${Date.now()}`,
-      prompt_type: activeTab,
-      version_name: versionName,
-      content: promptContent,
-      is_active: false, // Newly saved version starts as draft
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
-
-    const updatedVersions = [...versions, newVersion];
-    setVersions(updatedVersions);
-    localStorage.setItem('zhos-prompt-versions', JSON.stringify(updatedVersions));
-    setSelectedVersionId(newVersion.id);
-
-    toast({
-      description: "Версію промпту збережено",
-    });
+    if (!activeCommunityId || !user) return;
+    setSaving(true);
+    try {
+      // First version for this prompt_type becomes active automatically
+      const isFirst = versions.filter(v => v.prompt_type === activeTab).length === 0;
+      const { data, error } = await supabase
+        .from('agent_prompt_versions')
+        .insert({
+          community_id: activeCommunityId,
+          prompt_type: activeTab,
+          version_name: versionName.trim(),
+          content: promptContent,
+          is_active: isFirst,
+          created_by: user.id,
+        })
+        .select()
+        .single();
+      if (error) throw error;
+      await loadVersions();
+      setSelectedVersionId(data.id);
+      toast({ description: 'Версію промпту збережено' });
+    } catch (err: any) {
+      console.error('Save error:', err);
+      toast({
+        title: 'Помилка збереження',
+        description: err?.message || 'Спробуйте ще раз',
+        variant: 'destructive',
+      });
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleActivateVersion = (id: string) => {
-    const updated = versions.map(v => {
-      if (v.prompt_type === activeTab) {
-        return { ...v, is_active: v.id === id };
+  const handleActivateVersion = async (id: string) => {
+    try {
+      const { error } = await supabase.rpc('activate_prompt_version', { p_version_id: id });
+      if (error) throw error;
+      await loadVersions();
+      const activated = versions.find(v => v.id === id);
+      if (activated) {
+        setPromptContent(activated.content);
+        setSelectedVersionId(activated.id);
       }
-      return v;
-    });
-
-    setVersions(updated);
-    localStorage.setItem('zhos-prompt-versions', JSON.stringify(updated));
-
-    // If active was selected, update promptContent
-    const activated = updated.find(v => v.id === id);
-    if (activated) {
-      setPromptContent(activated.content);
-      setSelectedVersionId(activated.id);
+      toast({ description: 'Версію активовано' });
+    } catch (err: any) {
+      console.error('Activate error:', err);
+      toast({
+        title: 'Помилка активації',
+        description: err?.message || 'Спробуйте ще раз',
+        variant: 'destructive',
+      });
     }
-
-    toast({
-      description: "Версію активовано",
-    });
   };
 
   const handleEditVersion = (v: PromptVersion) => {
@@ -223,6 +179,27 @@ export function PromptEditor() {
   const filteredVersions = versions.filter(v => v.prompt_type === activeTab)
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
+  if (communityLoading) {
+    return (
+      <div className="container max-w-5xl mx-auto p-6">
+        <div className="text-sm text-muted-foreground">Завантаження спільноти...</div>
+      </div>
+    );
+  }
+
+  if (!activeCommunityId) {
+    return (
+      <div className="container max-w-5xl mx-auto p-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Немає активної спільноти</CardTitle>
+            <CardDescription>Створіть або оберіть спільноту, щоб редагувати промпти.</CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="container max-w-5xl mx-auto p-4 sm:p-6 space-y-6">
       {/* Header */}
@@ -233,7 +210,7 @@ export function PromptEditor() {
             <h1 className="text-2xl font-bold tracking-tight">Редактор промптів</h1>
           </div>
           <p className="text-muted-foreground text-sm mt-1">
-            Налаштування інструкцій та поведінки агента
+            Налаштування інструкцій та поведінки агента{activeCommunity ? ` · ${activeCommunity.name}` : ''}
           </p>
         </div>
         
@@ -253,15 +230,21 @@ export function PromptEditor() {
               variant="default" 
               size="sm" 
               onClick={handleSaveVersion}
-              disabled={!promptContent.trim()}
+              disabled={!promptContent.trim() || saving}
               className="flex items-center gap-1.5"
             >
               <Save className="h-4 w-4" />
-              Зберегти версію
+              {saving ? 'Збереження...' : 'Зберегти версію'}
             </Button>
           )}
         </div>
       </div>
+
+      {loadError && (
+        <div className="p-3 rounded-lg border border-destructive/30 bg-destructive/10 text-destructive text-xs">
+          {loadError}
+        </div>
+      )}
 
       {/* Tabs */}
       <Tabs 
