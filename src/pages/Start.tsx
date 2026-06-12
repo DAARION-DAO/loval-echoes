@@ -39,7 +39,8 @@ import {
 
 /* ──────────────────────────────────────────────
  * Scroll-reveal hook — adds .visible to elements
- * with .landing-reveal when they enter the viewport
+ * with .landing-reveal when they enter the viewport.
+ * Includes fallback timeout for iframe environments.
  * ────────────────────────────────────────────── */
 function useScrollReveal() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -48,21 +49,32 @@ function useScrollReveal() {
     const root = containerRef.current;
     if (!root) return;
 
+    const targets = root.querySelectorAll('.landing-reveal');
+
+    // Fallback: if IntersectionObserver doesn't fire (e.g. in iframes),
+    // reveal all elements after a short delay
+    const fallbackTimer = setTimeout(() => {
+      targets.forEach((t) => t.classList.add('visible'));
+    }, 1500);
+
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             entry.target.classList.add('visible');
+            observer.unobserve(entry.target);
           }
         });
       },
-      { threshold: 0.12, rootMargin: '0px 0px -40px 0px' }
+      { threshold: 0.01 }
     );
 
-    const targets = root.querySelectorAll('.landing-reveal');
     targets.forEach((t) => observer.observe(t));
 
-    return () => observer.disconnect();
+    return () => {
+      clearTimeout(fallbackTimer);
+      observer.disconnect();
+    };
   }, []);
 
   return containerRef;

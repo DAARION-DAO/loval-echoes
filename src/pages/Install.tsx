@@ -29,21 +29,31 @@ function useScrollReveal() {
     const root = containerRef.current;
     if (!root) return;
 
+    const targets = root.querySelectorAll('.landing-reveal');
+
+    // Fallback: reveal all after 1.5s if IntersectionObserver doesn't fire
+    const fallbackTimer = setTimeout(() => {
+      targets.forEach((t) => t.classList.add('visible'));
+    }, 1500);
+
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             entry.target.classList.add('visible');
+            observer.unobserve(entry.target);
           }
         });
       },
-      { threshold: 0.12, rootMargin: '0px 0px -40px 0px' }
+      { threshold: 0.01 }
     );
 
-    const targets = root.querySelectorAll('.landing-reveal');
     targets.forEach((t) => observer.observe(t));
 
-    return () => observer.disconnect();
+    return () => {
+      clearTimeout(fallbackTimer);
+      observer.disconnect();
+    };
   }, []);
 
   return containerRef;
