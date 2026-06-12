@@ -36,10 +36,10 @@ export const usePendingApprovals = () => {
   useEffect(() => {
     if (!user) return;
 
-    // Subscribe to changes in approval requests
-    const subscription = supabase
-      .channel('pending_approvals')
-      .on('postgres_changes',
+    // Subscribe to changes in approval requests (unique channel per mount to avoid reuse)
+    const channel = supabase
+      .channel(`pending_approvals_${user.id}_${Math.random().toString(36).slice(2)}`)
+      .on('postgres_changes' as any,
         {
           event: '*',
           schema: 'public',
@@ -52,7 +52,7 @@ export const usePendingApprovals = () => {
       .subscribe();
 
     return () => {
-      subscription.unsubscribe();
+      supabase.removeChannel(channel);
     };
   }, [user]);
 
