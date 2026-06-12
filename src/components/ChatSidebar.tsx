@@ -485,4 +485,15 @@ export const ChatSidebar = () => {
 
     </div>
   );
+}
+
+function ActiveCommunityHeader() {
+  const { activeCommunity } = useActiveCommunity();
+  if (!activeCommunity) return null;
+  return (
+    <div className="mb-2 px-1 text-xs font-semibold tracking-wide text-muted-foreground truncate">
+      {activeCommunity.name}
+    </div>
+  );
+}
 };
