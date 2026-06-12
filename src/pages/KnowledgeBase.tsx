@@ -8,7 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Upload, Search, LayoutGrid, LayoutList, Folder, 
   FolderOpen, File, Tag, Settings, Download, 
-  Trash2, Copy, Move, Star, StarOff 
+  Trash2, Copy, Move, Star, StarOff,
+  Database, Cpu, Loader2
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -31,6 +32,7 @@ interface KBFile {
   storage_path: string;
   description?: string;
   is_knowledge_base: boolean;
+  indexing_status?: string | null;
   created_at: string;
   file_tags?: { tag: string }[];
   profiles?: { display_name: string; avatar_url?: string };
@@ -60,6 +62,48 @@ export default function KnowledgeBase() {
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [indexingFileId, setIndexingFileId] = useState<string | null>(null);
+
+  const indexFile = async (fileId: string) => {
+    try {
+      setIndexingFileId(fileId);
+      const session = await supabase.auth.getSession();
+      const token = session.data.session?.access_token;
+      
+      const response = await fetch(
+        `https://pbsdsdexayzfoexjdlgb.supabase.co/functions/v1/embed-document`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ fileId })
+        }
+      );
+
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(errText || 'Failed to index file');
+      }
+
+      toast({
+        title: "Индексация завершена",
+        description: "Файл успешно проиндексирован ШІ и добавлен в векторную базу данных.",
+      });
+
+      loadFiles();
+    } catch (error) {
+      console.error('Error indexing file:', error);
+      toast({
+        title: "Ошибка индексации",
+        description: error instanceof Error ? error.message : "Не удалось проиндексировать файл",
+        variant: "destructive",
+      });
+    } finally {
+      setIndexingFileId(null);
+    }
+  };
 
   const loadFiles = async () => {
     try {
@@ -300,6 +344,13 @@ export default function KnowledgeBase() {
                                 <><Star className="h-4 w-4 mr-2" /> Добавить в базу знаний</>
                               )}
                             </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => indexFile(file.id)}
+                              disabled={indexingFileId === file.id || file.indexing_status === 'indexing'}
+                            >
+                              <Database className="h-4 w-4 mr-2" />
+                              {file.indexing_status === 'indexed' ? 'Переиндексировать' : 'Индексировать ШІ'}
+                            </DropdownMenuItem>
                             <DropdownMenuItem>
                               <Download className="h-4 w-4 mr-2" /> Скачать
                             </DropdownMenuItem>
@@ -326,6 +377,27 @@ export default function KnowledgeBase() {
                           <Badge variant="secondary" className="mb-2">
                             <Star className="h-3 w-3 mr-1" />
                             База знаний
+                          </Badge>
+                        )}
+                        
+                        {file.indexing_status === 'indexed' ? (
+                          <Badge variant="secondary" className="mb-2 bg-green-500/10 text-green-600 hover:bg-green-500/20 border-green-500/20">
+                            <Cpu className="h-3 w-3 mr-1" />
+                            Индексирован
+                          </Badge>
+                        ) : file.indexing_status === 'indexing' || indexingFileId === file.id ? (
+                          <Badge variant="secondary" className="mb-2 bg-yellow-500/10 text-yellow-600 hover:bg-yellow-500/20 border-yellow-500/20 animate-pulse">
+                            <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                            Индексация...
+                          </Badge>
+                        ) : file.indexing_status === 'failed' ? (
+                          <Badge variant="secondary" className="mb-2 bg-destructive/10 text-destructive hover:bg-destructive/20 border-destructive/20">
+                            Ошибка
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="mb-2 cursor-pointer hover:bg-muted" onClick={() => indexFile(file.id)}>
+                            <Database className="h-3 w-3 mr-1" />
+                            Индексировать ШІ
                           </Badge>
                         )}
                         
@@ -376,6 +448,26 @@ export default function KnowledgeBase() {
                             База знаний
                           </Badge>
                         )}
+                        {file.indexing_status === 'indexed' ? (
+                          <Badge variant="secondary" className="bg-green-500/10 text-green-600 hover:bg-green-500/20 border-green-500/20">
+                            <Cpu className="h-3 w-3 mr-1" />
+                            Индексирован
+                          </Badge>
+                        ) : file.indexing_status === 'indexing' || indexingFileId === file.id ? (
+                          <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-600 hover:bg-yellow-500/20 border-yellow-500/20 animate-pulse">
+                            <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                            Индексация...
+                          </Badge>
+                        ) : file.indexing_status === 'failed' ? (
+                          <Badge variant="secondary" className="bg-destructive/10 text-destructive hover:bg-destructive/20 border-destructive/20">
+                            Ошибка
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="cursor-pointer hover:bg-muted" onClick={() => indexFile(file.id)}>
+                            <Database className="h-3 w-3 mr-1" />
+                            Индексировать ШІ
+                          </Badge>
+                        )}
                         {file.file_tags && file.file_tags.map((tagObj, idx) => (
                           <Badge key={idx} variant="outline">
                             <Tag className="h-3 w-3 mr-1" />
@@ -397,6 +489,13 @@ export default function KnowledgeBase() {
                             ) : (
                               <><Star className="h-4 w-4 mr-2" /> Добавить в базу знаний</>
                             )}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => indexFile(file.id)}
+                            disabled={indexingFileId === file.id || file.indexing_status === 'indexing'}
+                          >
+                            <Database className="h-4 w-4 mr-2" />
+                            {file.indexing_status === 'indexed' ? 'Переиндексировать' : 'Индексировать ШІ'}
                           </DropdownMenuItem>
                           <DropdownMenuItem>
                             <Download className="h-4 w-4 mr-2" /> Скачать

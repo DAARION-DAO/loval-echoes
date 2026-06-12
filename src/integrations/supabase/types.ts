@@ -420,6 +420,54 @@ export type Database = {
           },
         ]
       }
+      document_chunks: {
+        Row: {
+          id: string
+          file_id: string | null
+          folder_id: string | null
+          user_id: string | null
+          content: string
+          embedding: string | null
+          metadata: Json
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          file_id?: string | null
+          folder_id?: string | null
+          user_id?: string | null
+          content: string
+          embedding?: string | null
+          metadata?: Json
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          file_id?: string | null
+          folder_id?: string | null
+          user_id?: string | null
+          content?: string
+          embedding?: string | null
+          metadata?: Json
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_chunks_file_id_fkey"
+            columns: ["file_id"]
+            isOneToOne: false
+            referencedRelation: "files"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_chunks_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "folders"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       file_tags: {
         Row: {
           added_by: string | null
@@ -508,6 +556,7 @@ export type Database = {
           is_knowledge_base: boolean | null
           mime_type: string | null
           name: string
+          indexing_status: string | null
           project_id: string | null
           scope: Database["public"]["Enums"]["file_scope"]
           size_bytes: number
@@ -526,6 +575,7 @@ export type Database = {
           is_knowledge_base?: boolean | null
           mime_type?: string | null
           name: string
+          indexing_status?: string | null
           project_id?: string | null
           scope?: Database["public"]["Enums"]["file_scope"]
           size_bytes: number
@@ -544,6 +594,7 @@ export type Database = {
           is_knowledge_base?: boolean | null
           mime_type?: string | null
           name?: string
+          indexing_status?: string | null
           project_id?: string | null
           scope?: Database["public"]["Enums"]["file_scope"]
           size_bytes?: number

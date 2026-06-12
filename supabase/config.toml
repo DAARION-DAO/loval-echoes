@@ -8,3 +8,9 @@ verify_jwt = false
 
 [functions.auto-register]
 verify_jwt = false
+
+[functions.embed-document]
+verify_jwt = false
+
+[functions.rag-search]
+verify_jwt = false
