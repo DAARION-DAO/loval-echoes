@@ -5,10 +5,11 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
+import { ActiveCommunityProvider, useActiveCommunity } from "@/hooks/useActiveCommunity";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 
-import { lazy, Suspense, useState, useEffect } from "react";
+import { lazy, Suspense } from "react";
 import { ChatsPage } from "./pages/Chats";
 import { Auth } from "./pages/Auth";
 import { NewIndex } from "./pages/NewIndex";
@@ -38,16 +39,9 @@ const queryClient = new QueryClient();
 
 const PublicStartRoute = () => {
   const { user, loading } = useAuth();
-  const [hasCommunity, setHasCommunity] = useState(false);
-  const [checking, setChecking] = useState(true);
+  const { loading: commLoading, memberships } = useActiveCommunity();
 
-  useEffect(() => {
-    const saved = localStorage.getItem('zhos-community');
-    setHasCommunity(!!saved);
-    setChecking(false);
-  }, [user]);
-
-  if (loading || checking) {
+  if (loading || (user && commLoading)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <LoadingSpinner size="lg" text="Загрузка..." />
@@ -59,7 +53,7 @@ const PublicStartRoute = () => {
     return <Start />; // Public Landing
   }
 
-  if (!hasCommunity) {
+  if (memberships.length === 0) {
     return <Start />; // Onboarding
   }
 
@@ -70,18 +64,9 @@ const PublicStartRoute = () => {
 const ProtectedLayout = () => {
   const { user, loading } = useAuth();
   useSessionTimeout();
-  const [hasCommunity, setHasCommunity] = useState(true);
-  const [checking, setChecking] = useState(true);
+  const { loading: commLoading, memberships } = useActiveCommunity();
 
-  useEffect(() => {
-    if (user) {
-      const saved = localStorage.getItem('zhos-community');
-      setHasCommunity(!!saved);
-    }
-    setChecking(false);
-  }, [user]);
-
-  if (loading || checking) {
+  if (loading || (user && commLoading)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <LoadingSpinner size="lg" text="Загрузка..." />
@@ -93,7 +78,7 @@ const ProtectedLayout = () => {
     return <Navigate to="/auth" replace />;
   }
 
-  if (!hasCommunity) {
+  if (memberships.length === 0) {
     return <Navigate to="/" replace />;
   }
 
@@ -153,12 +138,14 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <AuthProvider>
-            <Routes>
-              <Route path="/" element={<PublicStartRoute />} />
-              <Route path="/auth" element={<PublicRoutes />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/*" element={<ProtectedLayout />} />
-            </Routes>
+            <ActiveCommunityProvider>
+              <Routes>
+                <Route path="/" element={<PublicStartRoute />} />
+                <Route path="/auth" element={<PublicRoutes />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/*" element={<ProtectedLayout />} />
+              </Routes>
+            </ActiveCommunityProvider>
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
