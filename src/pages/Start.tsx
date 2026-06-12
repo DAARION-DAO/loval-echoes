@@ -8,6 +8,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation, Language } from '@/lib/i18n';
+import { usePwaInstall } from '@/hooks/usePwaInstall';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useActiveCommunity } from '@/hooks/useActiveCommunity';
@@ -87,6 +89,8 @@ export function Start() {
   const { memberships, loading: communityLoading, refresh, setActiveCommunityId } = useActiveCommunity();
   const [submitting, setSubmitting] = useState(false);
   const scrollRef = useScrollReveal();
+  const { t, language, setLanguage } = useTranslation();
+  const { isInstallable, install } = usePwaInstall();
 
   // Onboarding form state
   const [commName, setCommName] = useState('');
@@ -363,18 +367,43 @@ export function Start() {
           </div>
 
           <div className="flex items-center gap-1.5 sm:gap-3">
-            <Button variant="ghost" size="sm" onClick={() => navigate('/install')} className="text-sm font-medium gap-1.5 hidden sm:inline-flex">
+            {/* Language Selector */}
+            <Select value={language} onValueChange={(value) => setLanguage(value as Language)}>
+              <SelectTrigger className="h-9 w-[70px] sm:w-[90px] bg-background/50 border-border/30 px-2">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="uk">🇺🇦 UA</SelectItem>
+                <SelectItem value="en">🇬🇧 EN</SelectItem>
+                <SelectItem value="ru">🇷🇺 RU</SelectItem>
+                <SelectItem value="es">🇪🇸 ES</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {isInstallable && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={install} 
+                className="text-xs sm:text-sm font-semibold gap-1.5 h-9 px-2 sm:px-3 border-primary/30 hover:bg-primary/5 text-primary"
+              >
+                <Download className="h-4 w-4" />
+                <span className="hidden xs:inline">{t.landing.installPwa}</span>
+                <span className="xs:hidden">PWA</span>
+              </Button>
+            )}
+
+            <Button variant="ghost" size="sm" onClick={() => navigate('/install')} className="text-xs sm:text-sm font-medium gap-1.5 h-9 px-2 sm:px-3">
               <Download className="h-4 w-4" />
-              <span>Клієнт</span>
+              <span className="hidden xxs:inline">{t.landing.client}</span>
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => navigate('/auth')} className="text-xs sm:text-sm font-medium gap-1">
+            <Button variant="ghost" size="sm" onClick={() => navigate('/auth')} className="text-xs sm:text-sm font-medium gap-1 h-9 px-2">
               <LogIn className="h-4 w-4" />
-              <span className="hidden xs:inline">Увійти</span>
+              <span className="hidden xs:inline">{t.landing.login}</span>
             </Button>
-            <Button size="sm" onClick={() => navigate('/auth?signup=true')} className="text-xs sm:text-sm font-semibold gap-1 sm:gap-1.5 shadow-md hover:shadow-lg transition-shadow px-3 sm:px-4">
+            <Button size="sm" onClick={() => navigate('/auth?signup=true')} className="text-xs sm:text-sm font-semibold gap-1 sm:gap-1.5 shadow-md hover:shadow-lg transition-shadow px-3 sm:px-4 h-9">
               <Sparkles className="h-3.5 w-3.5" />
-              <span className="hidden xs:inline">Створити</span>
-              <span className="xs:hidden">Старт</span>
+              <span>{t.create}</span>
             </Button>
           </div>
         </div>
@@ -405,17 +434,15 @@ export function Start() {
           </Badge>
 
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-extrabold tracking-tight leading-[1.1] max-w-4xl mx-auto landing-gradient-text bg-gradient-to-r from-foreground via-primary to-foreground pb-2">
-            MicroDAO
+            {t.landing.heroTitle}
           </h1>
 
           <p className="text-lg sm:text-xl md:text-3xl font-bold text-foreground/80 tracking-wide mt-2 mb-4 sm:mb-6">
-            Дух Спільноти
+            {t.landing.heroSubtitle}
           </p>
 
           <p className="text-sm sm:text-base md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed mb-6 sm:mb-10 px-2 sm:px-0">
-            Жива операційна система для команд, DAO та спільнот.
-            <br className="hidden sm:block" />
-            Чати, задачі, знання, зустрічі й агенти — в одному просторі для спільної дії.
+            {t.landing.heroDesc}
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto sm:max-w-none">
@@ -424,7 +451,7 @@ export function Start() {
               onClick={handleScrollToForm}
               className="w-full sm:w-auto h-13 px-10 font-semibold text-base gap-2 shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98]"
             >
-              Створити простір
+              {t.landing.createSpace}
               <ArrowRight className="h-5 w-5" />
             </Button>
             <Button
@@ -433,7 +460,7 @@ export function Start() {
               onClick={() => navigate('/auth')}
               className="w-full sm:w-auto h-13 px-10 font-semibold text-base gap-1.5 border-border/60 hover:bg-muted/30"
             >
-              Увійти
+              {t.landing.login}
             </Button>
           </div>
 
@@ -448,9 +475,9 @@ export function Start() {
       <section className="py-20 md:py-28 border-t border-border/10">
         <div className="container max-w-4xl mx-auto px-4 space-y-8">
           <div className="text-center space-y-4 landing-reveal">
-            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">Що таке MicroDAO?</h2>
+            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">{t.landing.whatIsMicroDAO}</h2>
             <p className="text-base sm:text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto">
-              MicroDAO — це автономний цифровий простір спільноти, де комунікація, задачі, знання, зустрічі та агенти працюють як єдина система. Кожна спільнота може мати власні правила, памʼять, учасників і агентів.
+              {t.landing.whatIsMicroDAODesc}
             </p>
           </div>
 
@@ -469,7 +496,7 @@ export function Start() {
       <section className="py-20 md:py-28 bg-gradient-to-b from-muted/5 to-muted/15 border-t border-border/10">
         <div className="container max-w-6xl mx-auto px-4 space-y-12">
           <div className="text-center space-y-3 landing-reveal">
-            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">Функціонал MicroDAO</h2>
+            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">{t.landing.featuresTitle}</h2>
             <p className="text-sm sm:text-base text-muted-foreground max-w-md mx-auto">
               Базові можливості робочого простору вашої спільноти
             </p>

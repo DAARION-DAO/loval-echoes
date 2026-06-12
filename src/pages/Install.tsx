@@ -1,7 +1,10 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useTranslation, Language } from '@/lib/i18n';
+import { usePwaInstall } from '@/hooks/usePwaInstall';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   ArrowLeft,
   Download,
@@ -159,6 +162,8 @@ const GITHUB_RELEASES = `${GITHUB_REPO}/releases`;
 export function Install() {
   const navigate = useNavigate();
   const scrollRef = useScrollReveal();
+  const { t, language, setLanguage } = useTranslation();
+  const { isInstallable, install } = usePwaInstall();
 
   return (
     <div ref={scrollRef} className="min-h-screen bg-background text-foreground flex flex-col overflow-x-hidden">
@@ -176,16 +181,44 @@ export function Install() {
             <span className="font-bold text-base tracking-tight">DAARION Edge Client</span>
           </div>
 
-          <a
-            href={GITHUB_RELEASES}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Button size="sm" className="text-sm font-semibold gap-1.5 shadow-md hover:shadow-lg transition-shadow">
-              <Download className="h-3.5 w-3.5" />
-              Завантажити
-            </Button>
-          </a>
+          <div className="flex items-center gap-1.5 sm:gap-3">
+            {/* Language Selector */}
+            <Select value={language} onValueChange={(value) => setLanguage(value as Language)}>
+              <SelectTrigger className="h-9 w-[70px] sm:w-[90px] bg-background/50 border-border/30 px-2">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="uk">🇺🇦 UA</SelectItem>
+                <SelectItem value="en">🇬🇧 EN</SelectItem>
+                <SelectItem value="ru">🇷🇺 RU</SelectItem>
+                <SelectItem value="es">🇪🇸 ES</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {isInstallable && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={install} 
+                className="text-xs sm:text-sm font-semibold gap-1.5 h-9 px-2 sm:px-3 border-primary/30 hover:bg-primary/5 text-primary"
+              >
+                <Download className="h-4 w-4" />
+                <span className="hidden xs:inline">{t.landing.installPwa}</span>
+                <span className="xs:hidden">PWA</span>
+              </Button>
+            )}
+
+            <a
+              href={GITHUB_RELEASES}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Button size="sm" className="text-xs sm:text-sm font-semibold gap-1.5 shadow-md hover:shadow-lg transition-shadow px-3 sm:px-4 h-9">
+                <Download className="h-3.5 w-3.5" />
+                <span>Завантажити</span>
+              </Button>
+            </a>
+          </div>
         </div>
       </header>
 

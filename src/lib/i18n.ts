@@ -186,6 +186,19 @@ export interface Translations {
     hideDetails: string;
     showDetails: string;
   };
+  
+  landing: {
+    heroTitle: string;
+    heroSubtitle: string;
+    heroDesc: string;
+    createSpace: string;
+    login: string;
+    client: string;
+    installPwa: string;
+    whatIsMicroDAO: string;
+    whatIsMicroDAODesc: string;
+    featuresTitle: string;
+  };
 }
 
 const translations: Record<Language, Translations> = {
@@ -357,6 +370,18 @@ const translations: Record<Language, Translations> = {
       hideDetails: 'Приховати деталі',
       showDetails: 'Показати деталі',
     },
+    landing: {
+      heroTitle: 'MicroDAO',
+      heroSubtitle: 'Дух Спільноти',
+      heroDesc: 'Жива операційна система для команд, DAO та спільнот. Чати, задачі, знання, зустрічі й агенти — в одному просторі для спільної дії.',
+      createSpace: 'Створити простір',
+      login: 'Увійти',
+      client: 'Клієнт',
+      installPwa: 'Встановити застосунок',
+      whatIsMicroDAO: 'Що таке MicroDAO?',
+      whatIsMicroDAODesc: 'MicroDAO — це автономний цифровий простір спільноти, де комунікація, задачі, знання, зустрічі та агенти працюють як єдина система. Кожна спільнота може мати власні правила, памʼять, учасників і агентів.',
+      featuresTitle: 'Функціонал MicroDAO',
+    },
   },
 
   en: {
@@ -526,6 +551,18 @@ const translations: Record<Language, Translations> = {
       retry: 'Retry',
       hideDetails: 'Hide details',
       showDetails: 'Show details',
+    },
+    landing: {
+      heroTitle: 'MicroDAO',
+      heroSubtitle: 'Spirit of Community',
+      heroDesc: 'A living operating system for teams, DAOs, and communities. Chats, tasks, knowledge, meetings, and agents — all in one space for collective action.',
+      createSpace: 'Create Space',
+      login: 'Log In',
+      client: 'Client',
+      installPwa: 'Install App',
+      whatIsMicroDAO: 'What is MicroDAO?',
+      whatIsMicroDAODesc: 'MicroDAO is an autonomous digital space for communities, where communication, tasks, knowledge, meetings, and agents work as a unified system. Each community can have its own rules, memory, members, and agents.',
+      featuresTitle: 'MicroDAO Features',
     },
   },
 
@@ -697,6 +734,18 @@ const translations: Record<Language, Translations> = {
       hideDetails: 'Скрыть детали',
       showDetails: 'Показать детали',
     },
+    landing: {
+      heroTitle: 'MicroDAO',
+      heroSubtitle: 'Дух Сообщества',
+      heroDesc: 'Живая операционная система для команд, DAO и сообществ. Чаты, задачи, знания, встречи и агенты — в одном пространстве для совместных действий.',
+      createSpace: 'Создать пространство',
+      login: 'Войти',
+      client: 'Клиент',
+      installPwa: 'Установить приложение',
+      whatIsMicroDAO: 'Что такое MicroDAO?',
+      whatIsMicroDAODesc: 'MicroDAO — это автономное цифровое пространство сообщества, где коммуникация, задачи, знания, встречи и агенты работают как единая система. Каждое сообщество может иметь свои правила, память, участников и агентов.',
+      featuresTitle: 'Функционал MicroDAO',
+    },
   },
 
   es: {
@@ -866,6 +915,18 @@ const translations: Record<Language, Translations> = {
       retry: 'Reintentar',
       hideDetails: 'Ocultar detalles',
       showDetails: 'Mostrar detalles',
+    },
+    landing: {
+      heroTitle: 'MicroDAO',
+      heroSubtitle: 'Espíritu de la Comunidad',
+      heroDesc: 'Un sistema operativo vivo para equipos, DAO y comunidades. Chats, tareas, conocimiento, reuniones y agentes, todo en un solo espacio para la acción colectiva.',
+      createSpace: 'Crear espacio',
+      login: 'Iniciar sesión',
+      client: 'Cliente',
+      installPwa: 'Instalar aplicación',
+      whatIsMicroDAO: '¿Qué es MicroDAO?',
+      whatIsMicroDAODesc: 'MicroDAO es un espacio digital autónomo para comunidades, donde la comunicación, las tareas, el conocimiento, las reuniones y los agentes funcionan como un sistema unificado. Cada comunidad puede tener sus propias reglas, memoria, miembros y agentes.',
+      featuresTitle: 'Funciones de MicroDAO',
     },
   },
 };
