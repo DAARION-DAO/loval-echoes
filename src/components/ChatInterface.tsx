@@ -167,10 +167,17 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
     };
   }, [chatId, currentUser]);
 
+  const [message, setMessage] = useState('');
+  const [isRecording, setIsRecording] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const [audioLevel, setAudioLevel] = useState(0);
+
   // Handle typing indicator
   useEffect(() => {
     if (!chatId || !currentUser || !typingChannelRef.current) return;
-    
+
     if (message.length > 0) {
       if (!isTypingRef.current) {
         isTypingRef.current = true;
@@ -184,11 +191,11 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
           }
         });
       }
-      
+
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);
       }
-      
+
       typingTimeoutRef.current = setTimeout(() => {
         isTypingRef.current = false;
         if (typingChannelRef.current) {
@@ -221,13 +228,6 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
       }
     }
   }, [message, chatId, currentUser]);
-  
-  const [message, setMessage] = useState('');
-  const [isRecording, setIsRecording] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
-  const [isDragging, setIsDragging] = useState(false);
-  const [audioLevel, setAudioLevel] = useState(0);
   
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -1085,7 +1085,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
               <Button
                 variant="destructive"
                 size="sm"
-                onClick={() => stopStream('current-task-id')}
+                onClick={() => stopStream()}
                 className="touch-target h-10 w-10 sm:h-11 sm:w-11 p-0 flex-shrink-0"
                 aria-label="Остановить генерацию"
               >
