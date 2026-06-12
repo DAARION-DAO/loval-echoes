@@ -104,6 +104,15 @@ export default function MicroDAOOnboarding() {
   const [partnerSubmitted, setPartnerSubmitted] = useState(false);
   const [draftSession, setDraftSession] = useState<any>(null);
 
+  // Redirect unauthenticated users or users who already have communities
+  useEffect(() => {
+    if (!user) {
+      navigate('/auth', { replace: true });
+    } else if (memberships.length > 0) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [user, memberships, navigate]);
+
   // Load existing draft setup session on mount
   useEffect(() => {
     const checkDraft = async () => {

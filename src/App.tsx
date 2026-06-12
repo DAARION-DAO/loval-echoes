@@ -48,7 +48,7 @@ const PublicStartRoute = () => {
   const { approvalStatus } = useUserApprovalStatus();
   const { loading: commLoading, memberships } = useActiveCommunity();
 
-  if (loading || approvalStatus === 'loading' || (user && commLoading)) {
+  if (loading || (user && (approvalStatus === 'loading' || commLoading))) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <LoadingSpinner size="lg" text="Завантаження..." />
@@ -78,7 +78,7 @@ const ProtectedLayout = () => {
   useSessionTimeout();
   const { loading: commLoading, memberships } = useActiveCommunity();
 
-  if (loading || approvalStatus === 'loading' || (user && commLoading)) {
+  if (loading || (user && (approvalStatus === 'loading' || commLoading))) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <LoadingSpinner size="lg" text="Завантаження..." />
