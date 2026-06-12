@@ -24,6 +24,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useTranslation } from "@/lib/i18n";
 
 interface KBFile {
   id: string;
@@ -39,6 +40,7 @@ interface KBFile {
   file_tags?: { tag: string }[];
   profiles?: { display_name: string; avatar_url?: string };
   folders?: { name: string };
+  folders_id?: string;
 }
 
 interface KBFolder {
@@ -53,6 +55,7 @@ export default function KnowledgeBase() {
   const { projectId } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const { toast } = useToast();
+  const { t } = useTranslation();
   
   const [scope, setScope] = useState<'community' | 'project'>(
     (searchParams.get('scope') as 'community' | 'project') || 'community'
@@ -83,16 +86,16 @@ export default function KnowledgeBase() {
       }
 
       toast({
-        title: "Индексация завершена",
-        description: "Файл успешно проиндексирован ШІ и добавлен в векторную базу данных.",
+        title: t.kb.indexSuccessTitle,
+        description: t.kb.indexSuccess,
       });
 
       loadFiles();
     } catch (error) {
       console.error('Error indexing file:', error);
       toast({
-        title: "Ошибка индексации",
-        description: error instanceof Error ? error.message : "Не удалось проиндексировать файл",
+        title: t.kb.indexErrorTitle,
+        description: error instanceof Error ? error.message : t.kb.indexFailedDesc,
         variant: "destructive",
       });
     } finally {
@@ -133,8 +136,8 @@ export default function KnowledgeBase() {
     } catch (error) {
       console.error('Error loading files:', error);
       toast({
-        title: "Ошибка",
-        description: error instanceof Error ? error.message : "Не удалось загрузить файлы",
+        title: t.error,
+        description: error instanceof Error ? error.message : t.kb.errorLoadFiles,
         variant: "destructive",
       });
     } finally {
@@ -163,6 +166,7 @@ export default function KnowledgeBase() {
   useEffect(() => {
     loadFiles();
     loadFolders();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scope, searchQuery, projectId]);
 
   const formatFileSize = (bytes: number) => {
@@ -196,16 +200,16 @@ export default function KnowledgeBase() {
       if (error) throw error;
       
       toast({
-        title: !currentValue ? "Добавлено в базу знаний" : "Удалено из базы знаний",
-        description: "Файл успешно обновлен",
+        title: !currentValue ? t.kb.addedToKb : t.kb.removedFromKb,
+        description: t.kb.fileUpdated,
       });
       
       loadFiles();
     } catch (error) {
       console.error('Error toggling knowledge base:', error);
       toast({
-        title: "Ошибка",
-        description: "Не удалось обновить файл",
+        title: t.error,
+        description: t.kb.errorUpdate,
         variant: "destructive",
       });
     }
@@ -239,9 +243,9 @@ export default function KnowledgeBase() {
         <div className="p-4">
           <Tabs value={scope} onValueChange={(v) => setScope(v as 'community' | 'project')}>
             <TabsList className="grid w-full grid-cols-3 mb-4">
-              <TabsTrigger value="community">Спільна</TabsTrigger>
-              <TabsTrigger value="project">Проєкти</TabsTrigger>
-              <TabsTrigger value="personal">Особиста</TabsTrigger>
+              <TabsTrigger value="community">{t.kb.tabCommunity}</TabsTrigger>
+              <TabsTrigger value="project">{t.kb.tabProjects}</TabsTrigger>
+              <TabsTrigger value="personal">{t.kb.tabPersonal}</TabsTrigger>
             </TabsList>
           </Tabs>
           
@@ -252,7 +256,7 @@ export default function KnowledgeBase() {
               onClick={() => setSelectedFolder(null)}
             >
               <Folder className="h-4 w-4 mr-2" />
-              Все файлы
+              {t.kb.allFiles}
             </Button>
           </div>
           
@@ -268,7 +272,7 @@ export default function KnowledgeBase() {
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Поиск файлов..."
+                placeholder={t.kb.searchPlaceholder}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
@@ -294,7 +298,7 @@ export default function KnowledgeBase() {
             
             <Button onClick={() => setUploadDialogOpen(true)}>
               <Upload className="h-4 w-4 mr-2" />
-              Загрузить
+              {t.kb.uploadBtn}
             </Button>
         </div>
 
@@ -307,7 +311,7 @@ export default function KnowledgeBase() {
             ) : files.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
                 <File className="h-12 w-12 mb-4 opacity-50" />
-                <p>Файлов не найдено</p>
+                <p>{t.kb.noFilesFound}</p>
               </div>
             ) : viewMode === 'grid' ? (
               <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
@@ -325,9 +329,9 @@ export default function KnowledgeBase() {
                           <DropdownMenuContent>
                             <DropdownMenuItem onClick={() => toggleKnowledgeBase(file.id, file.is_knowledge_base)}>
                               {file.is_knowledge_base ? (
-                                <><StarOff className="h-4 w-4 mr-2" /> Убрать из базы знаний</>
+                                <><StarOff className="h-4 w-4 mr-2" /> {t.kb.removeFromKb}</>
                               ) : (
-                                <><Star className="h-4 w-4 mr-2" /> Добавить в базу знаний</>
+                                <><Star className="h-4 w-4 mr-2" /> {t.kb.addToKb}</>
                               )}
                             </DropdownMenuItem>
                             <DropdownMenuItem 
@@ -335,19 +339,19 @@ export default function KnowledgeBase() {
                               disabled={indexingFileId === file.id || file.indexing_status === 'indexing'}
                             >
                               <Database className="h-4 w-4 mr-2" />
-                              {file.indexing_status === 'indexed' ? 'Переиндексировать' : 'Индексировать ШІ'}
+                              {file.indexing_status === 'indexed' ? t.kb.reindex : t.kb.indexBtn}
                             </DropdownMenuItem>
                             <DropdownMenuItem>
-                              <Download className="h-4 w-4 mr-2" /> Скачать
+                              <Download className="h-4 w-4 mr-2" /> {t.kb.download}
                             </DropdownMenuItem>
                             <DropdownMenuItem>
-                              <Copy className="h-4 w-4 mr-2" /> Копировать ссылку
+                              <Copy className="h-4 w-4 mr-2" /> {t.kb.copyLink}
                             </DropdownMenuItem>
                             <DropdownMenuItem>
-                              <Move className="h-4 w-4 mr-2" /> Переместить
+                              <Move className="h-4 w-4 mr-2" /> {t.kb.move}
                             </DropdownMenuItem>
                             <DropdownMenuItem className="text-destructive">
-                              <Trash2 className="h-4 w-4 mr-2" /> Удалить
+                              <Trash2 className="h-4 w-4 mr-2" /> {t.delete}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -362,28 +366,28 @@ export default function KnowledgeBase() {
                         {file.is_knowledge_base && (
                           <Badge variant="secondary" className="mb-2">
                             <Star className="h-3 w-3 mr-1" />
-                            База знаний
+                            {t.kb.title}
                           </Badge>
                         )}
                         
                         {file.indexing_status === 'indexed' ? (
                           <Badge variant="secondary" className="mb-2 bg-green-500/10 text-green-600 hover:bg-green-500/20 border-green-500/20">
                             <Cpu className="h-3 w-3 mr-1" />
-                            Индексирован
+                            {t.kb.indexed}
                           </Badge>
                         ) : file.indexing_status === 'indexing' || indexingFileId === file.id ? (
                           <Badge variant="secondary" className="mb-2 bg-yellow-500/10 text-yellow-600 hover:bg-yellow-500/20 border-yellow-500/20 animate-pulse">
                             <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                            Индексация...
+                            {t.kb.indexing}
                           </Badge>
                         ) : file.indexing_status === 'failed' ? (
                           <Badge variant="secondary" className="mb-2 bg-destructive/10 text-destructive hover:bg-destructive/20 border-destructive/20">
-                            Ошибка
+                            {t.error}
                           </Badge>
                         ) : (
                           <Badge variant="outline" className="mb-2 cursor-pointer hover:bg-muted" onClick={() => handleOpenConfigDialog(file.id)}>
                             <Database className="h-3 w-3 mr-1" />
-                            Индексировать ШІ
+                            {t.kb.indexBtn}
                           </Badge>
                         )}
                         
@@ -431,27 +435,27 @@ export default function KnowledgeBase() {
                         {file.is_knowledge_base && (
                           <Badge variant="secondary">
                             <Star className="h-3 w-3 mr-1" />
-                            База знаний
+                            {t.kb.title}
                           </Badge>
                         )}
                         {file.indexing_status === 'indexed' ? (
                           <Badge variant="secondary" className="bg-green-500/10 text-green-600 hover:bg-green-500/20 border-green-500/20">
                             <Cpu className="h-3 w-3 mr-1" />
-                            Индексирован
+                            {t.kb.indexed}
                           </Badge>
                         ) : file.indexing_status === 'indexing' || indexingFileId === file.id ? (
                           <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-600 hover:bg-yellow-500/20 border-yellow-500/20 animate-pulse">
                             <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                            Индексация...
+                            {t.kb.indexing}
                           </Badge>
                         ) : file.indexing_status === 'failed' ? (
                           <Badge variant="secondary" className="bg-destructive/10 text-destructive hover:bg-destructive/20 border-destructive/20">
-                            Ошибка
+                            {t.error}
                           </Badge>
                         ) : (
                           <Badge variant="outline" className="cursor-pointer hover:bg-muted" onClick={() => handleOpenConfigDialog(file.id)}>
                             <Database className="h-3 w-3 mr-1" />
-                            Индексировать ШІ
+                            {t.kb.indexBtn}
                           </Badge>
                         )}
                         {file.file_tags && file.file_tags.map((tagObj, idx) => (
@@ -471,9 +475,9 @@ export default function KnowledgeBase() {
                         <DropdownMenuContent>
                           <DropdownMenuItem onClick={() => toggleKnowledgeBase(file.id, file.is_knowledge_base)}>
                             {file.is_knowledge_base ? (
-                              <><StarOff className="h-4 w-4 mr-2" /> Убрать из базы знаний</>
+                              <><StarOff className="h-4 w-4 mr-2" /> {t.kb.removeFromKb}</>
                             ) : (
-                              <><Star className="h-4 w-4 mr-2" /> Добавить в базу знаний</>
+                              <><Star className="h-4 w-4 mr-2" /> {t.kb.addToKb}</>
                             )}
                           </DropdownMenuItem>
                           <DropdownMenuItem 
@@ -481,19 +485,19 @@ export default function KnowledgeBase() {
                             disabled={indexingFileId === file.id || file.indexing_status === 'indexing'}
                           >
                             <Database className="h-4 w-4 mr-2" />
-                            {file.indexing_status === 'indexed' ? 'Переиндексировать' : 'Индексировать ШІ'}
+                            {file.indexing_status === 'indexed' ? t.kb.reindex : t.kb.indexBtn}
                           </DropdownMenuItem>
                           <DropdownMenuItem>
-                            <Download className="h-4 w-4 mr-2" /> Скачать
+                            <Download className="h-4 w-4 mr-2" /> {t.kb.download}
                           </DropdownMenuItem>
                           <DropdownMenuItem>
-                            <Copy className="h-4 w-4 mr-2" /> Копировать ссылку
+                            <Copy className="h-4 w-4 mr-2" /> {t.kb.copyLink}
                           </DropdownMenuItem>
                           <DropdownMenuItem>
-                            <Move className="h-4 w-4 mr-2" /> Переместить
+                            <Move className="h-4 w-4 mr-2" /> {t.kb.move}
                           </DropdownMenuItem>
                           <DropdownMenuItem className="text-destructive">
-                            <Trash2 className="h-4 w-4 mr-2" /> Удалить
+                            <Trash2 className="h-4 w-4 mr-2" /> {t.delete}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -520,15 +524,15 @@ export default function KnowledgeBase() {
       <Dialog open={configDialogOpen} onOpenChange={setConfigDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Настройки индексации ШІ</DialogTitle>
+            <DialogTitle>{t.kb.configTitle}</DialogTitle>
             <DialogDescription>
-              Укажите размер чанков и перекрытие для разбиения документа. Это поможет оптимизировать качество RAG-поиска.
+              {t.kb.configDesc}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="chunkSize" className="text-right">
-                Размер чанка
+                {t.kb.chunkSize}
               </Label>
               <Input
                 id="chunkSize"
@@ -540,7 +544,7 @@ export default function KnowledgeBase() {
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="chunkOverlap" className="text-right">
-                Перекрытие
+                {t.kb.chunkOverlap}
               </Label>
               <Input
                 id="chunkOverlap"
@@ -553,10 +557,10 @@ export default function KnowledgeBase() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setConfigDialogOpen(false)}>
-              Отмена
+              {t.cancel}
             </Button>
             <Button onClick={handleStartIndexing}>
-              Индексировать
+              {t.kb.indexAction}
             </Button>
           </DialogFooter>
         </DialogContent>

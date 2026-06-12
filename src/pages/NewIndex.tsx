@@ -25,6 +25,7 @@ import { useCommunityStats } from '@/hooks/useCommunityStats';
 import { toast } from '@/hooks/use-toast';
 import { createChat } from '@/services/chats';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
+import { supabase } from '@/integrations/supabase/client';
 
 export const NewIndex = () => {
   const { t } = useTranslation();
@@ -43,20 +44,40 @@ export const NewIndex = () => {
     if (isCreating) return;
     
     try {
+      setIsCreating(true);
       if (data.type === 'chat') {
-        setIsCreating(true);
-        const newChat = await createChat(data.name || "Новый чат");
+        const newChat = await createChat(data.name || "Новий чат");
         navigate(`/chats/${newChat.id}`);
         toast({
-          title: "Чат создан",
-          description: `Чат "${data.name}" успешно создан`,
+          title: "Чат створено",
+          description: `Чат "${data.name}" успішно створено`,
         });
         setCreateModalOpen(false);
-      } else {
-        // TODO: Implement other types
+      } else if (data.type === 'project') {
+        const response = await supabase.functions.invoke('projects-api', {
+          body: {
+            name: data.name.trim(),
+            description: data.description?.trim() || '',
+            participants: []
+          }
+        });
+        
+        if (response.error) {
+          throw response.error;
+        }
+
+        const { project } = response.data;
+        
         toast({
-          title: "В разработке",
-          description: `Создание ${data.type} будет добавлено позже`,
+          title: "Проєкт створено",
+          description: `Проєкт "${data.name}" успішно створено`,
+        });
+        setCreateModalOpen(false);
+        navigate(`/projects/${project.id}`);
+      } else {
+        toast({
+          title: "В розробці",
+          description: `Створення ${data.type} буде додано пізніше`,
         });
         setCreateModalOpen(false);
       }
@@ -64,14 +85,14 @@ export const NewIndex = () => {
       console.error('Error creating:', error);
       toast({
         variant: 'destructive',
-        title: 'Ошибка создания',
-        description: error instanceof Error ? error.message : 'Не удалось создать чат',
+        title: 'Помилка створення',
+        description: error instanceof Error ? error.message : 'Не вдалося виконати створення',
       });
     } finally {
       setIsCreating(false);
     }
   };
-
+ 
   const quickActions = [
     {
       title: t.dashboard.createChat,
@@ -86,16 +107,10 @@ export const NewIndex = () => {
       action: () => setCreateModalOpen(true),
     },
     {
-      title: t.dashboard.startMeeting,
-      description: t.dashboard.startMeetingDesc,
-      icon: Video,
-      action: () => toast({ title: 'TODO', description: t.dashboard.startMeetingDesc }),
-    },
-    {
       title: t.dashboard.importHistory,
       description: t.dashboard.importHistoryDesc,
       icon: Upload,
-      action: () => toast({ title: 'TODO', description: t.dashboard.importHistoryDesc }),
+      action: () => navigate('/import'),
     },
   ];
 
@@ -266,8 +281,15 @@ export const NewIndex = () => {
         open={searchDialogOpen}
         onClose={() => setSearchDialogOpen(false)}
         onNavigate={(type, id) => {
-          console.log('Navigate to:', type, id);
-          // TODO: Implement navigation
+          if (type === 'chat' || type === 'message') {
+            navigate(`/chats/${id}`);
+          } else if (type === 'project') {
+            navigate(`/projects/${id}`);
+          } else if (type === 'file') {
+            navigate(`/knowledge-base`);
+          } else {
+            navigate(`/participants`);
+          }
         }}
       />
     </div>

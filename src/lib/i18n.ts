@@ -199,6 +199,96 @@ export interface Translations {
     whatIsMicroDAODesc: string;
     featuresTitle: string;
   };
+  success: string;
+  projects: {
+    title: string;
+    description: string;
+    createBtn: string;
+    searchPlaceholder: string;
+    emptyState: string;
+    errorLoad: string;
+    errorCreate: string;
+    successCreate: string;
+    backBtn: string;
+    detailsTitle: string;
+    notFound: string;
+  };
+  tasks: {
+    title: string;
+    description: string;
+    board: string;
+    list: string;
+    calendar: string;
+    addTask: string;
+    searchPlaceholder: string;
+    errorLoad: string;
+    errorCreate: string;
+    errorUpdate: string;
+    errorDelete: string;
+    errorNoProjects: string;
+    successCreate: string;
+    successUpdate: string;
+    successDelete: string;
+    taskTitle: string;
+    taskTitlePlaceholder: string;
+    taskDesc: string;
+    taskDescPlaceholder: string;
+    total: string;
+    overdue: string;
+    today: string;
+    inReview: string;
+    allStatuses: string;
+    backlog: string;
+    todo: string;
+    inProgress: string;
+    done: string;
+    next7days: string;
+    noDueDate: string;
+    noTasksFound: string;
+    noTasks: string;
+    newTask: string;
+    newTaskDesc: string;
+    prevMonth: string;
+    nextMonth: string;
+    more: string;
+    taskLegend: string;
+  };
+  kb: {
+    title: string;
+    description: string;
+    searchPlaceholder: string;
+    indexBtn: string;
+    indexing: string;
+    indexSuccess: string;
+    indexSuccessTitle: string;
+    indexError: string;
+    indexErrorTitle: string;
+    indexFailedDesc: string;
+    errorLoadFiles: string;
+    addedToKb: string;
+    removedFromKb: string;
+    fileUpdated: string;
+    errorUpdate: string;
+    uploadBtn: string;
+    emptyState: string;
+    noFilesFound: string;
+    tabCommunity: string;
+    tabProjects: string;
+    tabPersonal: string;
+    allFiles: string;
+    removeFromKb: string;
+    addToKb: string;
+    reindex: string;
+    download: string;
+    copyLink: string;
+    move: string;
+    indexed: string;
+    configTitle: string;
+    configDesc: string;
+    chunkSize: string;
+    chunkOverlap: string;
+    indexAction: string;
+  };
 }
 
 const translations: Record<Language, Translations> = {
@@ -382,6 +472,96 @@ const translations: Record<Language, Translations> = {
       whatIsMicroDAODesc: 'MicroDAO — це автономний цифровий простір спільноти, де комунікація, задачі, знання, зустрічі та агенти працюють як єдина система. Кожна спільнота може мати власні правила, памʼять, учасників і агентів.',
       featuresTitle: 'Функціонал MicroDAO',
     },
+    success: 'Успіх',
+    projects: {
+      title: 'Проєкти',
+      description: 'Керуйте проєктами та спільною роботою команди',
+      createBtn: 'Створити проєкт',
+      searchPlaceholder: 'Пошук проєктів...',
+      emptyState: 'Проєктів не знайдено. Створіть перший проєкт для спільної роботи.',
+      errorLoad: 'Не вдалося завантажити проєкти',
+      errorCreate: 'Не вдалося створити проєкт',
+      successCreate: 'Проєкт створено успішно',
+      backBtn: 'Назад до проєктів',
+      detailsTitle: 'Деталі проєкту',
+      notFound: 'Проєкт не знайдено',
+    },
+    tasks: {
+      title: 'Мої завдання',
+      description: 'Керуйте своїми завданнями та відстежуйте прогрес',
+      board: 'Дошка',
+      list: 'Список',
+      calendar: 'Календар',
+      addTask: 'Додати завдання',
+      searchPlaceholder: 'Пошук завдань...',
+      errorLoad: 'Не вдалося завантажити завдання',
+      errorCreate: 'Не вдалося створити завдання',
+      errorUpdate: 'Не вдалося оновити завдання',
+      errorDelete: 'Не вдалося видалити завдання',
+      errorNoProjects: 'Немає доступних проєктів',
+      successCreate: 'Завдання створено',
+      successUpdate: 'Завдання оновлено',
+      successDelete: 'Завдання видалено',
+      taskTitle: 'Назва завдання',
+      taskTitlePlaceholder: 'Введіть назву завдання...',
+      taskDesc: 'Опис завдання',
+      taskDescPlaceholder: 'Додайте опис (необов\'язково)...',
+      total: 'Всього',
+      overdue: 'Протерміновано',
+      today: 'Сьогодні',
+      inReview: 'На перевірці',
+      allStatuses: 'Усі статуси',
+      backlog: 'Беклог',
+      todo: 'До виконання',
+      inProgress: 'В процесі',
+      done: 'Готово',
+      next7days: 'Наступні 7 днів',
+      noDueDate: 'Без терміну',
+      noTasksFound: 'Завдання не знайдено',
+      noTasks: 'У вас поки немає завдань',
+      newTask: 'Нове завдання',
+      newTaskDesc: 'Створіть нове завдання для відстеження',
+      prevMonth: 'Назад',
+      nextMonth: 'Вперед',
+      more: 'ще',
+      taskLegend: 'Завдання',
+    },
+    kb: {
+      title: 'База знань',
+      description: 'Документи та знання вашої спільноти',
+      searchPlaceholder: 'Пошук документів...',
+      indexBtn: 'Індексувати ШІ',
+      indexing: 'Індексація...',
+      indexSuccess: 'Файл успішно проіндексовано ШІ та додано у векторну базу знань.',
+      indexSuccessTitle: 'Індексацію завершено',
+      indexError: 'Помилка індексації',
+      indexErrorTitle: 'Помилка індексації',
+      indexFailedDesc: 'Не вдалося проіндексувати файл',
+      errorLoadFiles: 'Не вдалося завантажити файли',
+      addedToKb: 'Додано до бази знань',
+      removedFromKb: 'Вилучено з бази знань',
+      fileUpdated: 'Файл успішно оновлено',
+      errorUpdate: 'Не вдалося оновити файл',
+      uploadBtn: 'Завантажити файл',
+      emptyState: 'База знань порожня. Завантажте перший документ.',
+      noFilesFound: 'Файлів не знайдено',
+      tabCommunity: 'Спільна',
+      tabProjects: 'Проєкти',
+      tabPersonal: 'Особиста',
+      allFiles: 'Усі файли',
+      removeFromKb: 'Вилучити з бази знань',
+      addToKb: 'Додати до бази знань',
+      reindex: 'Переіндексувати',
+      download: 'Завантажити',
+      copyLink: 'Копіювати посилання',
+      move: 'Перемістити',
+      indexed: 'Проіндексовано',
+      configTitle: 'Налаштування індексації ШІ',
+      configDesc: 'Вкажіть розмір чанків та перекриття для розбиття документа. Це допоможе орієнтуватися у RAG-пошуку.',
+      chunkSize: 'Розмір чанку',
+      chunkOverlap: 'Перекриття',
+      indexAction: 'Індексувати',
+    },
   },
 
   en: {
@@ -563,6 +743,96 @@ const translations: Record<Language, Translations> = {
       whatIsMicroDAO: 'What is MicroDAO?',
       whatIsMicroDAODesc: 'MicroDAO is an autonomous digital space for communities, where communication, tasks, knowledge, meetings, and agents work as a unified system. Each community can have its own rules, memory, members, and agents.',
       featuresTitle: 'MicroDAO Features',
+    },
+    success: 'Success',
+    projects: {
+      title: 'Projects',
+      description: 'Manage projects and team collaboration',
+      createBtn: 'Create Project',
+      searchPlaceholder: 'Search projects...',
+      emptyState: 'No projects found. Create your first project to start collaborating.',
+      errorLoad: 'Failed to load projects',
+      errorCreate: 'Failed to create project',
+      successCreate: 'Project created successfully',
+      backBtn: 'Back to projects',
+      detailsTitle: 'Project Details',
+      notFound: 'Project not found',
+    },
+    tasks: {
+      title: 'My Tasks',
+      description: 'Manage your tasks and track progress',
+      board: 'Board',
+      list: 'List',
+      calendar: 'Calendar',
+      addTask: 'Add Task',
+      searchPlaceholder: 'Search tasks...',
+      errorLoad: 'Failed to load tasks',
+      errorCreate: 'Failed to create task',
+      errorUpdate: 'Failed to update task',
+      errorDelete: 'Failed to delete task',
+      errorNoProjects: 'No available projects',
+      successCreate: 'Task created',
+      successUpdate: 'Task updated',
+      successDelete: 'Task deleted',
+      taskTitle: 'Task Title',
+      taskTitlePlaceholder: 'Enter task title...',
+      taskDesc: 'Task Description',
+      taskDescPlaceholder: 'Add description (optional)...',
+      total: 'Total',
+      overdue: 'Overdue',
+      today: 'Today',
+      inReview: 'In Review',
+      allStatuses: 'All statuses',
+      backlog: 'Backlog',
+      todo: 'To Do',
+      inProgress: 'In Progress',
+      done: 'Done',
+      next7days: 'Next 7 days',
+      noDueDate: 'No due date',
+      noTasksFound: 'Tasks not found',
+      noTasks: 'You have no tasks yet',
+      newTask: 'New Task',
+      newTaskDesc: 'Create a new task to track',
+      prevMonth: 'Back',
+      nextMonth: 'Forward',
+      more: 'more',
+      taskLegend: 'Task',
+    },
+    kb: {
+      title: 'Knowledge Base',
+      description: 'Documents and knowledge of your community',
+      searchPlaceholder: 'Search documents...',
+      indexBtn: 'Index with AI',
+      indexing: 'Indexing...',
+      indexSuccess: 'File successfully indexed by AI and added to the vector knowledge base.',
+      indexSuccessTitle: 'Indexing completed',
+      indexError: 'Indexing error',
+      indexErrorTitle: 'Indexing error',
+      indexFailedDesc: 'Failed to index file',
+      errorLoadFiles: 'Failed to load files',
+      addedToKb: 'Added to knowledge base',
+      removedFromKb: 'Removed from knowledge base',
+      fileUpdated: 'File successfully updated',
+      errorUpdate: 'Failed to update file',
+      uploadBtn: 'Upload File',
+      emptyState: 'Knowledge base is empty. Upload your first document.',
+      noFilesFound: 'No files found',
+      tabCommunity: 'Community',
+      tabProjects: 'Projects',
+      tabPersonal: 'Personal',
+      allFiles: 'All files',
+      removeFromKb: 'Remove from knowledge base',
+      addToKb: 'Add to knowledge base',
+      reindex: 'Reindex',
+      download: 'Download',
+      copyLink: 'Copy link',
+      move: 'Move',
+      indexed: 'Indexed',
+      configTitle: 'AI Indexing Settings',
+      configDesc: 'Specify chunk size and overlap for splitting the document. This will help optimize RAG search quality.',
+      chunkSize: 'Chunk size',
+      chunkOverlap: 'Overlap',
+      indexAction: 'Index',
     },
   },
 
@@ -746,6 +1016,96 @@ const translations: Record<Language, Translations> = {
       whatIsMicroDAODesc: 'MicroDAO — это автономное цифровое пространство сообщества, где коммуникация, задачи, знания, встречи и агенты работают как единая система. Каждое сообщество может иметь свои правила, память, участников и агентов.',
       featuresTitle: 'Функционал MicroDAO',
     },
+    success: 'Успех',
+    projects: {
+      title: 'Проекты',
+      description: 'Управляйте проектами и совместной работой команды',
+      createBtn: 'Создать проект',
+      searchPlaceholder: 'Поиск проектов...',
+      emptyState: 'Проекты не найдены. Создайте первый проект для совместной работы.',
+      errorLoad: 'Не удалось загрузить проекты',
+      errorCreate: 'Не удалось создать проект',
+      successCreate: 'Проект успешно создан',
+      backBtn: 'Назад к проектам',
+      detailsTitle: 'Детали проекта',
+      notFound: 'Проект не найден',
+    },
+    tasks: {
+      title: 'Мои задачи',
+      description: 'Управляйте своими задачами и отслеживайте прогресс',
+      board: 'Доска',
+      list: 'Список',
+      calendar: 'Календарь',
+      addTask: 'Добавить задачу',
+      searchPlaceholder: 'Поиск задач...',
+      errorLoad: 'Не удалось загрузить задачи',
+      errorCreate: 'Не удалось создать задачу',
+      errorUpdate: 'Не удалось обновить задачу',
+      errorDelete: 'Не удалось удалить задачу',
+      errorNoProjects: 'Нет доступных проектов',
+      successCreate: 'Задача создана',
+      successUpdate: 'Задача обновлена',
+      successDelete: 'Задача удалена',
+      taskTitle: 'Название задачи',
+      taskTitlePlaceholder: 'Введите название задачи...',
+      taskDesc: 'Описание задачи',
+      taskDescPlaceholder: 'Добавьте описание (опционально)...',
+      total: 'Всего',
+      overdue: 'Просрочено',
+      today: 'Сегодня',
+      inReview: 'На проверке',
+      allStatuses: 'Все статусы',
+      backlog: 'Бэклог',
+      todo: 'К выполнению',
+      inProgress: 'В процессе',
+      done: 'Готово',
+      next7days: 'Следующие 7 дней',
+      noDueDate: 'Без срока',
+      noTasksFound: 'Задачи не найдены',
+      noTasks: 'У вас пока нет задач',
+      newTask: 'Новая задача',
+      newTaskDesc: 'Создайте новую задачу для отслеживания',
+      prevMonth: 'Назад',
+      nextMonth: 'Вперед',
+      more: 'ещё',
+      taskLegend: 'Задача',
+    },
+    kb: {
+      title: 'База знаний',
+      description: 'Документы и знания вашего сообщества',
+      searchPlaceholder: 'Поиск документов...',
+      indexBtn: 'Индексировать ИИ',
+      indexing: 'Индексация...',
+      indexSuccess: 'Файл успешно проиндексирован ИИ и добавлен в векторную базу знаний.',
+      indexSuccessTitle: 'Индексация завершена',
+      indexError: 'Ошибка индексации',
+      indexErrorTitle: 'Ошибка индексации',
+      indexFailedDesc: 'Не удалось проиндексировать файл',
+      errorLoadFiles: 'Не удалось загрузить файлы',
+      addedToKb: 'Добавлено в базу знаний',
+      removedFromKb: 'Удалено из базы знаний',
+      fileUpdated: 'Файл успешно обновлен',
+      errorUpdate: 'Не удалось обновить файл',
+      uploadBtn: 'Загрузить файл',
+      emptyState: 'База знаний пуста. Загрузите первый документ.',
+      noFilesFound: 'Файлов не найдено',
+      tabCommunity: 'Общая',
+      tabProjects: 'Проекты',
+      tabPersonal: 'Личная',
+      allFiles: 'Все файлы',
+      removeFromKb: 'Убрать из базы знаний',
+      addToKb: 'Добавить в базу знаний',
+      reindex: 'Переиндексировать',
+      download: 'Скачать',
+      copyLink: 'Копировать ссылку',
+      move: 'Переместить',
+      indexed: 'Индексирован',
+      configTitle: 'Настройки индексации ИИ',
+      configDesc: 'Укажите размер чанков и перекрытие для разбиения документа. Это поможет оптимизировать качество RAG-поиска.',
+      chunkSize: 'Размер чанка',
+      chunkOverlap: 'Перекрытие',
+      indexAction: 'Индексировать',
+    },
   },
 
   es: {
@@ -927,6 +1287,96 @@ const translations: Record<Language, Translations> = {
       whatIsMicroDAO: '¿Qué es MicroDAO?',
       whatIsMicroDAODesc: 'MicroDAO es un espacio digital autónomo para comunidades, donde la comunicación, las tareas, el conocimiento, las reuniones y los agentes funcionan como un sistema unificado. Cada comunidad puede tener sus propias reglas, memoria, miembros y agentes.',
       featuresTitle: 'Funciones de MicroDAO',
+    },
+    success: 'Éxito',
+    projects: {
+      title: 'Proyectos',
+      description: 'Administre proyectos y la colaboración del equipo',
+      createBtn: 'Crear Proyecto',
+      searchPlaceholder: 'Buscar proyectos...',
+      emptyState: 'No se encontraron proyectos. Cree su primer proyecto para comenzar a colaborar.',
+      errorLoad: 'Error al cargar los proyectos',
+      errorCreate: 'Error al crear el proyecto',
+      successCreate: 'Proyecto creado con éxito',
+      backBtn: 'Volver a proyectos',
+      detailsTitle: 'Detalles del proyecto',
+      notFound: 'Proyecto no encontrado',
+    },
+    tasks: {
+      title: 'Mis tareas',
+      description: 'Gestione sus tareas y realice un seguimiento del progreso',
+      board: 'Tablero',
+      list: 'Lista',
+      calendar: 'Calendario',
+      addTask: 'Añadir tarea',
+      searchPlaceholder: 'Buscar tareas...',
+      errorLoad: 'Error al cargar las tareas',
+      errorCreate: 'Error al crear la tarea',
+      errorUpdate: 'Error al actualizar la tarea',
+      errorDelete: 'Error al eliminar la tarea',
+      errorNoProjects: 'No hay proyectos disponibles',
+      successCreate: 'Tarea creada',
+      successUpdate: 'Tarea actualizada',
+      successDelete: 'Tarea eliminada',
+      taskTitle: 'Título de la tarea',
+      taskTitlePlaceholder: 'Ingrese el título de la tarea...',
+      taskDesc: 'Descripción de la tarea',
+      taskDescPlaceholder: 'Añada una descripción (opcional)...',
+      total: 'Total',
+      overdue: 'Atrasado',
+      today: 'Hoy',
+      inReview: 'En revisión',
+      allStatuses: 'Todos los estados',
+      backlog: 'Backlog',
+      todo: 'Por hacer',
+      inProgress: 'En progreso',
+      done: 'Hecho',
+      next7days: 'Próximos 7 días',
+      noDueDate: 'Sin fecha de vencimiento',
+      noTasksFound: 'Tareas no encontradas',
+      noTasks: 'Aún no tiene tareas',
+      newTask: 'Nueva tarea',
+      newTaskDesc: 'Cree una nueva tarea para realizar seguimiento',
+      prevMonth: 'Atrás',
+      nextMonth: 'Adelante',
+      more: 'más',
+      taskLegend: 'Tarea',
+    },
+    kb: {
+      title: 'Base de conocimiento',
+      description: 'Documentos y conocimiento de su comunidad',
+      searchPlaceholder: 'Buscar documentos...',
+      indexBtn: 'Indexar con IA',
+      indexing: 'Indexando...',
+      indexSuccess: 'Archivo indexado con éxito por la IA y agregado a la base de conocimiento vectorial.',
+      indexSuccessTitle: 'Indexación completada',
+      indexError: 'Error de indexación',
+      indexErrorTitle: 'Error de indexación',
+      indexFailedDesc: 'No se pudo indexar el archivo',
+      errorLoadFiles: 'Error al cargar los archivos',
+      addedToKb: 'Añadido a la base de conocimiento',
+      removedFromKb: 'Eliminado de la base de conocimiento',
+      fileUpdated: 'Archivo actualizado con éxito',
+      errorUpdate: 'Error al actualizar el archivo',
+      uploadBtn: 'Subir archivo',
+      emptyState: 'La base de conocimiento está vacía. Suba su primer documento.',
+      noFilesFound: 'No se encontraron archivos',
+      tabCommunity: 'Comunidad',
+      tabProjects: 'Proyectos',
+      tabPersonal: 'Personal',
+      allFiles: 'Todos los archivos',
+      removeFromKb: 'Quitar de la base de conocimiento',
+      addToKb: 'Añadir a la base de conocimiento',
+      reindex: 'Reindexar',
+      download: 'Descargar',
+      copyLink: 'Copiar enlace',
+      move: 'Mover',
+      indexed: 'Indexado',
+      configTitle: 'Configuración de indexación de IA',
+      configDesc: 'Especifique el tamaño del fragmento y el solapamiento para dividir el documento. Esto ayudará a optimizar la calidad de búsqueda de RAG.',
+      chunkSize: 'Tamaño del fragmento',
+      chunkOverlap: 'Solapamiento',
+      indexAction: 'Indexar',
     },
   },
 };

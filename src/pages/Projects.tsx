@@ -2,13 +2,14 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { FolderPlus, Search, Filter } from "lucide-react";
+import { FolderPlus, Search } from "lucide-react";
 import { CreateProjectModal } from "@/components/CreateProjectModal";
 import { ProjectCard } from "@/components/ProjectCard";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "@/lib/i18n";
 
 interface Project {
   id: string;
@@ -34,6 +35,7 @@ export default function Projects() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const loadProjects = async () => {
     try {
@@ -49,8 +51,8 @@ export default function Projects() {
     } catch (error) {
       console.error('Error loading projects:', error);
       toast({
-        title: "Ошибка",
-        description: "Не удалось загрузить проекты",
+        title: t.error,
+        description: t.projects.errorLoad,
         variant: "destructive",
       });
     } finally {
@@ -60,6 +62,7 @@ export default function Projects() {
 
   useEffect(() => {
     loadProjects();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleProjectCreated = (projectId: string) => {
@@ -87,9 +90,9 @@ export default function Projects() {
         <div className="max-w-6xl mx-auto">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-foreground mb-2">Проекты</h1>
+            <h1 className="text-3xl font-bold text-foreground mb-2">{t.projects.title}</h1>
             <p className="text-muted-foreground">
-              Управляйте проектами и совместной работой команды
+              {t.projects.description}
             </p>
           </div>
 
@@ -98,7 +101,7 @@ export default function Projects() {
             <div className="relative flex-1 max-w-md">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Поиск проектов..."
+                placeholder={t.projects.searchPlaceholder}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
@@ -107,7 +110,7 @@ export default function Projects() {
             
             <Button onClick={() => setShowCreateModal(true)} className="shrink-0">
               <FolderPlus className="h-4 w-4 mr-2" />
-              Создать проект
+              {t.projects.createBtn}
             </Button>
           </div>
 
@@ -123,14 +126,14 @@ export default function Projects() {
                   <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
                     <FolderPlus className="h-6 w-6 text-primary" />
                   </div>
-                  <CardTitle>Создать проект</CardTitle>
+                  <CardTitle>{t.projects.createBtn}</CardTitle>
                   <CardDescription>
-                    Начните новый проект с командой
+                    {t.projects.description}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Button className="w-full" variant="outline">
-                    Создать проект
+                    {t.projects.createBtn}
                   </Button>
                 </CardContent>
               </Card>
@@ -145,13 +148,13 @@ export default function Projects() {
               <div className="mx-auto w-24 h-24 rounded-full bg-muted flex items-center justify-center mb-6">
                 <FolderPlus className="h-12 w-12 text-muted-foreground" />
               </div>
-              <h3 className="text-lg font-semibold mb-2">Нет проектов</h3>
+              <h3 className="text-lg font-semibold mb-2">{t.projects.emptyState.split('.')[0]}</h3>
               <p className="text-muted-foreground mb-6">
-                {searchQuery ? 'Проекты не найдены' : 'Создайте первый проект для начала работы'}
+                {searchQuery ? t.projects.emptyState.split('.')[0] : t.projects.emptyState}
               </p>
               <Button onClick={() => setShowCreateModal(true)}>
                 <FolderPlus className="h-4 w-4 mr-2" />
-                Создать проект
+                {t.projects.createBtn}
               </Button>
             </div>
           )}

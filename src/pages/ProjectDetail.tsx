@@ -7,6 +7,7 @@ import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { CompactName } from '@/components/CompactName';
+import { useTranslation } from '@/lib/i18n';
 
 interface Project {
   id: string;
@@ -21,6 +22,7 @@ export default function ProjectDetail() {
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (!id) {
@@ -29,6 +31,7 @@ export default function ProjectDetail() {
     }
 
     loadProject();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, navigate]);
 
   const loadProject = async () => {
@@ -54,8 +57,8 @@ export default function ProjectDetail() {
     } catch (error) {
       console.error('Error loading project:', error);
       toast({
-        title: "Ошибка",
-        description: "Проект не найден",
+        title: t.error,
+        description: t.projects.notFound,
         variant: "destructive",
       });
       navigate('/projects');
@@ -87,7 +90,7 @@ export default function ProjectDetail() {
           className="shrink-0"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Проекты
+          {t.projects.title}
         </Button>
         
         <div className="flex-1 min-w-0">

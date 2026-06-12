@@ -11,7 +11,7 @@ import { List, LayoutGrid, Calendar as CalendarIcon, Search, Plus } from 'lucide
 import { toast } from '@/hooks/use-toast';
 import { KanbanCard } from '@/components/KanbanCard';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, startOfWeek, endOfWeek } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { uk, enUS, ru, es } from 'date-fns/locale';
 import { useResponsive } from '@/hooks/useResponsive';
 import { DndContext, DragEndEvent, closestCorners, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { useTaskTelemetry } from '@/hooks/useTaskTelemetry';
@@ -28,6 +28,16 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useDroppable } from '@dnd-kit/core';
+import { useTranslation } from '@/lib/i18n';
+
+const getDateLocale = (lang: string) => {
+  switch (lang) {
+    case 'en': return enUS;
+    case 'ru': return ru;
+    case 'es': return es;
+    default: return uk;
+  }
+};
 
 export default function MyTasks() {
   const { user } = useAuth();
@@ -41,6 +51,7 @@ export default function MyTasks() {
   const [isCreateDrawerOpen, setIsCreateDrawerOpen] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskDescription, setNewTaskDescription] = useState('');
+  const { t } = useTranslation();
   
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -54,6 +65,7 @@ export default function MyTasks() {
     if (user) {
       loadMyTasks();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const loadMyTasks = async () => {
@@ -89,8 +101,8 @@ export default function MyTasks() {
     } catch (error) {
       console.error('Error loading tasks:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось загрузить задачи',
+        title: t.error,
+        description: t.tasks.errorLoad,
         variant: 'destructive',
       });
     } finally {
@@ -124,14 +136,14 @@ export default function MyTasks() {
       logEvent('task_updated', cardId, card?.project_id, { updates });
 
       toast({
-        title: 'Успех',
-        description: 'Задача обновлена',
+        title: t.success,
+        description: t.tasks.successUpdate,
       });
     } catch (error) {
       console.error('Error updating card:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось обновить задачу',
+        title: t.error,
+        description: t.tasks.errorUpdate,
         variant: 'destructive',
       });
     }
@@ -153,14 +165,14 @@ export default function MyTasks() {
       setCards(prev => prev.filter(card => card.id !== cardId));
 
       toast({
-        title: 'Успех',
-        description: 'Задача удалена',
+        title: t.success,
+        description: t.tasks.successDelete,
       });
     } catch (error) {
       console.error('Error deleting card:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось удалить задачу',
+        title: t.error,
+        description: t.tasks.errorDelete,
         variant: 'destructive',
       });
     }
@@ -180,8 +192,8 @@ export default function MyTasks() {
 
       if (!participantData) {
         toast({
-          title: 'Ошибка',
-          description: 'Нет доступных проектов',
+          title: t.error,
+          description: t.tasks.errorNoProjects,
           variant: 'destructive',
         });
         return;
@@ -220,14 +232,14 @@ export default function MyTasks() {
       setIsCreateDrawerOpen(false);
 
       toast({
-        title: 'Успех',
-        description: 'Задача создана',
+        title: t.success,
+        description: t.tasks.successCreate,
       });
     } catch (error) {
       console.error('Error creating task:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось создать задачу',
+        title: t.error,
+        description: t.tasks.errorCreate,
         variant: 'destructive',
       });
     }
@@ -314,9 +326,9 @@ export default function MyTasks() {
           <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-foreground mb-2">Ваши задачи</h1>
+            <h1 className="text-3xl font-bold text-foreground mb-2">{t.tasks.title}</h1>
             <p className="text-muted-foreground">
-              Управляйте своими задачами и отслеживайте прогресс
+              {t.tasks.description}
             </p>
           </div>
 
@@ -324,7 +336,7 @@ export default function MyTasks() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Всего</CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground">{t.tasks.total}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{counts.total}</div>
@@ -332,7 +344,7 @@ export default function MyTasks() {
             </Card>
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Просрочено</CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground">{t.tasks.overdue}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-destructive">{counts.overdue}</div>
@@ -340,7 +352,7 @@ export default function MyTasks() {
             </Card>
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Сегодня</CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground">{t.tasks.today}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-blue-600">{counts.today}</div>
@@ -348,7 +360,7 @@ export default function MyTasks() {
             </Card>
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-muted-foreground">На проверке</CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground">{t.tasks.inReview}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-purple-600">{counts.review}</div>
@@ -361,7 +373,7 @@ export default function MyTasks() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Поиск задач..."
+                placeholder={t.tasks.searchPlaceholder}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
@@ -370,15 +382,15 @@ export default function MyTasks() {
             
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-full md:w-[200px]">
-                <SelectValue placeholder="Статус" />
+                <SelectValue placeholder={t.tasks.total} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Все статусы</SelectItem>
-                <SelectItem value="backlog">Бэклог</SelectItem>
-                <SelectItem value="todo">К выполнению</SelectItem>
-                <SelectItem value="progress">В процессе</SelectItem>
-                <SelectItem value="review">На проверке</SelectItem>
-                <SelectItem value="done">Готово</SelectItem>
+                <SelectItem value="all">{t.tasks.allStatuses}</SelectItem>
+                <SelectItem value="backlog">{t.tasks.backlog}</SelectItem>
+                <SelectItem value="todo">{t.tasks.todo}</SelectItem>
+                <SelectItem value="progress">{t.tasks.inProgress}</SelectItem>
+                <SelectItem value="review">{t.tasks.inReview}</SelectItem>
+                <SelectItem value="done">{t.tasks.done}</SelectItem>
               </SelectContent>
             </Select>
 
@@ -386,7 +398,7 @@ export default function MyTasks() {
               {!isMobile && (
                 <Button onClick={() => setIsCreateDrawerOpen(true)}>
                   <Plus className="h-4 w-4 mr-2" />
-                  Создать задачу
+                  {t.tasks.addTask}
                 </Button>
               )}
               <Button
@@ -419,7 +431,7 @@ export default function MyTasks() {
               {counts.overdue > 0 && (
                 <div>
                   <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                    Просрочено
+                    {t.tasks.overdue}
                     <Badge variant="destructive">{counts.overdue}</Badge>
                   </h2>
                   <div className="space-y-2">
@@ -439,7 +451,7 @@ export default function MyTasks() {
               {counts.today > 0 && (
                 <div>
                   <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                    Сегодня
+                    {t.tasks.today}
                     <Badge>{counts.today}</Badge>
                   </h2>
                   <div className="space-y-2">
@@ -458,7 +470,7 @@ export default function MyTasks() {
               {groupedByDate.next7days.length > 0 && (
                 <div>
                   <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                    Следующие 7 дней
+                    {t.tasks.next7days}
                     <Badge variant="secondary">{groupedByDate.next7days.length}</Badge>
                   </h2>
                   <div className="space-y-2">
@@ -477,7 +489,7 @@ export default function MyTasks() {
               {groupedByDate.noDueDate.length > 0 && (
                 <div>
                   <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                    Без срока
+                    {t.tasks.noDueDate}
                     <Badge variant="outline">{groupedByDate.noDueDate.length}</Badge>
                   </h2>
                   <div className="space-y-2">
@@ -496,7 +508,7 @@ export default function MyTasks() {
               {filteredCards.length === 0 && (
                 <div className="text-center py-12">
                   <p className="text-muted-foreground">
-                    {searchQuery || statusFilter !== 'all' ? 'Задачи не найдены' : 'У вас пока нет задач'}
+                    {searchQuery || statusFilter !== 'all' ? t.tasks.noTasksFound : t.tasks.noTasks}
                   </p>
                 </div>
               )}
@@ -507,11 +519,11 @@ export default function MyTasks() {
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 overflow-x-auto">
               {Object.entries(groupedByStatus).map(([status, statusCards]) => {
                 const statusLabels = {
-                  backlog: 'Бэклог',
-                  todo: 'К выполнению',
-                  progress: 'В процессе',
-                  review: 'На проверке',
-                  done: 'Готово',
+                  backlog: t.tasks.backlog,
+                  todo: t.tasks.todo,
+                  progress: t.tasks.inProgress,
+                  review: t.tasks.inReview,
+                  done: t.tasks.done,
                 };
 
                 return (
@@ -533,7 +545,7 @@ export default function MyTasks() {
                     </SortableContext>
                     {statusCards.length === 0 && (
                       <div className="border-2 border-dashed rounded-lg p-4 text-center text-sm text-muted-foreground">
-                        Нет задач
+                        {t.tasks.noTasksFound}
                       </div>
                     )}
                   </DroppableColumn>
@@ -567,30 +579,30 @@ export default function MyTasks() {
       <Drawer open={isCreateDrawerOpen} onOpenChange={setIsCreateDrawerOpen}>
         <DrawerContent>
           <DrawerHeader>
-            <DrawerTitle>Новая задача</DrawerTitle>
+            <DrawerTitle>{t.tasks.newTask}</DrawerTitle>
             <DrawerDescription>
-              Создайте новую задачу для отслеживания
+              {t.tasks.newTaskDesc}
             </DrawerDescription>
           </DrawerHeader>
           
           <div className="px-4 space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="task-title">Название</Label>
+              <Label htmlFor="task-title">{t.tasks.taskTitle}</Label>
               <Input
                 id="task-title"
                 value={newTaskTitle}
                 onChange={(e) => setNewTaskTitle(e.target.value)}
-                placeholder="Введите название задачи..."
+                placeholder={t.tasks.taskTitlePlaceholder}
               />
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="task-description">Описание</Label>
+              <Label htmlFor="task-description">{t.tasks.taskDesc}</Label>
               <Textarea
                 id="task-description"
                 value={newTaskDescription}
                 onChange={(e) => setNewTaskDescription(e.target.value)}
-                placeholder="Добавьте описание (опционально)..."
+                placeholder={t.tasks.taskDescPlaceholder}
                 rows={4}
               />
             </div>
@@ -598,10 +610,10 @@ export default function MyTasks() {
 
           <DrawerFooter>
             <Button onClick={createTask} disabled={!newTaskTitle.trim()}>
-              Создать задачу
+              {t.tasks.addTask}
             </Button>
             <DrawerClose asChild>
-              <Button variant="outline">Отмена</Button>
+              <Button variant="outline">{t.cancel}</Button>
             </DrawerClose>
           </DrawerFooter>
         </DrawerContent>
@@ -654,11 +666,13 @@ function CalendarView({
   onDelete: (id: string) => void;
 }) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const { t, language } = useTranslation();
+  const dateLocale = getDateLocale(language);
   
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
-  const calendarStart = startOfWeek(monthStart, { locale: ru });
-  const calendarEnd = endOfWeek(monthEnd, { locale: ru });
+  const calendarStart = startOfWeek(monthStart, { locale: dateLocale });
+  const calendarEnd = endOfWeek(monthEnd, { locale: dateLocale });
   
   const days = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
   
@@ -679,23 +693,28 @@ function CalendarView({
   
   const isToday = (day: Date) => isSameDay(day, new Date());
   const isCurrentMonth = (day: Date) => day.getMonth() === currentMonth.getMonth();
+
+  const weekdays = eachDayOfInterval({
+    start: startOfWeek(new Date(), { locale: dateLocale }),
+    end: endOfWeek(new Date(), { locale: dateLocale })
+  });
   
   return (
     <div className="space-y-4">
       {/* Заголовок календаря */}
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">
-          {format(currentMonth, 'LLLL yyyy', { locale: ru })}
+        <h2 className="text-2xl font-bold capitalize">
+          {format(currentMonth, 'LLLL yyyy', { locale: dateLocale })}
         </h2>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={previousMonth}>
-            Назад
+            {t.tasks.prevMonth}
           </Button>
           <Button variant="outline" size="sm" onClick={() => setCurrentMonth(new Date())}>
-            Сегодня
+            {t.tasks.today}
           </Button>
           <Button variant="outline" size="sm" onClick={nextMonth}>
-            Вперед
+            {t.tasks.nextMonth}
           </Button>
         </div>
       </div>
@@ -703,9 +722,9 @@ function CalendarView({
       {/* Календарная сетка */}
       <div className="grid grid-cols-7 gap-2">
         {/* Заголовки дней недели */}
-        {['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].map(day => (
-          <div key={day} className="text-center font-semibold text-sm p-2">
-            {day}
+        {weekdays.map(day => (
+          <div key={day.toISOString()} className="text-center font-semibold text-sm p-2 capitalize">
+            {format(day, 'EEEEEE', { locale: dateLocale })}
           </div>
         ))}
         
@@ -744,7 +763,7 @@ function CalendarView({
                   ))}
                   {dayTasks.length > 3 && (
                     <div className="text-xs text-muted-foreground">
-                      +{dayTasks.length - 3} ещё
+                      +{dayTasks.length - 3} {t.tasks.more}
                     </div>
                   )}
                 </div>
@@ -758,15 +777,15 @@ function CalendarView({
       <div className="flex gap-4 text-sm text-muted-foreground">
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 rounded ring-2 ring-primary"></div>
-          <span>Сегодня</span>
+          <span>{t.tasks.today}</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 rounded bg-destructive/10"></div>
-          <span>Просрочено</span>
+          <span>{t.tasks.overdue}</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 rounded bg-primary/10"></div>
-          <span>Задача</span>
+          <span>{t.tasks.taskLegend}</span>
         </div>
       </div>
     </div>
