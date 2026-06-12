@@ -276,7 +276,7 @@ export const ChatSidebar = () => {
   return (
     <div className="h-full flex flex-col">
       <div className="px-3 py-3 border-b">
-        <ActiveCommunityLabel />
+        <ActiveCommunityLabel />{null}
         <div className="flex items-center gap-2 mb-3">
           <Input 
             placeholder="Поиск чатов..."
