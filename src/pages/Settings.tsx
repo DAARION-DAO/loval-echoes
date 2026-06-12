@@ -245,7 +245,7 @@ export const Settings = () => {
             {t.language}
           </CardTitle>
           <CardDescription>
-            Выбор языка интерфейса
+            {language === 'uk' ? 'Мова інтерфейсу' : language === 'en' ? 'Interface language' : language === 'es' ? 'Idioma de la interfaz' : 'Язык интерфейса'}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -256,9 +256,10 @@ export const Settings = () => {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ru">Русский (RU)</SelectItem>
-                <SelectItem value="ua">Українська (UA)</SelectItem>
-                <SelectItem value="en">English (EN)</SelectItem>
+                <SelectItem value="uk">🇺🇦 Українська</SelectItem>
+                <SelectItem value="en">🇬🇧 English</SelectItem>
+                <SelectItem value="ru">🇷🇺 Русский</SelectItem>
+                <SelectItem value="es">🇪🇸 Español</SelectItem>
               </SelectContent>
             </Select>
           </div>

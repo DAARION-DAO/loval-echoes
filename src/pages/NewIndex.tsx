@@ -74,28 +74,28 @@ export const NewIndex = () => {
 
   const quickActions = [
     {
-      title: 'Создать чат',
-      description: 'Начать новое обсуждение с сообществом',
+      title: t.dashboard.createChat,
+      description: t.dashboard.createChatDesc,
       icon: MessageSquarePlus,
       action: () => setCreateModalOpen(true),
     },
     {
-      title: 'Создать проект',
-      description: 'Запустить новый проект для совместной работы',
+      title: t.dashboard.createProject,
+      description: t.dashboard.createProjectDesc,
       icon: FolderPlus,
       action: () => setCreateModalOpen(true),
     },
     {
-      title: 'Начать встречу',
-      description: 'Организовать видеоконференцию',
+      title: t.dashboard.startMeeting,
+      description: t.dashboard.startMeetingDesc,
       icon: Video,
-      action: () => toast({ title: 'TODO', description: 'Функция встреч в разработке' }),
+      action: () => toast({ title: 'TODO', description: t.dashboard.startMeetingDesc }),
     },
     {
-      title: 'Импорт истории',
-      description: 'Загрузить историю из других платформ',
+      title: t.dashboard.importHistory,
+      description: t.dashboard.importHistoryDesc,
       icon: Upload,
-      action: () => toast({ title: 'TODO', description: 'Импорт в разработке' }),
+      action: () => toast({ title: 'TODO', description: t.dashboard.importHistoryDesc }),
     },
   ];
 
@@ -169,16 +169,15 @@ export const NewIndex = () => {
 
         {/* Welcome Section */}
         <div className="text-center space-y-3 sm:space-y-4">
-          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold">Вітаємо у Дух Спільноти</h2>
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold">{t.dashboard.welcome}</h2>
           <p className="text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto px-2">
-            Платформа для відкритої комунікації та спільної роботи спільноти.
-            Всі взаємодії прозорі та видимі для всіх учасників.
+            {t.dashboard.welcomeDesc}
           </p>
         </div>
 
         {/* Quick Actions */}
         <div className="space-y-3">
-          <h3 className="text-base sm:text-lg font-semibold">Швидкі дії</h3>
+          <h3 className="text-base sm:text-lg font-semibold">{t.dashboard.quickActions}</h3>
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
             {quickActions.map((action, index) => (
               <Card 
@@ -207,9 +206,9 @@ export const NewIndex = () => {
         {/* Stats or Recent Activity */}
         <Card>
           <CardHeader className="pb-4">
-            <CardTitle className="text-base sm:text-lg">Активність спільноти</CardTitle>
+            <CardTitle className="text-base sm:text-lg">{t.dashboard.communityActivity}</CardTitle>
             <CardDescription>
-              Статистика учасників та активності
+              {t.dashboard.activityDesc}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -218,31 +217,31 @@ export const NewIndex = () => {
                 <div className="text-xl sm:text-2xl font-bold text-primary">
                   {stats.isLoading ? '...' : stats.onlineUsers}
                 </div>
-                <div className="text-[10px] sm:text-xs text-muted-foreground">Учасників онлайн</div>
+                <div className="text-[10px] sm:text-xs text-muted-foreground">{t.dashboard.onlineUsers}</div>
               </div>
               <div className="text-center flex-shrink-0 min-w-[80px]">
                 <div className="text-xl sm:text-2xl font-bold text-primary">
                   {stats.isLoading ? '...' : stats.onlineAgents}
                 </div>
-                <div className="text-[10px] sm:text-xs text-muted-foreground">Агентів онлайн</div>
+                <div className="text-[10px] sm:text-xs text-muted-foreground">{t.dashboard.onlineAgents}</div>
               </div>
               <div className="text-center flex-shrink-0 min-w-[80px]">
                 <div className="text-xl sm:text-2xl font-bold text-primary">
                   {stats.isLoading ? '...' : stats.totalUsers}
                 </div>
-                <div className="text-[10px] sm:text-xs text-muted-foreground">Всього учасників</div>
+                <div className="text-[10px] sm:text-xs text-muted-foreground">{t.dashboard.totalUsers}</div>
               </div>
               <div className="text-center flex-shrink-0 min-w-[80px]">
                 <div className="text-xl sm:text-2xl font-bold text-primary">
                   {stats.isLoading ? '...' : stats.totalChats}
                 </div>
-                <div className="text-[10px] sm:text-xs text-muted-foreground">Активних чатів</div>
+                <div className="text-[10px] sm:text-xs text-muted-foreground">{t.dashboard.activeChats}</div>
               </div>
               <div className="text-center flex-shrink-0 min-w-[80px]">
                 <div className="text-xl sm:text-2xl font-bold text-primary">
                   {stats.isLoading ? '...' : stats.todayMessages}
                 </div>
-                <div className="text-[10px] sm:text-xs text-muted-foreground">Повідомлень сьогодні</div>
+                <div className="text-[10px] sm:text-xs text-muted-foreground">{t.dashboard.todayMessages}</div>
               </div>
             </div>
           </CardContent>
@@ -250,7 +249,7 @@ export const NewIndex = () => {
         
         {/* Community News Feed */}
         <div className="space-y-4">
-          <h3 className="text-base sm:text-lg font-semibold">Стрічка новин спільноти</h3>
+          <h3 className="text-base sm:text-lg font-semibold">{t.dashboard.newsFeed}</h3>
           <CommunityNewsFeed />
         </div>
       </main>

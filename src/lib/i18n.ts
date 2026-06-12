@@ -1,6 +1,6 @@
-// Система локализации для поддержки RU/UA/EN
+// Система локализации для поддержки UK/EN/RU/ES
 
-export type Language = 'ru' | 'ua' | 'en';
+export type Language = 'uk' | 'en' | 'ru' | 'es';
 
 export interface Translations {
   // Общие
@@ -52,6 +52,56 @@ export interface Translations {
     pauseButton: string;
   };
   
+  // Навигация
+  nav: {
+    home: string;
+    chats: string;
+    tasks: string;
+    projects: string;
+    agents: string;
+    participants: string;
+    news: string;
+    chatManage: string;
+    knowledgeBase: string;
+    meetings: string;
+    promptEditor: string;
+    integrations: string;
+    installClient: string;
+    settings: string;
+    more: string;
+    navigation: string;
+  };
+
+  // Дашборд
+  dashboard: {
+    welcome: string;
+    welcomeDesc: string;
+    quickActions: string;
+    createChat: string;
+    createChatDesc: string;
+    createProject: string;
+    createProjectDesc: string;
+    startMeeting: string;
+    startMeetingDesc: string;
+    importHistory: string;
+    importHistoryDesc: string;
+    communityActivity: string;
+    activityDesc: string;
+    onlineUsers: string;
+    onlineAgents: string;
+    totalUsers: string;
+    activeChats: string;
+    todayMessages: string;
+    newsFeed: string;
+  };
+
+  // Лейаут
+  layout: {
+    appName: string;
+    logout: string;
+    user: string;
+  };
+
   // Чаты
   chats: {
     title: string;
@@ -139,130 +189,7 @@ export interface Translations {
 }
 
 const translations: Record<Language, Translations> = {
-  ru: {
-    loading: 'Загрузка...',
-    error: 'Ошибка',
-    retry: 'Повторить',
-    cancel: 'Отмена',
-    save: 'Сохранить',
-    delete: 'Удалить',
-    edit: 'Редактировать',
-    send: 'Отправить',
-    stop: 'Остановить',
-
-    allRepliesVisible: 'Все реплики видят все участники',
-    inviteParticipants: 'Пригласите участников',
-    globalSearch: 'Глобальный поиск',
-    online: 'Онлайн',
-    
-    branchFromMessage: 'Ветка из сообщения',
-    project: 'Проект',
-    generalChat: 'Общий чат',
-    name: 'Название',
-    description: 'Описание',
-    tags: 'Теги',
-    create: 'Создать',
-    
-    principlesTitle: 'Принципы ЖОС',
-    principleNeutral: 'Агент нейтрален и учитывает контекст всей беседы',
-    principleVisible: 'Все сообщения видны всем участникам',
-    principlePause: 'В споре используйте «Пауза/Узел»',
-    
-    profile: 'Профиль',
-    theme: 'Тема',
-    themeLight: 'Светлая',
-    themeDark: 'Тёмная',
-    themeSystem: 'Системная',
-    language: 'Язык',
-    showPrinciplesBanner: 'Показывать баннер принципов',
-    
-    zhosBanner: {
-      line1: 'Агент ЖОС нейтрален и учитывает контекст всей беседы.',
-      line2: 'Все сообщения и ответы видны всем участникам общины.',
-      line3: 'Если возникает напряжение — нажмите Пауза/Зафиксировать узел: агент кратко отзеркалит позиции и предложит следующий шаг без обвинений.',
-      pauseButton: 'Пауза/Узел',
-    },
-    
-    chats: {
-      title: 'Чаты общины',
-      newChat: 'Новый чат',
-      emptyState: 'Начните разговор — это общий чат общины. Ваше сообщение увидят все.',
-      search: 'Поиск чатов...',
-      rename: 'Переименовать',
-      delete: 'Удалить',
-      deleteConfirm: 'Это сотрёт беседу в Dify. Продолжить?',
-      fork: 'Создать ветку',
-      forkFrom: 'из чата',
-    },
-    
-    messages: {
-      typing: 'печатает...',
-      copyCode: 'Копировать код',
-      like: 'Нравится',
-      dislike: 'Не нравится',
-      feedback: 'Обратная связь',
-      sources: 'Источники',
-      report: 'Сообщить о нарушении',
-      fork: 'Создать ветку',
-      pauseNode: 'Пауза/Узел зафиксирован',
-    },
-    
-    files: {
-      upload: 'Загрузить файл',
-      dragDrop: 'Перетащите файлы сюда или нажмите для выбора',
-      tooLarge: 'Размер файла превышает допустимый лимит (25 МБ)',
-      invalidType: 'Тип файла не поддерживается',
-      preview: 'Предпросмотр',
-    },
-    
-    voice: {
-      startRecording: 'Начать запись',
-      stopRecording: 'Остановить запись',
-      transcribing: 'Распознавание речи...',
-      playAudio: 'Воспроизвести',
-      pauseAudio: 'Пауза',
-    },
-    
-    presence: {
-      online: 'в сети',
-      typing: 'печатает...',
-      limit: '/ 12',
-      waitingRoom: 'Когда место освободится — мы вас впустим автоматически',
-    },
-    
-    settings: {
-      title: 'Настройки',
-      difyConfig: 'Конфигурация Dify',
-      apiKey: 'API ключ',
-      baseUrl: 'Базовый URL',
-      fileSettings: 'Настройки файлов',
-      maxFileSize: 'Максимальный размер файла (МБ)',
-      auditLog: 'Журнал аудита',
-      exportSettings: 'Экспорт настроек',
-      importSettings: 'Импорт настроек',
-    },
-    
-    errors: {
-      chatNotFound: 'Чат не найден или был удалён. Обновите список.',
-      invalidParams: 'Неверные параметры запроса.',
-      providerNotInitialized: 'Отсутствует конфигурация модели. Проверьте ключи в настройках.',
-      quotaExceeded: 'Квота модели исчерпана.',
-      serverError: 'Временная ошибка сервиса. Повторите позже.',
-      unauthorized: 'Требуется авторизация.',
-      forbidden: 'Доступ запрещён.',
-      networkError: 'Ошибка сети. Проверьте подключение к интернету.',
-      timeout: 'Превышено время ожидания. Попробуйте ещё раз.',
-      fileTooLarge: 'Размер файла превышает допустимый лимит (25 МБ).',
-      fileTypeNotAllowed: 'Тип файла не поддерживается.',
-      rateLimitExceeded: 'Слишком много запросов. Подождите немного.',
-      unknownError: 'Произошла неожиданная ошибка. Попробуйте ещё раз.',
-      retry: 'Повторить',
-      hideDetails: 'Скрыть детали',
-      showDetails: 'Показать детали',
-    },
-  },
-  
-  ua: {
+  uk: {
     loading: 'Завантаження...',
     error: 'Помилка',
     retry: 'Повторити',
@@ -304,6 +231,53 @@ const translations: Record<Language, Translations> = {
       line2: 'Усі повідомлення та відповіді видні всім учасникам спільноти.',
       line3: 'Якщо виникає напруження — натисніть Пауза/Зафіксувати вузол: агент коротко відобразить позиції та запропонує наступний крок без звинувачень.',
       pauseButton: 'Пауза/Вузол',
+    },
+
+    nav: {
+      home: 'Головна',
+      chats: 'Чати',
+      tasks: 'Завдання',
+      projects: 'Проєкти',
+      agents: 'Агенти',
+      participants: 'Учасники',
+      news: 'Новини',
+      chatManage: 'Керування чатами',
+      knowledgeBase: 'База знань',
+      meetings: 'Зустрічі',
+      promptEditor: 'Редактор промптів',
+      integrations: 'Інтеграції',
+      installClient: 'Встановити клієнт',
+      settings: 'Налаштування',
+      more: 'Більше',
+      navigation: 'Навігація',
+    },
+
+    dashboard: {
+      welcome: 'Ласкаво просимо',
+      welcomeDesc: 'Ваш центр керування спільнотою',
+      quickActions: 'Швидкі дії',
+      createChat: 'Створити чат',
+      createChatDesc: 'Розпочніть нову розмову зі спільнотою',
+      createProject: 'Створити проєкт',
+      createProjectDesc: 'Організуйте завдання та ресурси',
+      startMeeting: 'Розпочати зустріч',
+      startMeetingDesc: 'Запланувати або почати відеозустріч',
+      importHistory: 'Імпорт історії',
+      importHistoryDesc: 'Завантажте попередні розмови',
+      communityActivity: 'Активність спільноти',
+      activityDesc: 'Огляд поточної активності',
+      onlineUsers: 'Користувачі онлайн',
+      onlineAgents: 'Агенти онлайн',
+      totalUsers: 'Всього користувачів',
+      activeChats: 'Активні чати',
+      todayMessages: 'Повідомлень сьогодні',
+      newsFeed: 'Стрічка новин',
+    },
+
+    layout: {
+      appName: 'Loval Echoes',
+      logout: 'Вийти',
+      user: 'Користувач',
     },
     
     chats: {
@@ -384,7 +358,7 @@ const translations: Record<Language, Translations> = {
       showDetails: 'Показати деталі',
     },
   },
-  
+
   en: {
     loading: 'Loading...',
     error: 'Error',
@@ -427,6 +401,53 @@ const translations: Record<Language, Translations> = {
       line2: 'All messages and responses are visible to all community members.',
       line3: 'If tension arises — press Pause/Fix Node: the agent will briefly mirror positions and suggest the next step without accusations.',
       pauseButton: 'Pause/Node',
+    },
+
+    nav: {
+      home: 'Home',
+      chats: 'Chats',
+      tasks: 'Tasks',
+      projects: 'Projects',
+      agents: 'Agents',
+      participants: 'Participants',
+      news: 'News',
+      chatManage: 'Manage Chats',
+      knowledgeBase: 'Knowledge Base',
+      meetings: 'Meetings',
+      promptEditor: 'Prompt Editor',
+      integrations: 'Integrations',
+      installClient: 'Install Client',
+      settings: 'Settings',
+      more: 'More',
+      navigation: 'Navigation',
+    },
+
+    dashboard: {
+      welcome: 'Welcome',
+      welcomeDesc: 'Your community control center',
+      quickActions: 'Quick Actions',
+      createChat: 'Create Chat',
+      createChatDesc: 'Start a new conversation with the community',
+      createProject: 'Create Project',
+      createProjectDesc: 'Organize tasks and resources',
+      startMeeting: 'Start Meeting',
+      startMeetingDesc: 'Schedule or start a video meeting',
+      importHistory: 'Import History',
+      importHistoryDesc: 'Load previous conversations',
+      communityActivity: 'Community Activity',
+      activityDesc: 'Overview of current activity',
+      onlineUsers: 'Online Users',
+      onlineAgents: 'Online Agents',
+      totalUsers: 'Total Users',
+      activeChats: 'Active Chats',
+      todayMessages: 'Messages Today',
+      newsFeed: 'News Feed',
+    },
+
+    layout: {
+      appName: 'Loval Echoes',
+      logout: 'Logout',
+      user: 'User',
     },
     
     chats: {
@@ -507,6 +528,346 @@ const translations: Record<Language, Translations> = {
       showDetails: 'Show details',
     },
   },
+
+  ru: {
+    loading: 'Загрузка...',
+    error: 'Ошибка',
+    retry: 'Повторить',
+    cancel: 'Отмена',
+    save: 'Сохранить',
+    delete: 'Удалить',
+    edit: 'Редактировать',
+    send: 'Отправить',
+    stop: 'Остановить',
+
+    allRepliesVisible: 'Все реплики видят все участники',
+    inviteParticipants: 'Пригласите участников',
+    globalSearch: 'Глобальный поиск',
+    online: 'Онлайн',
+    
+    branchFromMessage: 'Ветка из сообщения',
+    project: 'Проект',
+    generalChat: 'Общий чат',
+    name: 'Название',
+    description: 'Описание',
+    tags: 'Теги',
+    create: 'Создать',
+    
+    principlesTitle: 'Принципы ЖОС',
+    principleNeutral: 'Агент нейтрален и учитывает контекст всей беседы',
+    principleVisible: 'Все сообщения видны всем участникам',
+    principlePause: 'В споре используйте «Пауза/Узел»',
+    
+    profile: 'Профиль',
+    theme: 'Тема',
+    themeLight: 'Светлая',
+    themeDark: 'Тёмная',
+    themeSystem: 'Системная',
+    language: 'Язык',
+    showPrinciplesBanner: 'Показывать баннер принципов',
+    
+    zhosBanner: {
+      line1: 'Агент ЖОС нейтрален и учитывает контекст всей беседы.',
+      line2: 'Все сообщения и ответы видны всем участникам общины.',
+      line3: 'Если возникает напряжение — нажмите Пауза/Зафиксировать узел: агент кратко отзеркалит позиции и предложит следующий шаг без обвинений.',
+      pauseButton: 'Пауза/Узел',
+    },
+
+    nav: {
+      home: 'Главная',
+      chats: 'Чаты',
+      tasks: 'Задачи',
+      projects: 'Проекты',
+      agents: 'Агенты',
+      participants: 'Участники',
+      news: 'Новости',
+      chatManage: 'Управление чатами',
+      knowledgeBase: 'База знаний',
+      meetings: 'Встречи',
+      promptEditor: 'Редактор промптов',
+      integrations: 'Интеграции',
+      installClient: 'Установить клиент',
+      settings: 'Настройки',
+      more: 'Ещё',
+      navigation: 'Навигация',
+    },
+
+    dashboard: {
+      welcome: 'Добро пожаловать',
+      welcomeDesc: 'Ваш центр управления общиной',
+      quickActions: 'Быстрые действия',
+      createChat: 'Создать чат',
+      createChatDesc: 'Начните новый разговор с общиной',
+      createProject: 'Создать проект',
+      createProjectDesc: 'Организуйте задачи и ресурсы',
+      startMeeting: 'Начать встречу',
+      startMeetingDesc: 'Запланировать или начать видеовстречу',
+      importHistory: 'Импорт истории',
+      importHistoryDesc: 'Загрузите предыдущие разговоры',
+      communityActivity: 'Активность общины',
+      activityDesc: 'Обзор текущей активности',
+      onlineUsers: 'Пользователи онлайн',
+      onlineAgents: 'Агенты онлайн',
+      totalUsers: 'Всего пользователей',
+      activeChats: 'Активные чаты',
+      todayMessages: 'Сообщений сегодня',
+      newsFeed: 'Лента новостей',
+    },
+
+    layout: {
+      appName: 'Loval Echoes',
+      logout: 'Выйти',
+      user: 'Пользователь',
+    },
+    
+    chats: {
+      title: 'Чаты общины',
+      newChat: 'Новый чат',
+      emptyState: 'Начните разговор — это общий чат общины. Ваше сообщение увидят все.',
+      search: 'Поиск чатов...',
+      rename: 'Переименовать',
+      delete: 'Удалить',
+      deleteConfirm: 'Это сотрёт беседу в Dify. Продолжить?',
+      fork: 'Создать ветку',
+      forkFrom: 'из чата',
+    },
+    
+    messages: {
+      typing: 'печатает...',
+      copyCode: 'Копировать код',
+      like: 'Нравится',
+      dislike: 'Не нравится',
+      feedback: 'Обратная связь',
+      sources: 'Источники',
+      report: 'Сообщить о нарушении',
+      fork: 'Создать ветку',
+      pauseNode: 'Пауза/Узел зафиксирован',
+    },
+    
+    files: {
+      upload: 'Загрузить файл',
+      dragDrop: 'Перетащите файлы сюда или нажмите для выбора',
+      tooLarge: 'Размер файла превышает допустимый лимит (25 МБ)',
+      invalidType: 'Тип файла не поддерживается',
+      preview: 'Предпросмотр',
+    },
+    
+    voice: {
+      startRecording: 'Начать запись',
+      stopRecording: 'Остановить запись',
+      transcribing: 'Распознавание речи...',
+      playAudio: 'Воспроизвести',
+      pauseAudio: 'Пауза',
+    },
+    
+    presence: {
+      online: 'в сети',
+      typing: 'печатает...',
+      limit: '/ 12',
+      waitingRoom: 'Когда место освободится — мы вас впустим автоматически',
+    },
+    
+    settings: {
+      title: 'Настройки',
+      difyConfig: 'Конфигурация Dify',
+      apiKey: 'API ключ',
+      baseUrl: 'Базовый URL',
+      fileSettings: 'Настройки файлов',
+      maxFileSize: 'Максимальный размер файла (МБ)',
+      auditLog: 'Журнал аудита',
+      exportSettings: 'Экспорт настроек',
+      importSettings: 'Импорт настроек',
+    },
+    
+    errors: {
+      chatNotFound: 'Чат не найден или был удалён. Обновите список.',
+      invalidParams: 'Неверные параметры запроса.',
+      providerNotInitialized: 'Отсутствует конфигурация модели. Проверьте ключи в настройках.',
+      quotaExceeded: 'Квота модели исчерпана.',
+      serverError: 'Временная ошибка сервиса. Повторите позже.',
+      unauthorized: 'Требуется авторизация.',
+      forbidden: 'Доступ запрещён.',
+      networkError: 'Ошибка сети. Проверьте подключение к интернету.',
+      timeout: 'Превышено время ожидания. Попробуйте ещё раз.',
+      fileTooLarge: 'Размер файла превышает допустимый лимит (25 МБ).',
+      fileTypeNotAllowed: 'Тип файла не поддерживается.',
+      rateLimitExceeded: 'Слишком много запросов. Подождите немного.',
+      unknownError: 'Произошла неожиданная ошибка. Попробуйте ещё раз.',
+      retry: 'Повторить',
+      hideDetails: 'Скрыть детали',
+      showDetails: 'Показать детали',
+    },
+  },
+
+  es: {
+    loading: 'Cargando...',
+    error: 'Error',
+    retry: 'Reintentar',
+    cancel: 'Cancelar',
+    save: 'Guardar',
+    delete: 'Eliminar',
+    edit: 'Editar',
+    send: 'Enviar',
+    stop: 'Detener',
+
+    allRepliesVisible: 'Todas las respuestas son visibles para todos',
+    inviteParticipants: 'Invitar participantes',
+    globalSearch: 'Búsqueda global',
+    online: 'En línea',
+    
+    branchFromMessage: 'Rama desde el mensaje',
+    project: 'Proyecto',
+    generalChat: 'Chat general',
+    name: 'Nombre',
+    description: 'Descripción',
+    tags: 'Etiquetas',
+    create: 'Crear',
+    
+    principlesTitle: 'Principios de la Comunidad',
+    principleNeutral: 'El agente es neutral y considera todo el contexto',
+    principleVisible: 'Todos los mensajes son visibles para todos',
+    principlePause: 'Use «Pausa/Nudo» en conflictos',
+    
+    profile: 'Perfil',
+    theme: 'Tema',
+    themeLight: 'Claro',
+    themeDark: 'Oscuro',
+    themeSystem: 'Sistema',
+    language: 'Idioma',
+    showPrinciplesBanner: 'Mostrar banner de principios',
+    
+    zhosBanner: {
+      line1: 'El agente ZHOS es neutral y considera el contexto de toda la conversación.',
+      line2: 'Todos los mensajes y respuestas son visibles para todos los miembros de la comunidad.',
+      line3: 'Si surge tensión — presione Pausa/Fijar Nudo: el agente reflejará brevemente las posiciones y sugerirá el siguiente paso sin acusaciones.',
+      pauseButton: 'Pausa/Nudo',
+    },
+
+    nav: {
+      home: 'Inicio',
+      chats: 'Chats',
+      tasks: 'Tareas',
+      projects: 'Proyectos',
+      agents: 'Agentes',
+      participants: 'Participantes',
+      news: 'Noticias',
+      chatManage: 'Gestionar chats',
+      knowledgeBase: 'Base de conocimiento',
+      meetings: 'Reuniones',
+      promptEditor: 'Editor de prompts',
+      integrations: 'Integraciones',
+      installClient: 'Instalar cliente',
+      settings: 'Configuración',
+      more: 'Más',
+      navigation: 'Navegación',
+    },
+
+    dashboard: {
+      welcome: 'Bienvenido',
+      welcomeDesc: 'Tu centro de control comunitario',
+      quickActions: 'Acciones rápidas',
+      createChat: 'Crear chat',
+      createChatDesc: 'Inicia una nueva conversación con la comunidad',
+      createProject: 'Crear proyecto',
+      createProjectDesc: 'Organiza tareas y recursos',
+      startMeeting: 'Iniciar reunión',
+      startMeetingDesc: 'Programar o iniciar una videollamada',
+      importHistory: 'Importar historial',
+      importHistoryDesc: 'Carga conversaciones anteriores',
+      communityActivity: 'Actividad comunitaria',
+      activityDesc: 'Resumen de la actividad actual',
+      onlineUsers: 'Usuarios en línea',
+      onlineAgents: 'Agentes en línea',
+      totalUsers: 'Total de usuarios',
+      activeChats: 'Chats activos',
+      todayMessages: 'Mensajes de hoy',
+      newsFeed: 'Noticias',
+    },
+
+    layout: {
+      appName: 'Loval Echoes',
+      logout: 'Cerrar sesión',
+      user: 'Usuario',
+    },
+    
+    chats: {
+      title: 'Chats de la comunidad',
+      newChat: 'Nuevo chat',
+      emptyState: 'Inicia una conversación — este es un chat comunitario. Todos verán tu mensaje.',
+      search: 'Buscar chats...',
+      rename: 'Renombrar',
+      delete: 'Eliminar',
+      deleteConfirm: 'Esto eliminará la conversación en Dify. ¿Continuar?',
+      fork: 'Crear rama',
+      forkFrom: 'del chat',
+    },
+    
+    messages: {
+      typing: 'escribiendo...',
+      copyCode: 'Copiar código',
+      like: 'Me gusta',
+      dislike: 'No me gusta',
+      feedback: 'Comentarios',
+      sources: 'Fuentes',
+      report: 'Reportar violación',
+      fork: 'Crear rama',
+      pauseNode: 'Pausa/Nudo fijado',
+    },
+    
+    files: {
+      upload: 'Subir archivo',
+      dragDrop: 'Arrastra archivos aquí o haz clic para seleccionar',
+      tooLarge: 'El tamaño del archivo excede el límite permitido (25 MB)',
+      invalidType: 'Tipo de archivo no compatible',
+      preview: 'Vista previa',
+    },
+    
+    voice: {
+      startRecording: 'Iniciar grabación',
+      stopRecording: 'Detener grabación',
+      transcribing: 'Transcribiendo voz...',
+      playAudio: 'Reproducir',
+      pauseAudio: 'Pausar',
+    },
+    
+    presence: {
+      online: 'en línea',
+      typing: 'escribiendo...',
+      limit: '/ 12',
+      waitingRoom: 'Cuando haya un lugar disponible — te dejaremos entrar automáticamente',
+    },
+    
+    settings: {
+      title: 'Configuración',
+      difyConfig: 'Configuración de Dify',
+      apiKey: 'Clave API',
+      baseUrl: 'URL base',
+      fileSettings: 'Configuración de archivos',
+      maxFileSize: 'Tamaño máximo de archivo (MB)',
+      auditLog: 'Registro de auditoría',
+      exportSettings: 'Exportar configuración',
+      importSettings: 'Importar configuración',
+    },
+    
+    errors: {
+      chatNotFound: 'Chat no encontrado o fue eliminado. Actualice la lista.',
+      invalidParams: 'Parámetros de solicitud no válidos.',
+      providerNotInitialized: 'Configuración del modelo ausente. Verifique las claves en la configuración.',
+      quotaExceeded: 'Cuota del modelo agotada.',
+      serverError: 'Error temporal del servicio. Inténtelo de nuevo más tarde.',
+      unauthorized: 'Se requiere autorización.',
+      forbidden: 'Acceso prohibido.',
+      networkError: 'Error de red. Verifique su conexión a internet.',
+      timeout: 'Tiempo de espera agotado. Inténtelo de nuevo.',
+      fileTooLarge: 'El tamaño del archivo excede el límite permitido (25 MB).',
+      fileTypeNotAllowed: 'Tipo de archivo no compatible.',
+      rateLimitExceeded: 'Demasiadas solicitudes. Espere un momento.',
+      unknownError: 'Ocurrió un error inesperado. Inténtelo de nuevo.',
+      retry: 'Reintentar',
+      hideDetails: 'Ocultar detalles',
+      showDetails: 'Mostrar detalles',
+    },
+  },
 };
 
 // Хук для использования переводов
@@ -515,19 +876,26 @@ import { useState, useEffect } from 'react';
 export const useTranslation = () => {
   const [language, setLanguage] = useState<Language>(() => {
     const saved = localStorage.getItem('language');
-    if (saved && ['ru', 'ua', 'en'].includes(saved)) {
+    // Migrate legacy 'ua' to 'uk'
+    if (saved === 'ua') {
+      localStorage.setItem('language', 'uk');
+      return 'uk';
+    }
+    if (saved && ['uk', 'en', 'ru', 'es'].includes(saved)) {
       return saved as Language;
     }
     
     // Определяем язык по браузеру
     const browserLang = navigator.language.toLowerCase();
     if (browserLang.startsWith('ru')) return 'ru';
-    if (browserLang.startsWith('uk')) return 'ua';
+    if (browserLang.startsWith('uk')) return 'uk';
+    if (browserLang.startsWith('es')) return 'es';
     return 'en';
   });
 
   useEffect(() => {
     localStorage.setItem('language', language);
+    document.documentElement.lang = language;
   }, [language]);
 
   const t = translations[language];

@@ -66,10 +66,10 @@ export function Layout({ sidebar, children }: LayoutProps) {
   };
 
   const mobileNavItems = [
-    { label: "Головна", icon: Home, path: "/dashboard" },
-    { label: "Чати", icon: MessageCircle, path: "/chats" },
-    { label: "Задачі", icon: CheckSquare, path: "/my/tasks" },
-    { label: "Проєкти", icon: FolderKanban, path: "/projects" },
+    { label: t.nav.home, icon: Home, path: "/dashboard" },
+    { label: t.nav.chats, icon: MessageCircle, path: "/chats" },
+    { label: t.nav.tasks, icon: CheckSquare, path: "/my/tasks" },
+    { label: t.nav.projects, icon: FolderKanban, path: "/projects" },
   ];
 
   const isNavItemActive = (path: string) => {
@@ -94,7 +94,7 @@ export function Layout({ sidebar, children }: LayoutProps) {
               <Menu className="h-5 w-5" />
               <span className="sr-only">Open menu</span>
             </Button>
-            <span className="font-bold text-lg sm:text-xl">Дух Спільноти</span>
+            <span className="font-bold text-lg sm:text-xl">{t.layout.appName}</span>
           </div>
           
           <div className="flex items-center gap-2 sm:gap-3">
@@ -143,11 +143,11 @@ export function Layout({ sidebar, children }: LayoutProps) {
                 <DropdownMenuContent align="end" className="w-48">
                   <DropdownMenuItem onClick={() => navigate('/')}>
                     <Home className="mr-2 h-4 w-4" />
-                    Головна
+                    {t.nav.home}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate('/participants')}>
                     <Users className="mr-2 h-4 w-4" />
-                    Учасники
+                    {t.nav.participants}
                     {pendingCount > 0 && (
                       <Badge variant="destructive" className="ml-auto h-5 px-1.5 text-xs">
                         {pendingCount}
@@ -173,13 +173,13 @@ export function Layout({ sidebar, children }: LayoutProps) {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <div className="px-2 py-1.5 text-sm">
-                  <div className="font-medium">{profile?.display_name || 'Пользователь'}</div>
+                  <div className="font-medium">{profile?.display_name || t.layout.user}</div>
                   <div className="text-xs text-muted-foreground">{user?.email}</div>
                 </div>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => navigate('/participants')}>
                   <Users className="mr-2 h-4 w-4" />
-                  Участники
+                  {t.nav.participants}
                   {pendingCount > 0 && (
                     <Badge variant="destructive" className="ml-auto h-5 px-1 text-xs">
                       {pendingCount}
@@ -188,16 +188,16 @@ export function Layout({ sidebar, children }: LayoutProps) {
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate('/projects')}>
                   <FolderCheck className="mr-2 h-4 w-4" />
-                  Проекты
+                  {t.nav.projects}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate('/settings')}>
                   <SettingsIcon className="mr-2 h-4 w-4" />
-                  Настройки
+                  {t.nav.settings}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout} className="text-destructive">
                   <LogOut className="mr-2 h-4 w-4" />
-                  Выйти
+                  {t.layout.logout}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -227,7 +227,7 @@ export function Layout({ sidebar, children }: LayoutProps) {
       <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
         <SheetContent side="left" className="p-0 w-[300px] max-w-[85vw] bg-sidebar border-r flex flex-col">
           <div className="p-4 border-b flex items-center justify-between">
-            <span className="font-bold text-lg">Навігація</span>
+            <span className="font-bold text-lg">{t.nav.navigation}</span>
           </div>
           <div className="flex-1 overflow-y-auto p-4">
             {sidebar}
@@ -264,7 +264,7 @@ export function Layout({ sidebar, children }: LayoutProps) {
           )}
         >
           <MoreHorizontal className="h-5 w-5 mb-0.5" />
-          <span className="text-[10px] font-medium tracking-tight">Більше</span>
+          <span className="text-[10px] font-medium tracking-tight">{t.nav.more}</span>
         </button>
       </nav>
     </div>

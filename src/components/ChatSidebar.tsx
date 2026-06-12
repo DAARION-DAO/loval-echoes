@@ -361,7 +361,7 @@ export const ChatSidebar = () => {
             )}
           >
             <Users className="h-4 w-4" />
-            Участники
+            {t.nav.participants}
             {pendingCount > 0 && (
               <Badge 
                 variant="destructive" 
@@ -379,7 +379,7 @@ export const ChatSidebar = () => {
             )}
           >
             <Rss className="h-4 w-4" />
-            Новостная лента
+            {t.nav.news}
           </NavLink>
           <NavLink
             to="/chats"
@@ -389,7 +389,7 @@ export const ChatSidebar = () => {
             )}
           >
             <MessageCircle className="h-4 w-4" />
-            Чаты
+            {t.nav.chats}
           </NavLink>
           <NavLink
             to="/chats/manage"
@@ -399,7 +399,7 @@ export const ChatSidebar = () => {
             )}
           >
             <Archive className="h-4 w-4" />
-            Управление чатами
+            {t.nav.chatManage}
           </NavLink>
           <NavLink
             to="/my/tasks"
@@ -409,7 +409,7 @@ export const ChatSidebar = () => {
             )}
           >
             <CheckSquare className="h-4 w-4" />
-            Ваши задачи
+            {t.nav.tasks}
           </NavLink>
           <NavLink
             to="/projects"
@@ -419,7 +419,7 @@ export const ChatSidebar = () => {
             )}
           >
             <FolderKanban className="h-4 w-4" />
-            Проекты
+            {t.nav.projects}
           </NavLink>
           <NavLink
             to="/knowledge-base"
@@ -429,7 +429,7 @@ export const ChatSidebar = () => {
             )}
           >
             <Files className="h-4 w-4" />
-            Файлы (База знаний)
+            {t.nav.knowledgeBase}
           </NavLink>
           <NavLink
             to="/meetings"
@@ -439,7 +439,7 @@ export const ChatSidebar = () => {
             )}
           >
             <Video className="h-4 w-4" />
-            Встречи
+            {t.nav.meetings}
           </NavLink>
           <NavLink
             to="/agents"
@@ -449,7 +449,7 @@ export const ChatSidebar = () => {
             )}
           >
             <Bot className="h-4 w-4" />
-            Агенти
+            {t.nav.agents}
           </NavLink>
           <NavLink
             to="/prompts"
@@ -459,7 +459,7 @@ export const ChatSidebar = () => {
             )}
           >
             <TerminalSquare className="h-4 w-4" />
-            Редактор промптів
+            {t.nav.promptEditor}
           </NavLink>
           <NavLink
             to="/integrations"
@@ -469,7 +469,7 @@ export const ChatSidebar = () => {
             )}
           >
             <Plug className="h-4 w-4" />
-            Інтеграції
+            {t.nav.integrations}
           </NavLink>
           <NavLink
             to="/install"
@@ -479,7 +479,7 @@ export const ChatSidebar = () => {
             )}
           >
             <Download className="h-4 w-4" />
-            Встановити клієнт
+            {t.nav.installClient}
           </NavLink>
           <NavLink
             to="/settings"
@@ -489,7 +489,7 @@ export const ChatSidebar = () => {
             )}
           >
             <Settings className="h-4 w-4" />
-            Настройки
+            {t.nav.settings}
           </NavLink>
         </div>
       </div>
