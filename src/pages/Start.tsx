@@ -699,13 +699,17 @@ export function Start() {
             <img src="/logo.jpg" alt="MicroDAO" className="h-7 w-7 rounded-lg object-cover shadow-sm" />
             <span className="font-semibold text-sm text-foreground/80">MicroDAO</span>
           </div>
-          <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
+          <div className="flex items-center justify-center flex-wrap gap-x-4 gap-y-2 text-xs text-muted-foreground">
             <button onClick={() => navigate('/install')} className="hover:text-foreground transition-colors">
               DAARION Edge Client
             </button>
             <span className="text-border">·</span>
-            <a href="https://github.com/DAARION-DAO" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">
-              GitHub
+            <a href="https://github.com/DAARION-DAO/loval-echoes" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">
+              GitHub (MicroDAO Open Source)
+            </a>
+            <span className="text-border">·</span>
+            <a href="https://github.com/DAARION-DAO/daarion-edge-client" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">
+              GitHub (Edge Client)
             </a>
           </div>
           <div className="text-xs text-muted-foreground">© {new Date().getFullYear()} DAARION.city — Всі права захищено.</div>
