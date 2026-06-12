@@ -35,7 +35,7 @@ export const useUserApprovalStatus = () => {
         if (!data) {
           console.log('📝 No profile found, creating one...');
           // Create profile if it doesn't exist
-          const { error: insertError } = await supabase
+          const { error: insertError } = await (supabase as any)
             .from('profiles')
             .insert({
               user_id: user.id,
