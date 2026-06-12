@@ -1858,6 +1858,10 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: undefined
       }
+      soft_delete_message: {
+        Args: { p_message_id: string }
+        Returns: undefined
+      }
       validate_invitation_code: { Args: { p_code: string }; Returns: Json }
     }
     Enums: {
