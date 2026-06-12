@@ -178,7 +178,7 @@ export function Start() {
               <Badge className="bg-primary/10 text-primary border-primary/20 text-xs px-2.5 py-0.5 mb-2">
                 ЖОС · Жива операційна система
               </Badge>
-              <h2 className="text-xl font-bold tracking-tight text-foreground">MicroDAO — Дух Спільноти</h2>
+              <h2 className="text-xl font-bold tracking-tight text-foreground">MicroDAO / Дух Спільноти</h2>
               <p className="text-xs text-muted-foreground mt-1 max-w-sm leading-relaxed">
                 Жива операційна система для команд, DAO та спільнот. Обʼєднуйте чати, задачі, знання, зустрічі й агентів в одному просторі.
               </p>
@@ -275,12 +275,12 @@ export function Start() {
             ЖОС · Жива операційна система
           </Badge>
           
-          <div className="space-y-1">
-            <h1 className="text-5xl sm:text-6xl md:text-7xl font-extrabold tracking-tight leading-tight max-w-4xl mx-auto bg-gradient-to-r from-foreground via-foreground/90 to-primary bg-clip-text text-transparent">
-              MicroDAO
+          <div className="space-y-2">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight leading-tight max-w-4xl mx-auto bg-gradient-to-r from-foreground via-foreground/90 to-primary bg-clip-text text-transparent">
+              MicroDAO / Дух Спільноти
             </h1>
-            <p className="text-2xl sm:text-3xl font-semibold text-muted-foreground tracking-wide">
-              Дух Спільноти
+            <p className="text-xl sm:text-2xl font-semibold text-muted-foreground tracking-wide">
+              Жива операційна система
             </p>
           </div>
           
