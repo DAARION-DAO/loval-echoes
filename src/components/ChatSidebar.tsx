@@ -16,7 +16,8 @@ import {
   CheckSquare,
   FolderKanban,
   Bot,
-  Plug
+  Plug,
+  TerminalSquare
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -446,6 +447,16 @@ export const ChatSidebar = () => {
           >
             <Bot className="h-4 w-4" />
             Агенти
+          </NavLink>
+          <NavLink
+            to="/prompts"
+            className={({ isActive }) => cn(
+              "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
+              isActive ? "bg-muted" : "hover:bg-muted/50"
+            )}
+          >
+            <TerminalSquare className="h-4 w-4" />
+            Редактор промптів
           </NavLink>
           <NavLink
             to="/integrations"

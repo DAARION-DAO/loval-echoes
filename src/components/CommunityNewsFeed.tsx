@@ -203,32 +203,34 @@ export const CommunityNewsFeed = () => {
             disabled={loading || !user}
           />
           
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Button variant="ghost" size="sm" className="h-8 px-2" disabled>
-                <Paperclip className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="sm" className="h-8 px-2" disabled>
-                <Mic className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="sm" className="h-8 px-2" disabled>
-                <Smile className="h-4 w-4" />
-              </Button>
-              <span className="ml-2">{message.length}/500</span>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground justify-between sm:justify-start">
+                <div className="flex items-center gap-2">
+                  <Button variant="ghost" size="sm" className="h-8 px-2" disabled>
+                    <Paperclip className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="sm" className="h-8 px-2" disabled>
+                    <Mic className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="sm" className="h-8 px-2" disabled>
+                    <Smile className="h-4 w-4" />
+                  </Button>
+                </div>
+                <span className="text-xs">{message.length}/500</span>
+              </div>
+              
+              <div className="flex items-center justify-end gap-2">
+                <kbd className="px-2 py-1 text-xs bg-muted rounded hidden sm:inline">Ctrl+Enter</kbd>
+                <Button 
+                  onClick={handleSendUrgentNews}
+                  disabled={!message.trim() || loading || !user}
+                  className="flex items-center justify-center gap-2 w-full sm:w-auto"
+                >
+                  <Send className="h-4 w-4" />
+                  Надіслати всім
+                </Button>
+              </div>
             </div>
-            
-            <div className="flex items-center gap-2">
-              <kbd className="px-2 py-1 text-xs bg-muted rounded">Ctrl+Enter</kbd>
-              <Button 
-                onClick={handleSendUrgentNews}
-                disabled={!message.trim() || loading || !user}
-                className="flex items-center gap-2"
-              >
-                <Send className="h-4 w-4" />
-                Отправить всем
-              </Button>
-            </div>
-          </div>
         </div>
         
         <div className="text-xs text-muted-foreground p-3 bg-muted/50 rounded-lg">

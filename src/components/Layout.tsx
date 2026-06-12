@@ -9,14 +9,31 @@ import {
   DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { Search, Plus, Menu, Home, Bell, Users, Settings as SettingsIcon, LogOut, FolderCheck } from "lucide-react";
+import { 
+  Search, 
+  Plus, 
+  Menu, 
+  Home, 
+  Bell, 
+  Users, 
+  Settings as SettingsIcon, 
+  LogOut, 
+  FolderCheck,
+  MoreVertical,
+  MessageCircle,
+  CheckSquare,
+  FolderKanban,
+  Bot
+} from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useTranslation } from "@/lib/i18n";
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { usePendingApprovals } from "@/hooks/usePendingApprovals";
 import { NewsNotificationsPopover } from "@/components/NewsNotificationsPopover";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
 
 interface LayoutProps {
   sidebar: React.ReactNode;
@@ -29,7 +46,13 @@ export function Layout({ sidebar, children }: LayoutProps) {
   const { pendingCount } = usePendingApprovals();
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Auto close mobile drawer on route change
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [location.pathname]);
 
   const handleLogout = async () => {
     try {
@@ -40,8 +63,23 @@ export function Layout({ sidebar, children }: LayoutProps) {
     }
   };
 
+  const mobileNavItems = [
+    { label: "Головна", icon: Home, path: "/dashboard" },
+    { label: "Чати", icon: MessageCircle, path: "/chats" },
+    { label: "Задачі", icon: CheckSquare, path: "/my/tasks" },
+    { label: "Проєкти", icon: FolderKanban, path: "/projects" },
+    { label: "Агент", icon: Bot, path: "/agents" }
+  ];
+
+  const isNavItemActive = (path: string) => {
+    if (path === '/dashboard') {
+      return location.pathname === '/dashboard' || location.pathname === '/';
+    }
+    return location.pathname.startsWith(path);
+  };
+
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-background text-foreground pb-16 lg:pb-0">
       {/* Header */}
       <header className="sticky top-0 z-40 backdrop-blur bg-background/70 border-b">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
@@ -58,38 +96,68 @@ export function Layout({ sidebar, children }: LayoutProps) {
             <span className="font-bold text-lg sm:text-xl">Дух Общины</span>
           </div>
           
-          <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate('/')}
-              className="p-2"
-            >
-              <Home className="h-4 w-4" />
-            </Button>
-            
-            {/* News Notifications */}
-            <NewsNotificationsPopover />
-            
-            {/* Participants Notifications Button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate('/participants')}
-              className="p-2 relative"
-            >
-              <Users className="h-4 w-4" />
-              {pendingCount > 0 && (
-                <Badge 
-                  variant="destructive" 
-                  className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center text-xs p-0"
-                >
-                  {pendingCount}
-                </Badge>
-              )}
-            </Button>
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* Desktop Actions */}
+            <div className="hidden md:flex items-center gap-3">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/')}
+                className="p-2"
+              >
+                <Home className="h-4 w-4" />
+              </Button>
+              
+              <NewsNotificationsPopover />
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/participants')}
+                className="p-2 relative"
+              >
+                <Users className="h-4 w-4" />
+                {pendingCount > 0 && (
+                  <Badge 
+                    variant="destructive" 
+                    className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center text-xs p-0"
+                  >
+                    {pendingCount}
+                  </Badge>
+                )}
+              </Button>
+            </div>
 
-            {/* User Avatar Dropdown */}
+            {/* Mobile Actions (Always Visible Notifications) */}
+            <div className="flex md:hidden items-center gap-1">
+              <NewsNotificationsPopover />
+              
+              {/* More Actions Dropdown on Mobile */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="p-2 h-9 w-9">
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={() => navigate('/')}>
+                    <Home className="mr-2 h-4 w-4" />
+                    Головна
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/participants')}>
+                    <Users className="mr-2 h-4 w-4" />
+                    Учасники
+                    {pendingCount > 0 && (
+                      <Badge variant="destructive" className="ml-auto h-5 px-1.5 text-xs">
+                        {pendingCount}
+                      </Badge>
+                    )}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+
+            {/* User Avatar Dropdown (Always Visible) */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="p-1 h-auto">
@@ -154,31 +222,37 @@ export function Layout({ sidebar, children }: LayoutProps) {
         </div>
       </div>
 
-      {/* Mobile Sidebar Overlay */}
-      {isMobileMenuOpen && (
-        <div className="lg:hidden fixed inset-0 z-50">
-          <div 
-            className="absolute inset-0 bg-black/40 backdrop-blur-sm" 
-            onClick={() => setIsMobileMenuOpen(false)}
-          />
-          <aside className="absolute left-0 top-0 h-full w-[280px] max-w-[80vw] bg-sidebar border-r overflow-y-auto animate-slide-in-right">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <span className="font-bold text-lg">Навигация</span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0 rounded-full"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  ✕
-                </Button>
-              </div>
-              {sidebar}
-            </div>
-          </aside>
-        </div>
-      )}
+      {/* Modern Slide-out Drawer */}
+      <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+        <SheetContent side="left" className="p-0 w-[300px] max-w-[85vw] bg-sidebar border-r flex flex-col">
+          <div className="p-4 border-b flex items-center justify-between">
+            <span className="font-bold text-lg">Навігація</span>
+          </div>
+          <div className="flex-1 overflow-y-auto p-4">
+            {sidebar}
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Bottom Mobile Navigation Bar */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-background/95 border-t border-border backdrop-blur-md h-16 flex items-center justify-around px-2 pb-safe">
+        {mobileNavItems.map((item) => {
+          const active = isNavItemActive(item.path);
+          return (
+            <button
+              key={item.path}
+              onClick={() => navigate(item.path)}
+              className={cn(
+                "flex flex-col items-center justify-center flex-1 h-full min-h-[44px] py-1 text-muted-foreground hover:text-foreground transition-colors",
+                active && "text-primary hover:text-primary"
+              )}
+            >
+              <item.icon className="h-5 w-5 mb-1" />
+              <span className="text-[10px] font-medium tracking-tight">{item.label}</span>
+            </button>
+          );
+        })}
+      </nav>
     </div>
   );
 }

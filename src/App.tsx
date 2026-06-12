@@ -8,11 +8,12 @@ import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useState, useEffect } from "react";
 import { ChatsPage } from "./pages/Chats";
 import { Auth } from "./pages/Auth";
 import { NewIndex } from "./pages/NewIndex";
 import { ResetPassword } from "./pages/ResetPassword";
+import { Start } from "./pages/Start";
 
 // Lazy load heavy components
 const ChatsManagement = lazy(() => import("./pages/ChatsManagement").then(m => ({ default: m.ChatsManagement })));
@@ -28,17 +29,59 @@ const KnowledgeBase = lazy(() => import("./pages/KnowledgeBase"));
 const MyTasks = lazy(() => import("./pages/MyTasks"));
 const Agents = lazy(() => import("./pages/Agents"));
 const Integrations = lazy(() => import("./pages/Integrations"));
+const PromptEditor = lazy(() => import("./pages/PromptEditor").then(m => ({ default: m.PromptEditor })));
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { Layout } from "./components/Layout";
 import { useSessionTimeout } from "./hooks/useSessionTimeout";
 
 const queryClient = new QueryClient();
 
+const PublicStartRoute = () => {
+  const { user, loading } = useAuth();
+  const [hasCommunity, setHasCommunity] = useState(false);
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('zhos-community');
+    setHasCommunity(!!saved);
+    setChecking(false);
+  }, [user]);
+
+  if (loading || checking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <LoadingSpinner size="lg" text="Загрузка..." />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Start />; // Public Landing
+  }
+
+  if (!hasCommunity) {
+    return <Start />; // Onboarding
+  }
+
+  // Logged in and has community -> go to dashboard
+  return <Navigate to="/dashboard" replace />;
+};
+
 const ProtectedLayout = () => {
   const { user, loading } = useAuth();
   useSessionTimeout();
+  const [hasCommunity, setHasCommunity] = useState(true);
+  const [checking, setChecking] = useState(true);
 
-  if (loading) {
+  useEffect(() => {
+    if (user) {
+      const saved = localStorage.getItem('zhos-community');
+      setHasCommunity(!!saved);
+    }
+    setChecking(false);
+  }, [user]);
+
+  if (loading || checking) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <LoadingSpinner size="lg" text="Загрузка..." />
@@ -50,12 +93,16 @@ const ProtectedLayout = () => {
     return <Navigate to="/auth" replace />;
   }
 
+  if (!hasCommunity) {
+    return <Navigate to="/" replace />;
+  }
+
   return (
     <Layout sidebar={<ChatSidebar />}>
       <ProtectedRoute>
         <Suspense fallback={<LoadingSpinner size="lg" text="Загрузка..." />}>
           <Routes>
-            <Route path="/" element={<NewIndex />} />
+            <Route path="/dashboard" element={<NewIndex />} />
             <Route path="/chats" element={<ChatsPage />} />
             <Route path="/chats/manage" element={<ChatsManagement />} />
             <Route path="/chats/:chatId" element={<ChatPage />} />
@@ -70,6 +117,8 @@ const ProtectedLayout = () => {
             <Route path="/my/tasks" element={<MyTasks />} />
             <Route path="/agents" element={<Agents />} />
             <Route path="/integrations" element={<Integrations />} />
+            <Route path="/prompts" element={<PromptEditor />} />
+            <Route path="/prompt-editor" element={<PromptEditor />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
@@ -105,6 +154,7 @@ const App = () => (
         <BrowserRouter>
           <AuthProvider>
             <Routes>
+              <Route path="/" element={<PublicStartRoute />} />
               <Route path="/auth" element={<PublicRoutes />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/*" element={<ProtectedLayout />} />
