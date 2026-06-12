@@ -353,36 +353,37 @@ export function Start() {
 
       {/* ── Navbar ── */}
       <header className="sticky top-0 z-50 w-full border-b border-border/30 bg-background/70 backdrop-blur-xl">
-        <div className="container max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="bg-gradient-to-br from-primary to-primary/70 text-primary-foreground h-9 w-9 rounded-xl flex items-center justify-center font-extrabold text-lg shadow-md landing-glow">
+        <div className="container max-w-7xl mx-auto px-3 sm:px-4 h-14 sm:h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="bg-gradient-to-br from-primary to-primary/70 text-primary-foreground h-8 w-8 sm:h-9 sm:w-9 rounded-xl flex items-center justify-center font-extrabold text-base sm:text-lg shadow-md landing-glow">
               M
             </div>
-            <span className="font-bold text-lg tracking-tight">MicroDAO</span>
+            <span className="font-bold text-base sm:text-lg tracking-tight">MicroDAO</span>
             <Badge variant="secondary" className="hidden sm:inline-flex text-[10px] px-1.5 py-0 h-5 font-medium">
               beta
             </Badge>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-3">
             <Button variant="ghost" size="sm" onClick={() => navigate('/install')} className="text-sm font-medium gap-1.5 hidden sm:inline-flex">
               <Download className="h-4 w-4" />
               <span>Клієнт</span>
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => navigate('/auth')} className="text-sm font-medium gap-1.5">
+            <Button variant="ghost" size="sm" onClick={() => navigate('/auth')} className="text-xs sm:text-sm font-medium gap-1">
               <LogIn className="h-4 w-4" />
               <span className="hidden xs:inline">Увійти</span>
             </Button>
-            <Button size="sm" onClick={() => navigate('/auth?signup=true')} className="text-sm font-semibold gap-1.5 shadow-md hover:shadow-lg transition-shadow">
+            <Button size="sm" onClick={() => navigate('/auth?signup=true')} className="text-xs sm:text-sm font-semibold gap-1 sm:gap-1.5 shadow-md hover:shadow-lg transition-shadow px-3 sm:px-4">
               <Sparkles className="h-3.5 w-3.5" />
-              Створити спільноту
+              <span className="hidden xs:inline">Створити</span>
+              <span className="xs:hidden">Старт</span>
             </Button>
           </div>
         </div>
       </header>
 
       {/* ── Hero Section ── */}
-      <section className="relative py-20 md:py-32 overflow-hidden">
+      <section className="relative py-12 sm:py-20 md:py-32 overflow-hidden">
         {/* Background orbs */}
         <div className="landing-orb absolute top-16 left-[15%] w-72 h-72 bg-primary/8 rounded-full blur-[100px]" />
         <div className="landing-orb absolute bottom-10 right-[10%] w-96 h-96 bg-violet-500/6 rounded-full blur-[120px]" style={{ animationDelay: '2s' }} />
@@ -394,15 +395,15 @@ export function Start() {
             ЖОС · Жива операційна система
           </Badge>
 
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.1] max-w-4xl mx-auto landing-gradient-text bg-gradient-to-r from-foreground via-primary to-foreground pb-2">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-extrabold tracking-tight leading-[1.1] max-w-4xl mx-auto landing-gradient-text bg-gradient-to-r from-foreground via-primary to-foreground pb-2">
             MicroDAO
           </h1>
 
-          <p className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground/80 tracking-wide mt-2 mb-6">
+          <p className="text-lg sm:text-xl md:text-3xl font-bold text-foreground/80 tracking-wide mt-2 mb-4 sm:mb-6">
             Дух Спільноти
           </p>
 
-          <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed mb-10">
+          <p className="text-sm sm:text-base md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed mb-6 sm:mb-10 px-2 sm:px-0">
             Жива операційна система для команд, DAO та спільнот.
             <br className="hidden sm:block" />
             Чати, задачі, знання, зустрічі й агенти — в одному просторі для спільної дії.

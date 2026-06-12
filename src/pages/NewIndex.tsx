@@ -100,7 +100,7 @@ export const NewIndex = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="bg-background pb-20 lg:pb-4">
       {/* Video Intro */}
       <VideoIntro onComplete={() => setShowVideoIntro(false)} />
       
@@ -158,7 +158,7 @@ export const NewIndex = () => {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
+      <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
         {/* User Approval Panel */}
         <UserApprovalPanel />
 
@@ -169,17 +169,17 @@ export const NewIndex = () => {
 
         {/* Welcome Section */}
         <div className="text-center space-y-3 sm:space-y-4">
-          <h2 className="text-2xl sm:text-3xl font-bold">Добро пожаловать в ЖОС Мессенджер</h2>
-          <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-2">
-            Платформа для открытого общения и совместной работы сообщества. 
-            Все взаимодействия прозрачны и видны всем участникам.
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold">Вітаємо у Дух Спільноти</h2>
+          <p className="text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto px-2">
+            Платформа для відкритої комунікації та спільної роботи спільноти.
+            Всі взаємодії прозорі та видимі для всіх учасників.
           </p>
         </div>
 
         {/* Quick Actions */}
         <div className="space-y-3">
-          <h3 className="text-lg font-semibold">Быстрые действия</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <h3 className="text-base sm:text-lg font-semibold">Швидкі дії</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
             {quickActions.map((action, index) => (
               <Card 
                 key={index}
@@ -207,42 +207,42 @@ export const NewIndex = () => {
         {/* Stats or Recent Activity */}
         <Card>
           <CardHeader className="pb-4">
-            <CardTitle className="text-lg">Активность сообщества</CardTitle>
+            <CardTitle className="text-base sm:text-lg">Активність спільноти</CardTitle>
             <CardDescription>
-              Статистика участников и активности
+              Статистика учасників та активності
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-primary">
+            <div className="flex overflow-x-auto gap-4 pb-2 -mx-2 px-2 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-5 sm:overflow-visible">
+              <div className="text-center flex-shrink-0 min-w-[80px]">
+                <div className="text-xl sm:text-2xl font-bold text-primary">
                   {stats.isLoading ? '...' : stats.onlineUsers}
                 </div>
-                <div className="text-xs text-muted-foreground">Участников онлайн</div>
+                <div className="text-[10px] sm:text-xs text-muted-foreground">Учасників онлайн</div>
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-primary">
+              <div className="text-center flex-shrink-0 min-w-[80px]">
+                <div className="text-xl sm:text-2xl font-bold text-primary">
                   {stats.isLoading ? '...' : stats.onlineAgents}
                 </div>
-                <div className="text-xs text-muted-foreground">Агентов онлайн</div>
+                <div className="text-[10px] sm:text-xs text-muted-foreground">Агентів онлайн</div>
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-primary">
+              <div className="text-center flex-shrink-0 min-w-[80px]">
+                <div className="text-xl sm:text-2xl font-bold text-primary">
                   {stats.isLoading ? '...' : stats.totalUsers}
                 </div>
-                <div className="text-xs text-muted-foreground">Всего участников</div>
+                <div className="text-[10px] sm:text-xs text-muted-foreground">Всього учасників</div>
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-primary">
+              <div className="text-center flex-shrink-0 min-w-[80px]">
+                <div className="text-xl sm:text-2xl font-bold text-primary">
                   {stats.isLoading ? '...' : stats.totalChats}
                 </div>
-                <div className="text-xs text-muted-foreground">Активных чатов</div>
+                <div className="text-[10px] sm:text-xs text-muted-foreground">Активних чатів</div>
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-primary">
+              <div className="text-center flex-shrink-0 min-w-[80px]">
+                <div className="text-xl sm:text-2xl font-bold text-primary">
                   {stats.isLoading ? '...' : stats.todayMessages}
                 </div>
-                <div className="text-xs text-muted-foreground">Сообщений сегодня</div>
+                <div className="text-[10px] sm:text-xs text-muted-foreground">Повідомлень сьогодні</div>
               </div>
             </div>
           </CardContent>
@@ -250,7 +250,7 @@ export const NewIndex = () => {
         
         {/* Community News Feed */}
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Новостная лента сообщества</h3>
+          <h3 className="text-base sm:text-lg font-semibold">Стрічка новин спільноти</h3>
           <CommunityNewsFeed />
         </div>
       </main>

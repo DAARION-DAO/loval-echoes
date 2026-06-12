@@ -23,7 +23,9 @@ import {
   MessageCircle,
   CheckSquare,
   FolderKanban,
-  Bot
+  Bot,
+  MoreHorizontal,
+  Files
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserProfile } from "@/hooks/useUserProfile";
@@ -68,7 +70,6 @@ export function Layout({ sidebar, children }: LayoutProps) {
     { label: "Чати", icon: MessageCircle, path: "/chats" },
     { label: "Задачі", icon: CheckSquare, path: "/my/tasks" },
     { label: "Проєкти", icon: FolderKanban, path: "/projects" },
-    { label: "Агент", icon: Bot, path: "/agents" }
   ];
 
   const isNavItemActive = (path: string) => {
@@ -87,13 +88,13 @@ export function Layout({ sidebar, children }: LayoutProps) {
             <Button
               variant="ghost"
               size="sm"
-              className="lg:hidden p-2 h-9 w-9"
+              className="lg:hidden p-2 h-11 w-11"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
               <Menu className="h-5 w-5" />
               <span className="sr-only">Open menu</span>
             </Button>
-            <span className="font-bold text-lg sm:text-xl">Дух Общины</span>
+            <span className="font-bold text-lg sm:text-xl">Дух Спільноти</span>
           </div>
           
           <div className="flex items-center gap-2 sm:gap-3">
@@ -235,7 +236,7 @@ export function Layout({ sidebar, children }: LayoutProps) {
       </Sheet>
 
       {/* Bottom Mobile Navigation Bar */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-background/95 border-t border-border backdrop-blur-md h-16 flex items-center justify-around px-2 pb-safe">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-background/95 border-t border-border backdrop-blur-md flex items-end justify-around px-1" style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}>
         {mobileNavItems.map((item) => {
           const active = isNavItemActive(item.path);
           return (
@@ -243,15 +244,28 @@ export function Layout({ sidebar, children }: LayoutProps) {
               key={item.path}
               onClick={() => navigate(item.path)}
               className={cn(
-                "flex flex-col items-center justify-center flex-1 h-full min-h-[44px] py-1 text-muted-foreground hover:text-foreground transition-colors",
+                "flex flex-col items-center justify-center flex-1 py-2 min-h-[52px] text-muted-foreground hover:text-foreground transition-colors relative",
                 active && "text-primary hover:text-primary"
               )}
             >
-              <item.icon className="h-5 w-5 mb-1" />
+              {active && (
+                <span className="absolute top-0 left-1/2 -translate-x-1/2 w-5 h-0.5 bg-primary rounded-full" />
+              )}
+              <item.icon className="h-5 w-5 mb-0.5" />
               <span className="text-[10px] font-medium tracking-tight">{item.label}</span>
             </button>
           );
         })}
+        {/* More button opens the full sidebar drawer */}
+        <button
+          onClick={() => setIsMobileMenuOpen(true)}
+          className={cn(
+            "flex flex-col items-center justify-center flex-1 py-2 min-h-[52px] text-muted-foreground hover:text-foreground transition-colors"
+          )}
+        >
+          <MoreHorizontal className="h-5 w-5 mb-0.5" />
+          <span className="text-[10px] font-medium tracking-tight">Більше</span>
+        </button>
       </nav>
     </div>
   );

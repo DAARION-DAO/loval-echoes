@@ -430,7 +430,7 @@ export const ChatPage = () => {
   }
 
   return (
-    <div className="flex-1 flex flex-row chat-container mobile-viewport-fix overflow-hidden">
+    <div className="flex-1 flex flex-row overflow-hidden h-[calc(100dvh-3.5rem-4rem)] lg:h-[calc(100dvh-3.5rem)] mobile-viewport-fix">
       <div className="flex-1 flex flex-col min-w-0">
         <ChatTabs 
           chatId={chatId || ''} 
@@ -444,9 +444,9 @@ export const ChatPage = () => {
                       variant="ghost"
                       size="sm"
                       onClick={() => navigate('/chats')}
-                      className="md:hidden flex-shrink-0 p-2"
+                      className="md:hidden flex-shrink-0 p-2 min-h-[44px] min-w-[44px]"
                     >
-                      <ArrowLeft className="h-4 w-4" />
+                      <ArrowLeft className="h-5 w-5" />
                     </Button>
                     
                     <div className="min-w-0 flex-1">
@@ -467,7 +467,7 @@ export const ChatPage = () => {
                       variant="outline"
                       size="sm"
                       onClick={handlePauseNode}
-                      className="flex items-center gap-1 text-xs px-2 py-1"
+                      className="flex items-center gap-1 text-xs px-3 py-1.5 min-h-[36px] sm:min-h-[auto]"
                     >
                       <AlertTriangle className="h-3 w-3" />
                       <span className="hidden sm:inline">Узел</span>
