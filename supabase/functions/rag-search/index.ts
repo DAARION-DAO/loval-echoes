@@ -3,23 +3,23 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
 import { handleCors } from '../_shared/cors.ts';
 
-// OpenAI embedding generator helper
+// Lovable AI Gateway embedding helper (OpenAI-compatible).
 async function generateEmbedding(queryText: string, apiKey: string): Promise<number[]> {
-  const response = await fetch('https://api.openai.com/v1/embeddings', {
+  const response = await fetch('https://ai.gateway.lovable.dev/v1/embeddings', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: 'text-embedding-3-small',
+      model: 'openai/text-embedding-3-small',
       input: queryText,
     }),
   });
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(`OpenAI API error: ${JSON.stringify(errorData)}`);
+    throw new Error(`Lovable AI embeddings error (${response.status}): ${JSON.stringify(errorData)}`);
   }
 
   const result = await response.json();
@@ -61,10 +61,10 @@ serve(async (req) => {
 
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
-    const openaiApiKey = Deno.env.get('OPENAI_API_KEY') ?? '';
+    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY') ?? '';
 
-    if (!openaiApiKey) {
-      return new Response(JSON.stringify({ error: 'Missing OPENAI_API_KEY on server' }), {
+    if (!lovableApiKey) {
+      return new Response(JSON.stringify({ error: 'Missing LOVABLE_API_KEY on server' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -75,7 +75,7 @@ serve(async (req) => {
 
     // 1. Generate embedding for query
     console.log(`[rag-search] Generating embedding for query: "${query.substring(0, 50)}..."`);
-    const queryEmbedding = await generateEmbedding(query, openaiApiKey);
+    const queryEmbedding = await generateEmbedding(query, lovableApiKey);
 
     // 2. Query database for similar chunks
     console.log(`[rag-search] Searching similar chunks (threshold: ${matchThreshold}, count: ${matchCount}, filter_file_ids: ${fileIds || 'all'})`);
