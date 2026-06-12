@@ -387,10 +387,10 @@ export function Start() {
           <img 
             src="/hero-bg.jpg" 
             alt="Hero Background" 
-            className="w-full h-full object-cover object-center opacity-35 select-none"
+            className="w-full h-full object-cover object-center opacity-75 dark:opacity-30 select-none transition-opacity duration-500"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/80 to-background" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_10%,hsl(var(--background))_90%)]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-background/20 via-background/60 to-background" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_20%,hsl(var(--background))_80%)]" />
         </div>
 
         {/* Background orbs */}
