@@ -12,23 +12,28 @@ import { EditableChatTitle } from '@/components/EditableChatTitle';
 import { OnlineUsersBar } from '@/components/OnlineUsersBar';
 import { useTranslation } from '@/lib/i18n';
 import { difyClient, type DifyMessage, type Chat } from '@/utils/difyClient';
-import { useDifyStream } from '@/hooks/useDifyStream';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { renameChat, pinChat, deleteMessage } from '@/services/chats';
 import { ChatTabs } from '@/components/ChatTabs';
+import { ThreadPanel } from '@/components/ThreadPanel';
 
 export const ChatPage = () => {
   const { chatId } = useParams<{ chatId: string }>();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { toast } = useToast();
-  const { currentMessage, isStreaming } = useDifyStream(chatId || '');
+  const currentMessage = null;
+  const isStreaming = false;
   
   const [chat, setChat] = useState<Chat | null>(null);
   const [messages, setMessages] = useState<DifyMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
+  const [typingUsers, setTypingUsers] = useState<string[]>([]);
+  const [participantsReadTimes, setParticipantsReadTimes] = useState<Record<string, string>>({});
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [selectedParentMessage, setSelectedParentMessage] = useState<DifyMessage | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -37,10 +42,84 @@ export const ChatPage = () => {
       return;
     }
     
+    // Get current user id
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        setCurrentUserId(user.id);
+      }
+    });
+
     loadChatData();
-    setupRealTimePresence();
-    setupRealTimeMessages();
+    const unsubscribePresence = setupRealTimePresence();
+    const unsubscribeMessages = setupRealTimeMessages();
+    updateLastRead();
+    loadReadReceipts();
+    
+    const unsubscribeReadReceipts = setupRealTimeReadReceipts();
+    return () => {
+      if (unsubscribePresence) unsubscribePresence();
+      if (unsubscribeMessages) unsubscribeMessages();
+      if (unsubscribeReadReceipts) unsubscribeReadReceipts();
+    };
   }, [chatId]);
+
+  const updateLastRead = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user || !chatId) return;
+
+    await supabase
+      .from('conversation_participants')
+      .update({ last_read_at: new Date().toISOString() })
+      .eq('conversation_id', chatId)
+      .eq('user_id', user.id);
+  };
+
+  const loadReadReceipts = async () => {
+    if (!chatId) return;
+    const { data, error } = await supabase
+      .from('conversation_participants')
+      .select('user_id, last_read_at')
+      .eq('conversation_id', chatId);
+
+    if (!error && data) {
+      const readTimes: Record<string, string> = {};
+      data.forEach(p => {
+        if (p.last_read_at) {
+          readTimes[p.user_id] = p.last_read_at;
+        }
+      });
+      setParticipantsReadTimes(readTimes);
+    }
+  };
+
+  const setupRealTimeReadReceipts = () => {
+    if (!chatId) return () => {};
+    const channel = supabase
+      .channel(`participants-read-${chatId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'conversation_participants',
+          filter: `conversation_id=eq.${chatId}`,
+        },
+        (payload) => {
+          const updated = payload.new as any;
+          if (updated.last_read_at) {
+            setParticipantsReadTimes(prev => ({
+              ...prev,
+              [updated.user_id]: updated.last_read_at
+            }));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  };
 
   const setupRealTimePresence = () => {
     if (!chatId) return;
@@ -112,6 +191,11 @@ export const ChatPage = () => {
           console.log('New message received:', payload.new);
           const newMessage = payload.new as any;
           
+          if (newMessage.parent_id) {
+            console.log('Skipping thread reply in main chat list:', newMessage.id);
+            return;
+          }
+          
           // Получаем имя пользователя из профиля
           let senderName = newMessage.sender_name;
           if (!senderName && newMessage.role === 'user') {
@@ -135,8 +219,24 @@ export const ChatPage = () => {
             if (exists) return prev;
             return [...prev, difyMessage];
           });
+
+          // Update last read timestamp on receiving new message
+          updateLastRead();
         }
       )
+      .on('broadcast', { event: 'typing' }, ({ payload }) => {
+        const { user_id, user_name, is_typing } = payload;
+        if (user_id === currentUserId) return;
+
+        setTypingUsers(prev => {
+          if (is_typing) {
+            if (prev.includes(user_name)) return prev;
+            return [...prev, user_name];
+          } else {
+            return prev.filter(name => name !== user_name);
+          }
+        });
+      })
       .subscribe();
 
     return () => {
@@ -191,9 +291,12 @@ export const ChatPage = () => {
   };
 
   const loadUserProfiles = async (messages: DifyMessage[]) => {
+    // Filter out messages that are thread replies
+    const nonReplyMessages = messages.filter(msg => !msg.parent_id);
+
     // Имена пользователей уже есть в sender_name полях сообщений
     // Обновляем сообщения с корректными именами
-    const updatedMessages = messages.map(msg => ({
+    const updatedMessages = nonReplyMessages.map(msg => ({
       ...msg,
       sender_name: msg.answer 
         ? 'Дух Общины' 
@@ -327,105 +430,124 @@ export const ChatPage = () => {
   }
 
   return (
-    <div className="flex-1 flex flex-col chat-container mobile-viewport-fix">
-      <ChatTabs 
-        chatId={chatId || ''} 
-        chatContent={
-          <>
-            {/* Шапка чата - компактная */}
-            <div className="sticky top-0 z-40 bg-background/80 backdrop-blur border-b px-4 py-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 min-w-0 flex-1">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => navigate('/chats')}
-                    className="md:hidden flex-shrink-0 p-2"
-                  >
-                    <ArrowLeft className="h-4 w-4" />
-                  </Button>
-                  
-                  <div className="min-w-0 flex-1">
-                    <EditableChatTitle
-                      chatId={chatId || ''}
-                      currentName={chat.name}
-                      isPinned={chat.is_pinned}
-                      onRename={handleRenameChat}
-                      onPin={handlePinChat}
-                    />
+    <div className="flex-1 flex flex-row chat-container mobile-viewport-fix overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0">
+        <ChatTabs 
+          chatId={chatId || ''} 
+          chatContent={
+            <>
+              {/* Шапка чата - компактная */}
+              <div className="sticky top-0 z-40 bg-background/80 backdrop-blur border-b px-4 py-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => navigate('/chats')}
+                      className="md:hidden flex-shrink-0 p-2"
+                    >
+                      <ArrowLeft className="h-4 w-4" />
+                    </Button>
+                    
+                    <div className="min-w-0 flex-1">
+                      <EditableChatTitle
+                        chatId={chatId || ''}
+                        currentName={chat.name}
+                        isPinned={chat.is_pinned}
+                        onRename={handleRenameChat}
+                        onPin={handlePinChat}
+                      />
+                    </div>
                   </div>
-                </div>
 
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <OnlineUsersBar maxVisible={3} className="hidden sm:flex" />
-                  <ParticipantsList chatId={chatId} onlineUsers={onlineUsers} />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handlePauseNode}
-                    className="flex items-center gap-1 text-xs px-2 py-1"
-                  >
-                    <AlertTriangle className="h-3 w-3" />
-                    <span className="hidden sm:inline">Узел</span>
-                  </Button>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <OnlineUsersBar maxVisible={3} className="hidden sm:flex" />
+                    <ParticipantsList chatId={chatId} onlineUsers={onlineUsers} />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handlePauseNode}
+                      className="flex items-center gap-1 text-xs px-2 py-1"
+                    >
+                      <AlertTriangle className="h-3 w-3" />
+                      <span className="hidden sm:inline">Узел</span>
+                    </Button>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Лента сообщений - компактная */}
-            <ScrollArea className="flex-1 chat-messages custom-scrollbar">
-              <div className="p-2 space-y-2 pb-safe">
-                {messages.length === 0 ? (
-                  <div className="text-center py-8">
-                    <p className="text-muted-foreground text-sm">{t.chats.emptyState}</p>
-                  </div>
-                ) : (
-                  messages.map((message) => (
+              {/* Лента сообщений - компактная */}
+              <ScrollArea className="flex-1 chat-messages custom-scrollbar">
+                <div className="p-2 space-y-2 pb-safe">
+                  {messages.length === 0 ? (
+                    <div className="text-center py-8">
+                      <p className="text-muted-foreground text-sm">{t.chats.emptyState}</p>
+                    </div>
+                  ) : (
+                    messages.map((message) => (
+                      <MessageBubble
+                        key={message.id}
+                        message={message}
+                        isAgent={!!message.answer}
+                        isSystem={message.id.startsWith('pause-')}
+                        senderName={message.sender_name}
+                        onFork={handleForkMessage}
+                        onReport={handleReportMessage}
+                        onDelete={handleDeleteMessage}
+                        currentUserId={currentUserId}
+                        participantsReadTimes={participantsReadTimes}
+                        onReplyInThread={setSelectedParentMessage}
+                      />
+                    ))
+                  )}
+
+                  {/* Текущее потоковое сообщение */}
+                  {currentMessage && (
                     <MessageBubble
-                      key={message.id}
-                      message={message}
-                      isAgent={!!message.answer}
-                      isSystem={message.id.startsWith('pause-')}
-                      senderName={message.sender_name}
+                      message={{
+                        id: currentMessage.id,
+                        conversation_id: chatId || '',
+                        query: '',
+                        answer: currentMessage.content,
+                        created_at: new Date().toISOString(),
+                        metadata: currentMessage.metadata,
+                      }}
+                      isAgent={true}
+                      senderName="Дух Общины"
                       onFork={handleForkMessage}
                       onReport={handleReportMessage}
                       onDelete={handleDeleteMessage}
                     />
-                  ))
-                )}
+                  )}
 
-                {/* Текущее потоковое сообщение */}
-                {currentMessage && (
-                  <MessageBubble
-                    message={{
-                      id: currentMessage.id,
-                      conversation_id: chatId || '',
-                      query: '',
-                      answer: currentMessage.content,
-                      created_at: new Date().toISOString(),
-                      metadata: currentMessage.metadata,
-                    }}
-                    isAgent={true}
-                    senderName="Дух Общины"
-                    onFork={handleForkMessage}
-                    onReport={handleReportMessage}
-                    onDelete={handleDeleteMessage}
-                  />
-                )}
+                  {/* Индикатор печати других пользователей */}
+                  {typingUsers.length > 0 && (
+                    <div className="text-xs text-muted-foreground italic px-3 py-1 animate-pulse">
+                      {typingUsers.join(', ')} {typingUsers.length === 1 ? 'печатает...' : 'печатают...'}
+                    </div>
+                  )}
 
-                <div ref={messagesEndRef} />
+                  <div ref={messagesEndRef} />
+                </div>
+              </ScrollArea>
+
+              {/* Интерфейс ввода */}
+              <div className="flex-shrink-0">
+                <ChatInterface
+                  chatId={chatId || ''}
+                />
               </div>
-            </ScrollArea>
-
-            {/* Интерфейс ввода */}
-            <div className="flex-shrink-0">
-              <ChatInterface
-                chatId={chatId || ''}
-              />
-            </div>
-          </>
-        }
-      />
+            </>
+          }
+        />
+      </div>
+      {selectedParentMessage && (
+        <ThreadPanel
+          parentMessage={selectedParentMessage}
+          currentUserId={currentUserId}
+          onClose={() => setSelectedParentMessage(null)}
+        />
+      )}
     </div>
   );
 };

@@ -20,7 +20,6 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useTranslation } from '@/lib/i18n';
 import { difyClient } from '@/utils/difyClient';
-import { useDifyStream } from '@/hooks/useDifyStream';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import {
@@ -45,7 +44,12 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
   const [silenceProgress, setSilenceProgress] = useState(0);
   const audioElementRef = useRef<HTMLAudioElement | null>(null);
   const isAutoStoppedRef = useRef<boolean>(false);
-  const handleSendMessageRef = useRef<((textToSend?: string) => Promise<void>) | null>(null);
+  const handleSendMessageRef = useRef<((textToSend?: string, voiceMeta?: {
+    messageType?: string;
+    fileUrl?: string;
+    transcription?: string;
+    voiceDuration?: number;
+  }) => Promise<void>) | null>(null);
   const startRecordingRef = useRef<(() => Promise<void>) | null>(null);
   
   // Обработка TTS аудио из Dify stream
@@ -117,7 +121,106 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
     setIsMainAgentAvailable(true);
   }, [chatId]);
   
-  const { currentMessage, isStreaming, startStream, stopStream } = useDifyStream(chatId, handleTTSMessage);
+  const currentMessage = null;
+  const isStreaming = false;
+  const stopStream = () => {};
+  
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const isTypingRef = useRef(false);
+  const typingTimeoutRef = useRef<any>(null);
+  const typingChannelRef = useRef<any>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        setCurrentUser(user);
+      }
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!chatId || !currentUser) return;
+
+    const channel = supabase.channel(`messages-${chatId}`);
+    channel.subscribe();
+    typingChannelRef.current = channel;
+
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      if (isTypingRef.current && typingChannelRef.current) {
+        typingChannelRef.current.send({
+          type: 'broadcast',
+          event: 'typing',
+          payload: {
+            user_id: currentUser.id,
+            user_name: currentUser.user_metadata?.display_name || currentUser.email?.split('@')[0] || 'Пользователь',
+            is_typing: false
+          }
+        });
+      }
+      isTypingRef.current = false;
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
+    };
+  }, [chatId, currentUser]);
+
+  // Handle typing indicator
+  useEffect(() => {
+    if (!chatId || !currentUser || !typingChannelRef.current) return;
+    
+    if (message.length > 0) {
+      if (!isTypingRef.current) {
+        isTypingRef.current = true;
+        typingChannelRef.current.send({
+          type: 'broadcast',
+          event: 'typing',
+          payload: {
+            user_id: currentUser.id,
+            user_name: currentUser.user_metadata?.display_name || currentUser.email?.split('@')[0] || 'Пользователь',
+            is_typing: true
+          }
+        });
+      }
+      
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      
+      typingTimeoutRef.current = setTimeout(() => {
+        isTypingRef.current = false;
+        if (typingChannelRef.current) {
+          typingChannelRef.current.send({
+            type: 'broadcast',
+            event: 'typing',
+            payload: {
+              user_id: currentUser.id,
+              user_name: currentUser.user_metadata?.display_name || currentUser.email?.split('@')[0] || 'Пользователь',
+              is_typing: false
+            }
+          });
+        }
+      }, 2000);
+    } else {
+      if (isTypingRef.current) {
+        isTypingRef.current = false;
+        if (typingTimeoutRef.current) {
+          clearTimeout(typingTimeoutRef.current);
+        }
+        typingChannelRef.current.send({
+          type: 'broadcast',
+          event: 'typing',
+          payload: {
+            user_id: currentUser.id,
+            user_name: currentUser.user_metadata?.display_name || currentUser.email?.split('@')[0] || 'Пользователь',
+            is_typing: false
+          }
+        });
+      }
+    }
+  }, [message, chatId, currentUser]);
   
   const [message, setMessage] = useState('');
   const [isRecording, setIsRecording] = useState(false);
@@ -289,20 +392,45 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
   };
 
 
-  const handleSendMessage = useCallback(async (textToSend?: string) => {
+  const handleSendMessage = useCallback(async (
+    textToSend?: string,
+    voiceMeta?: {
+      messageType?: string;
+      fileUrl?: string;
+      transcription?: string | null;
+      voiceDuration?: number;
+      fileName?: string;
+      fileSize?: number;
+      fileType?: string;
+    }
+  ) => {
     const messageText = textToSend || message;
-    if (!messageText.trim() && attachedFiles.length === 0) return;
+    if (!messageText.trim() && attachedFiles.length === 0 && !voiceMeta) return;
     if (isStreaming) return;
 
     try {
-      const fileIds: string[] = [];
+      // 1. Send text message if any
+      if (messageText.trim() && !voiceMeta) {
+        await difyClient.sendMessage(chatId, messageText);
+      }
+
+      // 2. Send voice message if any
+      if (voiceMeta) {
+        await difyClient.sendMessage(chatId, '', undefined, voiceMeta);
+      }
       
-      // Загружаем файлы если есть
+      // 3. Send each file as a separate message
       if (attachedFiles.length > 0) {
         for (const file of attachedFiles) {
           try {
-            const uploadResult = await difyClient.uploadFile(file);
-            fileIds.push(uploadResult.id);
+            const uploadResult = await difyClient.uploadFile(file, chatId);
+            await difyClient.sendMessage(chatId, '', undefined, {
+              messageType: 'file',
+              fileUrl: uploadResult.url,
+              fileName: uploadResult.name,
+              fileSize: uploadResult.size,
+              fileType: file.type,
+            });
           } catch (error) {
             console.error('Error uploading file:', error);
             toast({
@@ -313,9 +441,6 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
           }
         }
       }
-
-      // Отправляем сообщение
-      await startStream(messageText, fileIds);
       
       // Очищаем форму
       setMessage('');
@@ -329,7 +454,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
         variant: 'destructive',
       });
     }
-  }, [message, attachedFiles, isStreaming, startStream, toast, t, difyClient]);
+  }, [message, attachedFiles, isStreaming, chatId, toast, t, difyClient]);
 
   // Зберігаємо handleSendMessage в ref для використання в async callbacks
   useEffect(() => {
@@ -551,9 +676,8 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
       mediaRecorder.onstop = async () => {
         let audioBlob = new Blob(chunks, { type: mimeType });
         
-        // Використовуємо ref для перевірки автостопу (через замикання)
         const wasAutoStopped = isAutoStoppedRef.current;
-        const currentVoiceMode = voiceModeEnabled; // Зберігаємо значення для використання в async callback
+        const recordingDuration = Math.max(1, Math.round((Date.now() - recordingStartRef.current) / 1000));
         
         // Показываем индикатор обработки
         toast({
@@ -571,53 +695,50 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
           
           toast({
             title: 'Обработка голоса',
-            description: 'Транскрибируем аудио...',
+            description: 'Сохраняем аудио сообщение...',
           });
           
-          console.log('Calling speechToText API with blob size:', audioBlob.size, 'type:', mimeType);
-          const result = await difyClient.speechToText(audioBlob, 'audio/wav');
-          console.log('SpeechToText result:', result);
-          
-          if (result?.text) {
-            const transcribedText = result.text.trim();
-            console.log('Transcribed text:', transcribedText);
-            
-            // Відправляємо повідомлення ТІЛЬКИ якщо це був автостоп (після 2.5 секунд мовчання)
-            if (wasAutoStopped && transcribedText) {
-              console.log('Auto-stopped recording (2.5s silence), sending message automatically:', transcribedText);
-              toast({
-                title: 'Голос распознан',
-                description: 'Отправляем сообщение...',
-              });
-              
-              // Скидаємо ref
-              isAutoStoppedRef.current = false;
-              
-              // Отправляем напрямую транскрибированный текст
-              setTimeout(() => {
-                if (handleSendMessageRef.current) {
-                  handleSendMessageRef.current(transcribedText);
-                }
-                setIsAutoStopped(false);
-              }, 300);
-            } else {
-              // Якщо запис зупинено вручну (не автостоп), додаємо текст в поле вводу
-              console.log('Recording stopped manually, adding text to input field');
-              setMessage(prev => prev + (prev ? ' ' : '') + transcribedText);
-              
-              toast({
-                title: 'Голос распознан',
-                description: 'Текст добавлен в поле ввода',
-              });
-            }
-          } else {
-            console.warn('No text in speechToText result:', result);
-            toast({
-              title: 'Голос не распознан',
-              description: 'Попробуйте говорить четче или проверьте микрофон',
-              variant: 'destructive',
+          // Upload to Supabase Storage
+          const fileName = `${chatId}/${Date.now()}.wav`;
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('voice-messages')
+            .upload(fileName, audioBlob, {
+              contentType: 'audio/wav',
+              cacheControl: '3600',
+              upsert: false
             });
+          
+          if (uploadError) {
+            throw new Error(`Failed to upload voice message: ${uploadError.message}`);
           }
+          
+          const { data: { publicUrl } } = supabase.storage
+            .from('voice-messages')
+            .getPublicUrl(fileName);
+            
+          const voiceMeta = {
+            messageType: 'voice',
+            fileUrl: publicUrl,
+            transcription: null,
+            voiceDuration: recordingDuration,
+          };
+          
+          console.log('Voice message uploaded, public URL:', publicUrl);
+          
+          toast({
+            title: 'Аудио записано',
+            description: 'Отправляем сообщение...',
+          });
+          
+          // Скидаємо ref
+          isAutoStoppedRef.current = false;
+          
+          setTimeout(() => {
+            if (handleSendMessageRef.current) {
+              handleSendMessageRef.current('', voiceMeta);
+            }
+            setIsAutoStopped(false);
+          }, 300);
         } catch (error) {
           console.error('Error transcribing audio:', error);
           const errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';

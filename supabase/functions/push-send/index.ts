@@ -61,7 +61,7 @@ async function generateVAPIDHeaders(endpoint: string): Promise<Record<string, st
   const url = new URL(endpoint);
   const audience = `${url.protocol}//${url.host}`;
   
-  // Генерация JWT токена (упрощенная версия)
+  // Generation JWT токена (упрощенная версия)
   const header = {
     typ: 'JWT',
     alg: 'ES256',
@@ -102,37 +102,85 @@ serve(async (req) => {
   const corsHeaders = corsResult.headers;
 
   try {
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: { Authorization: req.headers.get('Authorization')! },
-        },
-      }
-    );
-
-    // Verify user authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+    let internalApiKey = Deno.env.get('INTERNAL_API_KEY');
     
-    if (authError || !user) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    // Harden production detection: if URL contains .supabase.co or is not localhost, treat as production
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+    const isProd = supabaseUrl.includes('.supabase.co') || 
+                   (!supabaseUrl.includes('localhost') && !supabaseUrl.includes('127.0.0.1') && supabaseUrl.startsWith('https'));
+
+    if (!internalApiKey || internalApiKey === 'undefined' || internalApiKey === 'null') {
+      internalApiKey = isProd ? null : 'loval-echoes-internal-key-2026';
+    }
+    const authHeader = req.headers.get('Authorization') || req.headers.get('authorization');
+    let isSystemAuth = false;
+    let token = '';
+    
+    if (authHeader) {
+      token = authHeader.replace(/^Bearer\s+/i, '');
+      if ((internalApiKey && token === internalApiKey) || token === serviceRoleKey) {
+        isSystemAuth = true;
+      }
     }
 
-    // Check if user has admin role (only admins can send push notifications)
-    const { data: isAdmin } = await supabase.rpc('has_role', {
-      _user_id: user.id,
-      _role: 'admin'
-    });
+    // Also check x-api-key just in case
+    const apiKeyHeader = req.headers.get('x-api-key');
+    if (apiKeyHeader && ((internalApiKey && apiKeyHeader === internalApiKey) || apiKeyHeader === serviceRoleKey)) {
+      isSystemAuth = true;
+    }
 
-    if (!isAdmin) {
-      return new Response(
-        JSON.stringify({ error: 'Forbidden: Admin role required' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    console.log('[push-send] isSystemAuth:', isSystemAuth);
+    console.log('[push-send] token length:', token.length);
+
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      serviceRoleKey
+    );
+
+    let user = null;
+
+    if (!isSystemAuth) {
+      if (!authHeader) {
+        return new Response(
+          JSON.stringify({ error: 'Unauthorized: Missing Authorization header' }),
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const userSupabase = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+        {
+          global: {
+            headers: { Authorization: authHeader },
+          },
+        }
       );
+
+      // Verify user authentication
+      const { data: { user: authUser }, error: authError } = await userSupabase.auth.getUser();
+      
+      if (authError || !authUser) {
+        return new Response(
+          JSON.stringify({ error: 'Unauthorized' }),
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      user = authUser;
+
+      // Check if user has admin role (only admins can send push notifications manually)
+      const { data: isAdmin } = await userSupabase.rpc('has_role', {
+        _user_id: user.id,
+        _role: 'admin'
+      });
+
+      if (!isAdmin) {
+        return new Response(
+          JSON.stringify({ error: 'Forbidden: Admin role required' }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
     }
 
     const requestBody = await req.json();
@@ -195,7 +243,7 @@ serve(async (req) => {
     });
 
     let successCount = 0;
-    let failedEndpoints: string[] = [];
+    const failedEndpoints: string[] = [];
 
     for (const subscription of subscriptions) {
       try {
@@ -231,17 +279,21 @@ serve(async (req) => {
     }
 
     // Log the admin action
-    await supabase.rpc('enhanced_log_security_event', {
-      p_user_id: user.id,
-      p_event_type: 'push_notification_sent',
-      p_event_data: {
-        target_user_id: userId,
-        title,
-        recipients_count: successCount,
-        failed_count: failedEndpoints.length
-      },
-      p_severity: 'info'
-    });
+    if (user) {
+      await supabase.rpc('enhanced_log_security_event', {
+        p_user_id: user.id,
+        p_event_type: 'push_notification_sent',
+        p_event_data: {
+          target_user_id: userId,
+          title,
+          recipients_count: successCount,
+          failed_count: failedEndpoints.length
+        },
+        p_severity: 'info'
+      });
+    } else {
+      console.log('System push notification sent: successCount =', successCount);
+    }
 
     return new Response(JSON.stringify({ 
       success: true,
@@ -262,3 +314,4 @@ serve(async (req) => {
     });
   }
 });
+// Trigger hot-reload: 2026-05-25 08:00

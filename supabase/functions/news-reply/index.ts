@@ -160,82 +160,11 @@ serve(async (req) => {
     // 2. Перевірка чи потрібна відповідь агента (тільки при згадці @ЖОС)
     const isAddressedToAgent = text.includes('@ЖОС') || text.includes('@Agent') || text.includes('@agent');
     
-    if (!isAddressedToAgent) {
-      console.log('Message not addressed to agent, skipping response');
-      return new Response(JSON.stringify({ success: true }), { 
-        status: 200,
-        headers: { ...headers, 'Content-Type': 'application/json' }
-      });
+    if (isAddressedToAgent) {
+      console.log('Message addressed to agent, but AI agent replies are disabled because Dify is removed.');
     }
 
-    console.log('Message addressed to agent, generating response');
-
-    // 3. Отримання Dify API ключа
-    const difyApiKey = Deno.env.get('DIFY_API_KEY');
-    if (!difyApiKey) {
-      console.error('DIFY_API_KEY not configured');
-      return new Response(JSON.stringify({ error: 'Agent configuration error' }), { 
-        status: 500,
-        headers: { ...headers, 'Content-Type': 'application/json' }
-      });
-    }
-
-    // 4. Генерація відповіді агента через Dify
-    const difyResponse = await fetch('https://api.dify.ai/v1/chat-messages', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${difyApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        inputs: {},
-        query: text,
-        response_mode: 'blocking',
-        conversation_id: 'news_feed_agent',
-        user: user.id
-      })
-    });
-
-    if (!difyResponse.ok) {
-      console.error('Dify API error:', await difyResponse.text());
-      return new Response(JSON.stringify({ error: 'Agent response error' }), { 
-        status: 500,
-        headers: { ...headers, 'Content-Type': 'application/json' }
-      });
-    }
-
-    const difyData = await difyResponse.json();
-    const agentAnswer = difyData.answer || 'Извините, не могу ответить на этот вопрос.';
-
-    console.log('Generated agent response:', agentAnswer);
-
-    // 5. Збереження відповіді агента (використовуємо service role тільки для агентських повідомлень)
-    const serviceSupabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
-
-    const { data: agentMessage, error: agentError } = await serviceSupabase
-      .from('news_feed')
-      .insert({
-        author_id: null, // Агентські повідомлення не мають автора-людини
-        text: agentAnswer,
-        is_agent: true
-      })
-      .select()
-      .single();
-
-    if (agentError) {
-      console.error('Error inserting agent message:', agentError);
-      return new Response(JSON.stringify({ error: agentError.message }), {
-        status: 500,
-        headers: { ...headers, 'Content-Type': 'application/json' }
-      });
-    }
-
-    console.log('Agent response saved successfully');
-
-    return new Response(JSON.stringify({ success: true, agent_message: agentMessage }), {
+    return new Response(JSON.stringify({ success: true }), { 
       status: 200,
       headers: { ...headers, 'Content-Type': 'application/json' }
     });

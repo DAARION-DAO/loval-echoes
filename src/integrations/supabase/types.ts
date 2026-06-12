@@ -704,6 +704,7 @@ export type Database = {
           file_url: string | null
           id: string
           message_type: string | null
+          parent_id: string | null
           role: string
           sender_name: string | null
           transcription: string | null
@@ -722,6 +723,7 @@ export type Database = {
           file_url?: string | null
           id?: string
           message_type?: string | null
+          parent_id?: string | null
           role: string
           sender_name?: string | null
           transcription?: string | null
@@ -740,6 +742,7 @@ export type Database = {
           file_url?: string | null
           id?: string
           message_type?: string | null
+          parent_id?: string | null
           role?: string
           sender_name?: string | null
           transcription?: string | null
@@ -753,6 +756,13 @@ export type Database = {
             referencedRelation: "conversations"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "messages_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          }
         ]
       }
       news_feed: {

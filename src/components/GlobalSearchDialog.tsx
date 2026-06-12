@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -40,8 +41,41 @@ export const GlobalSearchDialog = ({
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [conversations, setConversations] = useState<any[]>([]);
+  const [filterChatId, setFilterChatId] = useState<string>('all');
+  const [filterStartDate, setFilterStartDate] = useState<string>('');
+  const [filterEndDate, setFilterEndDate] = useState<string>('');
 
-  // Mock search function - replace with real API call
+  useEffect(() => {
+    if (!open) return;
+    const fetchConversations = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: participantData } = await supabase
+        .from('conversation_participants')
+        .select('conversation_id')
+        .eq('user_id', user.id);
+
+      const myConversationIds = participantData?.map(p => p.conversation_id) || [];
+      if (myConversationIds.length === 0) {
+        setConversations([]);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('conversations')
+        .select('id, name')
+        .eq('is_archived', false)
+        .in('id', myConversationIds)
+        .order('updated_at', { ascending: false });
+      if (!error && data) {
+        setConversations(data);
+      }
+    };
+    fetchConversations();
+  }, [open]);
+
   const performSearch = async (searchQuery: string) => {
     if (!searchQuery.trim()) {
       setResults([]);
@@ -49,42 +83,132 @@ export const GlobalSearchDialog = ({
     }
 
     setLoading(true);
-    
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    // Mock results
-    const mockResults: SearchResult[] = [
-      {
-        id: '1',
-        type: 'chat' as const,
-        title: 'Обсуждение проекта ЖОС',
-        content: 'Последнее сообщение о принципах работы...',
-        timestamp: '2 часа назад',
-      },
-      {
-        id: '2',
-        type: 'message' as const,
-        title: 'Сообщение от Алексей',
-        content: 'Нужно обсудить архитектуру системы...',
-        timestamp: '1 день назад',
-        chatName: 'Техническое обсуждение',
-      },
-      {
-        id: '3',
-        type: 'project' as const,
-        title: 'Проект ЖОС Мессенджер',
-        content: 'Разработка мессенджера для сообщества',
-        timestamp: '3 дня назад',
-      },
-    ].filter(item => 
-      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.content?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
 
-    setResults(mockResults);
-    setLoading(false);
-    setSelectedIndex(-1);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setResults([]);
+        return;
+      }
+
+      const { data: participantData } = await supabase
+        .from('conversation_participants')
+        .select('conversation_id')
+        .eq('user_id', user.id);
+
+      const myConversationIds = participantData?.map(p => p.conversation_id) || [];
+      if (myConversationIds.length === 0) {
+        setResults([]);
+        return;
+      }
+
+      let queryBuilder = supabase
+        .from('messages')
+        .select(`
+          id,
+          content,
+          created_at,
+          role,
+          conversation_id,
+          conversations!inner (
+            id,
+            name
+          )
+        `)
+        .in('conversation_id', myConversationIds);
+
+      queryBuilder = queryBuilder.textSearch('content', searchQuery, {
+        config: 'simple',
+        type: 'websearch'
+      });
+
+      if (filterChatId && filterChatId !== 'all') {
+        queryBuilder = queryBuilder.eq('conversation_id', filterChatId);
+      }
+
+      if (filterStartDate) {
+        queryBuilder = queryBuilder.gte('created_at', new Date(filterStartDate).toISOString());
+      }
+      if (filterEndDate) {
+        const nextDay = new Date(filterEndDate);
+        nextDay.setDate(nextDay.getDate() + 1);
+        queryBuilder = queryBuilder.lt('created_at', nextDay.toISOString());
+      }
+
+      const { data, error } = await queryBuilder
+        .order('created_at', { ascending: false })
+        .limit(30);
+
+      if (error) {
+        console.warn('FTS failed, falling back to ILIKE search:', error);
+        let fallbackQuery = supabase
+          .from('messages')
+          .select(`
+            id,
+            content,
+            created_at,
+            role,
+            conversation_id,
+            conversations!inner (
+              id,
+              name
+            )
+          `)
+          .in('conversation_id', myConversationIds)
+          .ilike('content', `%${searchQuery}%`);
+
+        if (filterChatId && filterChatId !== 'all') {
+          fallbackQuery = fallbackQuery.eq('conversation_id', filterChatId);
+        }
+        if (filterStartDate) {
+          fallbackQuery = fallbackQuery.gte('created_at', new Date(filterStartDate).toISOString());
+        }
+        if (filterEndDate) {
+          const nextDay = new Date(filterEndDate);
+          nextDay.setDate(nextDay.getDate() + 1);
+          fallbackQuery = fallbackQuery.lt('created_at', nextDay.toISOString());
+        }
+
+        const { data: fallbackData, error: fallbackError } = await fallbackQuery
+          .order('created_at', { ascending: false })
+          .limit(30);
+
+        if (!fallbackError && fallbackData) {
+          const mappedResults: SearchResult[] = fallbackData.map((msg: any) => ({
+            id: msg.id,
+            type: 'message',
+            title: msg.role === 'user' ? 'Сообщение' : 'Ответ Духа Общины',
+            content: msg.content,
+            timestamp: new Date(msg.created_at).toLocaleString('ru-RU', {
+              hour: '2-digit',
+              minute: '2-digit'
+            }),
+            chatName: msg.conversations?.name,
+          }));
+          setResults(mappedResults);
+        } else {
+          setResults([]);
+        }
+      } else if (data) {
+        const mappedResults: SearchResult[] = data.map((msg: any) => ({
+          id: msg.id,
+          type: 'message',
+          title: msg.role === 'user' ? 'Сообщение' : 'Ответ Духа Общины',
+          content: msg.content,
+          timestamp: new Date(msg.created_at).toLocaleString('ru-RU', {
+            hour: '2-digit',
+            minute: '2-digit'
+          }),
+          chatName: msg.conversations?.name,
+        }));
+        setResults(mappedResults);
+      }
+    } catch (err) {
+      console.error('Error during global search:', err);
+    } finally {
+      setLoading(false);
+      setSelectedIndex(-1);
+    }
   };
 
   useEffect(() => {
@@ -93,7 +217,7 @@ export const GlobalSearchDialog = ({
     }, 300);
 
     return () => clearTimeout(delayedSearch);
-  }, [query]);
+  }, [query, filterChatId, filterStartDate, filterEndDate]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -187,6 +311,55 @@ export const GlobalSearchDialog = ({
           <Badge variant="secondary" className="text-xs">
             Ctrl+K
           </Badge>
+        </div>
+
+        {/* Filters Section */}
+        <div className="flex flex-wrap items-center gap-2 p-3 border-b bg-muted/10 text-xs">
+          <span className="text-muted-foreground">Фильтры:</span>
+          
+          <select 
+            value={filterChatId} 
+            onChange={(e) => setFilterChatId(e.target.value)}
+            className="bg-background border rounded px-2 py-1 text-xs text-foreground focus:outline-none max-w-[150px] truncate"
+          >
+            <option value="all">Все чаты</option>
+            {conversations.map(conv => (
+              <option key={conv.id} value={conv.id}>{conv.name}</option>
+            ))}
+          </select>
+
+          <input 
+            type="date"
+            value={filterStartDate}
+            onChange={(e) => setFilterStartDate(e.target.value)}
+            className="bg-background border rounded px-2 py-1 text-xs text-foreground focus:outline-none"
+            placeholder="С"
+          />
+          
+          <span className="text-muted-foreground">—</span>
+
+          <input 
+            type="date"
+            value={filterEndDate}
+            onChange={(e) => setFilterEndDate(e.target.value)}
+            className="bg-background border rounded px-2 py-1 text-xs text-foreground focus:outline-none"
+            placeholder="По"
+          />
+
+          {(filterChatId !== 'all' || filterStartDate || filterEndDate) && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setFilterChatId('all');
+                setFilterStartDate('');
+                setFilterEndDate('');
+              }}
+              className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
+            >
+              Сбросить
+            </Button>
+          )}
         </div>
 
         <div className="max-h-96 overflow-y-auto">

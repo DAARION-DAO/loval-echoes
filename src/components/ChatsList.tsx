@@ -5,7 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
-import { getErrorMessage } from "@/utils/errorMapping";
+import { getErrorMessage } from "@/utils/errorHelper";
 import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/ui/button";
 import { Pin, PinOff } from "lucide-react";

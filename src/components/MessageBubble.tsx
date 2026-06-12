@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -15,7 +15,10 @@ import {
   Bot,
   User,
   AlertTriangle,
-  Trash2
+  Trash2,
+  Check,
+  CheckCheck,
+  MessageSquare
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -23,6 +26,12 @@ import { difyClient, type DifyMessage } from '@/utils/difyClient';
 import { supabase } from '@/integrations/supabase/client';
 import { Avatar as CustomAvatar } from '@/components/Avatar';
 import { ReactionsBar } from '@/components/ReactionsBar';
+
+const formatDuration = (seconds: number) => {
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+};
 
 interface MessageBubbleProps {
   message: DifyMessage;
@@ -32,6 +41,9 @@ interface MessageBubbleProps {
   onFork?: (messageId: string) => void;
   onReport?: (messageId: string) => void;
   onDelete?: (messageId: string) => void;
+  currentUserId?: string | null;
+  participantsReadTimes?: Record<string, string>;
+  onReplyInThread?: (message: DifyMessage) => void;
 }
 
 export const MessageBubble: React.FC<MessageBubbleProps> = ({
@@ -42,13 +54,109 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   onFork,
   onReport,
   onDelete,
+  currentUserId,
+  participantsReadTimes,
+  onReplyInThread,
 }) => {
   const { toast } = useToast();
   const [isPlaying, setIsPlaying] = useState(false);
   const [showActions, setShowActions] = useState(false);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [canDelete, setCanDelete] = useState(false);
   const [isDeleted, setIsDeleted] = useState(false);
+  const [replyCount, setReplyCount] = useState(0);
+
+  // States for voice playback
+  const [voicePlaying, setVoicePlaying] = useState(false);
+  const [voiceProgress, setVoiceProgress] = useState(0);
+  const [showTranscript, setShowTranscript] = useState(false);
+  const voiceAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  const handleToggleVoicePlay = () => {
+    if (!message.file_url) return;
+    
+    if (!voiceAudioRef.current) {
+      voiceAudioRef.current = new Audio(message.file_url);
+      voiceAudioRef.current.ontimeupdate = () => {
+        if (voiceAudioRef.current) {
+          const curTime = voiceAudioRef.current.currentTime;
+          const dur = voiceAudioRef.current.duration || message.voice_duration || 1;
+          setVoiceProgress((curTime / dur) * 100);
+        }
+      };
+      voiceAudioRef.current.onended = () => {
+        setVoicePlaying(false);
+        setVoiceProgress(0);
+      };
+    }
+
+    if (voicePlaying) {
+      voiceAudioRef.current.pause();
+      setVoicePlaying(false);
+    } else {
+      voiceAudioRef.current.play();
+      setVoicePlaying(true);
+    }
+  };
+
+  // Cleanup audio on unmount
+  useEffect(() => {
+    return () => {
+      if (voiceAudioRef.current) {
+        voiceAudioRef.current.pause();
+        voiceAudioRef.current = null;
+      }
+    };
+  }, []);
+
+  const isOwn = !isAgent && !isSystem;
+
+  const isMessageRead = () => {
+    const activeUserId = currentUserId || localUserId;
+    if (!isOwn || !activeUserId || !participantsReadTimes) return false;
+    const otherParticipants = Object.keys(participantsReadTimes).filter(uid => uid !== activeUserId);
+    if (otherParticipants.length === 0) return false;
+    return otherParticipants.every(uid => {
+      const readTime = participantsReadTimes[uid];
+      return readTime && new Date(readTime) >= new Date(message.created_at);
+    });
+  };
+
+  useEffect(() => {
+    if (!message.id) return;
+    const loadReplyCount = async () => {
+      const { count, error } = await supabase
+        .from('messages')
+        .select('*', { count: 'exact', head: true })
+        .eq('parent_id', message.id);
+      
+      if (!error && count !== null) {
+        setReplyCount(count);
+      }
+    };
+    loadReplyCount();
+    
+    // Subscribe to new replies to update count
+    const channel = supabase
+      .channel(`replies-count-${message.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `parent_id=eq.${message.id}`,
+        },
+        () => {
+          setReplyCount(prev => prev + 1);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [message.id]);
+  const [localUserId, setLocalUserId] = useState<string | null>(null);
 
   useEffect(() => {
     getCurrentUser();
@@ -57,16 +165,17 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
 
   const getCurrentUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
-    setCurrentUserId(user?.id || null);
+    setLocalUserId(user?.id || null);
     
     // Проверяем права на удаление
-    if (user?.id) {
+    const activeUserId = currentUserId || user?.id;
+    if (activeUserId) {
       // Пользователь может удалять свои сообщения или если он модератор/админ
       const isOwn = !isAgent && !isSystem; // Предполагаем что пользовательские сообщения - не от агента/системы
       const { data: profile } = await supabase
         .from('profiles')
         .select('approval_status')
-        .eq('user_id', user.id)
+        .eq('user_id', activeUserId)
         .single();
       
       const isModerator = profile?.approval_status === 'approved';
@@ -251,11 +360,20 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
             <span className="font-medium text-[11px] text-muted-foreground">
               {senderName || (isSystem ? 'Система' : (isAgent ? 'Дух Общины' : 'Пользователь'))}
             </span>
-            <span className="text-[10px] text-muted-foreground/60">
+            <span className="text-[10px] text-muted-foreground/60 flex items-center gap-1">
               {new Date(message.created_at).toLocaleTimeString('ru-RU', { 
                 hour: '2-digit', 
                 minute: '2-digit' 
               })}
+              {isOwn && (
+                <span className="ml-0.5">
+                  {isMessageRead() ? (
+                    <CheckCheck className="h-3 w-3 text-sky-400 inline" />
+                  ) : (
+                    <Check className="h-3 w-3 text-muted-foreground/40 inline" />
+                  )}
+                </span>
+              )}
             </span>
             
             {/* Компактная кнопка удаления */}
@@ -278,7 +396,60 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
               <em className="text-muted-foreground text-sm">Сообщение удалено</em>
             ) : (
               <div className="text-foreground leading-tight text-sm">
-                {renderMessage(message.query || message.answer || '')}
+                {message.message_type === 'voice' ? (
+                  <div className={cn("flex flex-col gap-2 p-2 rounded-lg border bg-card/50 max-w-sm", isAgent ? "mr-auto" : "ml-auto")}>
+                    <div className="flex items-center gap-3">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={handleToggleVoicePlay}
+                        disabled={!message.file_url}
+                        className="h-8 w-8 rounded-full p-0 flex items-center justify-center bg-primary/10 text-primary hover:bg-primary/20 disabled:opacity-50"
+                      >
+                        {voicePlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                      </Button>
+                      <div className="flex-1">
+                        <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-primary transition-all duration-100" 
+                            style={{ width: `${voiceProgress}%` }}
+                          />
+                        </div>
+                        <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+                          <span>
+                            {!message.file_url
+                              ? 'Файл недоступен'
+                              : voicePlaying && voiceAudioRef.current
+                                ? formatDuration(voiceAudioRef.current.currentTime)
+                                : '0:00'}
+                          </span>
+                          <span>
+                            {formatDuration(message.voice_duration || 0)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    {message.transcription && (
+                      <div className="mt-1 border-t pt-2">
+                        <Button
+                          variant="link"
+                          onClick={() => setShowTranscript(!showTranscript)}
+                          className="p-0 h-auto text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
+                        >
+                          <MessageSquare className="h-3 w-3" />
+                          {showTranscript ? 'Скрыть транскрипцию' : 'Показать транскрипцию'}
+                        </Button>
+                        {showTranscript && (
+                          <p className="mt-1 text-xs italic text-foreground text-left whitespace-pre-wrap">
+                            "{message.transcription}"
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  renderMessage(message.query || message.answer || '')
+                )}
               </div>
             )}
           </div>
@@ -325,6 +496,19 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
           {/* Ультра-компактная панель действий */}
           {!isDeleted && (message.answer || message.query) && (
             <div className={cn('flex items-center gap-1 pt-1', isAgent ? 'justify-start' : 'justify-end')}>
+              {/* Thread reply button */}
+              {onReplyInThread && !isSystem && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => onReplyInThread(message)}
+                  className="h-5 w-5 p-0 text-muted-foreground hover:text-foreground hover:bg-muted/30 rounded"
+                  title="Ответить в ветке"
+                >
+                  <MessageSquare className="h-3 w-3" />
+                </Button>
+              )}
+
               {/* Действия для агентских сообщений */}
               {isAgent && message.answer && (
                 <>
@@ -337,29 +521,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                   >
                     {isPlaying ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
                   </Button>
-                  {/* Показываем кнопки feedback только если есть dify_message_id */}
-                  {message.dify_message_id && (
-                    <>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleFeedback('like')}
-                        className="h-5 w-5 p-0 text-muted-foreground hover:text-green-600"
-                        title="Нравится"
-                      >
-                        <ThumbsUp className="h-2.5 w-2.5" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleFeedback('dislike')}
-                        className="h-5 w-5 p-0 text-muted-foreground hover:text-red-600"
-                        title="Не нравится"
-                      >
-                        <ThumbsDown className="h-2.5 w-2.5" />
-                      </Button>
-                    </>
-                  )}
+
                   {onFork && (
                     <Button
                       size="sm"
@@ -376,6 +538,21 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
               
               {/* Реакции - ультра-компактно */}
               <ReactionsBar messageId={message.id} />
+            </div>
+          )}
+
+          {/* Reply counter */}
+          {!isDeleted && replyCount > 0 && onReplyInThread && (
+            <div className={cn('flex mt-1', isAgent ? 'justify-start' : 'justify-end')}>
+              <Button
+                variant="link"
+                size="sm"
+                onClick={() => onReplyInThread(message)}
+                className="h-auto p-0 text-xs text-primary flex items-center gap-1 hover:no-underline"
+              >
+                <MessageSquare className="h-3 w-3" />
+                {replyCount} {replyCount === 1 ? 'ответ' : (replyCount < 5 ? 'ответа' : 'ответов')}
+              </Button>
             </div>
           )}
         </div>

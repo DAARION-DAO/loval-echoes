@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useTranslation } from '@/lib/i18n';
 import { fetchChats, createChat, ChatLite } from '@/services/chats';
 import { useToast } from '@/hooks/use-toast';
-import { mapDifyError } from '@/utils/errorMapping';
+import { getErrorMessage } from '@/utils/errorHelper';
 import { AgoraVoiceCall } from '@/components/AgoraVoiceCall';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
@@ -43,8 +43,7 @@ export const ChatsPage = () => {
       setChats(chatList);
     } catch (error: unknown) {
       console.error('Error loading chats:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      const friendlyMessage = mapDifyError(errorMessage);
+      const friendlyMessage = getErrorMessage(error);
       toast({
         title: "Ошибка",
         description: friendlyMessage,
@@ -67,8 +66,7 @@ export const ChatsPage = () => {
       });
     } catch (error: unknown) {
       console.error('Error creating chat:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      const friendlyMessage = mapDifyError(errorMessage);
+      const friendlyMessage = getErrorMessage(error);
       toast({
         title: "Ошибка",
         description: friendlyMessage,

@@ -171,3 +171,4 @@ AND tablename IN ('user_integrations', 'push_notification_settings');
 - [ ] Створіть backup БД
 - [ ] Задокументуйте будь-які відомі проблеми
 
+

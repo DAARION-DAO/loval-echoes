@@ -173,3 +173,4 @@ const { text, author_id } = validationResult.data;
 - [Zod Validation](https://zod.dev/)
 - [Supabase Edge Functions Security](https://supabase.com/docs/guides/functions/security)
 
+

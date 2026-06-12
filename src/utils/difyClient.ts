@@ -6,7 +6,7 @@ export interface DifyMessage {
   query: string;
   answer: string;
   sender_name?: string;
-  dify_message_id?: string; // ID сообщения из Dify API для feedback
+  dify_message_id?: string;
   feedback?: {
     rating: 'like' | 'dislike';
     content?: string;
@@ -27,6 +27,14 @@ export interface DifyMessage {
     };
   };
   created_at: string;
+  message_type?: string | null;
+  file_url?: string | null;
+  transcription?: string | null;
+  voice_duration?: number | null;
+  file_name?: string | null;
+  file_size?: number | null;
+  file_type?: string | null;
+  parent_id?: string | null;
 }
 
 export interface Chat {
@@ -51,14 +59,6 @@ export class DifyClientError extends Error {
 }
 
 export class DifyClient {
-  private async getAuthHeaders() {
-    const { data: { session } } = await supabase.auth.getSession();
-    return {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${session?.access_token || ''}`,
-    };
-  }
-
   async getChats(): Promise<Chat[]> {
     try {
       const { data: conversations, error } = await supabase
@@ -74,7 +74,7 @@ export class DifyClient {
       return (conversations || []).map(conv => ({
         id: conv.id,
         name: conv.name,
-        dify_conversation_id: conv.dify_conversation_id,
+        dify_conversation_id: conv.dify_conversation_id || undefined,
         created_at: conv.created_at,
         updated_at: conv.updated_at,
       }));
@@ -104,6 +104,15 @@ export class DifyClient {
       if (error) {
         throw new Error(`Failed to create chat: ${error.message}`);
       }
+
+      // Add user as participant
+      await supabase
+        .from('conversation_participants')
+        .insert({
+          conversation_id: newChat.id,
+          user_id: user.id,
+          role: 'member'
+        });
 
       return {
         id: newChat.id,
@@ -181,15 +190,22 @@ export class DifyClient {
         throw new Error(`Failed to get chat history: ${error.message}`);
       }
 
-      // Convert database messages to DifyMessage format
       const difyMessages: DifyMessage[] = (messages || []).map(msg => ({
         id: msg.id,
         conversation_id: msg.conversation_id,
         query: msg.role === 'user' ? msg.content : '',
         answer: msg.role === 'assistant' ? msg.content : '',
-        sender_name: msg.sender_name,
-        dify_message_id: msg.dify_message_id, // Добавляем Dify message ID
+        sender_name: msg.sender_name || undefined,
+        dify_message_id: msg.dify_message_id || undefined,
         created_at: msg.created_at,
+        message_type: msg.message_type,
+        file_url: msg.file_url,
+        transcription: msg.transcription,
+        voice_duration: msg.voice_duration,
+        file_name: msg.file_name,
+        file_size: msg.file_size,
+        file_type: msg.file_type,
+        parent_id: msg.parent_id,
       }));
 
       return {
@@ -203,7 +219,20 @@ export class DifyClient {
     }
   }
 
-  async sendMessage(chatId: string, query: string, files?: string[]): Promise<void> {
+  async sendMessage(
+    chatId: string, 
+    query: string, 
+    files?: string[],
+    voiceMeta?: {
+      messageType?: string;
+      fileUrl?: string;
+      transcription?: string;
+      voiceDuration?: number;
+      fileName?: string;
+      fileSize?: number;
+      fileType?: string;
+    }
+  ): Promise<void> {
     try {
       const { data: { user }, error: authError } = await supabase.auth.getUser();
       
@@ -211,35 +240,44 @@ export class DifyClient {
         throw new Error('You must be logged in to send a message');
       }
 
-      // User message will be saved by the Edge Function
-
-      // Получаем conversation_id из Dify для этого чата
-      const { data: conversation, error: convError } = await supabase
-        .from('conversations')
-        .select('dify_conversation_id')
-        .eq('id', chatId)
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('display_name')
+        .eq('user_id', user.id)
         .single();
+      
+      const userDisplayName = profile?.display_name || 
+                             user.user_metadata?.display_name || 
+                             user.email?.split('@')[0] || 
+                             'Участник';
 
-      if (convError) {
-        throw new Error(`Failed to get conversation: ${convError.message}`);
-      }
+      const messageType = voiceMeta?.messageType || (voiceMeta?.fileUrl ? 'file' : 'text');
 
-      // Отправляем сообщение к Dify API через edge function
-      const { data, error } = await supabase.functions.invoke('dify-client', {
-        body: {
-          action: 'send_message',
-          conversationId: conversation?.dify_conversation_id || null,
-          query,
-          files: files || [],
-          chatId: chatId,
-        },
-      });
+      const { error } = await supabase
+        .from('messages')
+        .insert({
+          conversation_id: chatId,
+          content: query,
+          role: 'user',
+          sender_name: userDisplayName,
+          message_type: messageType,
+          file_url: voiceMeta?.fileUrl || null,
+          transcription: voiceMeta?.transcription || null,
+          voice_duration: voiceMeta?.voiceDuration || null,
+          file_name: voiceMeta?.fileName || null,
+          file_size: voiceMeta?.fileSize || null,
+          file_type: voiceMeta?.fileType || null,
+        });
 
       if (error) {
-        throw new Error(`Failed to send message to Dify: ${error.message}`);
+        throw new Error(`Failed to save message: ${error.message}`);
       }
 
-      console.log('Message sent to Dify successfully:', data);
+      // Update conversation timestamp
+      await supabase
+        .from('conversations')
+        .update({ updated_at: new Date().toISOString() })
+        .eq('id', chatId);
       
     } catch (error) {
       console.error('Error sending message:', error);
@@ -248,67 +286,48 @@ export class DifyClient {
   }
 
   async stopGeneration(taskId: string): Promise<void> {
-    try {
-      console.log('Stopping generation for task:', taskId);
-      
-      // Отправляем запрос остановки к Dify API
-      const { error } = await supabase.functions.invoke('dify-client?action=stop_generation', {
-        body: {
-          taskId: taskId
-        }
-      });
-
-      if (error) {
-        throw new Error(`Failed to stop generation: ${error.message}`);
-      }
-      
-    } catch (error) {
-      console.error('Error stopping generation:', error);
-      throw new DifyClientError(error instanceof Error ? error.message : 'Failed to stop generation');
-    }
+    // No-op since we do not have an LLM generation process to cancel
+    console.log('Stop generation requested (no-op):', taskId);
   }
 
   async sendFeedback(messageId: string, rating: 'like' | 'dislike', content?: string): Promise<void> {
-    try {
-      const headers = await this.getAuthHeaders();
-      const response = await fetch(`https://pbsdsdexayzfoexjdlgb.supabase.co/functions/v1/feedback-api`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          messageId,
-          rating,
-          content,
-        }),
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${await response.text()}`);
-      }
-    } catch (error) {
-      console.error('Error sending feedback:', error);
-      throw new DifyClientError(error instanceof Error ? error.message : 'Failed to send feedback');
-    }
+    // No-op since we do not store feedback in Dify anymore
+    console.log('Feedback sent (no-op):', { messageId, rating, content });
   }
 
-  async uploadFile(file: File): Promise<{ id: string; name: string; size: number }> {
+  async uploadFile(file: File, chatId?: string): Promise<{ id: string; name: string; size: number; url: string }> {
     try {
-      const headers = await this.getAuthHeaders();
-      delete headers['Content-Type']; // Let browser set boundary for FormData
-      
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const response = await fetch(`https://pbsdsdexayzfoexjdlgb.supabase.co/functions/v1/file-api`, {
-        method: 'POST',
-        headers,
-        body: formData,
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('Unauthorized');
       }
+
+      const fileExt = file.name.split('.').pop();
+      const randomId = Math.random().toString(36).substring(2, 9);
+      const cleanFileName = `${Date.now()}_${randomId}.${fileExt}`;
       
-      return await response.json();
+      // Prefix with chatId (or fallback to 'general') to satisfy voice-messages bucket policy
+      const prefix = chatId || 'general';
+      const filePath = `${prefix}/${cleanFileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('voice-messages')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('voice-messages')
+        .getPublicUrl(filePath);
+
+      return {
+        id: filePath,
+        name: file.name,
+        size: file.size,
+        url: publicUrl,
+      };
     } catch (error) {
       console.error('Error uploading file:', error);
       throw new DifyClientError(error instanceof Error ? error.message : 'Failed to upload file');
@@ -317,17 +336,15 @@ export class DifyClient {
 
   async getFilePreview(fileId: string): Promise<Blob> {
     try {
-      const headers = await this.getAuthHeaders();
-      const response = await fetch(`https://pbsdsdexayzfoexjdlgb.supabase.co/functions/v1/file-api/${fileId}`, {
-        method: 'GET',
-        headers,
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+      const { data, error } = await supabase.storage
+        .from('voice-messages')
+        .download(fileId);
+
+      if (error) {
+        throw error;
       }
-      
-      return await response.blob();
+
+      return data;
     } catch (error) {
       console.error('Error getting file preview:', error);
       throw new DifyClientError(error instanceof Error ? error.message : 'Failed to get file preview');
@@ -335,54 +352,14 @@ export class DifyClient {
   }
 
   async speechToText(audioBlob: Blob, mimeType?: string): Promise<{ text: string }> {
-    try {
-      // Конвертируем blob в base64 безопасно для больших файлов
-      const arrayBuffer = await audioBlob.arrayBuffer();
-      const uint8Array = new Uint8Array(arrayBuffer);
-      
-      // Обрабатываем по частям чтобы избежать Maximum call stack
-      let binary = '';
-      const chunkSize = 8192;
-      for (let i = 0; i < uint8Array.length; i += chunkSize) {
-        const chunk = uint8Array.subarray(i, i + chunkSize);
-        binary += String.fromCharCode.apply(null, Array.from(chunk));
-      }
-      const base64Audio = btoa(binary);
-
-      const headers = await this.getAuthHeaders();
-      const response = await fetch(`https://pbsdsdexayzfoexjdlgb.supabase.co/functions/v1/stt-api`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ 
-          audio: base64Audio,
-          mimeType: mimeType || audioBlob.type || 'audio/webm'
-        }),
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${await response.text()}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('Error converting speech to text:', error);
-      throw new DifyClientError(error instanceof Error ? error.message : 'Failed to convert speech to text');
-    }
+    // Speech to text is disabled since Dify is removed
+    console.warn('Speech to text called but Dify is removed.');
+    return { text: '' };
   }
 
-  // textToSpeech removed - now using Dify TTS through stream events
-
-  // Подписка на стрим сообщений для чата
   subscribeToChat(chatId: string, onMessage: (data: { event: string; [key: string]: unknown }) => void) {
-    const channel = supabase.channel(`chat:${chatId}`)
-      .on('broadcast', { event: 'dify_stream' }, ({ payload }) => {
-        onMessage(payload);
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    // Returns dummy unsubscribe function since real-time message changes are handled directly via postgres_changes
+    return () => {};
   }
 }
 

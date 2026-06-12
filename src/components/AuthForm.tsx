@@ -9,7 +9,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useTranslation } from '@/lib/i18n';
 import { useToast } from '@/hooks/use-toast';
-import { useSecureAuth } from '@/hooks/useSecureAuth';
 import { useAuth } from '@/hooks/useAuth';
 import { useRememberMe } from '@/hooks/useRememberMe';
 
@@ -19,7 +18,6 @@ export const AuthForm = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { loading: secureAuthLoading, secureSignIn, secureSignUp } = useSecureAuth();
   const { saveCredentials, getSavedEmail, isRemembered, attemptAutoLogin } = useRememberMe();
   
   const [loading, setLoading] = useState(false);
@@ -128,78 +126,50 @@ export const AuthForm = () => {
 
     setLoading(true);
     try {
-      // Try secure auth first
-      const result = await secureSignUp(
-        formData.email, 
-        formData.password, 
-        formData.displayName || formData.email.split('@')[0]
-      );
+      const redirectUrl = `${window.location.origin}/`;
+      const { data, error } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: {
+            display_name: formData.displayName || formData.email.split('@')[0]
+          }
+        }
+      });
 
-      if (result.success) {
+      if (error) {
+        if (error.message.includes('User already registered') || error.message.includes('already been registered')) {
+          toast({
+            title: 'Пользователь уже существует',
+            description: 'Этот email уже зарегистрирован. Перейдите на вкладку "Вход" для входа в систему.',
+            variant: 'destructive',
+          });
+          setTimeout(() => {
+            const signinTab = document.querySelector('[value="signin"]') as HTMLButtonElement;
+            if (signinTab) signinTab.click();
+          }, 2000);
+        } else {
+          toast({
+            title: t.error,
+            description: error.message,
+            variant: 'destructive',
+          });
+        }
+        return;
+      }
+
+      if (data.user && !data.session) {
         toast({
           title: 'Регистрация успешна',
           description: 'Проверьте email для подтверждения аккаунта. Письмо может прийти в папку "Спам".',
         });
-        return;
-      }
-
-      // If secure auth fails, fallback to direct Supabase
-      if (result.error?.includes('not found') || result.rateLimited) {
-        console.log('Falling back to direct Supabase auth');
-        
-        const redirectUrl = `${window.location.origin}/`;
-        const { data, error } = await supabase.auth.signUp({
-          email: formData.email,
-          password: formData.password,
-          options: {
-            emailRedirectTo: redirectUrl,
-            data: {
-              display_name: formData.displayName || formData.email.split('@')[0]
-            }
-          }
-        });
-
-        if (error) {
-          if (error.message.includes('User already registered') || error.message.includes('already been registered')) {
-            toast({
-              title: 'Пользователь уже существует',
-              description: 'Этот email уже зарегистрирован. Перейдите на вкладку "Вход" для входа в систему.',
-              variant: 'destructive',
-            });
-            setTimeout(() => {
-              const signinTab = document.querySelector('[value="signin"]') as HTMLButtonElement;
-              if (signinTab) signinTab.click();
-            }, 2000);
-          } else {
-            toast({
-              title: t.error,
-              description: error.message,
-              variant: 'destructive',
-            });
-          }
-          return;
-        }
-
-        if (data.user && !data.session) {
-          toast({
-            title: 'Регистрация успешна',
-            description: 'Проверьте email для подтверждения аккаунта. Письмо может прийти в папку "Спам".',
-          });
-        } else if (data.session) {
-          toast({
-            title: 'Добро пожаловать!',
-            description: 'Вы успешно зарегистрированы и вошли в систему',
-          });
-        }
-      } else {
-        // Show specific error from secure auth
+      } else if (data.session) {
         toast({
-          title: t.error,
-          description: result.error || 'Ошибка при регистрации',
-          variant: 'destructive',
+          title: 'Добро пожаловать!',
+          description: 'Вы успешно зарегистрированы и вошли в систему',
         });
       }
-
     } catch (error) {
       toast({
         title: t.error,
@@ -563,8 +533,8 @@ export const AuthForm = () => {
                   🔒 Цей пристрій буде запам'ятовано. Вхід потрібен лише після виходу.
                 </p>
 
-                <Button type="submit" className="w-full" disabled={loading || secureAuthLoading}>
-                  {(loading || secureAuthLoading) ? 'Вход...' : 'Войти'}
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? 'Вход...' : 'Войти'}
                 </Button>
                 
                 <div className="mt-4 flex justify-center">
@@ -665,8 +635,8 @@ export const AuthForm = () => {
                     required
                   />
                 </div>
-                <Button type="submit" className="w-full" disabled={loading || secureAuthLoading}>
-                  {(loading || secureAuthLoading) ? 'Регистрация...' : 'Зарегистрироваться'}
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? 'Регистрация...' : 'Зарегистрироваться'}
                 </Button>
               </form>
             </TabsContent>

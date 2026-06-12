@@ -7,7 +7,6 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { difyClient, type DifyMessage } from '@/utils/difyClient';
-import { useDifyStream } from '@/hooks/useDifyStream';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserProfile } from '@/hooks/useUserProfile';
@@ -27,7 +26,8 @@ export const CommunityChat = () => {
   const { profile } = useUserProfile();
   const { toast } = useToast();
   const [communityChat, setCommunityChat] = useState<{ id: string } | null>(null);
-  const { isStreaming, startStream, currentMessage } = useDifyStream(communityChat?.id || null);
+  const isStreaming = false;
+  const currentMessage = null;
   
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<CommunityMessage[]>([]);
@@ -253,9 +253,6 @@ export const CommunityChat = () => {
 
       console.log('[CommunityChat] Saved user message to DB');
 
-      // Отправляем сообщение агенту
-      console.log('[CommunityChat] Starting stream to agent...');
-      await startStream(message);
       setMessage('');
     } catch (error) {
       console.error('Error sending message:', error);
@@ -294,33 +291,7 @@ export const CommunityChat = () => {
     return 'bg-background';
   };
 
-  // Обработчик завершения потока для сохранения ответа агента
-  useEffect(() => {
-    if (currentMessage?.isComplete && communityChat) {
-      console.log('[CommunityChat] Agent message complete, saving to DB:', currentMessage.content);
-      
-      const saveAgentMessage = async () => {
-        try {
-          await supabase.from('messages').insert({
-            conversation_id: communityChat.id,
-            content: currentMessage.content,
-            role: 'assistant',
-            sender_name: 'Дух общины',
-            message_type: 'text'
-          });
 
-          console.log('[CommunityChat] Saved agent message to DB');
-
-          // Сообщение агента появится через real-time подписку
-          // Не добавляем в локальное состояние, чтобы избежать дублирования
-        } catch (error) {
-          console.error('Error saving agent message:', error);
-        }
-      };
-
-      saveAgentMessage();
-    }
-  }, [currentMessage?.isComplete, communityChat]);
 
   if (isLoading) {
     return (

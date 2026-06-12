@@ -40,3 +40,4 @@ export const validateInput = <T>(schema: z.ZodSchema<T>, data: unknown) => {
   return schema.safeParse(data);
 };
 
+

@@ -6,7 +6,7 @@ import { createChat } from '@/services/chats';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
-import { getErrorMessage } from "@/utils/errorMapping";
+import { getErrorMessage } from "@/utils/errorHelper";
 
 interface ChatEmptyStateProps {
   onCreateChat: () => void;
