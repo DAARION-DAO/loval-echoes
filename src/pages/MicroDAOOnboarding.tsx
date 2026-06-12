@@ -151,7 +151,7 @@ export default function MicroDAOOnboarding() {
         description: "Ви стали учасником MicroDAO спільноти."
       });
       
-      const newCommId = data.community_id;
+      const newCommId = (data as any).community_id;
       setActiveCommunityId(newCommId);
       await refresh();
       navigate('/dashboard', { replace: true });
@@ -172,7 +172,7 @@ export default function MicroDAOOnboarding() {
     if (!partnerMessage.trim()) return;
     setLoading(true);
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('access_requests')
         .insert({
           user_id: user?.id,
@@ -227,7 +227,7 @@ export default function MicroDAOOnboarding() {
           leader_id: user.id,
           current_step: step.toString(),
           status: 'draft',
-          answers: answers,
+          answers: answers as any,
           updated_at: new Date().toISOString()
         })
         .select()
@@ -300,12 +300,12 @@ export default function MicroDAOOnboarding() {
         p_values_rules: answers.values_rules.trim() || null,
         p_agent_name: answers.agent_name.trim(),
         p_autonomy_level: answers.autonomy_level,
-        p_setup_answers: answers,
+        p_setup_answers: answers as any,
         p_setup_session_id: sessionId || null
       });
 
       if (rpcErr) throw rpcErr;
-      const { community_id } = data;
+      const { community_id } = data as any;
 
       // 2. Create custom invitation codes if specified
       if (answers.member_code) {
@@ -335,7 +335,7 @@ export default function MicroDAOOnboarding() {
       // 3. Create starter task if title is provided and conversations/projects setup is done
       // Note: We'll create a default "general" conversation for the community first if required,
       // but since project tasks require conversations, we can look up or insert a default one.
-      const { data: conv, error: convErr } = await supabase
+      const { data: conv, error: convErr } = await (supabase as any)
         .from('conversations')
         .insert({
           name: 'Загальний чат',

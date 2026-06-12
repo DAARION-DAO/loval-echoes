@@ -14,6 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
+      agent_action_logs: {
+        Row: {
+          action_payload: Json | null
+          action_type: string
+          agent_id: string | null
+          approved_by: string | null
+          community_id: string | null
+          created_at: string | null
+          executed_at: string | null
+          id: string
+          requested_by: string | null
+          status: string | null
+        }
+        Insert: {
+          action_payload?: Json | null
+          action_type: string
+          agent_id?: string | null
+          approved_by?: string | null
+          community_id?: string | null
+          created_at?: string | null
+          executed_at?: string | null
+          id?: string
+          requested_by?: string | null
+          status?: string | null
+        }
+        Update: {
+          action_payload?: Json | null
+          action_type?: string
+          agent_id?: string | null
+          approved_by?: string | null
+          community_id?: string | null
+          created_at?: string | null
+          executed_at?: string | null
+          id?: string
+          requested_by?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_action_logs_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_action_logs_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agent_memberships: {
         Row: {
           active: boolean
@@ -79,6 +133,75 @@ export type Database = {
           },
         ]
       }
+      agent_permissions: {
+        Row: {
+          agent_id: string | null
+          can_approve_members: boolean | null
+          can_create_summaries: boolean | null
+          can_create_tasks: boolean | null
+          can_delete_community: boolean | null
+          can_invite_guests: boolean | null
+          can_make_admins: boolean | null
+          can_remove_members: boolean | null
+          can_send_welcome_messages: boolean | null
+          can_suggest_roles: boolean | null
+          community_id: string | null
+          created_at: string | null
+          id: string
+          requires_human_approval_for_sensitive_actions: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          agent_id?: string | null
+          can_approve_members?: boolean | null
+          can_create_summaries?: boolean | null
+          can_create_tasks?: boolean | null
+          can_delete_community?: boolean | null
+          can_invite_guests?: boolean | null
+          can_make_admins?: boolean | null
+          can_remove_members?: boolean | null
+          can_send_welcome_messages?: boolean | null
+          can_suggest_roles?: boolean | null
+          community_id?: string | null
+          created_at?: string | null
+          id?: string
+          requires_human_approval_for_sensitive_actions?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          agent_id?: string | null
+          can_approve_members?: boolean | null
+          can_create_summaries?: boolean | null
+          can_create_tasks?: boolean | null
+          can_delete_community?: boolean | null
+          can_invite_guests?: boolean | null
+          can_make_admins?: boolean | null
+          can_remove_members?: boolean | null
+          can_send_welcome_messages?: boolean | null
+          can_suggest_roles?: boolean | null
+          community_id?: string | null
+          created_at?: string | null
+          id?: string
+          requires_human_approval_for_sensitive_actions?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_permissions_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_permissions_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agent_prompt_versions: {
         Row: {
           agent_id: string | null
@@ -128,48 +251,74 @@ export type Database = {
       }
       agents: {
         Row: {
+          agent_type: string
           avatar_url: string | null
+          community_id: string | null
           connection_type: Database["public"]["Enums"]["agent_connection_type"]
           created_at: string
           description: string | null
           endpoint_url: string | null
           id: string
           is_preset: boolean | null
+          memory_scope: string | null
           name: string
-          owner_user_id: string
+          owner_user_id: string | null
+          personality: Json | null
           public_key: string | null
+          scope: string | null
           status: Database["public"]["Enums"]["agent_status"]
+          system_prompt: string | null
           updated_at: string
         }
         Insert: {
+          agent_type?: string
           avatar_url?: string | null
+          community_id?: string | null
           connection_type?: Database["public"]["Enums"]["agent_connection_type"]
           created_at?: string
           description?: string | null
           endpoint_url?: string | null
           id?: string
           is_preset?: boolean | null
+          memory_scope?: string | null
           name: string
-          owner_user_id: string
+          owner_user_id?: string | null
+          personality?: Json | null
           public_key?: string | null
+          scope?: string | null
           status?: Database["public"]["Enums"]["agent_status"]
+          system_prompt?: string | null
           updated_at?: string
         }
         Update: {
+          agent_type?: string
           avatar_url?: string | null
+          community_id?: string | null
           connection_type?: Database["public"]["Enums"]["agent_connection_type"]
           created_at?: string
           description?: string | null
           endpoint_url?: string | null
           id?: string
           is_preset?: boolean | null
+          memory_scope?: string | null
           name?: string
-          owner_user_id?: string
+          owner_user_id?: string | null
+          personality?: Json | null
           public_key?: string | null
+          scope?: string | null
           status?: Database["public"]["Enums"]["agent_status"]
+          system_prompt?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "agents_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       ai_agent_permissions: {
         Row: {
@@ -428,6 +577,60 @@ export type Database = {
             columns: ["community_id"]
             isOneToOne: false
             referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_setup_sessions: {
+        Row: {
+          answers: Json | null
+          community_id: string | null
+          created_agent_id: string | null
+          created_at: string | null
+          current_step: string | null
+          generated_summary: Json | null
+          id: string
+          leader_id: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          answers?: Json | null
+          community_id?: string | null
+          created_agent_id?: string | null
+          created_at?: string | null
+          current_step?: string | null
+          generated_summary?: Json | null
+          id?: string
+          leader_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          answers?: Json | null
+          community_id?: string | null
+          created_agent_id?: string | null
+          created_at?: string | null
+          current_step?: string | null
+          generated_summary?: Json | null
+          id?: string
+          leader_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_setup_sessions_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_setup_sessions_created_agent_id_fkey"
+            columns: ["created_agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
             referencedColumns: ["id"]
           },
         ]
@@ -778,6 +981,62 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invitation_codes: {
+        Row: {
+          access_tier: string | null
+          code: string
+          community_id: string | null
+          created_at: string | null
+          created_by: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          max_uses: number | null
+          role_to_grant: string | null
+          scope: string
+          updated_at: string | null
+          used_count: number | null
+        }
+        Insert: {
+          access_tier?: string | null
+          code: string
+          community_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_uses?: number | null
+          role_to_grant?: string | null
+          scope?: string
+          updated_at?: string | null
+          used_count?: number | null
+        }
+        Update: {
+          access_tier?: string | null
+          code?: string
+          community_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_uses?: number | null
+          role_to_grant?: string | null
+          scope?: string
+          updated_at?: string | null
+          used_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invitation_codes_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
             referencedColumns: ["id"]
           },
         ]
@@ -1472,6 +1731,21 @@ export type Database = {
         Returns: boolean
       }
       cleanup_expired_refresh_tokens: { Args: never; Returns: undefined }
+      create_microdao_with_spirit_agent: {
+        Args: {
+          p_agent_name: string
+          p_autonomy_level: string
+          p_description: string
+          p_goal_30_days: string
+          p_mission: string
+          p_name: string
+          p_setup_answers: Json
+          p_setup_session_id?: string
+          p_type: string
+          p_values_rules: string
+        }
+        Returns: Json
+      }
       create_task_notification: {
         Args: {
           p_message: string
@@ -1535,6 +1809,7 @@ export type Database = {
       }
       is_moderator: { Args: { p_user_id: string }; Returns: boolean }
       is_user_approved: { Args: { p_user_id: string }; Returns: boolean }
+      join_community_by_code: { Args: { p_code: string }; Returns: Json }
       log_security_event: {
         Args: {
           p_event_data?: Json
@@ -1575,6 +1850,7 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: undefined
       }
+      validate_invitation_code: { Args: { p_code: string }; Returns: Json }
     }
     Enums: {
       agent_connection_type: "webhook" | "websocket" | "msp"
