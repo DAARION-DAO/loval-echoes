@@ -355,9 +355,7 @@ export function Start() {
       <header className="sticky top-0 z-50 w-full border-b border-border/30 bg-background/70 backdrop-blur-xl">
         <div className="container max-w-7xl mx-auto px-3 sm:px-4 h-14 sm:h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="bg-gradient-to-br from-primary to-primary/70 text-primary-foreground h-8 w-8 sm:h-9 sm:w-9 rounded-xl flex items-center justify-center font-extrabold text-base sm:text-lg shadow-md landing-glow">
-              M
-            </div>
+            <img src="/logo.jpg" alt="MicroDAO" className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl object-cover shadow-md landing-glow" />
             <span className="font-bold text-base sm:text-lg tracking-tight">MicroDAO</span>
             <Badge variant="secondary" className="hidden sm:inline-flex text-[10px] px-1.5 py-0 h-5 font-medium">
               beta
@@ -384,6 +382,17 @@ export function Start() {
 
       {/* ── Hero Section ── */}
       <section className="relative py-12 sm:py-20 md:py-32 overflow-hidden">
+        {/* Background Photo for Hero */}
+        <div className="absolute inset-0 z-0 pointer-events-none">
+          <img 
+            src="/hero-bg.jpg" 
+            alt="Hero Background" 
+            className="w-full h-full object-cover object-center opacity-35 select-none"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/80 to-background" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_10%,hsl(var(--background))_90%)]" />
+        </div>
+
         {/* Background orbs */}
         <div className="landing-orb absolute top-16 left-[15%] w-72 h-72 bg-primary/8 rounded-full blur-[100px]" />
         <div className="landing-orb absolute bottom-10 right-[10%] w-96 h-96 bg-violet-500/6 rounded-full blur-[120px]" style={{ animationDelay: '2s' }} />
@@ -687,9 +696,7 @@ export function Start() {
       <footer className="mt-auto border-t border-border/30 py-10 bg-card/10 backdrop-blur-sm">
         <div className="container max-w-7xl mx-auto px-4 space-y-4 text-center">
           <div className="flex items-center justify-center gap-2 mb-4">
-            <div className="bg-gradient-to-br from-primary to-primary/70 text-primary-foreground h-7 w-7 rounded-lg flex items-center justify-center font-bold text-sm">
-              M
-            </div>
+            <img src="/logo.jpg" alt="MicroDAO" className="h-7 w-7 rounded-lg object-cover shadow-sm" />
             <span className="font-semibold text-sm text-foreground/80">MicroDAO</span>
           </div>
           <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">

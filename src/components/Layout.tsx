@@ -94,7 +94,10 @@ export function Layout({ sidebar, children }: LayoutProps) {
               <Menu className="h-5 w-5" />
               <span className="sr-only">Open menu</span>
             </Button>
-            <span className="font-bold text-lg sm:text-xl">{t.layout.appName}</span>
+            <div className="flex items-center gap-2">
+              <img src="/logo.jpg" alt="Logo" className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg object-cover shadow-sm" />
+              <span className="font-bold text-lg sm:text-xl">{t.layout.appName}</span>
+            </div>
           </div>
           
           <div className="flex items-center gap-2 sm:gap-3">
