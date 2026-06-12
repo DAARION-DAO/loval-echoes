@@ -19,11 +19,13 @@ import {
   Bot, 
   ArrowRight, 
   LogIn, 
-  PlusCircle, 
   Sparkles, 
   Shield, 
   Zap, 
-  Workflow
+  Workflow,
+  Cpu,
+  Layers,
+  Network
 } from 'lucide-react';
 
 export function Start() {
@@ -151,6 +153,13 @@ export function Start() {
     }
   };
 
+  const handleScrollToForm = () => {
+    const el = document.getElementById('start-space');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   if (communityLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -165,16 +174,22 @@ export function Start() {
       <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background flex items-center justify-center p-4 sm:p-6 md:p-8">
         <Card className="w-full max-w-lg border-border/80 bg-card/65 backdrop-blur-md shadow-elegant">
           <CardHeader className="text-center pb-4 border-b">
-            <div className="mx-auto bg-primary/10 w-12 h-12 rounded-full flex items-center justify-center mb-3">
-              <Sparkles className="h-6 w-6 text-primary" />
+            <div className="flex flex-col items-center text-center mb-2">
+              <Badge className="bg-primary/10 text-primary border-primary/20 text-xs px-2.5 py-0.5 mb-2">
+                ЖОС · Жива операційна система
+              </Badge>
+              <h2 className="text-xl font-bold tracking-tight text-foreground">MicroDAO — Дух Спільноти</h2>
+              <p className="text-xs text-muted-foreground mt-1 max-w-sm leading-relaxed">
+                Жива операційна система для команд, DAO та спільнот. Обʼєднуйте чати, задачі, знання, зустрічі й агентів в одному просторі.
+              </p>
             </div>
-            <CardTitle className="text-2xl font-bold tracking-tight text-foreground">Створіть свій перший простір</CardTitle>
-            <CardDescription className="text-sm mt-1">
-              Налаштуйте робоче середовище для вашої команди в MicroDAO
+            <CardTitle className="text-lg font-bold text-foreground mt-4" id="start-space">Створіть свій перший простір</CardTitle>
+            <CardDescription className="text-xs">
+              Налаштуйте робоче середовище для вашої команди або спільноти в MicroDAO
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-6">
-            <form onSubmit={handleOnboardingSubmit} className="space-y-5">
+            <form onSubmit={handleOnboardingSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="onboarding-comm-name" className="text-sm font-medium">Назва спільноти / команди *</Label>
                 <Input 
@@ -210,14 +225,17 @@ export function Start() {
                   value={commDesc}
                   onChange={(e) => setCommDesc(e.target.value)}
                   placeholder="Опишіть цілі або сферу діяльності вашої спільноти..."
-                  className="min-h-[100px] bg-background/60"
+                  className="min-h-[90px] bg-background/60"
                 />
               </div>
 
-              <Button type="submit" disabled={submitting} className="w-full flex items-center justify-center gap-2 mt-2 py-5 font-semibold text-base">
+              <Button type="submit" disabled={submitting} className="w-full flex items-center justify-center gap-2 mt-2 py-4 font-semibold text-base">
                 {submitting ? 'Створення...' : 'Продовжити'}
                 <ArrowRight className="h-5 w-5" />
               </Button>
+              <p className="text-[11px] text-muted-foreground text-center pt-2 leading-relaxed">
+                Після створення простору ви зможете додати учасників, налаштувати агента, створити чати, задачі, проєкти та базу знань.
+              </p>
             </form>
           </CardContent>
         </Card>
@@ -235,7 +253,7 @@ export function Start() {
             <div className="bg-primary text-primary-foreground h-9 w-9 rounded-lg flex items-center justify-center font-bold text-lg">
               M
             </div>
-            <span className="font-bold text-xl tracking-tight">MicroDAO</span>
+            <span className="font-bold text-lg tracking-tight">MicroDAO</span>
           </div>
 
           <div className="flex items-center gap-3">
@@ -251,23 +269,32 @@ export function Start() {
       </header>
 
       {/* Hero Section */}
-      <section className="relative py-20 md:py-28 overflow-hidden bg-gradient-to-b from-background via-primary/5 to-background border-b border-border/20">
-        <div className="container max-w-6xl mx-auto px-4 text-center space-y-6 relative z-10">
+      <section className="relative py-16 md:py-24 overflow-hidden bg-gradient-to-b from-background via-primary/5 to-background border-b border-border/20">
+        <div className="container max-w-5xl mx-auto px-4 text-center space-y-6 relative z-10">
           <Badge className="bg-primary/10 text-primary border-primary/20 text-xs px-3 py-1 mb-2 hover:bg-primary/15 transition-all">
-            🤖 Нове покоління координації спільнот
+            ЖОС · Жива операційна система
           </Badge>
           
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight leading-tight max-w-4xl mx-auto bg-gradient-to-r from-foreground via-foreground/90 to-primary bg-clip-text text-transparent">
-            MicroDAO — агентська операційна система для спільнот
-          </h1>
+          <div className="space-y-1">
+            <h1 className="text-5xl sm:text-6xl md:text-7xl font-extrabold tracking-tight leading-tight max-w-4xl mx-auto bg-gradient-to-r from-foreground via-foreground/90 to-primary bg-clip-text text-transparent">
+              MicroDAO
+            </h1>
+            <p className="text-2xl sm:text-3xl font-semibold text-muted-foreground tracking-wide">
+              Дух Спільноти
+            </p>
+          </div>
           
-          <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Створюйте команди, чати, задачі, базу знань і власних агентів для координації спільної роботи.
+          <p className="text-lg sm:text-xl text-foreground/80 max-w-3xl mx-auto leading-relaxed">
+            Жива операційна система для команд, DAO та спільнот. Обʼєднуйте чати, задачі, знання, зустрічі й агентів в одному просторі для спільної дії.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-            <Button size="lg" onClick={() => navigate('/auth?signup=true')} className="w-full sm:w-auto h-12 px-8 font-semibold text-base gap-2">
-              Створити спільноту
+          <p className="text-sm text-muted-foreground italic">
+            Не просто чат. Не тільки governance. Це цифровий осередок спільноти.
+          </p>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-3 max-w-md mx-auto sm:max-w-none">
+            <Button size="lg" onClick={handleScrollToForm} className="w-full sm:w-auto h-12 px-8 font-semibold text-base gap-2">
+              Створити простір
               <ArrowRight className="h-5 w-5" />
             </Button>
             <Button size="lg" variant="outline" onClick={() => navigate('/auth')} className="w-full sm:w-auto h-12 px-8 font-semibold text-base gap-1.5">
@@ -280,184 +307,245 @@ export function Start() {
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-primary/10 rounded-full blur-[120px] pointer-events-none -z-10" />
       </section>
 
-      {/* Feature Sections */}
-      <section className="py-20 container max-w-6xl mx-auto px-4 space-y-16">
+      {/* What is MicroDAO Section */}
+      <section className="py-16 container max-w-5xl mx-auto px-4 space-y-8 border-b border-border/10">
         <div className="text-center space-y-3">
-          <h2 className="text-3xl font-bold tracking-tight">Що таке MicroDAO?</h2>
-          <p className="text-muted-foreground max-w-xl mx-auto">
-            Єдина робоча екосистема, яка об'єднує інструменти управління та штучний інтелект.
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Що таке MicroDAO?</h2>
+        </div>
+        <div className="max-w-3xl mx-auto text-center space-y-4">
+          <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
+            MicroDAO — це автономний цифровий простір спільноти, де комунікація, задачі, знання, зустрічі та агенти працюють як єдина система. Кожна спільнота може мати власні правила, памʼять, учасників і агентів.
+          </p>
+          <p className="text-md sm:text-lg font-semibold text-primary/90 bg-primary/5 p-3 rounded-lg inline-block border border-primary/10">
+            ✨ Кожна спільнота — це живий організм. Кожен простір — це канал дії.
+          </p>
+        </div>
+      </section>
+
+      {/* ЖОС / Дух Спільноти Section */}
+      <section className="py-16 bg-muted/20 border-b border-border/10">
+        <div className="container max-w-4xl mx-auto px-4 space-y-8">
+          <div className="text-center space-y-3">
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Дух Спільноти / ЖОС</h2>
+            <p className="text-base text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+              ЖОС — це Жива Операційна Система спільноти. Вона допомагає бачити контекст, памʼятати рішення, координувати дії та зберігати дух спільної роботи.
+            </p>
+          </div>
+
+          <div className="bg-card/40 border border-border/40 rounded-xl p-5 sm:p-6 space-y-4 max-w-xl mx-auto">
+            <h4 className="font-bold text-sm text-foreground/80 tracking-wide uppercase border-b pb-2">Принципи роботи ЖОС:</h4>
+            <ul className="space-y-3">
+              {[
+                "Агент нейтральний і враховує контекст",
+                "Рішення залишаються за людьми",
+                "Памʼять простору прозора для учасників",
+                "Координація без примусу",
+                "Кожна дія має значення для спільноти"
+              ].map((principle, index) => (
+                <li key={index} className="flex items-start gap-2.5 text-sm">
+                  <span className="text-primary mt-0.5">✔</span>
+                  <span>{principle}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      {/* How it works Section */}
+      <section className="py-16 container max-w-5xl mx-auto px-4 space-y-10 border-b border-border/10">
+        <div className="text-center space-y-3">
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Як це працює</h2>
+          <p className="text-sm text-muted-foreground max-w-md mx-auto">
+            Зв'язок агентів та протоколів координації в єдиній екосистемі
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
-          <Card className="border-border/60 bg-card/40 hover:bg-card/75 transition-all">
-            <CardHeader>
-              <div className="p-2.5 bg-primary/10 w-fit rounded-lg mb-3">
-                <MessageSquare className="h-5 w-5 text-primary" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+          <Card className="border-border/60 bg-card/45 hover:bg-card/75 transition-all">
+            <CardHeader className="pb-2">
+              <div className="p-2 bg-primary/10 w-fit rounded-lg mb-2">
+                <Network className="h-4 w-4 text-primary" />
               </div>
-              <CardTitle className="text-lg">Командна комунікація</CardTitle>
+              <CardTitle className="text-base font-bold">DAGI Network</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Швидкі та зручні чати в реальному часі для вільного обговорення ідей, інтегровані з вашими ШІ-помічниками.
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Мережа агентів і протокол звʼязку між людьми, командами та автономними системами.
               </p>
             </CardContent>
           </Card>
 
-          <Card className="border-border/60 bg-card/40 hover:bg-card/75 transition-all">
-            <CardHeader>
-              <div className="p-2.5 bg-primary/10 w-fit rounded-lg mb-3">
-                <CheckSquare className="h-5 w-5 text-primary" />
+          <Card className="border-border/60 bg-card/45 hover:bg-card/75 transition-all">
+            <CardHeader className="pb-2">
+              <div className="p-2 bg-primary/10 w-fit rounded-lg mb-2">
+                <Layers className="h-4 w-4 text-primary" />
               </div>
-              <CardTitle className="text-lg">Задачі та проєкти</CardTitle>
+              <CardTitle className="text-base font-bold">MicroDAO простір</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Зручні Канбан-дошки, списки та трекінг завдань для прозорого розподілу обов'язків та моніторингу прогресу.
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Канал взаємодії для команди або спільноти з власними чатами, задачами, знаннями й агентами.
               </p>
             </CardContent>
           </Card>
 
-          <Card className="border-border/60 bg-card/40 hover:bg-card/75 transition-all">
-            <CardHeader>
-              <div className="p-2.5 bg-primary/10 w-fit rounded-lg mb-3">
-                <Files className="h-5 w-5 text-primary" />
+          <Card className="border-border/60 bg-card/45 hover:bg-card/75 transition-all">
+            <CardHeader className="pb-2">
+              <div className="p-2 bg-primary/10 w-fit rounded-lg mb-2">
+                <Cpu className="h-4 w-4 text-primary" />
               </div>
-              <CardTitle className="text-lg">База знань</CardTitle>
+              <CardTitle className="text-base font-bold">Second Me</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Спільні документи, вікі-сторінки та файлове сховище з вбудованим розумним пошуком по всім накопиченим знанням.
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Персональний агент учасника, який поступово допомагає діяти в межах простору.
               </p>
             </CardContent>
           </Card>
 
-          <Card className="border-border/60 bg-card/40 hover:bg-card/75 transition-all">
-            <CardHeader>
-              <div className="p-2.5 bg-primary/10 w-fit rounded-lg mb-3">
-                <Bot className="h-5 w-5 text-primary" />
+          <Card className="border-border/60 bg-card/45 hover:bg-card/75 transition-all">
+            <CardHeader className="pb-2">
+              <div className="p-2 bg-primary/10 w-fit rounded-lg mb-2">
+                <Zap className="h-4 w-4 text-primary" />
               </div>
-              <CardTitle className="text-lg">Агент спільноти</CardTitle>
+              <CardTitle className="text-base font-bold">Правила та економіка</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                ШІ-асистенти, налаштовані під контекст вашої команди, які автоматично допомагають у вирішенні рутинних задач.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-border/60 bg-card/40 hover:bg-card/75 transition-all">
-            <CardHeader>
-              <div className="p-2.5 bg-primary/10 w-fit rounded-lg mb-3">
-                <Workflow className="h-5 w-5 text-primary" />
-              </div>
-              <CardTitle className="text-lg">Координація & Пам'ять</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Прозорий запис подій, рішень та обговорень, який дозволяє ШІ-агенту миттєво адаптуватись під потреби команди.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-border/60 bg-card/40 hover:bg-card/75 transition-all">
-            <CardHeader>
-              <div className="p-2.5 bg-primary/10 w-fit rounded-lg mb-3">
-                <Shield className="h-5 w-5 text-primary" />
-              </div>
-              <CardTitle className="text-lg">Безпека та контроль</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Гнучкі налаштування ролей та дозволів, що забезпечують збереження чутливих даних вашого простору.
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                У майбутньому простір може мати власні правила, ролі, токени, доступи й DAO-логіку.
               </p>
             </CardContent>
           </Card>
         </div>
       </section>
 
-      {/* Target Audience Section */}
-      <section className="py-20 bg-muted/20 border-t border-b border-border/20">
-        <div className="container max-w-6xl mx-auto px-4 space-y-12">
-          <div className="text-center space-y-3">
-            <h2 className="text-3xl font-bold tracking-tight">Для кого створений MicroDAO?</h2>
-            <p className="text-muted-foreground max-w-xl mx-auto">
-              Платформа гнучко масштабується під потреби різних типів команд.
-            </p>
+      {/* Functional Block Section */}
+      <section className="py-16 container max-w-5xl mx-auto px-4 space-y-10 border-b border-border/10">
+        <div className="text-center space-y-3">
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Функціонал MicroDAO</h2>
+          <p className="text-sm text-muted-foreground max-w-md mx-auto">
+            Базові можливості робочого простору вашої спільноти
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            {
+              title: "Комунікація",
+              desc: "Групові й персональні чати, треди, голосові повідомлення та прозорий контекст.",
+              icon: MessageSquare
+            },
+            {
+              title: "Координація",
+              desc: "Задачі, проєкти, зустрічі, ролі та спільне управління діями.",
+              icon: CheckSquare
+            },
+            {
+              title: "Пам'ять",
+              desc: "База знань, файли, рішення, історія та майбутній RAG для агентів.",
+              icon: Files
+            },
+            {
+              title: "Інтелект",
+              desc: "Агенти спільноти, редактор промптів, Second Me та майбутня агентська мережа.",
+              icon: Bot
+            }
+          ].map((item, index) => (
+            <div key={index} className="bg-card/20 border border-border/40 p-4 rounded-xl space-y-3">
+              <div className="p-2 bg-primary/10 w-fit rounded-lg">
+                <item.icon className="h-4 w-4 text-primary" />
+              </div>
+              <h4 className="font-bold text-sm text-foreground">{item.title}</h4>
+              <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Use Cases Section */}
+      <section className="py-16 container max-w-5xl mx-auto px-4 space-y-10 border-b border-border/10">
+        <div className="text-center space-y-3">
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Приклади використання</h2>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            {
+              title: "Проєктний MicroDAO",
+              desc: "Команда створює простір для задач, рішень, файлів і координації."
+            },
+            {
+              title: "Креативний MicroDAO",
+              desc: "Митці або креатори обʼєднують ідеї, обговорення, знання й події."
+            },
+            {
+              title: "Інфраструктурний MicroDAO",
+              desc: "Група операторів підтримує вузол, сервіс або спільну систему."
+            },
+            {
+              title: "Міський MicroDAO",
+              desc: "Локальна спільнота координує ініціативи, зустрічі й взаємодію."
+            }
+          ].map((item, index) => (
+            <div key={index} className="bg-card/30 border border-border/40 p-4 rounded-xl space-y-2">
+              <h4 className="font-bold text-sm text-foreground/90">{item.title}</h4>
+              <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Position in Ecosystem Section */}
+      <section className="py-16 bg-muted/10 border-b border-border/10">
+        <div className="container max-w-3xl mx-auto px-4 space-y-8">
+          <div className="text-center space-y-2">
+            <h2 className="text-2xl font-bold tracking-tight">Позиція в екосистемі DAARION</h2>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
             {[
-              { title: 'Команди', desc: 'Спільна робота та координація' },
-              { title: 'DAO / спільноти', desc: 'Прозорість та децентралізація' },
-              { title: 'Волонтери', desc: 'Швидка реакція та організація' },
-              { title: 'Стартапи', desc: 'Гнучке масштабування ідей' },
-              { title: 'Дослідники', desc: 'Систематизація накопичених знань' }
-            ].map((card, i) => (
-              <div key={i} className="bg-card border border-border/60 p-4 rounded-xl text-center space-y-2 hover:shadow-sm transition-shadow">
-                <div className="font-bold text-base text-foreground">{card.title}</div>
-                <div className="text-xs text-muted-foreground leading-tight">{card.desc}</div>
+              { title: "DAGI", desc: "Мережа агентів і протокол взаємодії." },
+              { title: "MicroDAO", desc: "Автономні простори спільнот, команд і DAO." },
+              { title: "DAARION.city", desc: "Місто, де MicroDAO можуть обʼєднуватися у більшу екосистему." }
+            ].map((item, index) => (
+              <div key={index} className="bg-card/40 border border-border/40 p-4 rounded-xl space-y-2">
+                <h4 className="font-extrabold text-sm text-primary tracking-wide">{item.title}</h4>
+                <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* How it works Section */}
-      <section className="py-20 container max-w-5xl mx-auto px-4 space-y-12">
-        <div className="text-center space-y-3">
-          <h2 className="text-3xl font-bold tracking-tight">Як це працює?</h2>
-          <p className="text-muted-foreground max-w-xl mx-auto">
-            Лише кілька простих кроків для запуску ефективної екосистеми.
-          </p>
-        </div>
-
-        <div className="relative grid grid-cols-1 md:grid-cols-5 gap-6 text-center">
-          {[
-            { step: '1', title: 'Реєстрація', desc: 'Створіть свій особистий кабінет за кілька секунд' },
-            { step: '2', title: 'Створення спільноти', desc: 'Задайте ім\'я та тип робочого простору' },
-            { step: '3', title: 'Запрошення', desc: 'Додайте колег та визначте їхні ролі' },
-            { step: '4', title: 'Налаштування агента', desc: 'Задайте правила для вашого ШІ-помічника' },
-            { step: '5', title: 'Співдія', desc: 'Спілкуйтесь, плануйте та координуйте роботу разом' }
-          ].map((item, i) => (
-            <div key={i} className="space-y-3 relative group">
-              <div className="mx-auto w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm shadow-md">
-                {item.step}
-              </div>
-              <h4 className="font-bold text-sm text-foreground">{item.title}</h4>
-              <p className="text-xs text-muted-foreground px-2 leading-relaxed">{item.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
       {/* Onboarding form card for guests */}
-      <section className="py-20 bg-gradient-to-t from-primary/5 via-background to-background border-t border-border/20">
+      <section className="py-16 bg-gradient-to-t from-primary/5 via-background to-background" id="start-space">
         <div className="container max-w-lg mx-auto px-4">
           <Card className="border-border/80 bg-card/65 backdrop-blur-md shadow-elegant">
             <CardHeader className="text-center">
-              <CardTitle className="text-xl font-bold">Створіть простір вже зараз</CardTitle>
-              <CardDescription>
-                Введіть базові деталі вашої майбутньої команди, щоб розпочати
+              <CardTitle className="text-xl font-bold">Створіть свій перший простір</CardTitle>
+              <CardDescription className="text-xs">
+                Налаштуйте робоче середовище для вашої команди або спільноти в MicroDAO.
               </CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleGuestSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="comm-name">Назва спільноти / команди *</Label>
+                  <Label htmlFor="comm-name" className="text-sm font-medium">Назва спільноти / команди *</Label>
                   <Input 
                     id="comm-name"
                     value={commName}
                     onChange={(e) => setCommName(e.target.value)}
                     placeholder="Наприклад: Моя Крута Команда"
                     required
+                    className="bg-background/60"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="comm-type">Тип простору</Label>
+                  <Label htmlFor="comm-type" className="text-sm font-medium">Тип простору</Label>
                   <Select value={commType} onValueChange={(val) => setCommType(val)}>
-                    <SelectTrigger id="comm-type">
+                    <SelectTrigger id="comm-type" className="bg-background/60">
                       <SelectValue placeholder="Оберіть тип..." />
                     </SelectTrigger>
                     <SelectContent>
@@ -471,20 +559,24 @@ export function Start() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="comm-desc">Короткий опис</Label>
+                  <Label htmlFor="comm-desc" className="text-sm font-medium">Короткий опис</Label>
                   <Textarea 
                     id="comm-desc"
                     value={commDesc}
                     onChange={(e) => setCommDesc(e.target.value)}
                     placeholder="Розкажіть чим займається ваша команда..."
-                    className="min-h-[80px]"
+                    className="min-h-[90px] bg-background/60"
                   />
                 </div>
 
-                <Button type="submit" className="w-full flex items-center justify-center gap-1.5 font-semibold">
+                <Button type="submit" className="w-full flex items-center justify-center gap-1.5 font-semibold py-4">
                   Продовжити
                   <ArrowRight className="h-4 w-4" />
                 </Button>
+                
+                <p className="text-[11px] text-muted-foreground text-center pt-2 leading-relaxed">
+                  Після створення простору ви зможете додати учасників, налаштувати агента, створити чати, задачі, проєкти та базу знань.
+                </p>
               </form>
             </CardContent>
           </Card>
