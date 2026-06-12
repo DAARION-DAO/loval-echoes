@@ -227,7 +227,7 @@ export function useNewsNotifications() {
     loadNotifications();
 
     const channel = supabase
-      .channel('news-notifications-realtime')
+      .channel(`news-notifications-realtime-${user.id}-${Math.random().toString(36).slice(2)}`)
       .on(
         'postgres_changes',
         {
