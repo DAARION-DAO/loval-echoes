@@ -1720,6 +1720,10 @@ export type Database = {
         Args: { p_version_id: string }
         Returns: undefined
       }
+      admin_set_approval_status: {
+        Args: { p_status: string; p_user_id: string }
+        Returns: undefined
+      }
       calculate_required_approvals: { Args: never; Returns: number }
       check_rate_limit: {
         Args: {
