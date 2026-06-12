@@ -31,6 +31,7 @@ const MyTasks = lazy(() => import("./pages/MyTasks"));
 const Agents = lazy(() => import("./pages/Agents"));
 const Integrations = lazy(() => import("./pages/Integrations"));
 const PromptEditor = lazy(() => import("./pages/PromptEditor").then(m => ({ default: m.PromptEditor })));
+const Install = lazy(() => import("./pages/Install"));
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { Layout } from "./components/Layout";
 import { useSessionTimeout } from "./hooks/useSessionTimeout";
@@ -141,6 +142,7 @@ const App = () => (
             <ActiveCommunityProvider>
               <Routes>
                 <Route path="/" element={<PublicStartRoute />} />
+                <Route path="/install" element={<Suspense fallback={<LoadingSpinner size="lg" text="Загрузка..." />}><Install /></Suspense>} />
                 <Route path="/auth" element={<PublicRoutes />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/*" element={<ProtectedLayout />} />

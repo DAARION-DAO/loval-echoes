@@ -34,6 +34,7 @@ import {
   HeartHandshake,
   Eye,
   ArrowDown,
+  Download,
 } from 'lucide-react';
 
 /* ──────────────────────────────────────────────
@@ -352,6 +353,10 @@ export function Start() {
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
+            <Button variant="ghost" size="sm" onClick={() => navigate('/install')} className="text-sm font-medium gap-1.5 hidden sm:inline-flex">
+              <Download className="h-4 w-4" />
+              <span>Клієнт</span>
+            </Button>
             <Button variant="ghost" size="sm" onClick={() => navigate('/auth')} className="text-sm font-medium gap-1.5">
               <LogIn className="h-4 w-4" />
               <span className="hidden xs:inline">Увійти</span>
@@ -667,12 +672,21 @@ export function Start() {
 
       {/* ── Footer ── */}
       <footer className="mt-auto border-t border-border/30 py-10 bg-card/10 backdrop-blur-sm">
-        <div className="container max-w-7xl mx-auto px-4 space-y-3 text-center">
+        <div className="container max-w-7xl mx-auto px-4 space-y-4 text-center">
           <div className="flex items-center justify-center gap-2 mb-4">
             <div className="bg-gradient-to-br from-primary to-primary/70 text-primary-foreground h-7 w-7 rounded-lg flex items-center justify-center font-bold text-sm">
               M
             </div>
             <span className="font-semibold text-sm text-foreground/80">MicroDAO</span>
+          </div>
+          <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
+            <button onClick={() => navigate('/install')} className="hover:text-foreground transition-colors">
+              DAARION Edge Client
+            </button>
+            <span className="text-border">·</span>
+            <a href="https://github.com/DAARION-DAO" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">
+              GitHub
+            </a>
           </div>
           <div className="text-xs text-muted-foreground">© {new Date().getFullYear()} DAARION.city — Всі права захищено.</div>
           <div className="text-[10px] text-muted-foreground/60">Побудовано для гнучкої координації та живих спільнот.</div>
