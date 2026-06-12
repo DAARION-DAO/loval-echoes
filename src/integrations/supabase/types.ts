@@ -1776,6 +1776,14 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_public_profiles: {
+        Args: { p_user_ids: string[] }
+        Returns: {
+          avatar_url: string
+          display_name: string
+          user_id: string
+        }[]
+      }
       get_user_approval_status: { Args: { p_user_id: string }; Returns: string }
       get_user_conversations: {
         Args: { p_user_id: string }
@@ -1848,6 +1856,10 @@ export type Database = {
       revoke_admin_role: { Args: { p_user_id: string }; Returns: undefined }
       revoke_user_refresh_tokens: {
         Args: { p_user_id: string }
+        Returns: undefined
+      }
+      soft_delete_message: {
+        Args: { p_message_id: string }
         Returns: undefined
       }
       validate_invitation_code: { Args: { p_code: string }; Returns: Json }
