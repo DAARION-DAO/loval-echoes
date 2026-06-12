@@ -3,42 +3,42 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
 import { handleCors } from '../_shared/cors.ts';
 
-// OpenAI embedding generator helper
+// Lovable Gateway embedding generator helper
 async function generateEmbedding(queryText: string, apiKey: string): Promise<number[]> {
-  const response = await fetch('https://api.openai.com/v1/embeddings', {
+  const response = await fetch('https://ai.gateway.lovable.dev/v1/embeddings', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: 'text-embedding-3-small',
+      model: 'openai/text-embedding-3-small',
       input: queryText,
     }),
   });
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(`OpenAI API error: ${JSON.stringify(errorData)}`);
+    throw new Error(`Lovable API error: ${JSON.stringify(errorData)}`);
   }
 
   const result = await response.json();
   return result.data[0].embedding;
 }
 
-// OpenAI Chat Completion helper
+// Lovable Gateway Chat Completion helper
 async function generateChatCompletion(
   messages: Array<{ role: string; content: string }>,
   apiKey: string
 ): Promise<string> {
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+  const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: 'gpt-4o-mini',
+      model: 'openai/gpt-4o-mini',
       messages: messages,
       temperature: 0.7,
       max_tokens: 1500,
@@ -47,7 +47,7 @@ async function generateChatCompletion(
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(`OpenAI Chat Completion API error: ${JSON.stringify(errorData)}`);
+    throw new Error(`Lovable Chat Completion API error: ${JSON.stringify(errorData)}`);
   }
 
   const result = await response.json();
@@ -89,10 +89,10 @@ serve(async (req) => {
 
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
-    const openaiApiKey = Deno.env.get('OPENAI_API_KEY') ?? '';
+    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY') ?? '';
 
-    if (!openaiApiKey) {
-      return new Response(JSON.stringify({ error: 'Missing OPENAI_API_KEY on server' }), {
+    if (!lovableApiKey) {
+      return new Response(JSON.stringify({ error: 'Missing LOVABLE_API_KEY on server' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -140,7 +140,7 @@ serve(async (req) => {
     if (useRag) {
       console.log(`[ai-agent-chat] Initiating RAG search for query: "${lastUserMessage.content.substring(0, 50)}..."`);
       try {
-        const queryEmbedding = await generateEmbedding(lastUserMessage.content, openaiApiKey);
+        const queryEmbedding = await generateEmbedding(lastUserMessage.content, lovableApiKey);
         
         const { data: chunks, error: matchError } = await supabase.rpc('match_document_chunks', {
           query_embedding: queryEmbedding,
@@ -204,7 +204,7 @@ ${contextText}
 
     // 4. Generate completion
     console.log('[ai-agent-chat] Requesting OpenAI Chat Completion...');
-    let assistantReply = await generateChatCompletion(apiMessages, openaiApiKey);
+    let assistantReply = await generateChatCompletion(apiMessages, lovableApiKey);
 
     // Append citation source footer if sources were found
     if (sourcesList.length > 0) {
