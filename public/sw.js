@@ -1,42 +1,117 @@
-// Service Worker для push-уведомлений
-const CACHE_NAME = 'zhos-push-v1';
+// MicroDAO — PWA Service Worker
+// Handles: app shell caching, offline fallback, push notifications
 
-// Обработка установки
+const CACHE_VERSION = 'microdao-v2';
+const STATIC_CACHE = `${CACHE_VERSION}-static`;
+const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
+
+// App shell resources to pre-cache on install
+const APP_SHELL = [
+  '/',
+  '/manifest.json',
+  '/icon-192x192.png',
+  '/icon-512x512.png',
+];
+
+// ─── Install: pre-cache app shell ───
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing service worker');
-  self.skipWaiting();
+  console.log('[SW] Installing — cache version:', CACHE_VERSION);
+  event.waitUntil(
+    caches.open(STATIC_CACHE)
+      .then((cache) => cache.addAll(APP_SHELL))
+      .then(() => self.skipWaiting())
+  );
 });
 
-// Обработка активации
+// ─── Activate: clean old caches ───
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activating service worker');
+  console.log('[SW] Activating');
   event.waitUntil(
     Promise.all([
       self.clients.claim(),
-      // Очистка старых кешей
-      caches.keys().then((cacheNames) => {
-        return Promise.all(
-          cacheNames
-            .filter((name) => name !== CACHE_NAME)
-            .map((name) => caches.delete(name))
-        );
-      }),
+      caches.keys().then((keys) =>
+        Promise.all(
+          keys
+            .filter((key) => key !== STATIC_CACHE && key !== RUNTIME_CACHE)
+            .map((key) => caches.delete(key))
+        )
+      ),
     ])
   );
 });
 
-// Обработка push-уведомлений
+// ─── Fetch: network-first with cache fallback ───
+self.addEventListener('fetch', (event) => {
+  const { request } = event;
+  const url = new URL(request.url);
+
+  // Skip non-GET, chrome-extension, and Supabase API calls
+  if (
+    request.method !== 'GET' ||
+    url.protocol === 'chrome-extension:' ||
+    url.hostname.includes('supabase') ||
+    url.pathname.startsWith('/rest/') ||
+    url.pathname.startsWith('/auth/') ||
+    url.pathname.startsWith('/functions/')
+  ) {
+    return;
+  }
+
+  // For navigation requests (HTML pages): network-first, fall back to cached index
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          // Cache the latest version of the page
+          const clone = response.clone();
+          caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, clone));
+          return response;
+        })
+        .catch(() => {
+          return caches.match(request)
+            .then((cached) => cached || caches.match('/'));
+        })
+    );
+    return;
+  }
+
+  // For static assets (JS, CSS, images, fonts): stale-while-revalidate
+  if (
+    url.pathname.match(/\.(js|css|png|jpg|jpeg|svg|webp|woff2?|ttf|ico)$/) ||
+    url.hostname === 'fonts.googleapis.com' ||
+    url.hostname === 'fonts.gstatic.com'
+  ) {
+    event.respondWith(
+      caches.match(request).then((cached) => {
+        const fetchPromise = fetch(request)
+          .then((response) => {
+            if (response.ok) {
+              const clone = response.clone();
+              caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, clone));
+            }
+            return response;
+          })
+          .catch(() => cached);
+
+        return cached || fetchPromise;
+      })
+    );
+    return;
+  }
+});
+
+// ─── Push notifications ───
 self.addEventListener('push', (event) => {
-  console.log('[SW] Push notification received');
-  
+  console.log('[SW] Push received');
+
   try {
     const data = event.data?.json() || {};
     const { title, body, icon, badge, url, tag, data: customData } = data;
 
     const options = {
-      body: body || 'Новое уведомление',
-      icon: icon || '/favicon.ico',
-      badge: badge || '/favicon.ico',
+      body: body || 'Нове повідомлення',
+      icon: icon || '/icon-192x192.png',
+      badge: badge || '/icon-192x192.png',
       tag: tag || 'default',
       data: {
         url: url || '/',
@@ -48,40 +123,32 @@ self.addEventListener('push', (event) => {
     };
 
     event.waitUntil(
-      self.registration.showNotification(title || '📢 Новое сообщение', options)
+      self.registration.showNotification(title || '📢 MicroDAO', options)
     );
   } catch (error) {
-    console.error('[SW] Error processing push notification:', error);
-    
-    // Показываем fallback уведомление
+    console.error('[SW] Push error:', error);
     event.waitUntil(
-      self.registration.showNotification('Новое уведомление', {
-        body: 'У вас новое сообщение',
-        icon: '/favicon.ico',
-        badge: '/favicon.ico',
+      self.registration.showNotification('MicroDAO', {
+        body: 'У вас нове повідомлення',
+        icon: '/icon-192x192.png',
+        badge: '/icon-192x192.png',
       })
     );
   }
 });
 
-// Обработка кликов по уведомлениям
+// ─── Notification click ───
 self.addEventListener('notificationclick', (event) => {
-  console.log('[SW] Notification click received');
-  
   event.notification.close();
-  
   const urlToOpen = event.notification.data?.url || '/';
-  
+
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      // Проверяем, есть ли уже открытое окно
       for (const client of clientList) {
         if (client.url.includes(urlToOpen) && 'focus' in client) {
           return client.focus();
         }
       }
-      
-      // Если нет, открываем новое окно
       if (clients.openWindow) {
         return clients.openWindow(urlToOpen);
       }
@@ -89,18 +156,16 @@ self.addEventListener('notificationclick', (event) => {
   );
 });
 
-// Обработка закрытия уведомлений
-self.addEventListener('notificationclose', (event) => {
-  console.log('[SW] Notification closed');
+// ─── Notification close ───
+self.addEventListener('notificationclose', () => {
+  // Analytics hook if needed
 });
 
-// Обработка сообщений от клиента
+// ─── Messages from client ───
 self.addEventListener('message', (event) => {
-  console.log('[SW] Message received:', event.data);
-  
   if (event.data?.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }
 });
 
-console.log('[SW] Service Worker script loaded');
+console.log('[SW] MicroDAO service worker loaded');
