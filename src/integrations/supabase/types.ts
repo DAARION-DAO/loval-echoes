@@ -762,7 +762,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "messages"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       news_feed: {
