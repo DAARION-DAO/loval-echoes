@@ -491,12 +491,23 @@ npm run tauri build`}</code>
 
       {/* ── Footer ── */}
       <footer className="mt-auto border-t border-border/30 py-10 bg-card/10 backdrop-blur-sm">
-        <div className="container max-w-7xl mx-auto px-4 space-y-3 text-center">
+        <div className="container max-w-7xl mx-auto px-4 space-y-4 text-center">
           <div className="flex items-center justify-center gap-2 mb-4">
-            <div className="bg-gradient-to-br from-primary to-primary/70 text-primary-foreground h-7 w-7 rounded-lg flex items-center justify-center font-bold text-sm">
-              M
-            </div>
+            <img src="/logo.jpg" alt="MicroDAO" className="h-7 w-7 rounded-lg object-cover shadow-sm" />
             <span className="font-semibold text-sm text-foreground/80">MicroDAO</span>
+          </div>
+          <div className="flex items-center justify-center flex-wrap gap-x-4 gap-y-2 text-xs text-muted-foreground">
+            <button onClick={() => navigate('/install')} className="hover:text-foreground transition-colors">
+              DAARION Edge Client
+            </button>
+            <span className="text-border">·</span>
+            <a href="https://github.com/DAARION-DAO/loval-echoes" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">
+              GitHub (MicroDAO Open Source)
+            </a>
+            <span className="text-border">·</span>
+            <a href="https://github.com/DAARION-DAO/daarion-edge-client" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">
+              GitHub (Edge Client)
+            </a>
           </div>
           <div className="text-xs text-muted-foreground">© {new Date().getFullYear()} DAARION.city — Всі права захищено.</div>
           <div className="text-[10px] text-muted-foreground/60">Побудовано для гнучкої координації та живих спільнот.</div>
