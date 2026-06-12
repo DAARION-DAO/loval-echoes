@@ -49,23 +49,24 @@ function extractTextFromPdf(pdfBytes: Uint8Array): string {
   return chunks.join(' ');
 }
 
-// OpenAI embedding generator helper
+// Lovable AI Gateway embedding helper (OpenAI-compatible).
+// Uses text-embedding-3-small => 1536 dims to match vector(1536) column.
 async function generateEmbedding(textChunk: string, apiKey: string): Promise<number[]> {
-  const response = await fetch('https://api.openai.com/v1/embeddings', {
+  const response = await fetch('https://ai.gateway.lovable.dev/v1/embeddings', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: 'text-embedding-3-small',
+      model: 'openai/text-embedding-3-small',
       input: textChunk,
     }),
   });
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(`OpenAI API error: ${JSON.stringify(errorData)}`);
+    throw new Error(`Lovable AI embeddings error (${response.status}): ${JSON.stringify(errorData)}`);
   }
 
   const result = await response.json();
@@ -107,10 +108,10 @@ serve(async (req) => {
 
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
-    const openaiApiKey = Deno.env.get('OPENAI_API_KEY') ?? '';
+    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY') ?? '';
 
-    if (!openaiApiKey) {
-      return new Response(JSON.stringify({ error: 'Missing OPENAI_API_KEY on server' }), {
+    if (!lovableApiKey) {
+      return new Response(JSON.stringify({ error: 'Missing LOVABLE_API_KEY on server' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -206,7 +207,7 @@ serve(async (req) => {
     for (let i = 0; i < chunks.length; i++) {
       const chunkContent = chunks[i];
       try {
-        const embedding = await generateEmbedding(chunkContent, openaiApiKey);
+        const embedding = await generateEmbedding(chunkContent, lovableApiKey);
         chunkInserts.push({
           file_id: file.id,
           folder_id: file.folder_id,
