@@ -442,7 +442,7 @@ export const ChatSidebar = () => {
             {t.nav.meetings}
           </NavLink>
           <NavLink
-            to="/agents"
+            to="/agents/manage"
             className={({ isActive }) => cn(
               "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
               isActive ? "bg-muted" : "hover:bg-muted/50"

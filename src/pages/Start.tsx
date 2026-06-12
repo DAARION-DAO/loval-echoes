@@ -13,6 +13,8 @@ import { usePwaInstall } from '@/hooks/usePwaInstall';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useActiveCommunity } from '@/hooks/useActiveCommunity';
+import { useUserApprovalStatus } from '@/hooks/useUserApprovalStatus';
+
 import {
   Users,
   MessageSquare,
@@ -87,9 +89,14 @@ export function Start() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { memberships, loading: communityLoading, refresh, setActiveCommunityId } = useActiveCommunity();
+  const { accessTier } = useUserApprovalStatus();
   const [submitting, setSubmitting] = useState(false);
   const scrollRef = useScrollReveal();
   const { t, language, setLanguage } = useTranslation();
+  
+  const isOverLimit = (accessTier === 'early_access' && memberships.length >= 1) || 
+                      (accessTier === 'community' && memberships.length >= 3);
+
   const { isInstallable, install } = usePwaInstall();
 
   // Onboarding form state
@@ -163,7 +170,16 @@ export function Start() {
       });
       return;
     }
+    if (isOverLimit) {
+      toast({
+        title: "Доступ обмежено",
+        description: "Ви досягли ліміту створення просторів для вашого рівня доступу. Оновіть рівень доступу.",
+        variant: "destructive"
+      });
+      return;
+    }
     if (!user) return;
+
     setSubmitting(true);
     try {
       const { data: community, error: insErr } = await supabase
@@ -226,80 +242,7 @@ export function Start() {
     );
   }
 
-  /* ─── Onboarding for auth users without community ─── */
-  if (user && memberships.length === 0) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background flex items-center justify-center p-4 sm:p-6 md:p-8">
-        <Card className="w-full max-w-lg border-border/80 bg-card/65 backdrop-blur-md shadow-elegant">
-          <CardHeader className="text-center pb-4 border-b">
-            <div className="flex flex-col items-center text-center mb-2">
-              <Badge className="bg-primary/10 text-primary border-primary/20 text-xs px-2.5 py-0.5 mb-2">
-                ЖОС · Жива операційна система
-              </Badge>
-              <h2 className="text-xl font-bold tracking-tight text-foreground">MicroDAO / Дух Спільноти</h2>
-              <p className="text-xs text-muted-foreground mt-1 max-w-sm leading-relaxed">
-                Жива операційна система для команд, DAO та спільнот. Обʼєднуйте чати, задачі, знання, зустрічі й агентів в одному просторі.
-              </p>
-            </div>
-            <CardTitle className="text-lg font-bold text-foreground mt-4" id="start-space">Створіть свій перший простір</CardTitle>
-            <CardDescription className="text-xs">
-              Налаштуйте робоче середовище для вашої команди або спільноти в MicroDAO
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pt-6">
-            <form onSubmit={handleOnboardingSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="onboarding-comm-name" className="text-sm font-medium">Назва спільноти / команди *</Label>
-                <Input 
-                  id="onboarding-comm-name" 
-                  value={commName}
-                  onChange={(e) => setCommName(e.target.value)}
-                  placeholder="Введіть назву..."
-                  required
-                  className="bg-background/60"
-                />
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="onboarding-comm-type" className="text-sm font-medium">Тип простору</Label>
-                <Select value={commType} onValueChange={(val) => setCommType(val)}>
-                  <SelectTrigger id="onboarding-comm-type" className="bg-background/60">
-                    <SelectValue placeholder="Оберіть тип..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="team">Команда</SelectItem>
-                    <SelectItem value="dao">DAO / Децентралізована спільнота</SelectItem>
-                    <SelectItem value="community">Громадська спільнота</SelectItem>
-                    <SelectItem value="project">Тимчасовий проект</SelectItem>
-                    <SelectItem value="other">Інше</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="onboarding-comm-desc" className="text-sm font-medium">Короткий опис</Label>
-                <Textarea 
-                  id="onboarding-comm-desc"
-                  value={commDesc}
-                  onChange={(e) => setCommDesc(e.target.value)}
-                  placeholder="Опишіть цілі або сферу діяльності вашої спільноти..."
-                  className="min-h-[90px] bg-background/60"
-                />
-              </div>
-
-              <Button type="submit" disabled={submitting} className="w-full flex items-center justify-center gap-2 mt-2 py-4 font-semibold text-base">
-                {submitting ? 'Створення...' : 'Продовжити'}
-                <ArrowRight className="h-5 w-5" />
-              </Button>
-              <p className="text-[11px] text-muted-foreground text-center pt-2 leading-relaxed">
-                Після створення простору ви зможете додати учасників, налаштувати агента, створити чати, задачі, проєкти та базу знань.
-              </p>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   /* ═══════════════════════════════════════════════
    * PUBLIC LANDING PAGE — Premium redesign
@@ -308,26 +251,26 @@ export function Start() {
   const features = [
     {
       icon: MessageSquare,
-      title: "Комунікація",
-      desc: "Групові й персональні чати, треди, голосові повідомлення та прозорий контекст.",
+      title: "Community Agent Chat",
+      desc: "Групові й персональні чати, треди та голосові повідомлення за участі ШІ-агента спільноти.",
       gradient: "from-blue-500/20 to-cyan-500/20",
     },
     {
       icon: CheckSquare,
-      title: "Координація",
-      desc: "Задачі, проєкти, зустрічі, ролі та спільне управління діями.",
+      title: "Autonomous Coordination",
+      desc: "Керування завданнями, проєктами та зустрічами за допомогою інтегрованих ШІ-агентів.",
       gradient: "from-emerald-500/20 to-teal-500/20",
     },
     {
       icon: Brain,
-      title: "Пам'ять",
-      desc: "База знань, файли, рішення, історія та RAG для контексту агентів.",
+      title: "Living Memory (RAG)",
+      desc: "База знань спільноти, файли та рішення з швидким семантичним пошуком для контексту агентів.",
       gradient: "from-violet-500/20 to-purple-500/20",
     },
     {
       icon: Bot,
-      title: "Інтелект",
-      desc: "Агенти спільноти, редактор промптів, Second Me та агентська мережа.",
+      title: "Action Engine & Agents",
+      desc: "ШІ-агенти, редактор промптів, персональні помічники (Second Me) та мережа агентів.",
       gradient: "from-amber-500/20 to-orange-500/20",
     },
   ];
@@ -393,6 +336,12 @@ export function Start() {
               </Button>
             )}
 
+            <Button variant="ghost" size="sm" onClick={() => navigate('/agents')} className="text-xs sm:text-sm font-medium h-9 px-2 sm:px-3">
+              Агенти
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => navigate('/pricing')} className="text-xs sm:text-sm font-medium h-9 px-2 sm:px-3">
+              Тарифи
+            </Button>
             <Button variant="ghost" size="sm" onClick={() => navigate('/install')} className="text-xs sm:text-sm font-medium gap-1.5 h-9 px-2 sm:px-3">
               <Download className="h-4 w-4" />
               <span className="hidden xxs:inline">{t.landing.client}</span>
@@ -444,6 +393,48 @@ export function Start() {
           <p className="text-sm sm:text-base md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed mb-6 sm:mb-10 px-2 sm:px-0">
             {t.landing.heroDesc}
           </p>
+
+          {/* ── Agent-First Pillars Grid ── */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto mt-8 mb-12 text-left">
+            <div className="bg-card/40 backdrop-blur-md border border-amber-500/20 p-5 rounded-2xl space-y-2 relative overflow-hidden group hover:border-amber-500/40 transition-all">
+              <div className="absolute top-0 right-0 p-3 text-amber-500/10 group-hover:text-amber-500/20 transition-colors">
+                <Shield className="h-12 w-12" />
+              </div>
+              <h3 className="font-bold text-lg text-amber-500 flex items-center gap-2">
+                <Shield className="h-5 w-5" />
+                Digital Steward
+              </h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Автономне управління правилами простору, фільтрація та модерація на основі принципів спільноти.
+              </p>
+            </div>
+
+            <div className="bg-card/40 backdrop-blur-md border border-indigo-500/20 p-5 rounded-2xl space-y-2 relative overflow-hidden group hover:border-indigo-500/40 transition-all">
+              <div className="absolute top-0 right-0 p-3 text-indigo-500/10 group-hover:text-indigo-500/20 transition-colors">
+                <Brain className="h-12 w-12" />
+              </div>
+              <h3 className="font-bold text-lg text-indigo-500 flex items-center gap-2">
+                <Brain className="h-5 w-5" />
+                Living Memory
+              </h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Довгострокова пам'ять та семантичне індексування (RAG) документів і переписок для миттєвого пошуку контексту.
+              </p>
+            </div>
+
+            <div className="bg-card/40 backdrop-blur-md border border-emerald-500/20 p-5 rounded-2xl space-y-2 relative overflow-hidden group hover:border-emerald-500/40 transition-all">
+              <div className="absolute top-0 right-0 p-3 text-emerald-500/10 group-hover:text-emerald-500/20 transition-colors">
+                <Workflow className="h-12 w-12" />
+              </div>
+              <h3 className="font-bold text-lg text-emerald-500 flex items-center gap-2">
+                <Workflow className="h-5 w-5" />
+                Coordination Layer
+              </h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Орієнтована на дії мережа ШІ-агентів для автоматизації завдань, ведення канбан-дошок та фасилітації зустрічей.
+              </p>
+            </div>
+          </div>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto sm:max-w-none">
             <Button
@@ -658,61 +649,19 @@ export function Start() {
                 <div className="mx-auto mb-3 h-12 w-12 rounded-2xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-lg landing-glow">
                   <Sparkles className="h-6 w-6 text-primary-foreground" />
                 </div>
-                <CardTitle className="text-xl font-bold">Створіть свій перший простір</CardTitle>
+                <CardTitle className="text-xl font-bold">Створіть своє MicroDAO</CardTitle>
                 <CardDescription className="text-xs">
-                  Налаштуйте робоче середовище для вашої команди або спільноти в MicroDAO.
+                  Запустіть інтерактивне створення простору під керівництвом вашого Духа Спільноти.
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <form onSubmit={handleGuestSubmit} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="comm-name" className="text-sm font-medium">Назва спільноти / команди *</Label>
-                    <Input 
-                      id="comm-name"
-                      value={commName}
-                      onChange={(e) => setCommName(e.target.value)}
-                      placeholder="Наприклад: Моя Крута Команда"
-                      required
-                      className="bg-background/60 h-11"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="comm-type" className="text-sm font-medium">Тип простору</Label>
-                    <Select value={commType} onValueChange={(val) => setCommType(val)}>
-                      <SelectTrigger id="comm-type" className="bg-background/60 h-11">
-                        <SelectValue placeholder="Оберіть тип..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="team">Команда</SelectItem>
-                        <SelectItem value="dao">DAO / Децентралізована спільнота</SelectItem>
-                        <SelectItem value="community">Громадська спільнота</SelectItem>
-                        <SelectItem value="project">Проектна група</SelectItem>
-                        <SelectItem value="other">Інше</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="comm-desc" className="text-sm font-medium">Короткий опис</Label>
-                    <Textarea 
-                      id="comm-desc"
-                      value={commDesc}
-                      onChange={(e) => setCommDesc(e.target.value)}
-                      placeholder="Розкажіть чим займається ваша команда..."
-                      className="min-h-[90px] bg-background/60"
-                    />
-                  </div>
-
-                  <Button type="submit" className="w-full flex items-center justify-center gap-1.5 font-semibold py-5 text-base shadow-md hover:shadow-lg transition-all hover:scale-[1.01] active:scale-[0.99]">
-                    Продовжити
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                  
-                  <p className="text-[11px] text-muted-foreground text-center pt-2 leading-relaxed">
-                    Після створення простору ви зможете додати учасників, налаштувати агента, створити чати, задачі, проєкти та базу знань.
-                  </p>
-                </form>
+              <CardContent className="pt-2 pb-6">
+                <Button 
+                  onClick={() => navigate(user ? '/onboarding' : '/auth?signup=true')} 
+                  className="w-full flex items-center justify-center gap-1.5 font-semibold py-5 text-base shadow-md hover:shadow-lg transition-all hover:scale-[1.01] active:scale-[0.99] bg-gradient-to-r from-primary to-violet-600 hover:from-primary/95 hover:to-violet-500 text-white"
+                >
+                  Створити MicroDAO з Духом Спільноти
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
               </CardContent>
             </Card>
           </div>
@@ -727,16 +676,20 @@ export function Start() {
             <span className="font-semibold text-sm text-foreground/80">MicroDAO</span>
           </div>
           <div className="flex items-center justify-center flex-wrap gap-x-4 gap-y-2 text-xs text-muted-foreground">
+            <button onClick={() => navigate('/agents')} className="hover:text-foreground transition-colors">
+              AI Agents Directory
+            </button>
+            <span className="text-border">·</span>
+            <button onClick={() => navigate('/pricing')} className="hover:text-foreground transition-colors">
+              Pricing Plans
+            </button>
+            <span className="text-border">·</span>
             <button onClick={() => navigate('/install')} className="hover:text-foreground transition-colors">
               DAARION Edge Client
             </button>
             <span className="text-border">·</span>
             <a href="https://github.com/DAARION-DAO/loval-echoes" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">
               GitHub (MicroDAO Open Source)
-            </a>
-            <span className="text-border">·</span>
-            <a href="https://github.com/DAARION-DAO/daarion-edge-client" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">
-              GitHub (Edge Client Open Source)
             </a>
           </div>
           <div className="text-xs text-muted-foreground flex items-center justify-center gap-1.5 flex-wrap">

@@ -1,10 +1,25 @@
-# Tasks: Prompt Editor, Mobile Responsive Shell, Start & Onboarding
+# Tasks: MicroDAO Sprint B — Agent First Foundation
 
-- [x] Create Prompt Editor Page ([PromptEditor.tsx](file:///Users/apple/github-projects/loval-echoes/src/pages/PromptEditor.tsx)) with version management, active indicators, and Ukrainian labels.
-- [x] Map prompts routing (`/prompts`, `/prompt-editor`) in [App.tsx](file:///Users/apple/github-projects/loval-echoes/src/App.tsx).
-- [x] Add Prompt Editor navigation link and icon (`TerminalSquare`) to [ChatSidebar.tsx](file:///Users/apple/github-projects/loval-echoes/src/components/ChatSidebar.tsx).
-- [x] Create Start/Landing Page and Onboarding Flow ([Start.tsx](file:///Users/apple/github-projects/loval-echoes/src/pages/Start.tsx)) with guest draft persistence and user space creation.
-- [x] Update App routing in [App.tsx](file:///Users/apple/github-projects/loval-echoes/src/App.tsx) to handle dynamic root `/` rendering (Landing for guests, Onboarding for new users, dashboard redirect for authenticated users).
-- [x] Implement Mobile Responsive optimizations in [Layout.tsx](file:///Users/apple/github-projects/loval-echoes/src/components/Layout.tsx) (slide-out drawer via Radix Sheet, bottom navigation bar, simplified header, and "More" actions menu).
-- [x] Make [CommunityNewsFeed.tsx](file:///Users/apple/github-projects/loval-echoes/src/components/CommunityNewsFeed.tsx) and [NewIndex.tsx](file:///Users/apple/github-projects/loval-echoes/src/pages/NewIndex.tsx) responsive on mobile, avoiding overflow and wrapping buttons.
-- [x] Verify project builds successfully with `npm run build`.
+- `[x]` **Task 1: Waitlist & Founder Program Registration**
+  - `[x]` Modify `AuthForm.tsx` to close public signup and replace with Waitlist & Founder application form
+  - `[x]` Support immediate signup bypass via Founder Access Code (e.g. `FOUNDER90`)
+- `[x]` **Task 2: Database Migration for Trial Tracking**
+  - `[x]` Create SQL migration to add trial start and end fields to profiles
+  - `[x]` Set up auto-initialization for 90 days trial upon profile approval
+- `[x]` **Task 3: Gate Access & Redirect Pending Users**
+  - `[x]` Update `App.tsx` routing to check profile approval status
+  - `[x]` Redirect pending/waitlisted users to `PendingApprovalPage`
+- `[x]` **Task 4: Landing Page Hero & Copy Redesign**
+  - `[x]` Redesign `Start.tsx` Hero section with agent-first branding
+  - `[x]` Replace generic terms with agent-powered definitions
+- `[x]` **Task 5: Pricing Page**
+  - `[x]` Create `src/pages/Pricing.tsx` with trial, founder, and sovereign pricing tiers
+  - `[x]` Integrate route `/pricing` in `App.tsx`
+- `[x]` **Task 6: Agent Directory Page**
+  - `[x]` Create `src/pages/AgentDirectory.tsx` displaying available agent profiles (Steward, RAG, Task, etc.)
+  - `[x]` Integrate route `/agents` in `App.tsx` (overwriting the basic agent page)
+- `[x]` **Task 7: Edge Client Install Page & Footers**
+  - `[x]` Update `Install.tsx` with Tauri client local layers
+  - `[x]` Update footers to link to client install and GitHub repos
+- `[x]` **Task 8: Production Verification**
+  - `[x]` Run build checks and type checks

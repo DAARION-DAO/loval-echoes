@@ -1,7 +1,9 @@
 import { ReactNode } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSessionRecovery } from '@/hooks/useSessionRecovery';
+import { useUserApprovalStatus } from '@/hooks/useUserApprovalStatus';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { Navigate } from 'react-router-dom';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -9,11 +11,12 @@ interface ProtectedRouteProps {
 
 export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const { user, loading: authLoading } = useAuth();
+  const { approvalStatus, isApproved } = useUserApprovalStatus();
 
   // Initialize session recovery
   useSessionRecovery();
 
-  if (authLoading) {
+  if (authLoading || approvalStatus === 'loading') {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <LoadingSpinner />
@@ -22,11 +25,11 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   }
 
   if (!user) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <LoadingSpinner />
-      </div>
-    );
+    return <Navigate to="/auth" replace />;
+  }
+
+  if (!isApproved) {
+    return <Navigate to="/waitlist" replace />;
   }
 
   return <>{children}</>;

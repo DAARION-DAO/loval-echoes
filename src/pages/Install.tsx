@@ -182,6 +182,12 @@ export function Install() {
           </div>
 
           <div className="flex items-center gap-1.5 sm:gap-3">
+            <Button variant="ghost" size="sm" onClick={() => navigate('/agents')} className="text-xs sm:text-sm font-medium h-9 px-2 sm:px-3">
+              Агенти
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => navigate('/pricing')} className="text-xs sm:text-sm font-medium h-9 px-2 sm:px-3">
+              Тарифи
+            </Button>
             {/* Language Selector */}
             <Select value={language} onValueChange={(value) => setLanguage(value as Language)}>
               <SelectTrigger className="h-9 w-[70px] sm:w-[90px] bg-background/50 border-border/30 px-2">
@@ -528,16 +534,20 @@ npm run tauri build`}</code>
             <span className="font-semibold text-sm text-foreground/80">MicroDAO</span>
           </div>
           <div className="flex items-center justify-center flex-wrap gap-x-4 gap-y-2 text-xs text-muted-foreground">
-            <button onClick={() => navigate('/install')} className="hover:text-foreground transition-colors">
+            <button onClick={() => navigate('/agents')} className="hover:text-foreground transition-colors">
+              AI Agents Directory
+            </button>
+            <span className="text-border">·</span>
+            <button onClick={() => navigate('/pricing')} className="hover:text-foreground transition-colors">
+              Pricing Plans
+            </button>
+            <span className="text-border">·</span>
+            <button onClick={() => navigate('/install')} className="hover:text-foreground transition-colors text-foreground">
               DAARION Edge Client
             </button>
             <span className="text-border">·</span>
             <a href="https://github.com/DAARION-DAO/loval-echoes" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">
               GitHub (MicroDAO Open Source)
-            </a>
-            <span className="text-border">·</span>
-            <a href="https://github.com/DAARION-DAO/daarion-edge-client" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">
-              GitHub (Edge Client Open Source)
             </a>
           </div>
           <div className="text-xs text-muted-foreground flex items-center justify-center gap-1.5 flex-wrap">

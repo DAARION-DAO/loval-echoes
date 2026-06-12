@@ -32,20 +32,26 @@ const Agents = lazy(() => import("./pages/Agents"));
 const Integrations = lazy(() => import("./pages/Integrations"));
 const PromptEditor = lazy(() => import("./pages/PromptEditor").then(m => ({ default: m.PromptEditor })));
 const Install = lazy(() => import("./pages/Install"));
+const Pricing = lazy(() => import("./pages/Pricing"));
+const AgentDirectory = lazy(() => import("./pages/AgentDirectory"));
+const MicroDAOOnboarding = lazy(() => import("./pages/MicroDAOOnboarding"));
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { Layout } from "./components/Layout";
 import { useSessionTimeout } from "./hooks/useSessionTimeout";
+import { useUserApprovalStatus } from "@/hooks/useUserApprovalStatus";
+import { PendingApprovalPage } from "@/components/PendingApprovalPage";
 
 const queryClient = new QueryClient();
 
 const PublicStartRoute = () => {
   const { user, loading } = useAuth();
+  const { approvalStatus } = useUserApprovalStatus();
   const { loading: commLoading, memberships } = useActiveCommunity();
 
-  if (loading || (user && commLoading)) {
+  if (loading || approvalStatus === 'loading' || (user && commLoading)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <LoadingSpinner size="lg" text="Загрузка..." />
+        <LoadingSpinner size="lg" text="Завантаження..." />
       </div>
     );
   }
@@ -54,8 +60,12 @@ const PublicStartRoute = () => {
     return <Start />; // Public Landing
   }
 
+  if (approvalStatus !== 'approved') {
+    return <Navigate to="/waitlist" replace />;
+  }
+
   if (memberships.length === 0) {
-    return <Start />; // Onboarding
+    return <Navigate to="/onboarding" replace />;
   }
 
   // Logged in and has community -> go to dashboard
@@ -64,13 +74,14 @@ const PublicStartRoute = () => {
 
 const ProtectedLayout = () => {
   const { user, loading } = useAuth();
+  const { approvalStatus } = useUserApprovalStatus();
   useSessionTimeout();
   const { loading: commLoading, memberships } = useActiveCommunity();
 
-  if (loading || (user && commLoading)) {
+  if (loading || approvalStatus === 'loading' || (user && commLoading)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <LoadingSpinner size="lg" text="Загрузка..." />
+        <LoadingSpinner size="lg" text="Завантаження..." />
       </div>
     );
   }
@@ -79,14 +90,18 @@ const ProtectedLayout = () => {
     return <Navigate to="/auth" replace />;
   }
 
+  if (approvalStatus !== 'approved') {
+    return <Navigate to="/waitlist" replace />;
+  }
+
   if (memberships.length === 0) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/onboarding" replace />;
   }
 
   return (
     <Layout sidebar={<ChatSidebar />}>
       <ProtectedRoute>
-        <Suspense fallback={<LoadingSpinner size="lg" text="Загрузка..." />}>
+        <Suspense fallback={<LoadingSpinner size="lg" text="Завантаження..." />}>
           <Routes>
             <Route path="/dashboard" element={<NewIndex />} />
             <Route path="/chats" element={<ChatsPage />} />
@@ -101,7 +116,7 @@ const ProtectedLayout = () => {
             <Route path="/knowledge-base" element={<KnowledgeBase />} />
             <Route path="/projects/:projectId/knowledge-base" element={<KnowledgeBase />} />
             <Route path="/my/tasks" element={<MyTasks />} />
-            <Route path="/agents" element={<Agents />} />
+            <Route path="/agents/manage" element={<Agents />} />
             <Route path="/integrations" element={<Integrations />} />
             <Route path="/prompts" element={<PromptEditor />} />
             <Route path="/prompt-editor" element={<PromptEditor />} />
@@ -119,7 +134,7 @@ const PublicRoutes = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <LoadingSpinner size="lg" text="Загрузка..." />
+        <LoadingSpinner size="lg" text="Завантаження..." />
       </div>
     );
   }
@@ -129,6 +144,29 @@ const PublicRoutes = () => {
   }
 
   return <Auth />;
+};
+
+const WaitlistRoute = () => {
+  const { user, loading } = useAuth();
+  const { approvalStatus } = useUserApprovalStatus();
+
+  if (loading || approvalStatus === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <LoadingSpinner size="lg" text="Завантаження..." />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
+
+  if (approvalStatus === 'approved') {
+    return <Navigate to="/" replace />;
+  }
+
+  return <PendingApprovalPage />;
 };
 
 const App = () => (
@@ -142,9 +180,13 @@ const App = () => (
             <ActiveCommunityProvider>
               <Routes>
                 <Route path="/" element={<PublicStartRoute />} />
-                <Route path="/install" element={<Suspense fallback={<LoadingSpinner size="lg" text="Загрузка..." />}><Install /></Suspense>} />
+                <Route path="/install" element={<Suspense fallback={<LoadingSpinner size="lg" text="Завантаження..." />}><Install /></Suspense>} />
                 <Route path="/auth" element={<PublicRoutes />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/waitlist" element={<WaitlistRoute />} />
+                <Route path="/pricing" element={<Suspense fallback={<LoadingSpinner size="lg" text="Завантаження..." />}><Pricing /></Suspense>} />
+                <Route path="/agents" element={<Suspense fallback={<LoadingSpinner size="lg" text="Завантаження..." />}><AgentDirectory /></Suspense>} />
+                <Route path="/onboarding" element={<Suspense fallback={<LoadingSpinner size="lg" text="Завантаження..." />}><MicroDAOOnboarding /></Suspense>} />
                 <Route path="/*" element={<ProtectedLayout />} />
               </Routes>
             </ActiveCommunityProvider>

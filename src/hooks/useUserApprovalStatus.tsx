@@ -7,6 +7,7 @@ type ApprovalStatus = 'approved' | 'pending' | 'rejected' | 'loading';
 export const useUserApprovalStatus = () => {
   const { user, loading: authLoading } = useAuth();
   const [approvalStatus, setApprovalStatus] = useState<ApprovalStatus>('loading');
+  const [accessTier, setAccessTier] = useState<string | null>(null);
 
   useEffect(() => {
     if (authLoading || !user) {
@@ -18,11 +19,11 @@ export const useUserApprovalStatus = () => {
       try {
         console.log('🔍 Checking approval status for user:', user.id);
         
-        const { data, error } = await supabase
+        const { data, error } = await (supabase
           .from('profiles')
-          .select('approval_status')
+          .select('approval_status, access_tier')
           .eq('user_id', user.id)
-          .maybeSingle();
+          .maybeSingle() as any);
 
         if (error) {
           console.error('❌ Error checking approval status:', error);
@@ -42,7 +43,8 @@ export const useUserApprovalStatus = () => {
                            user.user_metadata?.full_name || 
                            user.email?.split('@')[0] || 
                            'Пользователь',
-              approval_status: 'pending'
+              approval_status: 'pending',
+              access_tier: 'early_access'
             });
 
           if (insertError && !insertError.message.includes('duplicate key')) {
@@ -56,6 +58,7 @@ export const useUserApprovalStatus = () => {
         const status = data.approval_status as ApprovalStatus;
         console.log(`✅ User approval status: ${status} for user ${user.id}`);
         setApprovalStatus(status);
+        setAccessTier(data.access_tier || 'early_access');
         
       } catch (error) {
         console.error('❌ Unexpected error checking approval status:', error);
@@ -79,6 +82,7 @@ export const useUserApprovalStatus = () => {
           const newStatus = payload.new.approval_status as ApprovalStatus;
           console.log(`🔄 Real-time update: User ${user.id} status changed to ${newStatus}`);
           setApprovalStatus(newStatus);
+          setAccessTier(payload.new.access_tier || 'early_access');
         }
       )
       .subscribe();
@@ -88,5 +92,9 @@ export const useUserApprovalStatus = () => {
     };
   }, [user, authLoading]);
 
-  return { approvalStatus, isApproved: approvalStatus === 'approved' };
+  return { 
+    approvalStatus, 
+    isApproved: approvalStatus === 'approved', 
+    accessTier 
+  };
 };

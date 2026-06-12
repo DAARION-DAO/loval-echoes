@@ -11,6 +11,8 @@ import { useTranslation } from '@/lib/i18n';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useRememberMe } from '@/hooks/useRememberMe';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 
 export const AuthForm = () => {
@@ -33,7 +35,11 @@ export const AuthForm = () => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    displayName: ''
+    displayName: '',
+    useCase: '',
+    founderCode: '',
+    communityName: '',
+    communityType: 'team'
   });
 
   // Initialize form with saved email if remembered
@@ -118,7 +124,7 @@ export const AuthForm = () => {
     if (!formData.email || !formData.password) {
       toast({
         title: t.error,
-        description: 'Пожалуйста, заполните все поля',
+        description: 'Будь ласка, заповніть усі обов\'язкові поля',
         variant: 'destructive',
       });
       return;
@@ -492,50 +498,50 @@ export const AuthForm = () => {
 
         <Card className="shadow-elegant">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold">ЖОС Мессенджер</CardTitle>
+            <CardTitle className="text-2xl font-bold">MicroDAO</CardTitle>
             <CardDescription>
-              Добро пожаловать в сообщество живой операционной системы
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="signin" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="signin">Вход</TabsTrigger>
-              <TabsTrigger value="signup">Регистрация</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="signin">
-              <form onSubmit={handleSignIn} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="введите ваш email"
-                    value={formData.email}
-                    onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password">Пароль</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="введите пароль"
-                    value={formData.password}
-                    onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                    required
-                  />
-                </div>
-                
-                <p className="text-xs text-muted-foreground text-center">
-                  🔒 Цей пристрій буде запам'ятовано. Вхід потрібен лише після виходу.
-                </p>
+              Community Agent Operating System
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Tabs defaultValue="signin" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="signin">{t.auth.signIn}</TabsTrigger>
+                <TabsTrigger value="signup">{t.auth.signUp}</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="signin">
+                <form onSubmit={handleSignIn} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="email">{t.auth.email}</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder={t.auth.emailPlaceholder}
+                      value={formData.email}
+                      onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="password">{t.auth.password}</Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      placeholder={t.auth.passwordPlaceholder}
+                      value={formData.password}
+                      onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                      required
+                    />
+                  </div>
+                  
+                  <p className="text-xs text-muted-foreground text-center">
+                    🔒 Цей пристрій буде запам'ятовано. Вхід потрібен лише після виходу.
+                  </p>
 
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? 'Вход...' : 'Войти'}
-                </Button>
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? `${t.loading}` : t.auth.loginBtn}
+                  </Button>
                 
                 <div className="mt-4 flex justify-center">
                   <Button 
@@ -602,41 +608,49 @@ export const AuthForm = () => {
             
             <TabsContent value="signup">
               <form onSubmit={handleSignUp} className="space-y-4">
+                <div className="rounded-lg bg-accent/10 border border-accent/20 p-3 text-center mb-2">
+                  <p className="text-xs text-muted-foreground">
+                    MicroDAO зараз знаходиться в режимі обмеженого тестування. Подайте заявку, щоб отримати ранній доступ.
+                  </p>
+                </div>
+
                 <div className="space-y-2">
-                  <Label htmlFor="display-name">Имя для отображения</Label>
+                  <Label htmlFor="display-name">{t.auth.displayName}</Label>
                   <Input
                     id="display-name"
                     type="text"
-                    placeholder="как вас называть в чате"
+                    placeholder={t.auth.displayNamePlaceholder}
                     value={formData.displayName}
                     onChange={(e) => setFormData(prev => ({ ...prev, displayName: e.target.value }))}
+                    required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
+                  <Label htmlFor="signup-email">{t.auth.email}</Label>
                   <Input
                     id="signup-email"
                     type="email"
-                    placeholder="введите ваш email"
+                    placeholder={t.auth.emailPlaceholder}
                     value={formData.email}
                     onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signup-password">Пароль</Label>
+                  <Label htmlFor="signup-password">{t.auth.password}</Label>
                   <Input
                     id="signup-password"
                     type="password"
-                    placeholder="придумайте пароль (мин. 6 символов)"
+                    placeholder={t.auth.passwordPlaceholder}
                     value={formData.password}
                     onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
                     minLength={6}
                     required
                   />
                 </div>
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? 'Регистрация...' : 'Зарегистрироваться'}
+                
+                <Button type="submit" className="w-full mt-6 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold">
+                  {loading ? t.loading : "Зареєструватися"}
                 </Button>
               </form>
             </TabsContent>

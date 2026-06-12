@@ -10,7 +10,13 @@ import {
   Upload, 
   Search,
   User,
-  Settings
+  Settings,
+  Bot,
+  Zap,
+  UserPlus,
+  Layers,
+  MessageSquare,
+  Sparkles
 } from 'lucide-react';
 import { PrinciplesBanner } from '@/components/PrinciplesBanner';
 import { CreateModal, CreateFormData } from '@/components/CreateModal';
@@ -19,6 +25,8 @@ import { VideoIntro } from '@/components/VideoIntro';
 import { UserApprovalPanel } from '@/components/UserApprovalPanel';
 import { CommunityNewsFeed } from '@/components/CommunityNewsFeed';
 import { NewsNotificationsPopover } from '@/components/NewsNotificationsPopover';
+import { Badge } from '@/components/ui/badge';
+import { useActiveCommunity } from '@/hooks/useActiveCommunity';
 import { useTranslation } from '@/lib/i18n';
 import { useAuth } from '@/hooks/useAuth';
 import { useCommunityStats } from '@/hooks/useCommunityStats';
@@ -36,6 +44,45 @@ export const NewIndex = () => {
   const [searchDialogOpen, setSearchDialogOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [showVideoIntro, setShowVideoIntro] = useState(true);
+  
+  const { activeCommunity, activeCommunityId, refresh: refreshCommunity } = useActiveCommunity();
+  const [spiritAgent, setSpiritAgent] = useState<any>(null);
+  const [agentPerms, setAgentPerms] = useState<any>(null);
+  const [loadingAgent, setLoadingAgent] = useState(false);
+
+  useEffect(() => {
+    const fetchSpiritAgent = async () => {
+      if (!activeCommunityId) return;
+      setLoadingAgent(true);
+      try {
+        const { data, error } = await supabase
+          .from('agents')
+          .select('*')
+          .eq('community_id', activeCommunityId)
+          .eq('agent_type', 'community_spirit')
+          .maybeSingle();
+
+        if (!error && data) {
+          setSpiritAgent(data);
+          
+          const { data: pData } = await supabase
+            .from('agent_permissions')
+            .select('*')
+            .eq('agent_id', data.id)
+            .maybeSingle();
+          if (pData) setAgentPerms(pData);
+        } else {
+          setSpiritAgent(null);
+          setAgentPerms(null);
+        }
+      } catch (err) {
+        console.error('Error fetching spirit agent:', err);
+      } finally {
+        setLoadingAgent(false);
+      }
+    };
+    fetchSpiritAgent();
+  }, [activeCommunityId]);
   
   // Initialize push notifications (will auto-request permission)
   usePushNotifications();
@@ -189,6 +236,121 @@ export const NewIndex = () => {
             {t.dashboard.welcomeDesc}
           </p>
         </div>
+
+        {/* Community Spirit Agent Card */}
+        {activeCommunityId && (
+          <Card className="border-indigo-500/30 bg-indigo-950/5 backdrop-blur-md shadow-elegant relative overflow-hidden group text-left">
+            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+              <Sparkles className="h-32 w-32 text-indigo-400 rotate-12" />
+            </div>
+            <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
+              <div className="flex items-center gap-3">
+                <div className="h-12 w-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center relative">
+                  <Bot className="h-6 w-6 text-indigo-400 animate-pulse" />
+                  <div className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 border-2 border-background" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg font-bold text-slate-100 flex items-center gap-2">
+                    <span>{spiritAgent ? spiritAgent.name : "Дух Спільноти"}</span>
+                    <span className="px-2 py-0.5 text-[9px] font-semibold rounded bg-green-500/10 text-green-400 border border-green-500/20 uppercase tracking-wider">активний</span>
+                  </CardTitle>
+                  <CardDescription className="text-xs text-indigo-300 font-medium tracking-wide">
+                    Головний AI Організатор • {spiritAgent?.personality?.autonomy_level === 'supervised_admin' ? 'Супервізований Адмін' : spiritAgent?.personality?.autonomy_level === 'coordinator' ? 'Координатор' : 'Асистент'}
+                  </CardDescription>
+                </div>
+              </div>
+              <Badge variant="outline" className="bg-indigo-500/5 text-indigo-300 border-indigo-500/20 text-[10px] py-1 px-2.5">
+                Дух MicroDAO
+              </Badge>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {spiritAgent ? (
+                <div className="space-y-3">
+                  <div className="text-xs text-slate-300 leading-relaxed bg-slate-950/40 p-3 rounded-lg border border-slate-900">
+                    <span className="font-semibold text-slate-200">Місія памʼяті:</span> {spiritAgent.personality?.mission || "Збереження колективного розуму та координація цілей спільноти."}
+                  </div>
+                  {spiritAgent.personality?.goal_30_days && (
+                    <div className="text-xs text-slate-400">
+                      <span className="font-medium text-slate-300">Ціль на 30 днів:</span> {spiritAgent.personality.goal_30_days}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-xs text-slate-400">
+                  Дух Спільноти готовий до налаштування. Спільнота працює в автономному режимі.
+                </div>
+              )}
+
+              <div className="pt-2 border-t border-slate-800/60">
+                <div className="text-xs font-semibold text-slate-400 mb-2">Швидкі дії Агента:</div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => {
+                      navigate('/chats');
+                      toast({ title: "Діалог з Агентом", description: "Дух Спільноти підключається до вашого чату..." });
+                    }}
+                    className="text-xs border-slate-800 bg-slate-950/20 hover:bg-slate-900 text-slate-300 gap-1.5 h-9"
+                  >
+                    <MessageSquare className="h-3.5 w-3.5 text-indigo-400" />
+                    <span>Поговорити</span>
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => toast({ title: "Підсумок роботи", description: "Дух Спільноти аналізує базу знань та повідомлення для підсумку." })}
+                    className="text-xs border-slate-800 bg-slate-950/20 hover:bg-slate-900 text-slate-300 gap-1.5 h-9"
+                  >
+                    <Sparkles className="h-3.5 w-3.5 text-indigo-400" />
+                    <span>Підсумувати</span>
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => {
+                      navigate('/settings');
+                      toast({ title: "Коди доступу", description: "Створення та керування запрошеннями до MicroDAO." });
+                    }}
+                    className="text-xs border-slate-800 bg-slate-950/20 hover:bg-slate-900 text-slate-300 gap-1.5 h-9"
+                  >
+                    <UserPlus className="h-3.5 w-3.5 text-indigo-400" />
+                    <span>Запрошення</span>
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => {
+                      setCreateModalOpen(true);
+                    }}
+                    className="text-xs border-slate-800 bg-slate-950/20 hover:bg-slate-900 text-slate-300 gap-1.5 h-9"
+                  >
+                    <FolderPlus className="h-3.5 w-3.5 text-indigo-400" />
+                    <span>Створити задачу</span>
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => toast({ title: "Аналіз правил", description: "Агент готує оновлений регламент на основі культури спілкування." })}
+                    className="text-xs border-slate-800 bg-slate-950/20 hover:bg-slate-900 text-slate-300 gap-1.5 h-9"
+                  >
+                    <Layers className="h-3.5 w-3.5 text-indigo-400" />
+                    <span>Правила</span>
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => toast({ title: "Планування", description: "Аналіз завдань та формування тижневого спринту." })}
+                    className="text-xs border-slate-800 bg-slate-950/20 hover:bg-slate-900 text-slate-300 gap-1.5 h-9"
+                  >
+                    <Zap className="h-3.5 w-3.5 text-indigo-400 animate-bounce" style={{ animationDuration: '3s' }} />
+                    <span>Запланувати тиждень</span>
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Quick Actions */}
         <div className="space-y-3">

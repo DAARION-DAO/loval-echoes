@@ -289,6 +289,27 @@ export interface Translations {
     chunkOverlap: string;
     indexAction: string;
   };
+  auth: {
+    signIn: string;
+    signUp: string;
+    displayName: string;
+    displayNamePlaceholder: string;
+    email: string;
+    emailPlaceholder: string;
+    password: string;
+    passwordPlaceholder: string;
+    useCase: string;
+    useCasePlaceholder: string;
+    founderCode: string;
+    founderCodePlaceholder: string;
+    founderCodeHelper: string;
+    submitApplication: string;
+    submitFounder: string;
+    loginBtn: string;
+    communityName: string;
+    communityNamePlaceholder: string;
+    communityType: string;
+  };
 }
 
 const translations: Record<Language, Translations> = {
@@ -461,15 +482,15 @@ const translations: Record<Language, Translations> = {
       showDetails: 'Показати деталі',
     },
     landing: {
-      heroTitle: 'MicroDAO',
-      heroSubtitle: 'Дух Спільноти',
-      heroDesc: 'Жива операційна система для команд, DAO та спільнот. Чати, задачі, знання, зустрічі й агенти — в одному просторі для спільної дії.',
+      heroTitle: 'MicroDAO / Дух Спільноти',
+      heroSubtitle: 'Агентська жива операційна система для невеликих спільнот',
+      heroDesc: 'Спільний простір, що обʼєднує чати, задачі та базу знань із мережею автономних ШІ-агентів. Living Memory структурує памʼять екосистеми, а агент координації допомагає автоматизувати роботу та приймати спільні рішення.',
       createSpace: 'Створити простір',
       login: 'Увійти',
       client: 'Клієнт',
       installPwa: 'Встановити застосунок',
       whatIsMicroDAO: 'Що таке MicroDAO?',
-      whatIsMicroDAODesc: 'MicroDAO — це автономний цифровий простір спільноти, де комунікація, задачі, знання, зустрічі та агенти працюють як єдина система. Кожна спільнота може мати власні правила, памʼять, учасників і агентів.',
+      whatIsMicroDAODesc: 'MicroDAO — це жива операційна система для невеликих спільнот, побудована навколо агентів штучного інтелекту. Вона інтегрує агентів пам\'яті та координації з вашою базою знань та задачами. Платформа забезпечує запуск приватних агентів, містить інтегрований microDAO token layer на roadmap для майбутньої токенізації та підтримує запуск через пов\'язаний open-source проєкт DAARION Edge Client.',
       featuresTitle: 'Функціонал MicroDAO',
     },
     success: 'Успіх',
@@ -561,6 +582,27 @@ const translations: Record<Language, Translations> = {
       chunkSize: 'Розмір чанку',
       chunkOverlap: 'Перекриття',
       indexAction: 'Індексувати',
+    },
+    auth: {
+      signIn: 'Вхід',
+      signUp: 'Ранній доступ',
+      displayName: 'Ім\'я для відображення',
+      displayNamePlaceholder: 'як вас називати в чаті',
+      email: 'Email',
+      emailPlaceholder: 'введіть ваш email',
+      password: 'Пароль',
+      passwordPlaceholder: 'введіть пароль',
+      useCase: 'Ваш сценарій використання',
+      useCasePlaceholder: 'опишіть, як ви плануєте використовувати MicroDAO...',
+      founderCode: 'Код запрошення',
+      founderCodePlaceholder: 'введіть код запрошення (за наявності)',
+      founderCodeHelper: 'Якщо у вас є код запрошення, система зможе активувати доступ після перевірки коду. Якщо коду немає — заявка потрапить у список очікування.',
+      submitApplication: 'Подати заявку',
+      submitFounder: 'Перевірити код і подати заявку',
+      loginBtn: 'Увійти',
+      communityName: 'Назва спільноти / команди',
+      communityNamePlaceholder: 'введіть назву простору',
+      communityType: 'Тип спільноти',
     },
   },
 
@@ -733,15 +775,15 @@ const translations: Record<Language, Translations> = {
       showDetails: 'Show details',
     },
     landing: {
-      heroTitle: 'MicroDAO',
-      heroSubtitle: 'Spirit of Community',
-      heroDesc: 'A living operating system for teams, DAOs, and communities. Chats, tasks, knowledge, meetings, and agents — all in one space for collective action.',
+      heroTitle: 'MicroDAO / Community Spirit',
+      heroSubtitle: 'Agentic Living Operating System for Small Communities',
+      heroDesc: 'A shared workspace integrating chats, tasks, and knowledge bases with a network of autonomous AI agents. Living Memory structures collective memory, while the coordination agent automates tasks and facilitates team decisions.',
       createSpace: 'Create Space',
       login: 'Log In',
       client: 'Client',
       installPwa: 'Install App',
       whatIsMicroDAO: 'What is MicroDAO?',
-      whatIsMicroDAODesc: 'MicroDAO is an autonomous digital space for communities, where communication, tasks, knowledge, meetings, and agents work as a unified system. Each community can have its own rules, memory, members, and agents.',
+      whatIsMicroDAODesc: 'MicroDAO is a living operating system for small communities built around AI agents. It integrates memory and coordination agents with your knowledge base and tasks. The platform supports private agent deployment, features an integrated microDAO token layer on the roadmap for future tokenization, and supports local deployment via the related open-source DAARION Edge Client project.',
       featuresTitle: 'MicroDAO Features',
     },
     success: 'Success',
@@ -833,6 +875,27 @@ const translations: Record<Language, Translations> = {
       chunkSize: 'Chunk size',
       chunkOverlap: 'Overlap',
       indexAction: 'Index',
+    },
+    auth: {
+      signIn: 'Sign In',
+      signUp: 'Early Access',
+      displayName: 'Display Name',
+      displayNamePlaceholder: 'how to call you in chat',
+      email: 'Email',
+      emailPlaceholder: 'enter your email',
+      password: 'Password',
+      passwordPlaceholder: 'enter password',
+      useCase: 'Your Use Case',
+      useCasePlaceholder: 'describe how you plan to use MicroDAO...',
+      founderCode: 'Invitation Code',
+      founderCodePlaceholder: 'enter invitation code (if any)',
+      founderCodeHelper: 'If you have an invitation code, the system will activate access after verification. If you do not have a code, your application will join the waitlist.',
+      submitApplication: 'Submit Application',
+      submitFounder: 'Verify code and submit application',
+      loginBtn: 'Sign In',
+      communityName: 'Community / Team Name',
+      communityNamePlaceholder: 'enter workspace name',
+      communityType: 'Community Type',
     },
   },
 
@@ -1005,15 +1068,15 @@ const translations: Record<Language, Translations> = {
       showDetails: 'Показать детали',
     },
     landing: {
-      heroTitle: 'MicroDAO',
-      heroSubtitle: 'Дух Сообщества',
-      heroDesc: 'Живая операционная система для команд, DAO и сообществ. Чаты, задачи, знания, встречи и агенты — в одном пространстве для совместных действий.',
+      heroTitle: 'MicroDAO / Дух Сообщества',
+      heroSubtitle: 'Агентская живая операционная система для небольших сообществ',
+      heroDesc: 'Совместное пространство, объединяющее чаты, задачи и базу знаний с сетью автономных ИИ-агентов. Living Memory структурирует общую память, а агент координации автоматизирует процессы.',
       createSpace: 'Создать пространство',
       login: 'Войти',
       client: 'Клиент',
       installPwa: 'Установить приложение',
       whatIsMicroDAO: 'Что такое MicroDAO?',
-      whatIsMicroDAODesc: 'MicroDAO — это автономное цифровое пространство сообщества, где коммуникация, задачи, знания, встречи и агенты работают как единая система. Каждое сообщество может иметь свои правила, память, участников и агентов.',
+      whatIsMicroDAODesc: 'MicroDAO — это живая операционная система для небольших сообществ, построенная вокруг агентов искусственного интеллекта. Она интегрирует агентов памяти и координации с вашей базой знаний и задачами. Платформа обеспечивает запуск приватных агентов, содержит интегрированный microDAO token layer в roadmap для будущей токенизации и поддерживает запуск через связанный open-source проект DAARION Edge Client.',
       featuresTitle: 'Функционал MicroDAO',
     },
     success: 'Успех',
@@ -1105,6 +1168,27 @@ const translations: Record<Language, Translations> = {
       chunkSize: 'Размер чанка',
       chunkOverlap: 'Перекрытие',
       indexAction: 'Индексировать',
+    },
+    auth: {
+      signIn: 'Вход',
+      signUp: 'Ранний доступ',
+      displayName: 'Имя для отображения',
+      displayNamePlaceholder: 'как вас называть в чате',
+      email: 'Email',
+      emailPlaceholder: 'введите ваш email',
+      password: 'Пароль',
+      passwordPlaceholder: 'введите пароль',
+      useCase: 'Ваш сценарий использования',
+      useCasePlaceholder: 'опишите, как вы планируете использовать MicroDAO...',
+      founderCode: 'Код приглашения',
+      founderCodePlaceholder: 'введите код приглашения (при наличии)',
+      founderCodeHelper: 'Если у вас есть код приглашения, система активирует доступ после проверки. Если кода нет — заявка попадет в список ожидания.',
+      submitApplication: 'Подать заявку',
+      submitFounder: 'Проверить код и подать заявку',
+      loginBtn: 'Войти',
+      communityName: 'Название сообщества / команды',
+      communityNamePlaceholder: 'введите название пространства',
+      communityType: 'Тип сообщества',
     },
   },
 
@@ -1277,15 +1361,15 @@ const translations: Record<Language, Translations> = {
       showDetails: 'Mostrar detalles',
     },
     landing: {
-      heroTitle: 'MicroDAO',
-      heroSubtitle: 'Espíritu de la Comunidad',
-      heroDesc: 'Un sistema operativo vivo para equipos, DAO y comunidades. Chats, tareas, conocimiento, reuniones y agentes, todo en un solo espacio para la acción colectiva.',
+      heroTitle: 'MicroDAO / Espíritu de la Comunidad',
+      heroSubtitle: 'Sistema operativo vivo de agentes para pequeñas comunidades',
+      heroDesc: 'Un espacio compartido que integra chats, tareas y bases de conocimiento con una red de agentes de IA autónomos. Living Memory estructura la memoria colectiva, mientras el agente de coordinación facilita las decisiones del equipo.',
       createSpace: 'Crear espacio',
       login: 'Iniciar sesión',
       client: 'Cliente',
       installPwa: 'Instalar aplicación',
       whatIsMicroDAO: '¿Qué es MicroDAO?',
-      whatIsMicroDAODesc: 'MicroDAO es un espacio digital autónomo para comunidades, donde la comunicación, las tareas, el conocimiento, las reuniones y los agentes funcionan como un sistema unificado. Cada comunidad puede tener sus propias reglas, memoria, miembros y agentes.',
+      whatIsMicroDAODesc: 'MicroDAO es un sistema operativo vivo para pequeñas comunidades construido alrededor de agentes de IA. Integra agentes de memoria y coordinación con sus tareas y base de conocimientos. Admite el despliegue de agentes privados, incluye una capa de token microDAO en la hoja de ruta para la tokenización futura y es compatible con el despliegue local a través de DAARION Edge Client.',
       featuresTitle: 'Funciones de MicroDAO',
     },
     success: 'Éxito',
@@ -1377,6 +1461,27 @@ const translations: Record<Language, Translations> = {
       chunkSize: 'Tamaño del fragmento',
       chunkOverlap: 'Solapamiento',
       indexAction: 'Indexar',
+    },
+    auth: {
+      signIn: 'Iniciar Sesión',
+      signUp: 'Acceso Temprano',
+      displayName: 'Nombre para Mostrar',
+      displayNamePlaceholder: 'cómo llamarte en el chat',
+      email: 'Email',
+      emailPlaceholder: 'introduce tu email',
+      password: 'Contraseña',
+      passwordPlaceholder: 'introduce la contraseña',
+      useCase: 'Tu Caso de Uso',
+      useCasePlaceholder: 'describe cómo planeas usar MicroDAO...',
+      founderCode: 'Código de Invitación',
+      founderCodePlaceholder: 'introduzca el código de invitación (si lo tiene)',
+      founderCodeHelper: 'Si tiene un código de invitación, el sistema activará el acceso tras la verificación. Si no tiene un código, su solicitud se añadirá a la lista de espera.',
+      submitApplication: 'Enviar Solicitud',
+      submitFounder: 'Verificar código y enviar solicitud',
+      loginBtn: 'Iniciar Sesión',
+      communityName: 'Nombre de la Comunidad / Equipo',
+      communityNamePlaceholder: 'introduzca el nombre del espacio',
+      communityType: 'Tipo de Comunidad',
     },
   },
 };

@@ -42,6 +42,9 @@ interface LayoutProps {
   children: React.ReactNode;
 }
 
+import { useUserApprovalStatus } from "@/hooks/useUserApprovalStatus";
+import { Zap, Shield, Sparkles, Network } from "lucide-react";
+
 export function Layout({ sidebar, children }: LayoutProps) {
   const { user, signOut } = useAuth();
   const { profile } = useUserProfile();
@@ -50,6 +53,7 @@ export function Layout({ sidebar, children }: LayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { accessTier } = useUserApprovalStatus();
 
   // Auto close mobile drawer on route change
   useEffect(() => {
@@ -103,6 +107,36 @@ export function Layout({ sidebar, children }: LayoutProps) {
           <div className="flex items-center gap-2 sm:gap-3">
             {/* Desktop Actions */}
             <div className="hidden md:flex items-center gap-3">
+              {accessTier === 'founder' && (
+                <Badge variant="outline" className="hidden sm:inline-flex bg-amber-500/10 text-amber-500 border-amber-500/20 text-xs px-2.5 py-1 gap-1 items-center font-medium">
+                  <Zap className="h-3 w-3" />
+                  <span>Founder Program</span>
+                </Badge>
+              )}
+              {accessTier === 'community' && (
+                <Badge variant="outline" className="hidden sm:inline-flex bg-indigo-500/10 text-indigo-500 border-indigo-500/20 text-xs px-2.5 py-1 gap-1 items-center font-medium">
+                  <Users className="h-3 w-3" />
+                  <span>Community Tier</span>
+                </Badge>
+              )}
+              {accessTier === 'early_access' && (
+                <Badge variant="outline" className="hidden sm:inline-flex bg-blue-500/10 text-blue-500 border-blue-500/20 text-xs px-2.5 py-1 gap-1 items-center font-medium">
+                  <Sparkles className="h-3 w-3" />
+                  <span>Early Access</span>
+                </Badge>
+              )}
+              {accessTier === 'network' && (
+                <Badge variant="outline" className="hidden sm:inline-flex bg-emerald-500/10 text-emerald-500 border-emerald-500/20 text-xs px-2.5 py-1 gap-1 items-center font-medium">
+                  <Network className="h-3 w-3" />
+                  <span>Network Tier</span>
+                </Badge>
+              )}
+              {accessTier === 'admin' && (
+                <Badge variant="outline" className="hidden sm:inline-flex bg-rose-500/10 text-rose-500 border-rose-500/20 text-xs px-2.5 py-1 gap-1 items-center font-medium">
+                  <Shield className="h-3 w-3" />
+                  <span>Admin</span>
+                </Badge>
+              )}
               <Button
                 variant="ghost"
                 size="sm"
@@ -178,6 +212,36 @@ export function Layout({ sidebar, children }: LayoutProps) {
                 <div className="px-2 py-1.5 text-sm">
                   <div className="font-medium">{profile?.display_name || t.layout.user}</div>
                   <div className="text-xs text-muted-foreground">{user?.email}</div>
+                  {accessTier === 'founder' && (
+                    <div className="text-[10px] text-amber-500 font-semibold mt-1 flex items-center gap-1">
+                      <Zap className="h-3 w-3" />
+                      <span>Founder Program</span>
+                    </div>
+                  )}
+                  {accessTier === 'community' && (
+                    <div className="text-[10px] text-indigo-400 font-semibold mt-1 flex items-center gap-1">
+                      <Users className="h-3 w-3 text-indigo-400" />
+                      <span>Community Tier</span>
+                    </div>
+                  )}
+                  {accessTier === 'early_access' && (
+                    <div className="text-[10px] text-blue-500 font-semibold mt-1 flex items-center gap-1">
+                      <Sparkles className="h-3 w-3" />
+                      <span>Early Access</span>
+                    </div>
+                  )}
+                  {accessTier === 'network' && (
+                    <div className="text-[10px] text-emerald-500 font-semibold mt-1 flex items-center gap-1">
+                      <Network className="h-3 w-3" />
+                      <span>Network Tier</span>
+                    </div>
+                  )}
+                  {accessTier === 'admin' && (
+                    <div className="text-[10px] text-rose-500 font-semibold mt-1 flex items-center gap-1">
+                      <Shield className="h-3 w-3" />
+                      <span>Admin</span>
+                    </div>
+                  )}
                 </div>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => navigate('/participants')}>
