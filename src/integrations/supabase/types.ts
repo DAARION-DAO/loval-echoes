@@ -420,6 +420,54 @@ export type Database = {
           },
         ]
       }
+      document_chunks: {
+        Row: {
+          content: string
+          created_at: string | null
+          embedding: string | null
+          file_id: string | null
+          folder_id: string | null
+          id: string
+          metadata: Json | null
+          user_id: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          embedding?: string | null
+          file_id?: string | null
+          folder_id?: string | null
+          id?: string
+          metadata?: Json | null
+          user_id?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          embedding?: string | null
+          file_id?: string | null
+          folder_id?: string | null
+          id?: string
+          metadata?: Json | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_chunks_file_id_fkey"
+            columns: ["file_id"]
+            isOneToOne: false
+            referencedRelation: "files"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_chunks_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "folders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       file_tags: {
         Row: {
           added_by: string | null
@@ -505,6 +553,7 @@ export type Database = {
           file_type: Database["public"]["Enums"]["file_type"]
           folder_id: string | null
           id: string
+          indexing_status: string | null
           is_knowledge_base: boolean | null
           mime_type: string | null
           name: string
@@ -523,6 +572,7 @@ export type Database = {
           file_type?: Database["public"]["Enums"]["file_type"]
           folder_id?: string | null
           id?: string
+          indexing_status?: string | null
           is_knowledge_base?: boolean | null
           mime_type?: string | null
           name: string
@@ -541,6 +591,7 @@ export type Database = {
           file_type?: Database["public"]["Enums"]["file_type"]
           folder_id?: string | null
           id?: string
+          indexing_status?: string | null
           is_knowledge_base?: boolean | null
           mime_type?: string | null
           name?: string
@@ -1376,6 +1427,21 @@ export type Database = {
           p_user_id?: string
         }
         Returns: string
+      }
+      match_document_chunks: {
+        Args: {
+          filter_file_ids?: string[]
+          match_count: number
+          match_threshold: number
+          query_embedding: string
+        }
+        Returns: {
+          content: string
+          file_id: string
+          id: string
+          metadata: Json
+          similarity: number
+        }[]
       }
       revoke_admin_role: { Args: { p_user_id: string }; Returns: undefined }
       revoke_user_refresh_tokens: {
