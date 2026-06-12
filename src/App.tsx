@@ -12,6 +12,7 @@ import { lazy, Suspense } from "react";
 import { ChatsPage } from "./pages/Chats";
 import { Auth } from "./pages/Auth";
 import { NewIndex } from "./pages/NewIndex";
+import { ResetPassword } from "./pages/ResetPassword";
 
 // Lazy load heavy components
 const ChatsManagement = lazy(() => import("./pages/ChatsManagement").then(m => ({ default: m.ChatsManagement })));
@@ -105,6 +106,7 @@ const App = () => (
           <AuthProvider>
             <Routes>
               <Route path="/auth" element={<PublicRoutes />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/*" element={<ProtectedLayout />} />
             </Routes>
           </AuthProvider>
