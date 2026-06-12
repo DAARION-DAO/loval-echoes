@@ -504,7 +504,7 @@ npm run tauri build`}</code>
             </a>
             <span className="text-border">·</span>
             <a href="https://github.com/DAARION-DAO/daarion-edge-client" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">
-              GitHub (Edge Client)
+              GitHub (Edge Client Open Source)
             </a>
           </div>
           <div className="text-xs text-muted-foreground flex items-center justify-center gap-1.5 flex-wrap">
