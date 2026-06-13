@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { useTranslation, Language } from '@/lib/i18n';
 import { usePwaInstall } from '@/hooks/usePwaInstall';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card } from '@/components/ui/card';
 import {
   ArrowLeft,
   Download,
@@ -62,56 +63,208 @@ function useScrollReveal() {
   return containerRef;
 }
 
+const EDGE_CLIENT_RELEASE_TAG = "v0.2.2-3";
+const EDGE_CLIENT_VERSION = "0.2.2-3";
+const GITHUB_REPO = 'https://github.com/DAARION-DAO/daarion-edge-client';
+
+const edgeClientAssetUrl = (filename: string) =>
+  `${GITHUB_REPO}/releases/download/${EDGE_CLIENT_RELEASE_TAG}/${filename}`;
+
+/* ── Localized Text Mapping ── */
+const localTexts = {
+  uk: {
+    heroTitle: 'DAARION Edge Client',
+    heroSubtitle: 'Встановіть Edge Client для запуску локального інтерфейсу, агентів і майбутніх MicroDAO edge-функцій на вашому пристрої.',
+    heroPrimaryCta: 'Скачати інсталлер',
+    heroSecondaryCta: 'Відкрити Web / PWA',
+    heroHelper: 'Оберіть платформу нижче. GitHub repo доступний у футері для розробників.',
+    fallbackVersionDesc: 'Якщо інсталлер ще не доступний для вашої платформи, використайте Web / PWA версію.',
+    githubSourceLinkDesc: 'Вихідний код DAARION Edge Client доступний на GitHub для розробників.',
+    architectureLabel: 'Архітектура',
+    formatLabel: 'Формат',
+    versionLabel: 'Версія',
+    devToolsLabel: 'Для розробників',
+    sourceCodeGithub: 'Вихідний код на GitHub',
+    
+    webDesc: 'Працює у браузері. Можна встановити як PWA на підтримуваних пристроях.',
+    webCta: 'Відкрити Web App',
+    
+    macSiliconCta: 'Скачати для Apple Silicon',
+    macIntelCta: 'Скачати для Intel Mac',
+    windowsCta: 'Скачати для Windows',
+    windowsAltCta: 'Альтернативний MSI інсталятор',
+    linuxCta: 'Скачати AppImage',
+    
+    androidDesc: 'Потрібне ручне встановлення APK. Версія для тестування.',
+    androidCta: 'Скачати APK',
+    
+    iosDesc: 'iOS build буде додано пізніше.',
+    iosCta: 'Скоро',
+  },
+  en: {
+    heroTitle: 'DAARION Edge Client',
+    heroSubtitle: 'Install the Edge Client to run the local interface, agents, and future MicroDAO edge functions on your device.',
+    heroPrimaryCta: 'Download Installer',
+    heroSecondaryCta: 'Open Web / PWA',
+    heroHelper: 'Select platform below. GitHub repo is available in the footer for developers.',
+    fallbackVersionDesc: 'If the installer is not yet available for your platform, use the Web / PWA version.',
+    githubSourceLinkDesc: 'The DAARION Edge Client source code is available on GitHub for developers.',
+    architectureLabel: 'Architecture',
+    formatLabel: 'Format',
+    versionLabel: 'Version',
+    devToolsLabel: 'For Developers',
+    sourceCodeGithub: 'Source Code on GitHub',
+    
+    webDesc: 'Runs in the browser. Can be installed as PWA on supported devices.',
+    webCta: 'Open Web App',
+    
+    macSiliconCta: 'Download for Apple Silicon',
+    macIntelCta: 'Download for Intel Mac',
+    windowsCta: 'Download for Windows',
+    windowsAltCta: 'Alternative MSI installer',
+    linuxCta: 'Download AppImage',
+    
+    androidDesc: 'Manual APK installation required. Testing version.',
+    androidCta: 'Download APK',
+    
+    iosDesc: 'iOS build will be added later.',
+    iosCta: 'Soon',
+  },
+  ru: {
+    heroTitle: 'DAARION Edge Client',
+    heroSubtitle: 'Установите Edge Client для запуска локального интерфейса, агентов и будущих MicroDAO edge-функций на вашем устройстве.',
+    heroPrimaryCta: 'Скачать инсталлятор',
+    heroSecondaryCta: 'Открыть Web / PWA',
+    heroHelper: 'Выберите платформу ниже. GitHub репозиторий доступен в футере для разработчиков.',
+    fallbackVersionDesc: 'Если инсталлятор еще не доступен для вашей платформы, используйте версию Web / PWA.',
+    githubSourceLinkDesc: 'Исходный код DAARION Edge Client доступен на GitHub для разработчиков.',
+    architectureLabel: 'Архитектура',
+    formatLabel: 'Формат',
+    versionLabel: 'Версия',
+    devToolsLabel: 'Для разработчиков',
+    sourceCodeGithub: 'Исходный код на GitHub',
+    
+    webDesc: 'Работает в браузере. Можно установить как PWA на поддерживаемых устройствах.',
+    webCta: 'Открыть Web App',
+    
+    macSiliconCta: 'Скачать для Apple Silicon',
+    macIntelCta: 'Скачать для Intel Mac',
+    windowsCta: 'Скачать для Windows',
+    windowsAltCta: 'Альтернативный MSI инсталлятор',
+    linuxCta: 'Скачать AppImage',
+    
+    androidDesc: 'Требуется ручная установка APK. Версия для тестирования.',
+    androidCta: 'Скачать APK',
+    
+    iosDesc: 'iOS сборка будет добавлена позже.',
+    iosCta: 'Скоро',
+  },
+  es: {
+    heroTitle: 'DAARION Edge Client',
+    heroSubtitle: 'Instale Edge Client para ejecutar la interfaz local, los agentes y las futuras funciones edge de MicroDAO en su dispositivo.',
+    heroPrimaryCta: 'Descargar instalador',
+    heroSecondaryCta: 'Abrir Web / PWA',
+    heroHelper: 'Seleccione la plataforma a continuación. El repositorio de GitHub está disponible en el pie de página para desarrolladores.',
+    fallbackVersionDesc: 'Si el instalador aún no está disponible para su plataforma, use la versión Web / PWA.',
+    githubSourceLinkDesc: 'El código fuente de DAARION Edge Client está disponible en GitHub para desarrolladores.',
+    architectureLabel: 'Arquitectura',
+    formatLabel: 'Formato',
+    versionLabel: 'Versión',
+    devToolsLabel: 'Para desarrolladores',
+    sourceCodeGithub: 'Código fuente en GitHub',
+    
+    webDesc: 'Funciona en el navegador. Se puede instalar como PWA en dispositivos compatibles.',
+    webCta: 'Abrir Web App',
+    
+    macSiliconCta: 'Descargar para Apple Silicon',
+    macIntelCta: 'Descargar para Intel Mac',
+    windowsCta: 'Descargar para Windows',
+    windowsAltCta: 'Instalador MSI alternativo',
+    linuxCta: 'Descargar AppImage',
+    
+    androidDesc: 'Se requiere instalación manual de APK. Versión de prueba.',
+    androidCta: 'Descargar APK',
+    
+    iosDesc: 'La compilación de iOS se agregará más tarde.',
+    iosCta: 'Próximamente',
+  }
+};
+
 /* ── Platform data ── */
-function getPlatforms(t: any) {
+function getPlatforms(t: any, texts: any) {
   return [
     {
-      name: t.clientInstall.macSilicon,
-      arch: 'ARM64 (M1 / M2 / M3 / M4)',
+      name: 'Web / PWA',
+      arch: texts.webDesc,
+      format: 'Browser app',
+      icon: Globe,
+      status: 'active' as const,
+      statusLabel: 'Active',
+      cta: texts.webCta,
+      downloadUrl: 'https://edge.daarion.city',
+      isExternal: true,
+    },
+    {
+      name: t.clientInstall.macSilicon || 'macOS Apple Silicon',
+      arch: 'ARM64 · M1 / M2 / M3 / M4',
       format: '.dmg',
       icon: Apple,
       status: 'active' as const,
       statusLabel: t.clientInstall.beta,
+      cta: texts.macSiliconCta,
+      downloadUrl: edgeClientAssetUrl(`Daarion.Edge_${EDGE_CLIENT_VERSION}_aarch64.dmg`),
     },
     {
-      name: t.clientInstall.macIntel,
-      arch: 'x86_64',
+      name: t.clientInstall.macIntel || 'macOS Intel',
+      arch: 'x64 Intel Mac',
       format: '.dmg',
       icon: Apple,
       status: 'active' as const,
       statusLabel: t.clientInstall.beta,
+      cta: texts.macIntelCta,
+      downloadUrl: edgeClientAssetUrl(`Daarion.Edge_${EDGE_CLIENT_VERSION}_x64.dmg`),
     },
     {
-      name: t.clientInstall.windows,
-      arch: 'x86_64',
-      format: '.exe / .msi',
+      name: t.clientInstall.windows || 'Windows',
+      arch: 'x64',
+      format: 'setup.exe',
       icon: Monitor,
-      status: 'pending' as const,
-      statusLabel: t.clientInstall.canary,
+      status: 'active' as const,
+      statusLabel: t.clientInstall.beta,
+      cta: texts.windowsCta,
+      downloadUrl: edgeClientAssetUrl(`Daarion.Edge_${EDGE_CLIENT_VERSION}_x64-setup.exe`),
+      secondaryUrl: edgeClientAssetUrl(`Daarion.Edge_${EDGE_CLIENT_VERSION}_x64_en-US.msi`),
+      secondaryCta: texts.windowsAltCta,
     },
     {
-      name: t.clientInstall.linux,
-      arch: 'x86_64',
+      name: t.clientInstall.linux || 'Linux',
+      arch: 'Ubuntu / Debian / compatible Linux',
       format: '.AppImage',
       icon: Terminal,
-      status: 'pending' as const,
-      statusLabel: t.clientInstall.canary,
+      status: 'active' as const,
+      statusLabel: t.clientInstall.beta,
+      cta: texts.linuxCta,
+      downloadUrl: edgeClientAssetUrl(`Daarion.Edge_${EDGE_CLIENT_VERSION}_amd64.AppImage`),
     },
     {
-      name: t.clientInstall.android,
-      arch: 'arm64-v8a',
+      name: t.clientInstall.android || 'Android',
+      arch: texts.androidDesc,
       format: '.apk',
       icon: Smartphone,
-      status: 'pending' as const,
+      status: 'active' as const,
       statusLabel: t.clientInstall.sideload,
+      cta: texts.androidCta,
+      downloadUrl: edgeClientAssetUrl(`Daarion.Edge_${EDGE_CLIENT_VERSION}_android_universal_release.apk`),
     },
     {
-      name: t.clientInstall.ios,
-      arch: 'arm64',
-      format: 'Native App',
+      name: 'iOS',
+      arch: texts.iosDesc,
+      format: 'App Store',
       icon: Smartphone,
       status: 'coming' as const,
       statusLabel: t.clientInstall.comingSoon,
+      cta: texts.iosCta,
+      downloadUrl: null,
     },
   ];
 }
@@ -160,17 +313,19 @@ function getArchitectureLayers(t: any) {
   ];
 }
 
-const GITHUB_REPO = 'https://github.com/DAARION-DAO/daarion-edge-client';
-const GITHUB_RELEASES = `${GITHUB_REPO}/releases`;
-
 export function Install() {
   const navigate = useNavigate();
   const scrollRef = useScrollReveal();
   const { t, language, setLanguage } = useTranslation();
   const { isInstallable, install } = usePwaInstall();
 
-  const platforms = getPlatforms(t);
+  const texts = localTexts[language as Language] || localTexts.en;
+  const platforms = getPlatforms(t, texts);
   const architectureLayers = getArchitectureLayers(t);
+
+  const scrollToPlatforms = () => {
+    document.getElementById('download-platforms')?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   return (
     <div ref={scrollRef} className="min-h-screen bg-background text-foreground flex flex-col overflow-x-hidden">
@@ -185,7 +340,7 @@ export function Install() {
             </Button>
             <div className="h-5 w-px bg-border/50 hidden sm:block" />
             <img src="/daarion-logo.jpg" alt="DAARION" className="h-8 w-8 rounded-lg object-cover shadow-md" />
-            <span className="font-bold text-base tracking-tight">DAARION Edge Client</span>
+            <span className="font-bold text-base tracking-tight">{texts.heroTitle}</span>
           </div>
 
           <div className="flex items-center gap-1.5 sm:gap-3">
@@ -221,16 +376,14 @@ export function Install() {
               </Button>
             )}
 
-            <a
-              href={GITHUB_RELEASES}
-              target="_blank"
-              rel="noopener noreferrer"
+            <Button 
+              size="sm" 
+              onClick={scrollToPlatforms}
+              className="text-xs sm:text-sm font-semibold gap-1.5 shadow-md hover:shadow-lg transition-shadow px-3 sm:px-4 h-9 bg-emerald-600 hover:bg-emerald-500 text-white"
             >
-              <Button size="sm" className="text-xs sm:text-sm font-semibold gap-1.5 shadow-md hover:shadow-lg transition-shadow px-3 sm:px-4 h-9">
-                <Download className="h-3.5 w-3.5" />
-                <span>{t.clientInstall.downloadBtn}</span>
-              </Button>
-            </a>
+              <Download className="h-3.5 w-3.5" />
+              <span>{texts.heroPrimaryCta}</span>
+            </Button>
           </div>
         </div>
       </header>
@@ -248,35 +401,35 @@ export function Install() {
           </Badge>
 
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.1] max-w-4xl mx-auto landing-gradient-text bg-gradient-to-r from-foreground via-emerald-400 to-foreground pb-2">
-            DAARION Edge Client
+            {texts.heroTitle}
           </h1>
 
           <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed mt-4 mb-10">
-            {t.clientInstall.installSubtitle}
+            {texts.heroSubtitle}
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto sm:max-w-none">
-            <a href={GITHUB_RELEASES} target="_blank" rel="noopener noreferrer">
-              <Button
-                size="lg"
-                className="w-full sm:w-auto h-13 px-10 font-semibold text-base gap-2 shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98] bg-emerald-600 hover:bg-emerald-500 text-white"
-              >
-                <Download className="h-5 w-5" />
-                {t.clientInstall.downloadFromGithub}
-              </Button>
-            </a>
-            <a href={GITHUB_REPO} target="_blank" rel="noopener noreferrer">
+            <Button
+              size="lg"
+              onClick={scrollToPlatforms}
+              className="w-full sm:w-auto h-13 px-10 font-semibold text-base gap-2 shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98] bg-emerald-600 hover:bg-emerald-500 text-white"
+            >
+              <Download className="h-5 w-5" />
+              {texts.heroPrimaryCta}
+            </Button>
+            <a href="https://edge.daarion.city" target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
               <Button
                 size="lg"
                 variant="outline"
-                className="w-full sm:w-auto h-13 px-10 font-semibold text-base gap-1.5 border-border/60 hover:bg-muted/30"
+                className="w-full sm:w-auto h-13 px-10 font-semibold text-base gap-1.5 border-border/60 hover:bg-muted/30 text-foreground"
               >
                 <Globe className="h-4 w-4" />
-                GitHub
+                {texts.heroSecondaryCta}
                 <ExternalLink className="h-3.5 w-3.5 ml-0.5 opacity-50" />
               </Button>
             </a>
           </div>
+          <p className="text-xs text-muted-foreground mt-4">{texts.heroHelper}</p>
         </div>
       </section>
 
@@ -290,48 +443,88 @@ export function Install() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 landing-stagger">
+          <div id="download-platforms" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 landing-stagger">
             {platforms.map((platform, index) => (
-              <div
+              <Card
                 key={index}
-                className="landing-reveal landing-card-hover group bg-card/30 backdrop-blur-sm border border-border/40 rounded-2xl p-5 flex items-start gap-4"
+                className="landing-reveal landing-card-hover group bg-card/30 backdrop-blur-md border border-border/40 rounded-2xl p-6 flex flex-col justify-between shadow-lg hover:shadow-xl transition-all"
               >
-                <div className="p-2.5 rounded-xl bg-primary/8 group-hover:bg-primary/15 transition-colors flex-shrink-0 mt-0.5">
-                  <platform.icon className="h-5 w-5 text-primary" />
-                </div>
-                <div className="flex-1 min-w-0 space-y-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h4 className="font-bold text-sm text-foreground">{platform.name}</h4>
-                    <Badge
-                      variant="secondary"
-                      className={`text-[10px] px-1.5 py-0 h-5 font-medium ${
-                        platform.status === 'active'
-                          ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20'
-                          : platform.status === 'pending'
-                          ? 'bg-amber-500/15 text-amber-400 border-amber-500/20'
-                          : 'bg-muted text-muted-foreground'
-                      }`}
-                    >
-                      {platform.status === 'active' && <CheckCircle2 className="h-2.5 w-2.5 mr-0.5" />}
-                      {platform.status === 'pending' && <AlertTriangle className="h-2.5 w-2.5 mr-0.5" />}
-                      {platform.statusLabel}
-                    </Badge>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 rounded-xl bg-primary/8 group-hover:bg-primary/15 transition-colors flex-shrink-0">
+                      <platform.icon className="h-6 w-6 text-primary" />
+                    </div>
+                    <div>
+                      <h4 className="font-extrabold text-base text-foreground">{platform.name}</h4>
+                      <Badge
+                        variant="secondary"
+                        className={`text-[10px] px-2 py-0.5 font-medium mt-1 ${
+                          platform.status === 'active'
+                            ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20'
+                            : platform.status === 'coming'
+                            ? 'bg-amber-500/15 text-amber-400 border-amber-500/20'
+                            : 'bg-muted text-muted-foreground'
+                        }`}
+                      >
+                        {platform.status === 'active' && <CheckCircle2 className="h-2.5 w-2.5 mr-1 inline" />}
+                        {platform.statusLabel}
+                      </Badge>
+                    </div>
                   </div>
-                  <p className="text-xs text-muted-foreground">{platform.arch}</p>
-                  <p className="text-xs text-muted-foreground/70">{t.clientInstall.platformFormat.replace('{format}', platform.format)}</p>
+                  
+                  <div className="space-y-2 text-sm text-left">
+                    <div>
+                      <span className="text-xs text-muted-foreground/60 block">{texts.architectureLabel}</span>
+                      <p className="text-xs text-foreground font-medium">{platform.arch}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs text-muted-foreground/60 block">{texts.formatLabel}</span>
+                      <p className="text-xs font-mono text-muted-foreground/80">{platform.format}</p>
+                    </div>
+                  </div>
                 </div>
-              </div>
+
+                <div className="mt-6 pt-4 border-t border-border/10 space-y-2">
+                  {platform.downloadUrl ? (
+                    <a
+                      href={platform.downloadUrl}
+                      target={platform.isExternal ? "_blank" : undefined}
+                      rel={platform.isExternal ? "noopener noreferrer" : undefined}
+                      className="block w-full"
+                    >
+                      <Button
+                        className="w-full h-10 text-xs font-semibold gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white shadow-md transition-all"
+                      >
+                        {platform.isExternal ? <Globe className="h-3.5 w-3.5" /> : <Download className="h-3.5 w-3.5" />}
+                        <span>{platform.cta}</span>
+                      </Button>
+                    </a>
+                  ) : (
+                    <Button
+                      disabled
+                      className="w-full h-10 text-xs font-semibold gap-1.5"
+                    >
+                      <span>{platform.cta}</span>
+                    </Button>
+                  )}
+
+                  {platform.secondaryUrl && (
+                    <a
+                      href={platform.secondaryUrl}
+                      className="block w-full text-center"
+                    >
+                      <span className="text-[11px] text-primary hover:underline font-medium">
+                        {platform.secondaryCta}
+                      </span>
+                    </a>
+                  )}
+                </div>
+              </Card>
             ))}
           </div>
 
-          <div className="text-center landing-reveal">
-            <a href={GITHUB_RELEASES} target="_blank" rel="noopener noreferrer">
-              <Button variant="outline" className="gap-2">
-                <Download className="h-4 w-4" />
-                {t.clientInstall.viewReleasesGithub}
-                <ExternalLink className="h-3 w-3 opacity-50" />
-              </Button>
-            </a>
+          <div className="p-4 bg-muted/20 border border-border/20 rounded-2xl max-w-2xl mx-auto text-center text-xs text-muted-foreground/95">
+            {texts.fallbackVersionDesc}
           </div>
         </div>
       </section>
@@ -432,7 +625,7 @@ export function Install() {
       <section className="py-16 md:py-24 border-t border-border/10">
         <div className="container max-w-3xl mx-auto px-4 space-y-8">
           <div className="text-center space-y-3 landing-reveal">
-            <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">{t.clientInstall.forDevsTitle}</h2>
+            <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">{texts.devToolsLabel}</h2>
             <p className="text-sm text-muted-foreground">Rust stable + Node.js v20+</p>
           </div>
 
@@ -460,16 +653,6 @@ npm run build
 npm run tauri build`}</code>
               </pre>
             </div>
-          </div>
-
-          <div className="text-center landing-reveal">
-            <a href={GITHUB_REPO} target="_blank" rel="noopener noreferrer">
-              <Button variant="outline" className="gap-2">
-                <Globe className="h-4 w-4" />
-                {t.clientInstall.openOnGithub}
-                <ExternalLink className="h-3 w-3 opacity-50" />
-              </Button>
-            </a>
           </div>
         </div>
       </section>
@@ -511,20 +694,19 @@ npm run tauri build`}</code>
             {t.clientInstall.readyDesc}
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <a href={GITHUB_RELEASES} target="_blank" rel="noopener noreferrer">
-              <Button
-                size="lg"
-                className="h-13 px-10 font-semibold text-base gap-2 shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98] bg-emerald-600 hover:bg-emerald-500 text-white"
-              >
-                <Download className="h-5 w-5" />
-                {t.clientInstall.downloadBtn}
-              </Button>
-            </a>
+            <Button
+              size="lg"
+              onClick={scrollToPlatforms}
+              className="w-full sm:w-auto h-13 px-10 font-semibold text-base gap-2 shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98] bg-emerald-600 hover:bg-emerald-500 text-white"
+            >
+              <Download className="h-5 w-5" />
+              {texts.heroPrimaryCta}
+            </Button>
             <Button
               size="lg"
               variant="outline"
               onClick={() => navigate('/')}
-              className="h-13 px-10 font-semibold text-base gap-1.5 border-border/60 hover:bg-muted/30"
+              className="w-full sm:w-auto h-13 px-10 font-semibold text-base gap-1.5 border-border/60 hover:bg-muted/30 text-foreground"
             >
               <Layers className="h-4 w-4" />
               {t.clientInstall.returnToMicroDAO}
@@ -557,7 +739,13 @@ npm run tauri build`}</code>
               GitHub (MicroDAO Open Source)
             </a>
           </div>
-          <div className="text-xs text-muted-foreground flex items-center justify-center gap-1.5 flex-wrap">
+          <p className="text-[11px] text-muted-foreground/85 max-w-md mx-auto pt-2">
+            {texts.githubSourceLinkDesc}{' '}
+            <a href={GITHUB_REPO} target="_blank" rel="noopener noreferrer" className="underline text-foreground/80 hover:text-foreground font-medium">
+              GitHub
+            </a>
+          </p>
+          <div className="text-xs text-muted-foreground flex items-center justify-center gap-1.5 flex-wrap pt-2">
             <span>© {new Date().getFullYear()}</span>
             <a href="https://daarion.city/" target="_blank" rel="noopener noreferrer" className="hover:underline flex items-center gap-1 text-foreground/80 font-medium transition-all">
               <img src="/daarion-logo.jpg" alt="DAARION.city" className="h-4 w-4 rounded-sm object-cover" />

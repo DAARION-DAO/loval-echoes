@@ -580,6 +580,16 @@ export interface Translations {
     returnToMicroDAO: string;
     footerCopyright: string;
     footerDesc: string;
+    downloadInstaller: string;
+    openWebPwa: string;
+    selectPlatformBelow: string;
+    fallbackVersionDesc: string;
+    githubSourceLinkDesc: string;
+    architectureLabel: string;
+    formatLabel: string;
+    versionLabel: string;
+    devToolsLabel: string;
+    sourceCodeGithub: string;
   };
   pricingExtra: {
     title: string;
@@ -2235,7 +2245,17 @@ export const translations: Record<Language, Translations> = {
       downloadBtn: 'Завантажити',
       returnToMicroDAO: 'Повернутись до MicroDAO',
       footerCopyright: '— Всі права захищено.',
-      footerDesc: 'Побудовано для гнучкої координації та живих спільнот.'
+      footerDesc: 'Побудовано для гнучкої координації та живих спільнот.',
+      downloadInstaller: 'Скачати інсталлер',
+      openWebPwa: 'Відкрити Web / PWA',
+      selectPlatformBelow: 'Оберіть платформу нижче. GitHub repo доступний у футері для розробників.',
+      fallbackVersionDesc: 'Якщо інсталлер ще не доступний для вашої платформи, використайте Web / PWA версію.',
+      githubSourceLinkDesc: 'Вихідний код DAARION Edge Client доступний на GitHub для розробників.',
+      architectureLabel: 'Архітектура',
+      formatLabel: 'Формат',
+      versionLabel: 'Версія',
+      devToolsLabel: 'Для розробників',
+      sourceCodeGithub: 'Вихідний код на GitHub'
     },
     pricingExtra: {
       title: 'План розвитку доступу',
@@ -3901,7 +3921,17 @@ export const translations: Record<Language, Translations> = {
       downloadBtn: 'Download',
       returnToMicroDAO: 'Return to MicroDAO',
       footerCopyright: '— All rights reserved.',
-      footerDesc: 'Built for agile coordination and living communities.'
+      footerDesc: 'Built for agile coordination and living communities.',
+      downloadInstaller: 'Download Installer',
+      openWebPwa: 'Open Web / PWA',
+      selectPlatformBelow: 'Select platform below. GitHub repo is available in the footer for developers.',
+      fallbackVersionDesc: 'If the installer is not yet available for your platform, use the Web / PWA version.',
+      githubSourceLinkDesc: 'The DAARION Edge Client source code is available on GitHub for developers.',
+      architectureLabel: 'Architecture',
+      formatLabel: 'Format',
+      versionLabel: 'Version',
+      devToolsLabel: 'For Developers',
+      sourceCodeGithub: 'Source Code on GitHub'
     },
     pricingExtra: {
       title: 'Access Roadmap Plan',
@@ -5567,7 +5597,17 @@ export const translations: Record<Language, Translations> = {
       downloadBtn: 'Скачать',
       returnToMicroDAO: 'Вернуться к MicroDAO',
       footerCopyright: '— Все права защищены.',
-      footerDesc: 'Построено для гибкой координации и живых сообществ.'
+      footerDesc: 'Построено для гибкой координации и живых сообществ.',
+      downloadInstaller: 'Скачать инсталлятор',
+      openWebPwa: 'Открыть Web / PWA',
+      selectPlatformBelow: 'Выберите платформу ниже. GitHub репозиторий доступен в футере для разработчиков.',
+      fallbackVersionDesc: 'Если инсталлятор еще не доступен для вашей платформы, используйте версию Web / PWA.',
+      githubSourceLinkDesc: 'Исходный код DAARION Edge Client доступен на GitHub для разработчиков.',
+      architectureLabel: 'Архитектура',
+      formatLabel: 'Формат',
+      versionLabel: 'Версия',
+      devToolsLabel: 'Для разработчиков',
+      sourceCodeGithub: 'Исходный код на GitHub'
     },
     pricingExtra: {
       title: 'План развития доступа',
@@ -7233,7 +7273,17 @@ export const translations: Record<Language, Translations> = {
       downloadBtn: 'Descargar',
       returnToMicroDAO: 'Volver a MicroDAO',
       footerCopyright: '— Todos los derechos reservados.',
-      footerDesc: 'Construido para la coordinación ágil y comunidades vivas.'
+      footerDesc: 'Construido para la coordinación ágil y comunidades vivas.',
+      downloadInstaller: 'Descargar instalador',
+      openWebPwa: 'Abrir Web / PWA',
+      selectPlatformBelow: 'Seleccione la plataforma a continuación. El repositorio de GitHub está disponible en el pie de página para desarrolladores.',
+      fallbackVersionDesc: 'Si el instalador aún no está disponible para su plataforma, use la versión Web / PWA.',
+      githubSourceLinkDesc: 'El código fuente de DAARION Edge Client está disponible en GitHub para desarrolladores.',
+      architectureLabel: 'Arquitectura',
+      formatLabel: 'Formato',
+      versionLabel: 'Versión',
+      devToolsLabel: 'Para desarrolladores',
+      sourceCodeGithub: 'Código fuente en GitHub'
     },
     pricingExtra: {
       title: 'Plan de Ruta de Acceso',
