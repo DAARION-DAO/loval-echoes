@@ -16,7 +16,11 @@ import {
   UserPlus,
   Layers,
   MessageSquare,
-  Sparkles
+  Sparkles,
+  ShieldAlert,
+  CheckCircle,
+  Loader2,
+  Plus
 } from 'lucide-react';
 import { PrinciplesBanner } from '@/components/PrinciplesBanner';
 import { CreateModal, CreateFormData } from '@/components/CreateModal';
@@ -34,9 +38,201 @@ import { toast } from '@/hooks/use-toast';
 import { createChat } from '@/services/chats';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { supabase } from '@/integrations/supabase/client';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+
+const dashboardLocals = {
+  uk: {
+    widgetTitle: "Дух Спільноти",
+    repairCta: "Створити Дух Спільноти для цієї MicroDAO",
+    repairDesc: "Кожна MicroDAO повинна мати власного Духа Спільноти для координації, памʼяті та автоматизації.",
+    createAgentBtn: "Створити Дух Спільноти",
+    autonomyLevel: "Рівень автономії",
+    setupCompleteness: "Готовність системи",
+    memorySummary: "Памʼять спільноти",
+    enabledModules: "Підключені модулі",
+    pendingActions: "Дії, що потребують підтвердження",
+    noPendingActions: "Немає дій для затвердження",
+    approveBtn: "Затвердити",
+    rejectBtn: "Відхилити",
+    talkBtn: "Поговорити з Духом",
+    configureBtn: "Налаштувати Дух",
+    connectModulesBtn: "Підключити модулі",
+    createTaskBtn: "Створити задачу",
+    prepareRulesBtn: "Підготувати правила",
+    inviteBtn: "Запросити учасників",
+    planWeekBtn: "План тижня",
+    rulesDialogTitle: "Пропозиція правил від Духа Спільноти",
+    rulesDialogDesc: "Ці правила згенеровані на основі цінностей вашої MicroDAO.",
+    rulesSuggested: "Пропоновані правила поведінки:",
+    rule1: "1. Прозорість: Усі ключові рішення фіксуються в загальному лозі.",
+    rule2: "2. Повага: Спілкування ведеться конструктивно, без переходів на особистості.",
+    rule3: "3. Фокус: Кожна дискусія має завершуватись конкретним завданням чи рішенням.",
+    rulesApplyBtn: "Затвердити правила",
+    toastRulesApproved: "Правила успішно затверджені для вашої MicroDAO!",
+    planWeekDialogTitle: "План тижня від Духа Спільноти",
+    planWeekDialogDesc: "Агент підготував пропозицію планування на наступні 7 днів.",
+    planWeekSuggested: "Пропонований план дій:",
+    planItem1: "• Провести тижневий зідзвон та синхронізувати статус завдань.",
+    planItem2: "• Скласти дайджест обговорень за попередній тиждень.",
+    planItem3: "• Оновити базу знань новими регламентами.",
+    planApplyBtn: "Затвердити план",
+    toastPlanApproved: "План тижня затверджений та надісланий усім учасникам!",
+    inviteDialogTitle: "Запросити учасників до MicroDAO",
+    inviteDialogDesc: "Надішліть код запрошення або запросіть емейлом.",
+    inviteMemberCode: "Код для учасника (Member):",
+    inviteAdminCode: "Код для адміністратора (Admin):",
+    inviteEmailLabel: "Запросити через Email:",
+    inviteEmailBtn: "Надіслати інвайт",
+    toastEmailSent: "Запрошення надіслано на вказаний Email!",
+    actionApprovedToast: "Дію успішно схвалено та виконано!",
+    actionRejectedToast: "Дію відхилено.",
+  },
+  en: {
+    widgetTitle: "Community Spirit",
+    repairCta: "Create Community Spirit for this MicroDAO",
+    repairDesc: "Every MicroDAO must have its own Community Spirit Agent for coordination, memory, and automation.",
+    createAgentBtn: "Create Community Spirit",
+    autonomyLevel: "Autonomy Level",
+    setupCompleteness: "Setup Completeness",
+    memorySummary: "Community Memory",
+    enabledModules: "Connected Modules",
+    pendingActions: "Actions requiring approval",
+    noPendingActions: "No actions pending approval",
+    approveBtn: "Approve",
+    rejectBtn: "Reject",
+    talkBtn: "Talk to Spirit",
+    configureBtn: "Configure Spirit",
+    connectModulesBtn: "Connect Modules",
+    createTaskBtn: "Create Task",
+    prepareRulesBtn: "Prepare Rules",
+    inviteBtn: "Invite Members",
+    planWeekBtn: "Plan Week",
+    rulesDialogTitle: "Community Spirit Rules Proposal",
+    rulesDialogDesc: "These rules are generated based on your MicroDAO's values.",
+    rulesSuggested: "Suggested behavior rules:",
+    rule1: "1. Transparency: All key decisions are logged publicly.",
+    rule2: "2. Respect: Communication is constructive and respectful.",
+    rule3: "3. Focus: Every discussion should result in a concrete task or decision.",
+    rulesApplyBtn: "Approve Rules",
+    toastRulesApproved: "Rules successfully approved for your MicroDAO!",
+    planWeekDialogTitle: "Community Spirit Weekly Plan",
+    planWeekDialogDesc: "The agent has drafted a proposal for the next 7 days.",
+    planWeekSuggested: "Suggested action plan:",
+    planItem1: "• Conduct a weekly sync and update task statuses.",
+    planItem2: "• Generate a digest of discussions from the past week.",
+    planItem3: "• Update the knowledge base with new guidelines.",
+    planApplyBtn: "Approve Plan",
+    toastPlanApproved: "Weekly plan approved and broadcast to all members!",
+    inviteDialogTitle: "Invite Members to MicroDAO",
+    inviteDialogDesc: "Send invite code or invite via email.",
+    inviteMemberCode: "Member Invite Code:",
+    inviteAdminCode: "Admin Invite Code:",
+    inviteEmailLabel: "Invite via Email:",
+    inviteEmailBtn: "Send Invite",
+    toastEmailSent: "Invitation sent to email!",
+    actionApprovedToast: "Action approved and executed!",
+    actionRejectedToast: "Action rejected.",
+  },
+  ru: {
+    widgetTitle: "Дух Сообщества",
+    repairCta: "Создать Дух Сообщества для этой MicroDAO",
+    repairDesc: "Каждая MicroDAO должна иметь собственного Духа Сообщества для координации, памяти и автоматизации.",
+    createAgentBtn: "Создать Дух Сообщества",
+    autonomyLevel: "Уровень автономии",
+    setupCompleteness: "Готовность системы",
+    memorySummary: "Память сообщества",
+    enabledModules: "Подключенные модули",
+    pendingActions: "Действия, требующие подтверждения",
+    noPendingActions: "Нет действий для утверждения",
+    approveBtn: "Утвердить",
+    rejectBtn: "Отклонить",
+    talkBtn: "Поговорить с Духом",
+    configureBtn: "Настроить Дух",
+    connectModulesBtn: "Подключить модули",
+    createTaskBtn: "Создать задачу",
+    prepareRulesBtn: "Подготовить правила",
+    inviteBtn: "Пригласить участников",
+    planWeekBtn: "План недели",
+    rulesDialogTitle: "Предложение правил от Духа Сообщества",
+    rulesDialogDesc: "Эти правила сгенерированы на основе ценностей вашей MicroDAO.",
+    rulesSuggested: "Предлагаемые правила поведения:",
+    rule1: "1. Прозрачность: Все ключевые решения фиксируются в общем логе.",
+    rule2: "2. Уважение: Общение ведется конструктивно и уважительно.",
+    rule3: "3. Фокус: Каждая дискуссия должна завершаться задачей или решением.",
+    rulesApplyBtn: "Утвердить правила",
+    toastRulesApproved: "Правила успешно утверждены для вашей MicroDAO!",
+    planWeekDialogTitle: "План недели от Духа Сообщества",
+    planWeekDialogDesc: "Агент подготовил предложение планирования на следующие 7 дней.",
+    planWeekSuggested: "Предлагаемый план действий:",
+    planItem1: "• Провести еженедельный созвон и синхронизировать статус задач.",
+    planItem2: "• Составить дайджест обсуждений за предыдущую неделю.",
+    planItem3: "• Обновить базу знаний новыми регламентами.",
+    planApplyBtn: "Утвердить план",
+    toastPlanApproved: "План недели утвержден и отправлен всем участникам!",
+    inviteDialogTitle: "Пригласить участников в MicroDAO",
+    inviteDialogDesc: "Отправьте код приглашения или пригласите по email.",
+    inviteMemberCode: "Код для участника (Member):",
+    inviteAdminCode: "Код для администратора (Admin):",
+    inviteEmailLabel: "Пригласить по Email:",
+    inviteEmailBtn: "Отправить инвайт",
+    toastEmailSent: "Приглашение отправлено на указанный Email!",
+    actionApprovedToast: "Действие успешно одобрено и выполнено!",
+    actionRejectedToast: "Действие отклонено.",
+  },
+  es: {
+    widgetTitle: "Espíritu de la Comunidad",
+    repairCta: "Crear Espíritu de la Comunidad para esta MicroDAO",
+    repairDesc: "Cada MicroDAO debe tener su propio Agente de Espíritu de la Comunidad para coordinación, memoria y automatización.",
+    createAgentBtn: "Crear Espíritu de la Comunidad",
+    autonomyLevel: "Nivel de autonomía",
+    setupCompleteness: "Estado de la configuración",
+    memorySummary: "Memoria de comunidad",
+    enabledModules: "Módulos habilitados",
+    pendingActions: "Acciones que requieren aprobación",
+    noPendingActions: "No hay acciones pendientes de aprobación",
+    approveBtn: "Aprobar",
+    rejectBtn: "Rechazar",
+    talkBtn: "Hablar con el Espíritu",
+    configureBtn: "Configurar el Espíritu",
+    connectModulesBtn: "Conectar módulos",
+    createTaskBtn: "Crear tarea",
+    prepareRulesBtn: "Preparar reglas",
+    inviteBtn: "Invitar miembros",
+    planWeekBtn: "Planificar semana",
+    rulesDialogTitle: "Propuesta de reglas del Espíritu",
+    rulesDialogDesc: "Estas reglas son generadas basadas en los valores de su MicroDAO.",
+    rulesSuggested: "Reglas de comportamiento sugeridas:",
+    rule1: "1. Transparencia: Todas las decisiones clave se registran públicamente.",
+    rule2: "2. Respeto: La comunicación es constructiva y respetuosa.",
+    rule3: "3. Enfoque: Cada discusión debe terminar con una tarea o decisión.",
+    rulesApplyBtn: "Aprobar Reglas",
+    toastRulesApproved: "¡Reglas aprobadas con éxito para su MicroDAO!",
+    planWeekDialogTitle: "Plan semanal del Espíritu",
+    planWeekDialogDesc: "El agente ha preparado una propuesta para los próximos 7 días.",
+    planWeekSuggested: "Plan de acción sugerido:",
+    planItem1: "• Realizar sincronización semanal y actualizar tareas.",
+    planItem2: "• Generar resumen de discusiones de la semana pasada.",
+    planItem3: "• Actualizar la base de conocimientos con nuevas guías.",
+    planApplyBtn: "Aprobar Plan",
+    toastPlanApproved: "¡Plan semanal aprobado y transmitido a todos!",
+    inviteDialogTitle: "Invitar miembros a MicroDAO",
+    inviteDialogDesc: "Envíe un código de invitación o invite por correo electrónico.",
+    inviteMemberCode: "Código de miembro:",
+    inviteAdminCode: "Código de administrador:",
+    inviteEmailLabel: "Invitar por correo electrónico:",
+    inviteEmailBtn: "Enviar Invitación",
+    toastEmailSent: "¡Invitación enviada al correo electrónico!",
+    actionApprovedToast: "¡Acción aprobada y ejecutada!",
+    actionRejectedToast: "Acción rechazada.",
+  }
+};
 
 export const NewIndex = () => {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
+  const dl = dashboardLocals[language as keyof typeof dashboardLocals] || dashboardLocals.en;
+
   const { user } = useAuth();
   const navigate = useNavigate();
   const { stats } = useCommunityStats();
@@ -49,6 +245,20 @@ export const NewIndex = () => {
   const [spiritAgent, setSpiritAgent] = useState<any>(null);
   const [agentPerms, setAgentPerms] = useState<any>(null);
   const [loadingAgent, setLoadingAgent] = useState(false);
+
+  // Dialog open/close states
+  const [rulesDialogOpen, setRulesDialogOpen] = useState(false);
+  const [planWeekDialogOpen, setPlanWeekDialogOpen] = useState(false);
+  const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
+  const [taskDialogOpen, setTaskDialogOpen] = useState(false);
+
+  // Data states
+  const [pendingActions, setPendingActions] = useState<any[]>([]);
+  const [inviteCodes, setInviteCodes] = useState<{ member: string; admin: string } | null>(null);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteEmailLoading, setInviteEmailLoading] = useState(false);
+  const [newTask, setNewTask] = useState({ title: '', desc: '' });
+  const [newTaskLoading, setNewTaskLoading] = useState(false);
 
   useEffect(() => {
     const fetchSpiritAgent = async () => {
@@ -75,14 +285,208 @@ export const NewIndex = () => {
           setSpiritAgent(null);
           setAgentPerms(null);
         }
+
+        // Fetch pending action logs
+        const { data: logsData } = await supabase
+          .from('agent_action_logs')
+          .select('*')
+          .eq('community_id', activeCommunityId)
+          .eq('status', 'pending_approval')
+          .order('created_at', { ascending: false });
+        if (logsData) {
+          setPendingActions(logsData);
+        } else {
+          setPendingActions([]);
+        }
+
+        // Fetch invitation codes
+        const { data: codesData } = await supabase
+          .from('invitation_codes')
+          .select('*')
+          .eq('community_id', activeCommunityId);
+        if (codesData) {
+          const member = codesData.find(c => c.role_to_grant === 'member')?.code || '';
+          const admin = codesData.find(c => c.role_to_grant === 'admin')?.code || '';
+          setInviteCodes({ member, admin });
+        } else {
+          setInviteCodes(null);
+        }
       } catch (err) {
-        console.error('Error fetching spirit agent:', err);
+        console.error('Error fetching spirit agent details:', err);
       } finally {
         setLoadingAgent(false);
       }
     };
     fetchSpiritAgent();
   }, [activeCommunityId]);
+
+  const handleActionApproval = async (actionId: string, approvalStatus: 'approved' | 'rejected') => {
+    try {
+      const { error } = await supabase
+        .from('agent_action_logs')
+        .update({ 
+          status: approvalStatus === 'approved' ? 'approved' : 'rejected',
+          approved_by: user?.id 
+        })
+        .eq('id', actionId);
+      if (error) throw error;
+      toast({
+        title: t.success,
+        description: approvalStatus === 'approved' ? dl.actionApprovedToast : dl.actionRejectedToast,
+      });
+      // reload logs
+      const { data: logsData } = await supabase
+        .from('agent_action_logs')
+        .select('*')
+        .eq('community_id', activeCommunityId)
+        .eq('status', 'pending_approval');
+      if (logsData) {
+        setPendingActions(logsData);
+      }
+    } catch (err: any) {
+      toast({
+        variant: 'destructive',
+        title: t.error,
+        description: err.message,
+      });
+    }
+  };
+
+  const handleCreateTask = async () => {
+    if (!newTask.title.trim()) return;
+    setNewTaskLoading(true);
+    try {
+      let convId = '';
+      const { data: convs } = await (supabase.from('conversations') as any)
+        .select('id')
+        .eq('community_id', activeCommunityId)
+        .eq('type', 'group')
+        .limit(1);
+
+      if (convs && convs.length > 0) {
+        convId = convs[0].id;
+      } else {
+        const { data: newConv, error: newConvErr } = await (supabase.from('conversations') as any)
+          .insert({
+            name: 'Загальний',
+            type: 'group',
+            community_id: activeCommunityId,
+            created_by: user?.id
+          })
+          .select('id')
+          .single();
+        if (newConvErr) throw newConvErr;
+        convId = newConv.id;
+      }
+
+      const { error: cardErr } = await (supabase.from('kanban_cards') as any)
+        .insert({
+          project_id: convId,
+          title: newTask.title.trim(),
+          description: newTask.desc.trim() || null,
+          column_type: 'todo',
+          created_by: user?.id
+        });
+
+      if (cardErr) throw cardErr;
+
+      toast({
+        title: t.success,
+        description: 'Завдання успішно створено!',
+      });
+      setTaskDialogOpen(false);
+      setNewTask({ title: '', desc: '' });
+    } catch (err: any) {
+      toast({
+        variant: 'destructive',
+        title: t.error,
+        description: err.message,
+      });
+    } finally {
+      setNewTaskLoading(false);
+    }
+  };
+
+  const handleInviteEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inviteEmail.trim()) return;
+    setInviteEmailLoading(true);
+    try {
+      await supabase.from('agent_action_logs').insert({
+        agent_id: spiritAgent?.id,
+        community_id: activeCommunityId,
+        action_type: 'member_invitation',
+        action_payload: { email: inviteEmail.trim(), role: 'member' },
+        status: 'executed',
+        requested_by: user?.id,
+        executed_at: new Date().toISOString()
+      });
+
+      toast({
+        title: t.success,
+        description: dl.toastEmailSent,
+      });
+      setInviteEmail('');
+    } catch (err: any) {
+      toast({
+        variant: 'destructive',
+        title: t.error,
+        description: err.message,
+      });
+    } finally {
+      setInviteEmailLoading(false);
+    }
+  };
+
+  const handleApproveRules = async () => {
+    try {
+      await supabase.from('agent_action_logs').insert({
+        agent_id: spiritAgent?.id,
+        community_id: activeCommunityId,
+        action_type: 'update_rules',
+        action_payload: { approved: true, timestamp: new Date().toISOString() },
+        status: 'executed',
+        requested_by: user?.id,
+        executed_at: new Date().toISOString()
+      });
+      toast({
+        title: t.success,
+        description: dl.toastRulesApproved,
+      });
+      setRulesDialogOpen(false);
+    } catch (err: any) {
+      toast({
+        variant: 'destructive',
+        title: t.error,
+        description: err.message,
+      });
+    }
+  };
+
+  const handleApprovePlan = async () => {
+    try {
+      await supabase.from('agent_action_logs').insert({
+        agent_id: spiritAgent?.id,
+        community_id: activeCommunityId,
+        action_type: 'weekly_plan',
+        action_payload: { approved: true, timestamp: new Date().toISOString() },
+        status: 'executed',
+        requested_by: user?.id,
+        executed_at: new Date().toISOString()
+      });
+      toast({
+        title: t.success,
+        description: dl.toastPlanApproved,
+      });
+      setPlanWeekDialogOpen(false);
+    } catch (err: any) {
+      toast({
+        variant: 'destructive',
+        title: t.error,
+        description: err.message,
+      });
+    }
+  };
   
   // Initialize push notifications (will auto-request permission)
   usePushNotifications();
@@ -239,117 +643,242 @@ export const NewIndex = () => {
 
         {/* Community Spirit Agent Card */}
         {activeCommunityId && (
-          <Card className="border-indigo-500/30 bg-indigo-950/5 backdrop-blur-md shadow-elegant relative overflow-hidden group text-left">
-            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-              <Sparkles className="h-32 w-32 text-indigo-400 rotate-12" />
-            </div>
-            <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
-              <div className="flex items-center gap-3">
-                <div className="h-12 w-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center relative">
-                  <Bot className="h-6 w-6 text-indigo-400 animate-pulse" />
-                  <div className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 border-2 border-background" />
-                </div>
-                <div>
-                  <CardTitle className="text-lg font-bold text-slate-100 flex items-center gap-2">
-                    <span>{spiritAgent ? spiritAgent.name : t.spiritWidget.widgetTitle}</span>
-                    <span className="px-2 py-0.5 text-[9px] font-semibold rounded bg-green-500/10 text-green-400 border border-green-500/20 uppercase tracking-wider">{t.spiritWidget.activeStatus}</span>
-                  </CardTitle>
-                  <CardDescription className="text-xs text-indigo-300 font-medium tracking-wide">
-                    {t.spiritWidget.mainOrganizer} • {spiritAgent?.personality?.autonomy_level === 'supervised_admin' ? t.spiritWidget.supervisorAdmin : spiritAgent?.personality?.autonomy_level === 'coordinator' ? t.spiritWidget.coordinator : t.spiritWidget.assistant}
-                  </CardDescription>
-                </div>
+          spiritAgent ? (
+            <Card className="border-indigo-500/35 bg-indigo-950/10 backdrop-blur-lg shadow-elegant relative overflow-hidden group text-left border">
+              <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                <Sparkles className="h-32 w-32 text-indigo-400 rotate-12" />
               </div>
-              <Badge variant="outline" className="bg-indigo-500/5 text-indigo-300 border-indigo-500/20 text-[10px] py-1 px-2.5">
-                {t.spiritWidget.spiritDAO}
-              </Badge>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {spiritAgent ? (
-                <div className="space-y-3">
-                  <div className="text-xs text-slate-300 leading-relaxed bg-slate-950/40 p-3 rounded-lg border border-slate-900">
-                    <span className="font-semibold text-slate-200">{t.spiritWidget.memoryMission}</span> {spiritAgent.personality?.mission || t.spiritWidget.defaultMission}
+              <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
+                <div className="flex items-center gap-3">
+                  <div className="h-12 w-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center relative">
+                    <Bot className="h-6 w-6 text-indigo-400 animate-pulse" />
+                    <div className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 border-2 border-background" />
                   </div>
-                  {spiritAgent.personality?.goal_30_days && (
+                  <div>
+                    <CardTitle className="text-lg font-bold text-slate-100 flex items-center gap-2">
+                      <span>{spiritAgent.name}</span>
+                      <span className="px-2 py-0.5 text-[9px] font-semibold rounded bg-green-500/10 text-green-400 border border-green-500/20 uppercase tracking-wider">
+                        {t.spiritWidget.activeStatus}
+                      </span>
+                    </CardTitle>
+                    <CardDescription className="text-xs text-indigo-300 font-medium tracking-wide font-mono">
+                      {activeCommunity ? `${t.chats.messenger || 'MicroDAO'}: ${activeCommunity.name}` : ''}
+                    </CardDescription>
+                  </div>
+                </div>
+                <Badge variant="outline" className="bg-indigo-500/5 text-indigo-300 border-indigo-500/20 text-[10px] py-1 px-2.5">
+                  {dl.widgetTitle}
+                </Badge>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-950/30 p-4 rounded-xl border border-slate-900">
+                  <div className="space-y-2">
                     <div className="text-xs text-slate-400">
-                      <span className="font-medium text-slate-300">{t.spiritWidget.goal30Days}</span> {spiritAgent.personality.goal_30_days}
+                      <span className="font-semibold text-slate-300">{dl.autonomyLevel}:</span>{' '}
+                      <span className="text-indigo-300 font-medium capitalize">
+                        {spiritAgent.personality?.autonomy_level === 'supervised_admin'
+                          ? t.spiritWidget.supervisorAdmin
+                          : spiritAgent.personality?.autonomy_level === 'coordinator'
+                          ? t.spiritWidget.coordinator
+                          : t.spiritWidget.assistant}
+                      </span>
                     </div>
-                  )}
-                </div>
-              ) : (
-                <div className="text-xs text-slate-400">
-                  {t.spiritWidget.agentReady}
-                </div>
-              )}
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-xs text-slate-400">
+                        <span>{dl.setupCompleteness}</span>
+                        <span className="font-bold text-indigo-300">
+                          {(() => {
+                            let score = 0;
+                            let total = 6;
+                            if (spiritAgent.name) score++;
+                            if (spiritAgent.personality?.mission) score++;
+                            if (spiritAgent.personality?.goal_30_days) score++;
+                            if (spiritAgent.personality?.autonomy_level) score++;
+                            if (spiritAgent.personality?.tone) score++;
+                            if (spiritAgent.personality?.language) score++;
+                            return Math.round((score / total) * 100);
+                          })()}%
+                        </span>
+                      </div>
+                      <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                        <div
+                          className="bg-indigo-500 h-1.5 rounded-full transition-all duration-500"
+                          style={{
+                            width: `${(() => {
+                              let score = 0;
+                              let total = 6;
+                              if (spiritAgent.name) score++;
+                              if (spiritAgent.personality?.mission) score++;
+                              if (spiritAgent.personality?.goal_30_days) score++;
+                              if (spiritAgent.personality?.autonomy_level) score++;
+                              if (spiritAgent.personality?.tone) score++;
+                              if (spiritAgent.personality?.language) score++;
+                              return Math.round((score / total) * 100);
+                            })()}%`
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
 
-              <div className="pt-2 border-t border-slate-800/60">
-                <div className="text-xs font-semibold text-slate-400 mb-2">{t.spiritWidget.quickActions}</div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => {
-                      navigate('/chats');
-                      toast({ title: t.spiritWidget.talkToastTitle, description: t.spiritWidget.talkToastDesc });
-                    }}
-                    className="text-xs border-slate-800 bg-slate-950/20 hover:bg-slate-900 text-slate-300 gap-1.5 h-9"
-                  >
-                    <MessageSquare className="h-3.5 w-3.5 text-indigo-400" />
-                    <span>{t.spiritWidget.talkBtn}</span>
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => toast({ title: t.spiritWidget.summarizeToastTitle, description: t.spiritWidget.summarizeToastDesc })}
-                    className="text-xs border-slate-800 bg-slate-950/20 hover:bg-slate-900 text-slate-300 gap-1.5 h-9"
-                  >
-                    <Sparkles className="h-3.5 w-3.5 text-indigo-400" />
-                    <span>{t.spiritWidget.summarizeBtn}</span>
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => {
-                      navigate('/settings');
-                      toast({ title: t.spiritWidget.inviteToastTitle, description: t.spiritWidget.inviteToastDesc });
-                    }}
-                    className="text-xs border-slate-800 bg-slate-950/20 hover:bg-slate-900 text-slate-300 gap-1.5 h-9"
-                  >
-                    <UserPlus className="h-3.5 w-3.5 text-indigo-400" />
-                    <span>{t.spiritWidget.inviteBtn}</span>
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => {
-                      setCreateModalOpen(true);
-                    }}
-                    className="text-xs border-slate-800 bg-slate-950/20 hover:bg-slate-900 text-slate-300 gap-1.5 h-9"
-                  >
-                    <FolderPlus className="h-3.5 w-3.5 text-indigo-400" />
-                    <span>{t.spiritWidget.createTaskBtn}</span>
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => toast({ title: t.spiritWidget.rulesToastTitle, description: t.spiritWidget.rulesToastDesc })}
-                    className="text-xs border-slate-800 bg-slate-950/20 hover:bg-slate-900 text-slate-300 gap-1.5 h-9"
-                  >
-                    <Layers className="h-3.5 w-3.5 text-indigo-400" />
-                    <span>{t.spiritWidget.rulesBtn}</span>
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => toast({ title: t.spiritWidget.planWeekToastTitle, description: t.spiritWidget.planWeekToastDesc })}
-                    className="text-xs border-slate-800 bg-slate-950/20 hover:bg-slate-900 text-slate-300 gap-1.5 h-9"
-                  >
-                    <Zap className="h-3.5 w-3.5 text-indigo-400 animate-bounce" style={{ animationDuration: '3s' }} />
-                    <span>{t.spiritWidget.planWeekBtn}</span>
-                  </Button>
+                  <div className="space-y-2 text-xs">
+                    <div>
+                      <span className="font-semibold text-slate-300">{dl.memorySummary}:</span>{' '}
+                      <span className="text-slate-400">
+                        {spiritAgent.personality?.mission
+                          ? `${spiritAgent.personality.mission.substring(0, 100)}...`
+                          : t.spiritWidget.defaultMission}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="font-semibold text-slate-300">{dl.enabledModules}:</span>{' '}
+                      <div className="flex flex-wrap gap-1.5 mt-1">
+                        {(spiritAgent.personality?.enabled_modules || ['memory', 'tasks', 'steward']).map((mod: string) => (
+                          <Badge key={mod} variant="secondary" className="text-[10px] bg-slate-900 text-indigo-300 border border-indigo-500/10">
+                            {mod === 'memory'
+                              ? 'Memory/RAG'
+                              : mod === 'tasks'
+                              ? 'Tasks'
+                              : mod === 'steward'
+                              ? 'Steward'
+                              : mod === 'digest'
+                              ? 'Digest'
+                              : mod}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+
+                {/* Pending action approvals section */}
+                {pendingActions.length > 0 && (
+                  <div className="border-t border-slate-800/80 pt-3 space-y-2">
+                    <div className="text-xs font-semibold text-amber-400 flex items-center gap-1.5">
+                      <ShieldAlert className="h-3.5 w-3.5" />
+                      <span>{dl.pendingActions} ({pendingActions.length})</span>
+                    </div>
+                    <div className="space-y-2 max-h-[180px] overflow-y-auto pr-1">
+                      {pendingActions.map((act) => (
+                        <div key={act.id} className="text-xs bg-amber-500/5 border border-amber-500/20 p-2.5 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                          <div className="text-left">
+                            <div className="font-medium text-amber-200">
+                              {act.action_type === 'member_invitation'
+                                ? `Invite member: ${act.action_payload?.email}`
+                                : act.action_type === 'update_rules'
+                                ? 'Update community rules'
+                                : act.action_type === 'weekly_plan'
+                                ? 'Approve weekly planner draft'
+                                : act.action_type}
+                            </div>
+                            <div className="text-[10px] text-slate-400">
+                              Requested by owner/admin
+                            </div>
+                          </div>
+                          <div className="flex gap-1.5 shrink-0 self-end sm:self-auto">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleActionApproval(act.id, 'rejected')}
+                              className="h-7 px-2.5 text-[11px] text-slate-400 hover:text-slate-200 hover:bg-slate-900 border border-slate-800"
+                            >
+                              {dl.rejectBtn}
+                            </Button>
+                            <Button
+                              size="sm"
+                              onClick={() => handleActionApproval(act.id, 'approved')}
+                              className="h-7 px-2.5 text-[11px] bg-amber-500 hover:bg-amber-600 text-slate-950 font-semibold"
+                            >
+                              {dl.approveBtn}
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="pt-2 border-t border-slate-800/60">
+                  <div className="text-xs font-semibold text-slate-400 mb-2">{t.spiritWidget.quickActions}</div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => navigate('/chats')}
+                      className="text-xs border-slate-800 bg-slate-950/20 hover:bg-slate-900 text-slate-300 gap-1.5 h-9"
+                    >
+                      <MessageSquare className="h-3.5 w-3.5 text-indigo-400" />
+                      <span>{dl.talkBtn}</span>
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => navigate('/agents/manage')}
+                      className="text-xs border-slate-800 bg-slate-950/20 hover:bg-slate-900 text-slate-300 gap-1.5 h-9"
+                    >
+                      <Settings className="h-3.5 w-3.5 text-indigo-400" />
+                      <span>{dl.configureBtn}</span>
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => navigate('/agents/manage?tab=modules')}
+                      className="text-xs border-slate-800 bg-slate-950/20 hover:bg-slate-900 text-slate-300 gap-1.5 h-9"
+                    >
+                      <Layers className="h-3.5 w-3.5 text-indigo-400" />
+                      <span>{dl.connectModulesBtn}</span>
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setTaskDialogOpen(true)}
+                      className="text-xs border-slate-800 bg-slate-950/20 hover:bg-slate-900 text-slate-300 gap-1.5 h-9"
+                    >
+                      <FolderPlus className="h-3.5 w-3.5 text-indigo-400" />
+                      <span>{dl.createTaskBtn}</span>
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setRulesDialogOpen(true)}
+                      className="text-xs border-slate-800 bg-slate-950/20 hover:bg-slate-900 text-slate-300 gap-1.5 h-9"
+                    >
+                      <ShieldAlert className="h-3.5 w-3.5 text-indigo-400" />
+                      <span>{dl.prepareRulesBtn}</span>
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setInviteDialogOpen(true)}
+                      className="text-xs border-slate-800 bg-slate-950/20 hover:bg-slate-900 text-slate-300 gap-1.5 h-9"
+                    >
+                      <UserPlus className="h-3.5 w-3.5 text-indigo-400" />
+                      <span>{dl.inviteBtn}</span>
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setPlanWeekDialogOpen(true)}
+                      className="text-xs border-slate-800 bg-slate-950/20 hover:bg-slate-900 text-slate-300 gap-1.5 h-9"
+                    >
+                      <Zap className="h-3.5 w-3.5 text-indigo-400 animate-bounce" style={{ animationDuration: '3s' }} />
+                      <span>{dl.planWeekBtn}</span>
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="border-amber-500/20 bg-amber-500/5 backdrop-blur-md p-6 text-center border">
+              <Bot className="mx-auto h-12 w-12 text-amber-400 mb-3 animate-pulse" />
+              <h3 className="text-lg font-bold text-slate-200 mb-1">{dl.repairCta}</h3>
+              <p className="text-sm text-slate-400 max-w-md mx-auto mb-4">{dl.repairDesc}</p>
+              <Button onClick={() => navigate('/onboarding')} className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-semibold">
+                <Plus className="mr-2 h-4 w-4 shrink-0" />
+                {dl.createAgentBtn}
+              </Button>
+            </Card>
+          )
         )}
 
         {/* Quick Actions */}
@@ -454,6 +983,146 @@ export const NewIndex = () => {
           }
         }}
       />
+
+      {/* Rules Dialog */}
+      <Dialog open={rulesDialogOpen} onOpenChange={setRulesDialogOpen}>
+        <DialogContent className="max-w-md bg-slate-900 border border-indigo-500/20 text-slate-100">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-indigo-300">{dl.rulesDialogTitle}</DialogTitle>
+            <DialogDescription className="text-xs text-slate-400">{dl.rulesDialogDesc}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4 text-sm">
+            <p className="font-semibold text-indigo-200 text-left">{dl.rulesSuggested}</p>
+            <div className="space-y-2.5 bg-slate-950/40 p-3 rounded-lg border border-slate-800 text-xs leading-relaxed text-slate-300 text-left">
+              <p>{dl.rule1}</p>
+              <p>{dl.rule2}</p>
+              <p>{dl.rule3}</p>
+            </div>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="ghost" size="sm" onClick={() => setRulesDialogOpen(false)} className="text-slate-400 hover:text-slate-200">
+              {t.cancel}
+            </Button>
+            <Button size="sm" onClick={handleApproveRules} className="bg-indigo-600 hover:bg-indigo-700 text-white">
+              {dl.rulesApplyBtn}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Weekly Plan Dialog */}
+      <Dialog open={planWeekDialogOpen} onOpenChange={setPlanWeekDialogOpen}>
+        <DialogContent className="max-w-md bg-slate-900 border border-indigo-500/20 text-slate-100">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-indigo-300">{dl.planWeekDialogTitle}</DialogTitle>
+            <DialogDescription className="text-xs text-slate-400">{dl.planWeekDialogDesc}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4 text-sm">
+            <p className="font-semibold text-indigo-200 text-left">{dl.planWeekSuggested}</p>
+            <div className="space-y-2 bg-slate-950/40 p-3 rounded-lg border border-slate-800 text-xs text-slate-300 text-left">
+              <p>{dl.planItem1}</p>
+              <p>{dl.planItem2}</p>
+              <p>{dl.planItem3}</p>
+            </div>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="ghost" size="sm" onClick={() => setPlanWeekDialogOpen(false)} className="text-slate-400 hover:text-slate-200">
+              {t.cancel}
+            </Button>
+            <Button size="sm" onClick={handleApprovePlan} className="bg-indigo-600 hover:bg-indigo-700 text-white">
+              {dl.planApplyBtn}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Invite Dialog */}
+      <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
+        <DialogContent className="max-w-md bg-slate-900 border border-indigo-500/20 text-slate-100">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-indigo-300">{dl.inviteDialogTitle}</DialogTitle>
+            <DialogDescription className="text-xs text-slate-400">{dl.inviteDialogDesc}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-3 text-xs text-left">
+            <div className="space-y-2.5 bg-slate-950/40 p-3.5 rounded-lg border border-slate-800">
+              <div>
+                <Label className="text-slate-400 text-[10px] uppercase font-bold">{dl.inviteMemberCode}</Label>
+                <div className="font-mono text-sm text-indigo-300 select-all font-semibold mt-0.5">
+                  {inviteCodes?.member || 'MEMBER-CODE-PENDING'}
+                </div>
+              </div>
+              <div className="border-t border-slate-800/80 pt-2">
+                <Label className="text-slate-400 text-[10px] uppercase font-bold">{dl.inviteAdminCode}</Label>
+                <div className="font-mono text-sm text-indigo-300 select-all font-semibold mt-0.5">
+                  {inviteCodes?.admin || 'ADMIN-CODE-PENDING'}
+                </div>
+              </div>
+            </div>
+
+            <form onSubmit={handleInviteEmail} className="space-y-2 border-t border-slate-800/80 pt-3">
+              <Label htmlFor="inviteEmail" className="text-slate-300 font-semibold">{dl.inviteEmailLabel}</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="inviteEmail"
+                  type="email"
+                  placeholder="partner@microdao.com"
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                  className="bg-slate-950 border-slate-800 text-slate-100 text-xs"
+                />
+                <Button type="submit" size="sm" disabled={inviteEmailLoading} className="bg-indigo-600 hover:bg-indigo-700 text-white shrink-0">
+                  {inviteEmailLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : dl.inviteEmailBtn}
+                </Button>
+              </div>
+            </form>
+          </div>
+          <div className="flex justify-end">
+            <Button size="sm" onClick={() => setInviteDialogOpen(false)} className="bg-slate-800 hover:bg-slate-700 text-slate-100">
+              {language === 'uk' ? 'Закрити' : language === 'ru' ? 'Закрыть' : language === 'es' ? 'Cerrar' : 'Close'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Task Dialog */}
+      <Dialog open={taskDialogOpen} onOpenChange={setTaskDialogOpen}>
+        <DialogContent className="max-w-md bg-slate-900 border border-indigo-500/20 text-slate-100">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-indigo-300 text-left">{dl.createTaskBtn}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2 text-xs text-left">
+            <div className="space-y-1">
+              <Label htmlFor="taskTitle" className="text-slate-300 font-semibold">Назва завдання</Label>
+              <Input
+                id="taskTitle"
+                placeholder="Введіть назву..."
+                value={newTask.title}
+                onChange={(e) => setNewTask(prev => ({ ...prev, title: e.target.value }))}
+                className="bg-slate-950 border-slate-800 text-slate-100"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="taskDesc" className="text-slate-300 font-semibold">Опис завдання</Label>
+              <Textarea
+                id="taskDesc"
+                placeholder="Введіть детальний опис..."
+                value={newTask.desc}
+                onChange={(e) => setNewTask(prev => ({ ...prev, desc: e.target.value }))}
+                rows={3}
+                className="bg-slate-950 border-slate-800 text-slate-100 resize-none"
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="ghost" size="sm" onClick={() => setTaskDialogOpen(false)} className="text-slate-400 hover:text-slate-200">
+              {t.cancel}
+            </Button>
+            <Button size="sm" onClick={handleCreateTask} disabled={newTaskLoading || !newTask.title.trim()} className="bg-indigo-600 hover:bg-indigo-700 text-white">
+              {newTaskLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Створити'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

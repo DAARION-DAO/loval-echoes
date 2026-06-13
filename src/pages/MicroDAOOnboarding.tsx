@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -53,6 +54,14 @@ interface AnswersState {
   initial_notes: string;
   first_task_title: string;
   first_task_desc: string;
+  // New fields for Sprint C onboarding flow
+  desired_result: string;
+  boundaries: string;
+  language: 'uk' | 'en' | 'ru' | 'es';
+  communication_style: string;
+  enabled_modules: string[];
+  invite_emails: string;
+  suggested_roles: string;
 }
 
 const defaultAnswers: AnswersState = {
@@ -75,14 +84,231 @@ const defaultAnswers: AnswersState = {
   code_max_uses: 50,
   initial_notes: '',
   first_task_title: '',
-  first_task_desc: ''
+  first_task_desc: '',
+  desired_result: '',
+  boundaries: '',
+  language: 'uk',
+  communication_style: 'friendly',
+  enabled_modules: ['memory', 'tasks', 'steward'],
+  invite_emails: '',
+  suggested_roles: 'Coordinator, Moderator'
+};
+
+const wizardLocals = {
+  uk: {
+    step1: "Ідентичність Спільноти",
+    step2: "Місія Спільноти",
+    step3: "Правила та Цінності",
+    step4: "Особистість Духа Спільноти",
+    step5: "Рівень Автономії",
+    step6: "Стартові Модулі",
+    step7: "Перші Запрошення",
+    step8: "Огляд та Створення",
+    desiredResultLabel: "Бажаний результат спільноти",
+    desiredResultPlaceholder: "Опишіть очікуваний результат вашої діяльності...",
+    boundariesLabel: "Межі поведінки спільноти",
+    boundariesPlaceholder: "Наприклад: жодного спаму, повага до приватности, табу на рекламу...",
+    agentLanguageLabel: "Основна мова спілкування агента",
+    agentCommStyleLabel: "Стиль спілкування агента",
+    agentCommStylePlaceholder: "Наприклад: дружній, але стриманий, професійний, творчий...",
+    modulesTitle: "Виберіть модулі для підключення",
+    modulesDesc: "Ви можете підключити або налаштувати їх пізніше у будь-який час.",
+    moduleNames: {
+      memory: "Памʼять спільноти / RAG",
+      tasks: "Органайзер задач",
+      steward: "Стюард / Модерація чату",
+      digest: "Автоматичні дайджести",
+      messenger: "Месенджер (Roadmap)",
+      governance: "Управління / Голосування (Roadmap)",
+      wallet: "Казна / Гаманець (Roadmap)",
+    } as Record<string, string>,
+    moduleDescs: {
+      memory: "Дозволяє агенту запамʼятовувати контекст, правила та завантажені документи.",
+      tasks: "Створення та відслідковування завдань у Kanban-дошках.",
+      steward: "Модерація повідомлень, попередження та автоматична допомога учасникам.",
+      digest: "Періодичний огляд найважливіших обговорень та рішень.",
+      messenger: "Суверенні edge-чати для комунікації без сторонніх серверів.",
+      governance: "Формування пропозицій, голосування та фіксація рішень у блокчейні.",
+      wallet: "Керування спільним бюджетом та виплати.",
+    } as Record<string, string>,
+    suggestedRolesLabel: "Пропоновані ролі для перших учасників",
+    suggestedRolesPlaceholder: "Наприклад: Координатор, Розробник, Модератор...",
+    inviteEmailsLabel: "Емейли для запрошення (через кому)",
+    inviteEmailsPlaceholder: "example1@dao.com, example2@dao.com...",
+    agentMsgs: {
+      1: "Привіт! Я — ваш майбутній Дух Спільноти. Давайте разом створимо нову MicroDAO. Спочатку вкажіть назву, тип та опис нашого майбутнього простору.",
+      2: "Чудово! Тепер давайте сформулюємо нашу місію, ціль на перші 30 днів та бажаний результат, щоб я міг допомагати вам рухатись у правильному напрямку.",
+      3: "Які правила, принципи та межі (boundaries) діятимуть у нашій спільноті? Це допоможе мені модерувати чати та нагадувати учасникам про цінності.",
+      4: "А тепер налаштуємо мене. Як мене зватимуть? Який тон, стиль та мову спілкування мені обрати для роботи з вашою спільнотою?",
+      5: "Визначте мій рівень автономії. Що я можу робити самостійно, а де мені обовʼязково знадобиться підтвердження власника або адміністратора?",
+      6: "Які стартові модулі ви хочете активувати прямо зараз? Деякі з них працюватимуть у локальному клієнті, інші перебувають у нашому плані розвитку.",
+      7: "Давайте підготуємо перші запрошення. Ви можете створити індивідуальні інвайт-коди або одразу надіслати запрошення на емейли.",
+      8: "Все готово! Перевірте конфігурацію. Коли ви натиснете «Запустити», народиться ваша MicroDAO, а разом з нею — я, ваш Дух Спільноти.",
+    } as Record<number, string>
+  },
+  en: {
+    step1: "Community Identity",
+    step2: "Mission",
+    step3: "Rules and Values",
+    step4: "Spirit Agent Personality",
+    step5: "Autonomy Level",
+    step6: "Starter Modules",
+    step7: "First Invites",
+    step8: "Review & Create",
+    desiredResultLabel: "Desired result of the community",
+    desiredResultPlaceholder: "Describe the expected outcome of your activities...",
+    boundariesLabel: "Community boundaries",
+    boundariesPlaceholder: "e.g., no spam, respect privacy, no advertising taboos...",
+    agentLanguageLabel: "Primary communication language",
+    agentCommStyleLabel: "Agent communication style",
+    agentCommStylePlaceholder: "e.g., friendly but reserved, professional, creative...",
+    modulesTitle: "Select starter modules to connect",
+    modulesDesc: "You can enable or disable these at any time in the future.",
+    moduleNames: {
+      memory: "Community Memory / RAG",
+      tasks: "Task Organizer",
+      steward: "Steward / Chat Moderation",
+      digest: "Automated Digests",
+      messenger: "Messenger (Roadmap)",
+      governance: "Governance / Voting (Roadmap)",
+      wallet: "Treasury / Wallet (Roadmap)",
+    } as Record<string, string>,
+    moduleDescs: {
+      memory: "Allows the agent to remember context, rules, and uploaded documents.",
+      tasks: "Create and track tasks in Kanban boards.",
+      steward: "Moderate messages, issue warnings, and automatically assist members.",
+      digest: "Periodic summaries of the most important discussions and decisions.",
+      messenger: "Sovereign edge chats for communication without third-party servers.",
+      governance: "Drafting proposals, voting, and recording decisions on-chain.",
+      wallet: "Manage shared budget and payouts.",
+    } as Record<string, string>,
+    suggestedRolesLabel: "Suggested roles for initial members",
+    suggestedRolesPlaceholder: "e.g., Coordinator, Developer, Moderator...",
+    inviteEmailsLabel: "Invite emails (comma separated)",
+    inviteEmailsPlaceholder: "example1@dao.com, example2@dao.com...",
+    agentMsgs: {
+      1: "Hello! I am your future Community Spirit Agent. Let's create a new MicroDAO together. First, enter the name, type, and description of our space.",
+      2: "Great! Now let's define our mission, first 30-day goal, and desired outcome so that I can help guide your community in the right direction.",
+      3: "What rules, principles, and boundaries will govern our community? This helps me moderate chats and reinforce our shared values.",
+      4: "Now let's configure my personality. What is my name? What tone, style, and language should I adopt to interact with your community?",
+      5: "Define my autonomy level. What can I do on my own, and where will I strictly need approval from the owner or admin?",
+      6: "Which starter modules would you like to activate now? Some will run in the local client, while others are on our roadmap.",
+      7: "Let's prepare the first invites. You can set up invite codes or draft email invites right away.",
+      8: "Everything is ready! Review the configuration. Once you click 'Launch', your MicroDAO will be born, and I, your Community Spirit, will come to life.",
+    } as Record<number, string>
+  },
+  ru: {
+    step1: "Идентичность Сообщества",
+    step2: "Миссия",
+    step3: "Правила и Ценности",
+    step4: "Личность Духа Сообщества",
+    step5: "Уровень Автономии",
+    step6: "Стартовые Модули",
+    step7: "Первые Приглашения",
+    step8: "Обзор и Создание",
+    desiredResultLabel: "Желаемый результат сообщества",
+    desiredResultPlaceholder: "Опишите ожидаемый результат вашей деятельности...",
+    boundariesLabel: "Границы поведения в сообществе",
+    boundariesPlaceholder: "Например: спам запрещен, уважение к приватности, табу на рекламу...",
+    agentLanguageLabel: "Основной язык общения агента",
+    agentCommStyleLabel: "Стиль общения агента",
+    agentCommStylePlaceholder: "Например: дружелюбный, но сдержанный, профессиональный, творческий...",
+    modulesTitle: "Выберите стартовые модули",
+    modulesDesc: "Вы можете подключить или отключить их позже в любое время.",
+    moduleNames: {
+      memory: "Память сообщества / RAG",
+      tasks: "Органайзер задач",
+      steward: "Стюард / Модерация чата",
+      digest: "Автоматические дайджесты",
+      messenger: "Мессенджер (Roadmap)",
+      governance: "Управление / Голосование (Roadmap)",
+      wallet: "Казна / Кошелек (Roadmap)",
+    } as Record<string, string>,
+    moduleDescs: {
+      memory: "Позволяет агенту помнить контекст, правила и загруженные документы.",
+      tasks: "Создание и отслеживание задач на Kanban-досках.",
+      steward: "Модерация сообщений, предупреждения и автоматическая помощь участникам.",
+      digest: "Периодический обзор важнейших обсуждений и решений.",
+      messenger: "Суверенные edge-чаты для общения без сторонних серверов.",
+      governance: "Формирование предложений, голосование и фиксация решений в блокчейне.",
+      wallet: "Управление общим бюджетом и выплаты.",
+    } as Record<string, string>,
+    suggestedRolesLabel: "Предлагаемые роли для первых участников",
+    suggestedRolesPlaceholder: "Например: Координатор, Разработчик, Модератор...",
+    inviteEmailsLabel: "Email-адреса для приглашения (через запятую)",
+    inviteEmailsPlaceholder: "example1@dao.com, example2@dao.com...",
+    agentMsgs: {
+      1: "Привет! Я — ваш будущий Дух Сообщества. Давайте вместе создадим новую MicroDAO. Сначала укажите имя, тип и описание нашего пространства.",
+      2: "Отлично! Теперь давайте сформулируем нашу миссию, цель на первые 30 дней и желаемый результат, чтобы я мог помогать вам двигаться в нужном направлении.",
+      3: "Какие правила, принципы и границы (boundaries) будут действовать в сообществе? Это поможет мне модерировать чаты и напоминать о ценностях.",
+      4: "А теперь настроим меня. Как меня будут звать? Какой тон, стиль и язык общения мне выбрать для работы с вашим сообществом?",
+      5: "Определите мой уровень автономии. Что я могу делать самостоятельно, а где мне обязательно потребуется подтверждение владельца или администратора?",
+      6: "Какие стартовые модули вы хотите активировать прямо сейчас? Некоторые будут работать в локальном клиенте, другие — в планах развития.",
+      7: "Давайте подготовим первые приглашения. Вы можете настроить инвайт-коды или сразу вписать email-адреса для отправки приглашений.",
+      8: "Все готово! Проверьте конфигурацию. Когда вы нажмете «Запустить», родится ваша MicroDAO, а вместе с ней — я, ваш Дух Сообщества.",
+    } as Record<number, string>
+  },
+  es: {
+    step1: "Identidad de la Comunidad",
+    step2: "Misión",
+    step3: "Reglas y Valores",
+    step4: "Personalidad del Espíritu",
+    step5: "Nivel de Autonomía",
+    step6: "Módulos Iniciales",
+    step7: "Primeras Invitaciones",
+    step8: "Revisión y Creación",
+    desiredResultLabel: "Resultado deseado de la comunidad",
+    desiredResultPlaceholder: "Describa el resultado esperado de sus actividades...",
+    boundariesLabel: "Límites de comportamiento",
+    boundariesPlaceholder: "Por ejemplo: no spam, respeto a la privacidad, sin anuncios...",
+    agentLanguageLabel: "Idioma principal del agente",
+    agentCommStyleLabel: "Estilo de comunicación del agente",
+    agentCommStylePlaceholder: "Por ejemplo: amigable pero reservado, profesional, creativo...",
+    modulesTitle: "Seleccione módulos iniciales",
+    modulesDesc: "Puede activarlos o desactivarlos en cualquier momento en el futuro.",
+    moduleNames: {
+      memory: "Memoria de Comunidad / RAG",
+      tasks: "Organizador de Tareas",
+      steward: "Administrador / Moderación de Chat",
+      digest: "Resúmenes Automáticos",
+      messenger: "Mensajero (Roadmap)",
+      governance: "Gobernanza / Votación (Roadmap)",
+      wallet: "Tesorería / Billetera (Roadmap)",
+    } as Record<string, string>,
+    moduleDescs: {
+      memory: "Permite al agente recordar contexto, reglas y documentos cargados.",
+      tasks: "Crear y rastrear tareas en tableros Kanban.",
+      steward: "Moderar mensajes, advertencias y ayuda automática a los miembros.",
+      digest: "Resumen periódico de las discusiones y decisiones más importantes.",
+      messenger: "Chats edge soberanos para comunicarse sin servidores de terceros.",
+      governance: "Crear propuestas, votar y registrar decisiones en cadena.",
+      wallet: "Administrar presupuesto compartido y pagos.",
+    } as Record<string, string>,
+    suggestedRolesLabel: "Roles sugeridos para miembros iniciales",
+    suggestedRolesPlaceholder: "Por ejemplo: Coordinador, Desarrollador, Moderador...",
+    inviteEmailsLabel: "Correos electrónicos para invitar (separados por comas)",
+    inviteEmailsPlaceholder: "example1@dao.com, example2@dao.com...",
+    agentMsgs: {
+      1: "¡Hola! Soy tu futuro Agente del Espíritu de la Comunidad. Creemos una nueva MicroDAO juntos. Primero, ingresa el nombre, tipo y descripción.",
+      2: "¡Excelente! Ahora definamos nuestra misión, objetivo para los primeros 30 días y resultado esperado para poder guiar a tu comunidad.",
+      3: "¿Qué reglas, principios y límites regirán nuestra comunidad? Esto me ayuda a moderar los chats y recordar los valores compartidos.",
+      4: "Ahora configuremos mi personalidad. ¿Cuál es mi nombre? ¿Qué tono, estilo e idioma debo adoptar para interactuar con tu comunidad?",
+      5: "Define mi nivel de autonomía. ¿Qué puedo hacer por mi cuenta y dónde necesitaré estrictamente la aprobación del propietario o administrador?",
+      6: "¿Qué módulos iniciales te gustaría activar ahora? Algunos se ejecutarán en el cliente local, otros están en nuestra hoja de ruta.",
+      7: "Preparemos las primeras invitaciones. Puedes configurar códigos de invitación o redactar correos de invitación de inmediato.",
+      8: "¡Todo está listo! Revisa la configuración. Al hacer clic en 'Iniciar', nacerá tu MicroDAO y yo, tu Espíritu de la Comunidad, cobraré vida.",
+    } as Record<number, string>
+  }
 };
 
 export default function MicroDAOOnboarding() {
   const { user, signOut } = useAuth();
   const { memberships, refresh, setActiveCommunityId } = useActiveCommunity();
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
+
+  // Retrieve localized strings
+  const wl = wizardLocals[language as keyof typeof wizardLocals] || wizardLocals.en;
 
   // Onboarding modes: 'lobby' | 'wizard'
   const [mode, setMode] = useState<'lobby' | 'wizard'>('lobby');
@@ -91,15 +317,26 @@ export default function MicroDAOOnboarding() {
   const [answers, setAnswers] = useState<AnswersState>(defaultAnswers);
 
   const agentMessages: Record<number, string> = {
-    1: t.onboardingWizard.agentMsg1,
-    2: t.onboardingWizard.agentMsg2,
-    3: t.onboardingWizard.agentMsg3,
-    4: t.onboardingWizard.agentMsg4,
-    5: t.onboardingWizard.agentMsg5,
-    6: t.onboardingWizard.agentMsg6,
-    7: t.onboardingWizard.agentMsg7,
-    8: t.onboardingWizard.agentMsg8,
+    1: wl.agentMsgs[1],
+    2: wl.agentMsgs[2],
+    3: wl.agentMsgs[3],
+    4: wl.agentMsgs[4],
+    5: wl.agentMsgs[5],
+    6: wl.agentMsgs[6],
+    7: wl.agentMsgs[7],
+    8: wl.agentMsgs[8],
   };
+
+  const stepsTitle = [
+    wl.step1,
+    wl.step2,
+    wl.step3,
+    wl.step4,
+    wl.step5,
+    wl.step6,
+    wl.step7,
+    wl.step8
+  ];
 
   useEffect(() => {
     setAnswers(prev => ({
@@ -114,6 +351,15 @@ export default function MicroDAOOnboarding() {
   const [partnerMessage, setPartnerMessage] = useState('');
   const [partnerSubmitted, setPartnerSubmitted] = useState(false);
   const [draftSession, setDraftSession] = useState<any>(null);
+
+  const toggleModule = (mod: string) => {
+    setAnswers(prev => {
+      const list = prev.enabled_modules.includes(mod)
+        ? prev.enabled_modules.filter(m => m !== mod)
+        : [...prev.enabled_modules, mod];
+      return { ...prev, enabled_modules: list };
+    });
+  };
 
   // Redirect unauthenticated users or users who already have communities
   useEffect(() => {
@@ -310,14 +556,17 @@ export default function MicroDAOOnboarding() {
 
     setLoading(true);
     try {
+      const combinedMission = answers.mission.trim() + (answers.desired_result ? `\nDesired Result: ${answers.desired_result.trim()}` : '');
+      const combinedRules = answers.values_rules.trim() + (answers.boundaries ? `\nBoundaries: ${answers.boundaries.trim()}` : '');
+
       // 1. Call atomic database transaction RPC
       const { data, error: rpcErr } = await supabase.rpc('create_microdao_with_spirit_agent', {
         p_name: answers.name.trim(),
         p_type: answers.type,
         p_description: answers.description.trim() || null,
-        p_mission: answers.mission.trim() || null,
+        p_mission: combinedMission || null,
         p_goal_30_days: answers.goal_30_days.trim() || null,
-        p_values_rules: answers.values_rules.trim() || null,
+        p_values_rules: combinedRules || null,
         p_agent_name: answers.agent_name.trim(),
         p_autonomy_level: answers.autonomy_level,
         p_setup_answers: answers as any,
@@ -642,7 +891,7 @@ export default function MicroDAOOnboarding() {
                 <CardHeader className="border-b border-slate-800/50 pb-4">
                   <div className="flex justify-between items-center">
                     <CardTitle className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-300 to-purple-400">
-                      {t.onboardingWizard.stepsTitle[step - 1]}
+                      {stepsTitle[step - 1]}
                     </CardTitle>
                     <span className="text-xs text-slate-500 font-semibold">
                       {Math.round((step / 8) * 100)}% {t.onboardingWizard.completed}
@@ -711,7 +960,7 @@ export default function MicroDAOOnboarding() {
                           placeholder={t.onboardingWizard.placeholderCommMission}
                           value={answers.mission}
                           onChange={(e) => setAnswers(prev => ({ ...prev, mission: e.target.value }))}
-                          className="bg-slate-950/80 border-slate-800 text-xs min-h-[100px]"
+                          className="bg-slate-950/80 border-slate-800 text-xs min-h-[80px]"
                         />
                       </div>
 
@@ -722,13 +971,24 @@ export default function MicroDAOOnboarding() {
                           placeholder={t.onboardingWizard.placeholderCommGoal}
                           value={answers.goal_30_days}
                           onChange={(e) => setAnswers(prev => ({ ...prev, goal_30_days: e.target.value }))}
-                          className="bg-slate-950/80 border-slate-800 text-xs min-h-[100px]"
+                          className="bg-slate-950/80 border-slate-800 text-xs min-h-[80px]"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="comm-result" className="text-xs font-bold text-slate-300">{wl.desiredResultLabel}</Label>
+                        <Textarea 
+                          id="comm-result"
+                          placeholder={wl.desiredResultPlaceholder}
+                          value={answers.desired_result}
+                          onChange={(e) => setAnswers(prev => ({ ...prev, desired_result: e.target.value }))}
+                          className="bg-slate-950/80 border-slate-800 text-xs min-h-[80px]"
                         />
                       </div>
                     </div>
                   )}
 
-                  {/* STEP 3: VALUES & RULES */}
+                  {/* STEP 3: RULES & VALUES */}
                   {step === 3 && (
                     <div className="space-y-4">
                       <div className="space-y-2">
@@ -738,13 +998,24 @@ export default function MicroDAOOnboarding() {
                           placeholder={t.onboardingWizard.placeholderCommValues}
                           value={answers.values_rules}
                           onChange={(e) => setAnswers(prev => ({ ...prev, values_rules: e.target.value }))}
-                          className="bg-slate-950/80 border-slate-800 text-xs min-h-[180px]"
+                          className="bg-slate-950/80 border-slate-800 text-xs min-h-[100px]"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="comm-boundaries" className="text-xs font-bold text-slate-300">{wl.boundariesLabel}</Label>
+                        <Textarea 
+                          id="comm-boundaries"
+                          placeholder={wl.boundariesPlaceholder}
+                          value={answers.boundaries}
+                          onChange={(e) => setAnswers(prev => ({ ...prev, boundaries: e.target.value }))}
+                          className="bg-slate-950/80 border-slate-800 text-xs min-h-[100px]"
                         />
                       </div>
                     </div>
                   )}
 
-                  {/* STEP 4: AGENT PERSONALITY */}
+                  {/* STEP 4: SPIRIT AGENT PERSONALITY */}
                   {step === 4 && (
                     <div className="space-y-4">
                       <div className="space-y-2">
@@ -774,10 +1045,39 @@ export default function MicroDAOOnboarding() {
                           </SelectContent>
                         </Select>
                       </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="agent-lang" className="text-xs font-bold text-slate-300">{wl.agentLanguageLabel}</Label>
+                        <Select 
+                          value={answers.language}
+                          onValueChange={(val: any) => setAnswers(prev => ({ ...prev, language: val }))}
+                        >
+                          <SelectTrigger id="agent-lang" className="bg-slate-950/80 border-slate-800">
+                            <SelectValue placeholder="Мова / Language" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-slate-900 border-slate-800 text-slate-100">
+                            <SelectItem value="uk">Українська (UA)</SelectItem>
+                            <SelectItem value="en">English (EN)</SelectItem>
+                            <SelectItem value="ru">Русский (RU)</SelectItem>
+                            <SelectItem value="es">Español (ES)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="agent-style" className="text-xs font-bold text-slate-300">{wl.agentCommStyleLabel}</Label>
+                        <Input 
+                          id="agent-style"
+                          placeholder={wl.agentCommStylePlaceholder}
+                          value={answers.communication_style}
+                          onChange={(e) => setAnswers(prev => ({ ...prev, communication_style: e.target.value }))}
+                          className="bg-slate-950/80 border-slate-800 focus-visible:ring-indigo-500"
+                        />
+                      </div>
                     </div>
                   )}
 
-                  {/* STEP 5: AUTONOMY & PERMISSIONS */}
+                  {/* STEP 5: AUTONOMY LEVEL */}
                   {step === 5 && (
                     <div className="space-y-4">
                       <div className="space-y-2">
@@ -863,59 +1163,107 @@ export default function MicroDAOOnboarding() {
                     </div>
                   )}
 
-                  {/* STEP 6: INVITES */}
+                  {/* STEP 6: MODULES TO START WITH */}
                   {step === 6 && (
                     <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="invite-member" className="text-xs font-bold text-slate-300">{t.onboardingWizard.labelInviteMember}</Label>
-                        <Input 
-                          id="invite-member"
-                          value={answers.member_code}
-                          onChange={(e) => setAnswers(prev => ({ ...prev, member_code: e.target.value.toUpperCase() }))}
-                          className="bg-slate-950/80 border-slate-800 font-mono text-center tracking-widest focus-visible:ring-indigo-500"
-                        />
+                      <div className="space-y-1">
+                        <Label className="text-xs font-bold text-slate-300">{wl.modulesTitle}</Label>
+                        <p className="text-[10px] text-slate-400">{wl.modulesDesc}</p>
                       </div>
 
-                      <div className="space-y-2">
-                        <Label htmlFor="invite-admin" className="text-xs font-bold text-slate-300">{t.onboardingWizard.labelInviteAdmin}</Label>
-                        <Input 
-                          id="invite-admin"
-                          value={answers.admin_code}
-                          onChange={(e) => setAnswers(prev => ({ ...prev, admin_code: e.target.value.toUpperCase() }))}
-                          className="bg-slate-950/80 border-slate-800 font-mono text-center tracking-widest focus-visible:ring-indigo-500"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="max-uses" className="text-xs font-bold text-slate-300">{t.onboardingWizard.labelMaxUses}</Label>
-                        <Input 
-                          id="max-uses"
-                          type="number"
-                          value={answers.code_max_uses}
-                          onChange={(e) => setAnswers(prev => ({ ...prev, code_max_uses: parseInt(e.target.value) || 1 }))}
-                          className="bg-slate-950/80 border-slate-800 focus-visible:ring-indigo-500"
-                        />
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[260px] overflow-y-auto pr-2">
+                        {[
+                          { id: 'memory', type: 'now' },
+                          { id: 'tasks', type: 'now' },
+                          { id: 'steward', type: 'now' },
+                          { id: 'digest', type: 'now' },
+                          { id: 'messenger', type: 'roadmap' },
+                          { id: 'governance', type: 'roadmap' },
+                          { id: 'wallet', type: 'roadmap' },
+                        ].map(m => {
+                          const isEnabled = answers.enabled_modules.includes(m.id);
+                          return (
+                            <div 
+                              key={m.id}
+                              onClick={() => toggleModule(m.id)}
+                              className={`p-3 rounded-lg border cursor-pointer transition-all flex flex-col justify-between ${
+                                isEnabled 
+                                  ? 'border-indigo-500/50 bg-indigo-950/20 text-indigo-100 shadow-md shadow-indigo-500/5' 
+                                  : 'border-slate-800 bg-slate-950/30 text-slate-400 hover:border-slate-700'
+                              }`}
+                            >
+                              <div className="flex items-start justify-between gap-2">
+                                <span className="text-xs font-semibold text-slate-200">
+                                  {wl.moduleNames[m.id]}
+                                </span>
+                                <Badge variant="outline" className={`text-[8px] uppercase font-bold py-0.5 px-1.5 leading-none shrink-0 ${
+                                  m.type === 'now' 
+                                    ? 'bg-green-500/10 text-green-400 border-green-500/20' 
+                                    : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                                }`}>
+                                  {m.type === 'now' ? 'active' : 'roadmap'}
+                                </Badge>
+                              </div>
+                              <p className="text-[10px] text-slate-400 mt-1.5 leading-relaxed">
+                                {wl.moduleDescs[m.id]}
+                              </p>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   )}
 
-                  {/* STEP 7: KNOWLEDGE SEED */}
+                  {/* STEP 7: FIRST INVITES */}
                   {step === 7 && (
-                    <div className="space-y-4">
+                    <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2">
                       <div className="space-y-2">
-                        <Label htmlFor="kb-seed" className="text-xs font-bold text-slate-300">{t.onboardingWizard.labelKbSeed}</Label>
+                        <Label htmlFor="invite-emails" className="text-xs font-bold text-slate-300">{wl.inviteEmailsLabel}</Label>
                         <Textarea 
-                          id="kb-seed"
-                          placeholder={t.onboardingWizard.placeholderKbSeed}
-                          value={answers.initial_notes}
-                          onChange={(e) => setAnswers(prev => ({ ...prev, initial_notes: e.target.value }))}
-                          className="bg-slate-950/80 border-slate-800 text-xs min-h-[180px]"
+                          id="invite-emails"
+                          placeholder={wl.inviteEmailsPlaceholder}
+                          value={answers.invite_emails}
+                          onChange={(e) => setAnswers(prev => ({ ...prev, invite_emails: e.target.value }))}
+                          className="bg-slate-950/80 border-slate-800 text-xs min-h-[60px]"
                         />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="suggested-roles" className="text-xs font-bold text-slate-300">{wl.suggestedRolesLabel}</Label>
+                        <Input 
+                          id="suggested-roles"
+                          placeholder={wl.suggestedRolesPlaceholder}
+                          value={answers.suggested_roles}
+                          onChange={(e) => setAnswers(prev => ({ ...prev, suggested_roles: e.target.value }))}
+                          className="bg-slate-950/80 border-slate-800 text-xs"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-800/60">
+                        <div className="space-y-1">
+                          <Label htmlFor="invite-member" className="text-[10px] font-bold text-slate-400">{t.onboardingWizard.labelInviteMember}</Label>
+                          <Input 
+                            id="invite-member"
+                            value={answers.member_code}
+                            onChange={(e) => setAnswers(prev => ({ ...prev, member_code: e.target.value.toUpperCase() }))}
+                            className="bg-slate-950/80 border-slate-800 font-mono text-center text-xs tracking-wider focus-visible:ring-indigo-500 h-8"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <Label htmlFor="invite-admin" className="text-[10px] font-bold text-slate-400">{t.onboardingWizard.labelInviteAdmin}</Label>
+                          <Input 
+                            id="invite-admin"
+                            value={answers.admin_code}
+                            onChange={(e) => setAnswers(prev => ({ ...prev, admin_code: e.target.value.toUpperCase() }))}
+                            className="bg-slate-950/80 border-slate-800 font-mono text-center text-xs tracking-wider focus-visible:ring-indigo-500 h-8"
+                          />
+                        </div>
                       </div>
                     </div>
                   )}
 
-                  {/* STEP 8: FIRST ACTIONS & REVIEW */}
+                  {/* STEP 8: REVIEW AND CREATE */}
                   {step === 8 && (
                     <div className="space-y-4 overflow-y-auto max-h-[300px] pr-2">
                       <div className="p-3 bg-indigo-950/30 border border-indigo-500/20 rounded-lg space-y-2 text-xs text-indigo-200">
@@ -952,7 +1300,10 @@ export default function MicroDAOOnboarding() {
                           <div><span className="font-semibold text-slate-200">{t.onboardingWizard.reviewLabels.type}</span> {t.onboardingWizard.types[answers.type as keyof typeof t.onboardingWizard.types] || answers.type}</div>
                           <div><span className="font-semibold text-slate-200">{t.onboardingWizard.reviewLabels.agent}</span> {answers.agent_name} ({t.onboardingWizard.tones[answers.tone as keyof typeof t.onboardingWizard.tones] || answers.tone})</div>
                           <div><span className="font-semibold text-slate-200">{t.onboardingWizard.reviewLabels.autonomy}</span> {t.onboardingWizard.autonomyLevels[answers.autonomy_level === 'supervised_admin' ? 'admin' : answers.autonomy_level]}</div>
-                          <div className="col-span-2 truncate"><span className="font-semibold text-slate-200">{t.onboardingWizard.reviewLabels.code}</span> {answers.member_code}</div>
+                          <div><span className="font-semibold text-slate-200">Мова агента / Language:</span> {answers.language.toUpperCase()}</div>
+                          <div><span className="font-semibold text-slate-200">Стиль / Style:</span> {answers.communication_style}</div>
+                          <div className="col-span-2"><span className="font-semibold text-slate-200">Активні модулі / Modules:</span> {answers.enabled_modules.map(m => wl.moduleNames[m] || m).join(', ')}</div>
+                          {answers.invite_emails && <div className="col-span-2 truncate"><span className="font-semibold text-slate-200">Email запрошення:</span> {answers.invite_emails}</div>}
                         </div>
                       </div>
                     </div>
