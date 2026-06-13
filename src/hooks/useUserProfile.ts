@@ -14,6 +14,10 @@ export interface UserProfile {
   updated_at: string;
   role?: string;
   access_tier?: string;
+  wallet_address?: string;
+  wallet_verified_at?: string;
+  telegram_username?: string;
+  telegram_user_id?: string;
 }
 
 
@@ -79,6 +83,53 @@ export const useUserProfile = () => {
         variant: 'destructive'
       });
       throw error;
+    }
+  };
+
+  const updateTelegram = async (telegramUsername: string) => {
+    if (!user) return;
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          telegram_username: telegramUsername,
+          updated_at: new Date().toISOString(),
+        } as Record<string, unknown>)
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.warn('[useUserProfile] telegram_username column may not exist:', error.message);
+      } else {
+        setProfile(prev => prev ? { ...prev, telegram_username: telegramUsername } : prev);
+      }
+    } catch (err) {
+      console.warn('[useUserProfile] updateTelegram failed:', err);
+    }
+  };
+
+  const updateWallet = async (walletAddress: string | null) => {
+    if (!user) return;
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          wallet_address: walletAddress,
+          wallet_verified_at: walletAddress ? new Date().toISOString() : null,
+          updated_at: new Date().toISOString(),
+        } as Record<string, unknown>)
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.warn('[useUserProfile] wallet_address column may not exist:', error.message);
+      } else {
+        setProfile(prev => prev ? {
+          ...prev,
+          wallet_address: walletAddress ?? undefined,
+          wallet_verified_at: walletAddress ? new Date().toISOString() : undefined,
+        } : prev);
+      }
+    } catch (err) {
+      console.warn('[useUserProfile] updateWallet failed:', err);
     }
   };
 
@@ -193,6 +244,8 @@ export const useUserProfile = () => {
     profile,
     loading,
     updateProfile,
+    updateTelegram,
+    updateWallet,
     uploadAvatar,
     refetch: fetchProfile
   };

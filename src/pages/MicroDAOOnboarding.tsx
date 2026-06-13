@@ -755,10 +755,36 @@ export default function MicroDAOOnboarding() {
                   <p className="text-xs text-slate-400 leading-relaxed">
                     {t.onboarding.createCommunityDesc}
                   </p>
-                  <div className="mt-3 p-2.5 rounded bg-indigo-500/5 border border-indigo-500/10 text-[11px] text-indigo-300">
-                    {language === 'uk' 
-                      ? 'Leader Plan — $20/міс після запуску оплати (зараз створення безкоштовне для тестування)' 
-                      : 'Leader Plan — $20/month after billing is enabled (currently free for testing)'}
+                  {/* Sprint F3 — Identity Requirements Info */}
+                  <div className="mt-3 space-y-2">
+                    <div className="p-3 rounded-lg bg-indigo-500/5 border border-indigo-500/10 space-y-2">
+                      <div className="text-[11px] font-semibold text-indigo-300">
+                        {t.identity.onboardingIdentityTitle}
+                      </div>
+                      <p className="text-[10px] text-slate-400">
+                        {t.identity.onboardingIdentityDesc}
+                      </p>
+                      <div className="space-y-1 text-[10px]">
+                        <div className="flex items-center gap-1.5 text-emerald-400">
+                          <span>✅</span> Email
+                        </div>
+                        <div className="flex items-center gap-1.5 text-slate-400">
+                          <span>⬜</span> Telegram
+                        </div>
+                        <div className="flex items-center gap-1.5 text-slate-400">
+                          <span>⬜</span> {t.identity.walletTitle}
+                        </div>
+                        <div className="flex items-center gap-1.5 text-slate-400">
+                          <span>⬜</span> {t.identity.subscriptionTitle} (Leader Plan)
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-2 rounded bg-amber-500/5 border border-amber-500/10 text-[10px] text-amber-300/80">
+                      🧪 {t.identity.onboardingTestingNote}
+                    </div>
+                    <div className="text-[10px] text-indigo-300/60">
+                      💎 {t.identity.onboardingPriceNote}
+                    </div>
                   </div>
                 </CardContent>
                 <CardFooter>

@@ -1,121 +1,219 @@
+/**
+ * Sprint F3 — Admin Billing Page (Crypto-First)
+ * 
+ * Complete rewrite from Stripe-first to crypto-first.
+ * Shows Leader Plan pricing in DAAR/USDT/USDC/ETH.
+ * No Stripe integration.
+ */
+
 import { 
-  CreditCard, 
+  Wallet,
   CheckSquare, 
-  HelpCircle, 
   ArrowRight,
   TrendingUp,
-  DollarSign,
-  AlertCircle
+  Coins,
+  AlertCircle,
+  Clock,
+  Shield,
+  Zap,
+  Circle
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTranslation } from '@/lib/i18n';
 import { Badge } from '@/components/ui/badge';
+import { 
+  LEADER_PLAN, 
+  SUPPORTED_ASSETS, 
+  SUBSCRIPTION_STATUS_LABELS, 
+  type SubscriptionStatus 
+} from '@/lib/subscriptionTypes';
 
 export const AdminBilling = () => {
-  const { language } = useTranslation();
-  const isUk = language === 'uk';
+  const { t, language } = useTranslation();
 
-  const todoItems = [
+  const lang = language as 'uk' | 'en' | 'ru' | 'es';
+
+  // Subscription status display data
+  const statusItems: { status: SubscriptionStatus; count: number; color: string }[] = [
+    { status: 'none', count: 0, color: 'slate' },
+    { status: 'active', count: 0, color: 'emerald' },
+    { status: 'pending_payment', count: 0, color: 'amber' },
+    { status: 'past_due', count: 0, color: 'red' },
+    { status: 'expired', count: 0, color: 'slate' },
+    { status: 'cancelled', count: 0, color: 'slate' },
+    { status: 'manual_review', count: 0, color: 'amber' },
+    { status: 'founder_bypass', count: 0, color: 'indigo' },
+    { status: 'guardian_bypass', count: 0, color: 'purple' },
+  ];
+
+  // Roadmap items
+  const roadmapItems = [
     {
-      title: isUk ? 'Синхронізація Stripe продуктів/цін' : 'Stripe Products & Prices sync',
-      desc: isUk ? 'Автоматичне завантаження тарифних планів Stripe у локальну базу даних.' : 'Pre-loading pricing tables from Stripe dashboard into db schema.'
+      label: t.identity.adminF3B,
+      done: false,
+      icon: <Coins className="h-4 w-4 text-amber-400" />,
     },
     {
-      title: isUk ? 'Створення сесії оформлення підписки (Checkout)' : 'Checkout Portal integration',
-      desc: isUk ? 'Формування посилання для оплати $20/міс за активну MicroDAO.' : 'Creating Stripe checkout session redirects for the Leader Plan ($20/mo).'
+      label: t.identity.adminF3C,
+      done: false,
+      icon: <Zap className="h-4 w-4 text-sky-400" />,
     },
     {
-      title: isUk ? 'Портал керування клієнта (Customer Portal)' : 'Stripe Customer Portal redirect',
-      desc: isUk ? 'Дозвіл власникам MicroDAO змінювати картки та скасовувати підписки.' : 'Allowing DAO owners to update billing methods or cancel subscriptions.'
+      label: t.identity.adminFiatFallback,
+      done: false,
+      icon: <Circle className="h-4 w-4 text-slate-500" />,
     },
-    {
-      title: isUk ? 'Слухач Webhooks (subscription status sync)' : 'Stripe Webhook Listener',
-      desc: isUk ? 'Обробка подій оплати та автоматична активація/блокування ресурсів.' : 'Listening to invoice.paid/subscription.deleted webhook events.'
-    },
-    {
-      title: isUk ? 'Контроль лімітів (Leader Plan Enforcement)' : 'Subscription Enforcement Gates',
-      desc: isUk ? 'Перевірка статусу оплати перед викликом LLM або активацією агента.' : 'Blocking paid AI operations if the community subscription is past due.'
-    },
-    {
-      title: isUk ? 'Обіхід для засновників (Guardian Bypass)' : 'Guardian & Founder Bypass',
-      desc: isUk ? 'Дозвіл на безкоштовне використання платформи для розробників/партнерів.' : 'Bypassing subscription requirement for early-access programs.'
-    }
   ];
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-slate-100 to-slate-300 bg-clip-text text-transparent">
-          {isUk ? 'Білінг та готовність інфраструктури' : 'Billing Readiness Dashboard'}
+          {t.identity.adminBillingTitle}
         </h1>
         <p className="text-slate-400 text-xs mt-1">
-          {isUk 
-            ? 'Аналіз готовності білінгової інтеграції зі Stripe. Поточний спринт виконує лише збір метаданих без списання коштів.' 
-            : 'Operational overview of Leader Plan monetization models and future Stripe requirements.'}
+          {t.identity.adminBillingDesc}
         </p>
       </div>
 
-      {/* Pricing Banner */}
+      {/* Crypto Pricing Banner */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         <Card className="border-indigo-500/20 bg-indigo-500/5 backdrop-blur-sm md:col-span-2">
           <CardHeader className="pb-2">
             <Badge className="w-fit bg-indigo-500/10 text-indigo-400 border-indigo-500/20 text-[9px] uppercase font-bold tracking-wider">
-              {isUk ? 'Планована модель монетизації' : 'Planned Pricing Model'}
+              {t.identity.adminCryptoModel}
             </Badge>
-            <CardTitle className="text-lg font-bold text-slate-100 mt-2">Leader Plan — $20/міс</CardTitle>
-            <CardDescription className="text-slate-400 text-xs leading-relaxed">
-              {isUk 
-                ? 'Плата за кожну активну MicroDAO з одним підключеним Духом Спільноти (Community Spirit Agent). Включає ліміти на виклики API, генерацію документів, керування завданнями спільноти.' 
-                : 'Charge per active MicroDAO featuring one Community Spirit Agent. Includes API budgets, RAG context search, task automation, and team summaries.'}
+            <CardTitle className="text-lg font-bold text-slate-100 mt-2">
+              {t.identity.adminPricingBanner}
+            </CardTitle>
+            <CardDescription className="text-slate-400 text-xs leading-relaxed space-y-1">
+              <div className="flex items-center gap-2 mt-1">
+                <span className="font-mono text-indigo-300 bg-indigo-500/10 px-1.5 py-0.5 rounded text-[11px]">
+                  {LEADER_PLAN.priceDaar} DAAR/{lang === 'uk' ? 'міс' : lang === 'ru' ? 'мес' : lang === 'es' ? 'mes' : 'mo'}
+                </span>
+                <span className="text-slate-500">|</span>
+                <span className="text-[10px] text-slate-500">
+                  {t.identity.daarRate}
+                </span>
+              </div>
             </CardDescription>
           </CardHeader>
-          <CardContent className="flex items-center gap-1.5 text-xs text-indigo-300/80 font-medium">
-            <DollarSign className="h-4 w-4 text-indigo-400" />
-            <span>{isUk ? 'У Sprint F2 немає фейкового обмеження чи примусової оплати' : 'No fake billing enforcement in Sprint F2'}</span>
+          <CardContent className="space-y-3">
+            {/* Features list */}
+            <div className="space-y-1">
+              {LEADER_PLAN.features[lang]?.map((feature, idx) => (
+                <div key={idx} className="flex items-center gap-2 text-[10px] text-slate-300">
+                  <CheckSquare className="h-3 w-3 text-indigo-400 flex-shrink-0" />
+                  {feature}
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
 
-        <Card className="border-slate-850 bg-slate-900/15 backdrop-blur-sm">
+        {/* Accepted Assets */}
+        <Card className="border-slate-800/60 bg-slate-900/15 backdrop-blur-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-xs uppercase text-slate-400 tracking-wider font-bold">{isUk ? 'Метрики білінгу' : 'Billing Placeholders'}</CardTitle>
+            <CardTitle className="text-xs uppercase text-slate-400 tracking-wider font-bold">
+              {t.identity.adminAcceptedLabel}
+            </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4 pt-2 text-xs">
-            <div className="flex justify-between items-center border-b border-slate-850/60 pb-2">
-              <span className="text-slate-450">{isUk ? 'Без підписки' : 'No subscription'}</span>
-              <span className="font-semibold text-slate-200">100% (MicroDAO)</span>
-            </div>
-            <div className="flex justify-between items-center border-b border-slate-850/60 pb-2">
-              <span className="text-slate-450">{isUk ? 'Активні підписки' : 'Active billing'}</span>
-              <span className="font-mono text-slate-500">0</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-slate-450">{isUk ? 'Всього дохід' : 'Total Revenue'}</span>
-              <span className="font-mono text-slate-500">$0.00</span>
-            </div>
+          <CardContent className="space-y-3 pt-2">
+            {SUPPORTED_ASSETS.map((asset) => (
+              <div 
+                key={asset.symbol}
+                className="flex items-center justify-between border-b border-slate-850/60 pb-2 last:border-0"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-sm">{asset.icon}</span>
+                  <div>
+                    <span className="text-xs font-semibold text-slate-200">{asset.symbol}</span>
+                    <span className="text-[9px] text-slate-500 ml-1.5">{asset.name}</span>
+                  </div>
+                </div>
+                <Badge variant="outline" className="text-[8px] text-slate-500 border-slate-700/50">
+                  {asset.chain}
+                </Badge>
+              </div>
+            ))}
           </CardContent>
         </Card>
       </div>
 
-      {/* Stripe TODO Alert Card */}
-      <Card className="border-amber-500/20 bg-amber-500/5 backdrop-blur-sm">
-        <CardHeader className="flex flex-row items-start gap-3 pb-3">
-          <AlertCircle className="h-5 w-5 text-amber-400 flex-shrink-0 mt-0.5" />
-          <div className="space-y-1">
-            <CardTitle className="text-sm font-bold text-amber-300">Sprint F3: Stripe Integration Checklist</CardTitle>
-            <CardDescription className="text-slate-400 text-xs">
-              {isUk 
-                ? 'Наступний етап розробки. Ці завдання мають бути виконані для повноцінного запуску комерційної експлуатації.' 
-                : 'Next development sprint. The following checklist lists requirements to enable monetization.'}
-            </CardDescription>
+      {/* Subscription States Overview */}
+      <Card className="border-slate-800/60 bg-slate-900/15 backdrop-blur-sm">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-sm font-bold text-slate-100 flex items-center gap-2">
+              <TrendingUp className="h-4 w-4 text-emerald-400" />
+              {t.identity.adminSubscriptionStates}
+            </CardTitle>
           </div>
         </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {todoItems.map((item, idx) => (
-            <div key={idx} className="flex gap-3 rounded-lg border border-slate-850/80 bg-slate-950/30 p-3">
-              <CheckSquare className="h-4 w-4 text-amber-400 flex-shrink-0 mt-0.5" />
-              <div className="space-y-1">
-                <div className="text-[11px] font-bold text-slate-200">{item.title}</div>
-                <p className="text-[10px] text-slate-500 leading-normal">{item.desc}</p>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {statusItems.map((item) => (
+              <div
+                key={item.status}
+                className={`rounded-lg border border-${item.color}-500/20 bg-${item.color}-500/5 p-3 space-y-1`}
+                style={{
+                  borderColor: `var(--${item.color}-border, rgba(100,116,139,0.2))`,
+                  backgroundColor: `var(--${item.color}-bg, rgba(100,116,139,0.03))`,
+                }}
+              >
+                <div className="text-[10px] font-medium text-slate-400">
+                  {SUBSCRIPTION_STATUS_LABELS[item.status][lang]}
+                </div>
+                <div className="text-xl font-bold text-slate-200 font-mono">{item.count}</div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 flex items-center gap-2 rounded-md border border-slate-800/40 bg-slate-950/30 p-3">
+            <AlertCircle className="h-4 w-4 text-slate-500 flex-shrink-0" />
+            <span className="text-[10px] text-slate-500">
+              {t.identity.adminNoSubscriptions}
+            </span>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Manual Verification Queue */}
+      <Card className="border-amber-500/10 bg-amber-500/3 backdrop-blur-sm">
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-2">
+            <Shield className="h-4 w-4 text-amber-400" />
+            <CardTitle className="text-sm font-bold text-amber-300">
+              {t.identity.adminManualQueue}
+            </CardTitle>
+          </div>
+          <CardDescription className="text-xs text-slate-400">
+            {t.identity.adminManualQueueDesc}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-lg border border-slate-800/40 bg-slate-950/30 p-6 text-center">
+            <Clock className="h-8 w-8 text-slate-600 mx-auto mb-2" />
+            <p className="text-xs text-slate-500">
+              {t.identity.adminNoSubscriptions}
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Development Roadmap */}
+      <Card className="border-slate-800/60 bg-slate-900/15 backdrop-blur-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-bold text-slate-100 flex items-center gap-2">
+            <ArrowRight className="h-4 w-4 text-sky-400" />
+            {t.identity.adminFutureRoadmap}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {roadmapItems.map((item, idx) => (
+            <div key={idx} className="flex gap-3 rounded-lg border border-slate-800/60 bg-slate-950/30 p-3">
+              {item.icon}
+              <div className="space-y-0.5">
+                <div className="text-[11px] font-bold text-slate-200">{item.label}</div>
               </div>
             </div>
           ))}
@@ -124,4 +222,5 @@ export const AdminBilling = () => {
     </div>
   );
 };
+
 export default AdminBilling;

@@ -11,7 +11,8 @@ import {
   Palette, 
   Globe, 
   Shield, 
-  Upload
+  Upload,
+  Fingerprint
 } from 'lucide-react';
 import { useTranslation, Language } from '@/lib/i18n';
 import { useState, useRef, useEffect } from 'react';
@@ -24,11 +25,14 @@ import { Bell, MessageSquare, CheckCircle2, XCircle } from 'lucide-react';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { IdentityChecklist } from '@/components/identity/IdentityChecklist';
+import { WalletConnect } from '@/components/identity/WalletConnect';
+import { TelegramLink } from '@/components/identity/TelegramLink';
 
 export const Settings = () => {
   const { t, language, setLanguage } = useTranslation();
   const { user } = useAuth();
-  const { profile, updateProfile, uploadAvatar, loading } = useUserProfile();
+  const { profile, updateProfile, updateTelegram, uploadAvatar, loading } = useUserProfile();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showPrinciplesBanner, setShowPrinciplesBanner] = useState(
@@ -210,6 +214,45 @@ export const Settings = () => {
               />
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Identity & Wallet Settings — Sprint F3 */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Fingerprint className="h-5 w-5" />
+            {t.identity.sectionTitle}
+          </CardTitle>
+          <CardDescription>
+            {t.identity.sectionDesc}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Identity Checklist */}
+          <IdentityChecklist
+            email={user?.email ?? null}
+            telegramUsername={profile?.telegram_username ?? null}
+            walletAddress={profile?.wallet_address ?? null}
+            level={
+              profile?.role === 'guardian' ? 'guardian'
+                : profile?.access_tier === 'leader' ? 'leader'
+                : 'member'
+            }
+          />
+          
+          <Separator />
+
+          {/* Wallet Connection */}
+          <WalletConnect />
+
+          {/* Telegram Link */}
+          <TelegramLink
+            currentUsername={profile?.telegram_username}
+            onSaved={(username) => {
+              updateTelegram(username);
+            }}
+          />
         </CardContent>
       </Card>
 

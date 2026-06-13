@@ -1682,6 +1682,86 @@ export interface Translations {
     errorTitle: string;
     errorDesc: string;
   };
+  identity: {
+    // Section title
+    sectionTitle: string;
+    sectionDesc: string;
+
+    // Checklist
+    checklistTitle: string;
+    emailConnected: string;
+    emailRequired: string;
+    telegramConnected: string;
+    telegramNotLinked: string;
+    telegramManual: string;
+    walletConnected: string;
+    walletNotConnected: string;
+
+    // Requirement badges
+    required: string;
+    recommended: string;
+    optional: string;
+
+    // Wallet
+    walletTitle: string;
+    walletDesc: string;
+    connectMetaMask: string;
+    disconnectWallet: string;
+    walletAddress: string;
+    copyAddress: string;
+    addressCopied: string;
+    installMetaMask: string;
+    installMetaMaskDesc: string;
+    connecting: string;
+    walletVerified: string;
+    chainLabel: string;
+
+    // Telegram
+    telegramTitle: string;
+    telegramDesc: string;
+    telegramUsername: string;
+    telegramPlaceholder: string;
+    telegramSave: string;
+    telegramSaved: string;
+    telegramVerifyBot: string;
+    telegramVerifyBotTooltip: string;
+    telegramStatusNotLinked: string;
+    telegramStatusManual: string;
+    telegramStatusVerified: string;
+
+    // Subscription
+    subscriptionTitle: string;
+    subscriptionDesc: string;
+    leaderPlan: string;
+    leaderPlanPrice: string;
+    leaderPlanDaar: string;
+    daarRate: string;
+    acceptedAssets: string;
+    testingMode: string;
+    testingModeDesc: string;
+
+    // Onboarding identity gate
+    onboardingIdentityTitle: string;
+    onboardingIdentityDesc: string;
+    onboardingLeaderRequires: string;
+    onboardingTestingNote: string;
+    onboardingPriceNote: string;
+
+    // Admin billing
+    adminBillingTitle: string;
+    adminBillingDesc: string;
+    adminCryptoModel: string;
+    adminPricingBanner: string;
+    adminAcceptedLabel: string;
+    adminSubscriptionStates: string;
+    adminManualQueue: string;
+    adminManualQueueDesc: string;
+    adminFutureRoadmap: string;
+    adminF3B: string;
+    adminF3C: string;
+    adminFiatFallback: string;
+    adminNoSubscriptions: string;
+  };
 }
 
 export const translations: Record<Language, Translations> = {
@@ -3359,6 +3439,71 @@ export const translations: Record<Language, Translations> = {
       errorTitle: 'Помилка',
       errorDesc: 'Не вдалося перевірити файл',
     },
+    identity: {
+      sectionTitle: 'Ідентичність та гаманець',
+      sectionDesc: 'Керуйте підключеними акаунтами та криптогаманцем',
+      checklistTitle: 'Контрольний список ідентичності',
+      emailConnected: 'Email підключено',
+      emailRequired: 'Email обов\'язковий',
+      telegramConnected: 'Telegram підключено',
+      telegramNotLinked: 'Telegram не підключено',
+      telegramManual: 'Telegram (ручний)',
+      walletConnected: 'Гаманець підключено',
+      walletNotConnected: 'Гаманець не підключено',
+      required: 'Обов\'язково',
+      recommended: 'Рекомендовано',
+      optional: 'Необов\'язково',
+      walletTitle: 'Криптогаманець',
+      walletDesc: 'Підключіть MetaMask для DAO-операцій та підписки',
+      connectMetaMask: 'Підключити MetaMask',
+      disconnectWallet: 'Відключити гаманець',
+      walletAddress: 'Адреса гаманця',
+      copyAddress: 'Скопіювати адресу',
+      addressCopied: 'Адресу скопійовано',
+      installMetaMask: 'Встановити MetaMask',
+      installMetaMaskDesc: 'MetaMask не знайдено. Встановіть розширення для браузера.',
+      connecting: 'Підключення...',
+      walletVerified: 'Підтверджено',
+      chainLabel: 'Мережа',
+      telegramTitle: 'Telegram',
+      telegramDesc: 'Підключіть Telegram для комунікації в MicroDAO',
+      telegramUsername: 'Ім\'я користувача Telegram',
+      telegramPlaceholder: '@username',
+      telegramSave: 'Зберегти',
+      telegramSaved: 'Збережено',
+      telegramVerifyBot: 'Підтвердити через бот',
+      telegramVerifyBotTooltip: 'Буде доступно у Sprint F3B',
+      telegramStatusNotLinked: 'Не підключено',
+      telegramStatusManual: 'Ручний (не підтверджено)',
+      telegramStatusVerified: 'Підтверджено',
+      subscriptionTitle: 'Підписка',
+      subscriptionDesc: 'Криптопідписка Leader Plan для активації MicroDAO',
+      leaderPlan: 'Leader Plan',
+      leaderPlanPrice: '$20/місяць',
+      leaderPlanDaar: '2 DAAR/місяць',
+      daarRate: '1 DAAR = 10 USDT',
+      acceptedAssets: 'Прийняті активи',
+      testingMode: 'Режим тестування',
+      testingModeDesc: 'Створення MicroDAO тимчасово доступне без оплати.',
+      onboardingIdentityTitle: 'Вимоги ідентичності',
+      onboardingIdentityDesc: 'Для активації продуктивної MicroDAO з Духом Спільноти лідеру потрібно:',
+      onboardingLeaderRequires: 'Email, Telegram, криптогаманець та активна підписка Leader Plan',
+      onboardingTestingNote: 'Режим тестування: створення тимчасово доступне без оплати.',
+      onboardingPriceNote: 'Leader Plan: $20/місяць еквівалент, оплата в DAAR або підтриманій крипті.',
+      adminBillingTitle: 'Крипто-білінг та підписки',
+      adminBillingDesc: 'Огляд крипто-підписок MicroDAO та платіжних операцій',
+      adminCryptoModel: 'Крипто-модель оплати',
+      adminPricingBanner: 'Leader Plan — $20/міс еквівалент',
+      adminAcceptedLabel: 'Прийняті активи для оплати',
+      adminSubscriptionStates: 'Стани підписок',
+      adminManualQueue: 'Черга ручної перевірки',
+      adminManualQueueDesc: 'Платежі, що потребують ручного підтвердження guardian.',
+      adminFutureRoadmap: 'Дорожня карта розробки',
+      adminF3B: 'Sprint F3B — Криптоплатіжний інтент + ручна верифікація',
+      adminF3C: 'Sprint F3C — On-chain watcher / автоматична верифікація',
+      adminFiatFallback: 'Майбутній fiat fallback (Stripe) — необов\'язковий',
+      adminNoSubscriptions: 'Підписок поки немає. Вони з\'являться після активації Leader Plan.',
+    },
   },
 
   en: {
@@ -5034,6 +5179,71 @@ export const translations: Record<Language, Translations> = {
       rejectedDesc: 'File does not meet security requirements',
       errorTitle: 'Error',
       errorDesc: 'Failed to validate file',
+    },
+    identity: {
+      sectionTitle: 'Identity & Wallet',
+      sectionDesc: 'Manage connected accounts and crypto wallet',
+      checklistTitle: 'Identity Checklist',
+      emailConnected: 'Email connected',
+      emailRequired: 'Email is required',
+      telegramConnected: 'Telegram connected',
+      telegramNotLinked: 'Telegram not linked',
+      telegramManual: 'Telegram (manual)',
+      walletConnected: 'Wallet connected',
+      walletNotConnected: 'Wallet not connected',
+      required: 'Required',
+      recommended: 'Recommended',
+      optional: 'Optional',
+      walletTitle: 'Crypto Wallet',
+      walletDesc: 'Connect MetaMask for DAO operations and subscription',
+      connectMetaMask: 'Connect MetaMask',
+      disconnectWallet: 'Disconnect wallet',
+      walletAddress: 'Wallet address',
+      copyAddress: 'Copy address',
+      addressCopied: 'Address copied',
+      installMetaMask: 'Install MetaMask',
+      installMetaMaskDesc: 'MetaMask not found. Please install the browser extension.',
+      connecting: 'Connecting...',
+      walletVerified: 'Verified',
+      chainLabel: 'Network',
+      telegramTitle: 'Telegram',
+      telegramDesc: 'Connect Telegram for MicroDAO communication',
+      telegramUsername: 'Telegram username',
+      telegramPlaceholder: '@username',
+      telegramSave: 'Save',
+      telegramSaved: 'Saved',
+      telegramVerifyBot: 'Verify via bot',
+      telegramVerifyBotTooltip: 'Coming in Sprint F3B',
+      telegramStatusNotLinked: 'Not linked',
+      telegramStatusManual: 'Manual (unverified)',
+      telegramStatusVerified: 'Verified',
+      subscriptionTitle: 'Subscription',
+      subscriptionDesc: 'Crypto subscription Leader Plan for MicroDAO activation',
+      leaderPlan: 'Leader Plan',
+      leaderPlanPrice: '$20/month',
+      leaderPlanDaar: '2 DAAR/month',
+      daarRate: '1 DAAR = 10 USDT',
+      acceptedAssets: 'Accepted assets',
+      testingMode: 'Testing mode',
+      testingModeDesc: 'MicroDAO creation is temporarily available without payment.',
+      onboardingIdentityTitle: 'Identity Requirements',
+      onboardingIdentityDesc: 'To activate a production MicroDAO with Community Spirit Agent, the leader will need:',
+      onboardingLeaderRequires: 'Email, Telegram, crypto wallet, and an active Leader Plan subscription',
+      onboardingTestingNote: 'Testing mode: creation is temporarily available without payment.',
+      onboardingPriceNote: 'Leader Plan: $20/month equivalent, payable in DAAR or supported crypto.',
+      adminBillingTitle: 'Crypto Billing & Subscriptions',
+      adminBillingDesc: 'Overview of MicroDAO crypto subscriptions and payment operations',
+      adminCryptoModel: 'Crypto Payment Model',
+      adminPricingBanner: 'Leader Plan — $20/month equivalent',
+      adminAcceptedLabel: 'Accepted payment assets',
+      adminSubscriptionStates: 'Subscription States',
+      adminManualQueue: 'Manual Verification Queue',
+      adminManualQueueDesc: 'Payments requiring manual guardian confirmation.',
+      adminFutureRoadmap: 'Development Roadmap',
+      adminF3B: 'Sprint F3B — Crypto payment intent + manual verification',
+      adminF3C: 'Sprint F3C — On-chain watcher / automatic verification',
+      adminFiatFallback: 'Future fiat fallback (Stripe) — optional',
+      adminNoSubscriptions: 'No subscriptions yet. They will appear after Leader Plan activation.',
     },
   },
 
@@ -6711,6 +6921,71 @@ export const translations: Record<Language, Translations> = {
       errorTitle: 'Ошибка',
       errorDesc: 'Не удалось проверить файл',
     },
+    identity: {
+      sectionTitle: 'Идентичность и кошелёк',
+      sectionDesc: 'Управление подключёнными аккаунтами и криптокошельком',
+      checklistTitle: 'Контрольный список идентичности',
+      emailConnected: 'Email подключен',
+      emailRequired: 'Email обязателен',
+      telegramConnected: 'Telegram подключён',
+      telegramNotLinked: 'Telegram не подключён',
+      telegramManual: 'Telegram (ручной)',
+      walletConnected: 'Кошелёк подключён',
+      walletNotConnected: 'Кошелёк не подключён',
+      required: 'Обязательно',
+      recommended: 'Рекомендовано',
+      optional: 'Необязательно',
+      walletTitle: 'Криптокошелёк',
+      walletDesc: 'Подключите MetaMask для DAO-операций и подписки',
+      connectMetaMask: 'Подключить MetaMask',
+      disconnectWallet: 'Отключить кошелёк',
+      walletAddress: 'Адрес кошелька',
+      copyAddress: 'Скопировать адрес',
+      addressCopied: 'Адрес скопирован',
+      installMetaMask: 'Установить MetaMask',
+      installMetaMaskDesc: 'MetaMask не найден. Установите расширение для браузера.',
+      connecting: 'Подключение...',
+      walletVerified: 'Подтверждён',
+      chainLabel: 'Сеть',
+      telegramTitle: 'Telegram',
+      telegramDesc: 'Подключите Telegram для коммуникации в MicroDAO',
+      telegramUsername: 'Имя пользователя Telegram',
+      telegramPlaceholder: '@username',
+      telegramSave: 'Сохранить',
+      telegramSaved: 'Сохранено',
+      telegramVerifyBot: 'Подтвердить через бота',
+      telegramVerifyBotTooltip: 'Будет доступно в Sprint F3B',
+      telegramStatusNotLinked: 'Не подключён',
+      telegramStatusManual: 'Ручной (не подтверждён)',
+      telegramStatusVerified: 'Подтверждён',
+      subscriptionTitle: 'Подписка',
+      subscriptionDesc: 'Криптоподписка Leader Plan для активации MicroDAO',
+      leaderPlan: 'Leader Plan',
+      leaderPlanPrice: '$20/месяц',
+      leaderPlanDaar: '2 DAAR/месяц',
+      daarRate: '1 DAAR = 10 USDT',
+      acceptedAssets: 'Принимаемые активы',
+      testingMode: 'Режим тестирования',
+      testingModeDesc: 'Создание MicroDAO временно доступно без оплаты.',
+      onboardingIdentityTitle: 'Требования идентичности',
+      onboardingIdentityDesc: 'Для активации производственной MicroDAO с Духом Сообщества лидеру потребуется:',
+      onboardingLeaderRequires: 'Email, Telegram, криптокошелёк и активная подписка Leader Plan',
+      onboardingTestingNote: 'Режим тестирования: создание временно доступно без оплаты.',
+      onboardingPriceNote: 'Leader Plan: $20/месяц эквивалент, оплата в DAAR или поддерживаемой крипте.',
+      adminBillingTitle: 'Крипто-биллинг и подписки',
+      adminBillingDesc: 'Обзор крипто-подписок MicroDAO и платёжных операций',
+      adminCryptoModel: 'Крипто-модель оплаты',
+      adminPricingBanner: 'Leader Plan — $20/мес эквивалент',
+      adminAcceptedLabel: 'Принимаемые активы для оплаты',
+      adminSubscriptionStates: 'Состояния подписок',
+      adminManualQueue: 'Очередь ручной проверки',
+      adminManualQueueDesc: 'Платежи, требующие ручного подтверждения guardian.',
+      adminFutureRoadmap: 'Дорожная карта разработки',
+      adminF3B: 'Sprint F3B — Криптоплатёжный интент + ручная верификация',
+      adminF3C: 'Sprint F3C — On-chain watcher / автоматическая верификация',
+      adminFiatFallback: 'Будущий fiat fallback (Stripe) — необязательный',
+      adminNoSubscriptions: 'Подписок пока нет. Они появятся после активации Leader Plan.',
+    },
   },
 
   es: {
@@ -8386,6 +8661,71 @@ export const translations: Record<Language, Translations> = {
       rejectedDesc: 'El archivo no cumple con los requisitos de seguridad',
       errorTitle: 'Error',
       errorDesc: 'No se pudo validar el archivo',
+    },
+    identity: {
+      sectionTitle: 'Identidad y billetera',
+      sectionDesc: 'Gestiona cuentas conectadas y billetera cripto',
+      checklistTitle: 'Lista de verificación de identidad',
+      emailConnected: 'Email conectado',
+      emailRequired: 'Email es obligatorio',
+      telegramConnected: 'Telegram conectado',
+      telegramNotLinked: 'Telegram no vinculado',
+      telegramManual: 'Telegram (manual)',
+      walletConnected: 'Billetera conectada',
+      walletNotConnected: 'Billetera no conectada',
+      required: 'Obligatorio',
+      recommended: 'Recomendado',
+      optional: 'Opcional',
+      walletTitle: 'Billetera cripto',
+      walletDesc: 'Conecta MetaMask para operaciones DAO y suscripción',
+      connectMetaMask: 'Conectar MetaMask',
+      disconnectWallet: 'Desconectar billetera',
+      walletAddress: 'Dirección de billetera',
+      copyAddress: 'Copiar dirección',
+      addressCopied: 'Dirección copiada',
+      installMetaMask: 'Instalar MetaMask',
+      installMetaMaskDesc: 'MetaMask no encontrado. Instala la extensión del navegador.',
+      connecting: 'Conectando...',
+      walletVerified: 'Verificada',
+      chainLabel: 'Red',
+      telegramTitle: 'Telegram',
+      telegramDesc: 'Conecta Telegram para comunicación en MicroDAO',
+      telegramUsername: 'Nombre de usuario Telegram',
+      telegramPlaceholder: '@username',
+      telegramSave: 'Guardar',
+      telegramSaved: 'Guardado',
+      telegramVerifyBot: 'Verificar vía bot',
+      telegramVerifyBotTooltip: 'Disponible en Sprint F3B',
+      telegramStatusNotLinked: 'No vinculado',
+      telegramStatusManual: 'Manual (no verificado)',
+      telegramStatusVerified: 'Verificado',
+      subscriptionTitle: 'Suscripción',
+      subscriptionDesc: 'Suscripción cripto Leader Plan para activación de MicroDAO',
+      leaderPlan: 'Leader Plan',
+      leaderPlanPrice: '$20/mes',
+      leaderPlanDaar: '2 DAAR/mes',
+      daarRate: '1 DAAR = 10 USDT',
+      acceptedAssets: 'Activos aceptados',
+      testingMode: 'Modo de prueba',
+      testingModeDesc: 'La creación de MicroDAO está temporalmente disponible sin pago.',
+      onboardingIdentityTitle: 'Requisitos de identidad',
+      onboardingIdentityDesc: 'Para activar una MicroDAO productiva con Community Spirit Agent, el líder necesitará:',
+      onboardingLeaderRequires: 'Email, Telegram, billetera cripto y una suscripción activa Leader Plan',
+      onboardingTestingNote: 'Modo de prueba: la creación está temporalmente disponible sin pago.',
+      onboardingPriceNote: 'Leader Plan: $20/mes equivalente, pagable en DAAR o cripto compatible.',
+      adminBillingTitle: 'Facturación cripto y suscripciones',
+      adminBillingDesc: 'Vista general de suscripciones cripto MicroDAO y operaciones de pago',
+      adminCryptoModel: 'Modelo de pago cripto',
+      adminPricingBanner: 'Leader Plan — $20/mes equivalente',
+      adminAcceptedLabel: 'Activos de pago aceptados',
+      adminSubscriptionStates: 'Estados de suscripción',
+      adminManualQueue: 'Cola de verificación manual',
+      adminManualQueueDesc: 'Pagos que requieren confirmación manual del guardian.',
+      adminFutureRoadmap: 'Hoja de ruta de desarrollo',
+      adminF3B: 'Sprint F3B — Intent de pago cripto + verificación manual',
+      adminF3C: 'Sprint F3C — On-chain watcher / verificación automática',
+      adminFiatFallback: 'Futuro fiat fallback (Stripe) — opcional',
+      adminNoSubscriptions: 'Sin suscripciones aún. Aparecerán tras la activación del Leader Plan.',
     },
   },
 };
