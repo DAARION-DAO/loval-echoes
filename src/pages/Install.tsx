@@ -23,6 +23,11 @@ import {
   CheckCircle2,
   AlertTriangle,
   Apple,
+  Sparkles,
+  MessageSquare,
+  Vote,
+  Coins,
+  Wallet,
 } from 'lucide-react';
 
 /* ── Scroll-reveal hook (same as landing) ── */
@@ -74,12 +79,12 @@ const edgeClientAssetUrl = (filename: string) =>
 const localTexts = {
   uk: {
     heroTitle: 'DAARION Edge Client',
-    heroSubtitle: 'Встановіть Edge Client для запуску локального інтерфейсу, агентів і майбутніх MicroDAO edge-функцій на вашому пристрої.',
+    heroSubtitle: 'Локальний клієнт і суверенний шлюз до вашого MicroDAO: агентів, децентралізованого месенджера, майбутнього гаманця, казни, голосувань і захищеного доступу спільноти.',
     heroPrimaryCtaDevice: 'Скачати для цього пристрою',
     heroPrimaryCtaChoose: 'Оберіть платформу',
     heroSecondaryCta: 'Відкрити Web / PWA',
-    heroHelper: 'Оберіть платформу нижче. GitHub repo доступний у футері для розробників.',
-    heroBadge: 'Суверенний агент · Beta / Canary',
+    heroHelper: 'Інсталлер можна скачати одразу. Повні функції MicroDAO активуються після входу та створення або приєднання до спільноти.',
+    heroBadge: 'Суверенний шлюз · Beta / Canary',
     
     headerTitleMobile: 'Edge Client',
     
@@ -117,15 +122,64 @@ const localTexts = {
     statusBeta: 'Beta',
     statusComingSoon: 'Скоро',
     statusSideload: 'Sideload',
+
+    // New keys
+    afterInstallTitle: 'Що відбувається після встановлення?',
+    step1: 'Встановіть DAARION Edge Client',
+    step2: 'Увійдіть або створіть акаунт DAARION',
+    step3: 'Створіть MicroDAO або приєднайтеся за запрошенням',
+    step4: 'Активуйте Дух Спільноти — агента вашого DAO',
+    step5: 'Запросіть учасників',
+    step6: 'Налаштуйте ролі, памʼять, задачі та правила',
+    step7: 'Поступово підключайте гаманець, казну, голосування й токени спільноти',
+
+    unlocksTitle: 'Що відкриває Edge Client',
+    unlockCard1Title: 'Дух Спільноти',
+    unlockCard1Desc: 'Агент спільноти допомагає онбордити учасників, пояснювати правила, памʼятати домовленості, створювати задачі та готувати рішення.',
+    unlockCard2Title: 'Децентралізований месенджер',
+    unlockCard2Desc: 'Месенджер для спільноти, повʼязаний із ролями, памʼяттю, задачами та агентом MicroDAO.',
+    unlockCard3Title: 'Казна й гаманець DAO',
+    unlockCard3Desc: 'Майбутній гаманець, казна та платіжний шар MicroDAO для внесків, витрат, доступів і спільних рішень.',
+    unlockCard4Title: 'Голосування та управління',
+    unlockCard4Desc: 'Голосування, ролі, правила, пропозиції та управління DAO через Дух Спільноти.',
+    unlockCard5Title: 'Фабрика токенів',
+    unlockCard5Desc: 'Планується можливість випуску власних токенів MicroDAO через токен-фабрику міста DAARION.',
+    unlockCard6Title: 'Захищений браузер і мережа',
+    unlockCard6Desc: 'Майбутній захищений браузер, VPN/мережевий шар та приватний доступ для спільнот.',
+    unlockCard7Title: 'Агенти-розробники',
+    unlockCard7Desc: 'Доступ до агентів-розробників DAARION для створення власних платформ, інструментів і децентралізованих соціальних мереж.',
+
+    roadmapTitle: 'План розвитку',
+    roadmapSubtitle: 'Поточний статус функцій та етапи впровадження в екосистемі.',
+    roadmapAvailableTitle: 'Доступно зараз',
+    roadmapComingTitle: 'Готується найближчим часом',
+    roadmapLaterTitle: 'План розвитку (1-3 місяці)',
+    roadmapFutureTitle: 'У майбутньому',
+    roadmapAvail1: 'Інсталятор Edge Client',
+    roadmapAvail2: 'Доступ через Web / PWA',
+    roadmapAvail3: 'Онбординг до MicroDAO',
+    roadmapAvail4: 'Налаштування агента Дух Спільноти',
+    roadmapComing1: 'децентралізований месенджер спільноти',
+    roadmapComing2: 'розширення памʼяті агента',
+    roadmapComing3: 'автоматизація запрошень та ролей',
+    roadmapComing4: 'базовий шар гаманця та казни',
+    roadmapLater1: 'токен-шар MicroDAO',
+    roadmapLater2: 'інтеграція з токен-фабрикою',
+    roadmapLater3: 'казна DAO',
+    roadmapLater4: 'процеси голосування та управління',
+    roadmapLater5: 'посилені локальні та edge-функції',
+    roadmapFuture1: 'децентралізований браузер',
+    roadmapFuture2: 'VPN та захисний шар',
+    roadmapFuture3: 'агенти-розробники для створення платформ і децентралізованих соцмереж',
   },
   en: {
     heroTitle: 'DAARION Edge Client',
-    heroSubtitle: 'Install the Edge Client to run the local interface, agents, and future MicroDAO edge functions on your device.',
+    heroSubtitle: 'A local client and sovereign gateway to your MicroDAO: agents, decentralized messaging, future wallet, treasury, voting, and protected community access.',
     heroPrimaryCtaDevice: 'Download for this device',
     heroPrimaryCtaChoose: 'Choose your platform',
     heroSecondaryCta: 'Open Web / PWA',
-    heroHelper: 'Select platform below. GitHub repo is available in the footer for developers.',
-    heroBadge: 'Sovereign Agent · Beta / Canary',
+    heroHelper: 'You can download the installer now. Full MicroDAO features activate after sign-in and after creating or joining a community.',
+    heroBadge: 'Sovereign Gateway · Beta / Canary',
     
     headerTitleMobile: 'Edge Client',
     
@@ -163,15 +217,64 @@ const localTexts = {
     statusBeta: 'Beta',
     statusComingSoon: 'Soon',
     statusSideload: 'Sideload',
+
+    // New keys
+    afterInstallTitle: 'What happens after installation?',
+    step1: 'Install DAARION Edge Client',
+    step2: 'Sign in or create DAARION account',
+    step3: 'Create or join a MicroDAO',
+    step4: 'Activate Community Spirit Agent',
+    step5: 'Invite members',
+    step6: 'Configure roles, memory, tasks, and rules',
+    step7: 'Connect future wallet, treasury, voting, and token features as they become available',
+
+    unlocksTitle: 'What Edge Client unlocks',
+    unlockCard1Title: 'Community Spirit Agent',
+    unlockCard1Desc: 'The community agent helps onboard members, explain rules, remember agreements, create tasks, and prepare decisions.',
+    unlockCard2Title: 'Decentralized Messenger',
+    unlockCard2Desc: 'A community messenger linked with roles, memory, tasks, and the MicroDAO agent.',
+    unlockCard3Title: 'DAO Treasury & Wallet',
+    unlockCard3Desc: 'Future wallet, treasury, and payment layer of MicroDAO for contributions, expenses, access, and joint decisions.',
+    unlockCard4Title: 'Voting & Governance',
+    unlockCard4Desc: 'Voting, roles, rules, proposals, and DAO governance through the Community Spirit.',
+    unlockCard5Title: 'Token Factory',
+    unlockCard5Desc: 'Planned ability to issue your own MicroDAO tokens through the DAARION city token factory.',
+    unlockCard6Title: 'Protected Browser & Network',
+    unlockCard6Desc: 'Future secure browser, VPN/network layer, and private access for communities.',
+    unlockCard7Title: 'Developer Agents',
+    unlockCard7Desc: 'Access to DAARION developer agents to create your own platforms, tools, and decentralized social networks.',
+
+    roadmapTitle: 'Status / Roadmap',
+    roadmapSubtitle: 'Current status of features and development stages.',
+    roadmapAvailableTitle: 'Available now',
+    roadmapComingTitle: 'Coming next',
+    roadmapLaterTitle: 'Roadmap (1-3 months)',
+    roadmapFutureTitle: 'Future',
+    roadmapAvail1: 'Edge Client installer',
+    roadmapAvail2: 'Web / PWA access',
+    roadmapAvail3: 'MicroDAO onboarding',
+    roadmapAvail4: 'Community Spirit Agent setup',
+    roadmapComing1: 'decentralized community messenger',
+    roadmapComing2: 'agent memory expansion',
+    roadmapComing3: 'invite and role automation',
+    roadmapComing4: 'wallet / treasury foundation',
+    roadmapLater1: 'MicroDAO token layer',
+    roadmapLater2: 'token factory integration',
+    roadmapLater3: 'DAO treasury',
+    roadmapLater4: 'voting/governance flows',
+    roadmapLater5: 'stronger local/edge features',
+    roadmapFuture1: 'decentralized browser',
+    roadmapFuture2: 'VPN/protection layer',
+    roadmapFuture3: 'developer agents for building platforms and decentralized social networks',
   },
   ru: {
     heroTitle: 'DAARION Edge Client',
-    heroSubtitle: 'Установите Edge Client для запуска локального интерфейса, агентов и будущих MicroDAO edge-функций на вашем устройстве.',
+    heroSubtitle: 'Локальный клиент и суверенный шлюз к вашему MicroDAO: агентам, децентрализованному мессенджеру, будущему кошельку, казне, голосованиям и защищенному доступу сообщества.',
     heroPrimaryCtaDevice: 'Скачать для этого устройства',
     heroPrimaryCtaChoose: 'Выберите платформу',
     heroSecondaryCta: 'Открыть Web / PWA',
-    heroHelper: 'Выберите платформу ниже. GitHub репозиторий доступен в футере для разработчиков.',
-    heroBadge: 'Суверенный агент · Beta / Canary',
+    heroHelper: 'Инсталлер можно скачать сразу. Полные функции MicroDAO активируются после входа и создания или присоединения к сообществу.',
+    heroBadge: 'Суверенный шлюз · Beta / Canary',
     
     headerTitleMobile: 'Edge Client',
     
@@ -209,15 +312,64 @@ const localTexts = {
     statusBeta: 'Beta',
     statusComingSoon: 'Скоро',
     statusSideload: 'Sideload',
+
+    // New keys
+    afterInstallTitle: 'Что происходит после установки?',
+    step1: 'Установите DAARION Edge Client',
+    step2: 'Войдите или создайте аккаунт DAARION',
+    step3: 'Создайте MicroDAO или присоединитесь по приглашению',
+    step4: 'Активируйте Дух Сообщества — агента вашего DAO',
+    step5: 'Пригласите участников',
+    step6: 'Настройте роли, память, задачи и правила',
+    step7: 'Постепенно подключайте кошелек, казну, голосования и токены сообщества',
+
+    unlocksTitle: 'Что открывает Edge Client',
+    unlockCard1Title: 'Дух Сообщества',
+    unlockCard1Desc: 'Агент сообщества помогает онбордить участников, объяснять правила, помнить договоренности, создавать задачи и готовить решения.',
+    unlockCard2Title: 'Децентрализованный мессенджер',
+    unlockCard2Desc: 'Мессенджер для сообщества, связанный с ролями, памятью, задачами и агентом MicroDAO.',
+    unlockCard3Title: 'Казна и кошелек DAO',
+    unlockCard3Desc: 'Будущий кошелек, казна и платежный слой MicroDAO для взносов, расходов, доступов и совместных решений.',
+    unlockCard4Title: 'Голосования и управление',
+    unlockCard4Desc: 'Голосования, роли, правила, предложения и управление DAO через Дух Сообщества.',
+    unlockCard5Title: 'Фабрика токенов',
+    unlockCard5Desc: 'Планируется возможность выпуска собственных токенов MicroDAO через токен-фабрику города DAARION.',
+    unlockCard6Title: 'Защищенный браузер и сеть',
+    unlockCard6Desc: 'Будущий защищенный браузер, VPN/сетевой слой и приватный доступ для сообществ.',
+    unlockCard7Title: 'Агенты-разработчики',
+    unlockCard7Desc: 'Доступ к агентам-разработчикам DAARION для создания собственных платформ, инструментов и децентрализованных социальных сетей.',
+
+    roadmapTitle: 'План развития',
+    roadmapSubtitle: 'Текущий статус функций и этапы внедрения в экосистеме.',
+    roadmapAvailableTitle: 'Доступно сейчас',
+    roadmapComingTitle: 'Готовится в ближайшее время',
+    roadmapLaterTitle: 'План развития (1-3 месяца)',
+    roadmapFutureTitle: 'В будущем',
+    roadmapAvail1: 'Инсталлятор Edge Client',
+    roadmapAvail2: 'Доступ через Web / PWA',
+    roadmapAvail3: 'Онбординг в MicroDAO',
+    roadmapAvail4: 'Настройка агента Дух Сообщества',
+    roadmapComing1: 'децентрализованный мессенджер сообщества',
+    roadmapComing2: 'расширение памяти агента',
+    roadmapComing3: 'автоматизация приглашений и ролей',
+    roadmapComing4: 'базовый слой кошелька и казны',
+    roadmapLater1: 'токен-слой MicroDAO',
+    roadmapLater2: 'интеграция с токен-фабрикой',
+    roadmapLater3: 'казна DAO',
+    roadmapLater4: 'процессы голосования и управления',
+    roadmapLater5: 'усиленные локальные и edge-функции',
+    roadmapFuture1: 'децентрализованный браузер',
+    roadmapFuture2: 'VPN и защитный слой',
+    roadmapFuture3: 'агенты-разработчики для создания платформ и децентрализованных соцсети',
   },
   es: {
     heroTitle: 'DAARION Edge Client',
-    heroSubtitle: 'Instale Edge Client para ejecutar la interfaz local, los agentes y las futuras funciones edge de MicroDAO en su dispositivo.',
+    heroSubtitle: 'Un cliente local y puerta soberana hacia tu MicroDAO: agentes, mensajería descentralizada, futura billetera, tesorería, votaciones y acceso protegido de la comunidad.',
     heroPrimaryCtaDevice: 'Descargar para este dispositivo',
     heroPrimaryCtaChoose: 'Elige tu plataforma',
     heroSecondaryCta: 'Abrir Web / PWA',
-    heroHelper: 'Seleccione la plataforma a continuación. El repositorio de GitHub está disponible en el pie de página para desarrolladores.',
-    heroBadge: 'Agente soberano · Beta / Canary',
+    heroHelper: 'Puedes descargar el instalador ahora. Las funciones completas de MicroDAO se activan después de iniciar sesión y crear o unirte a una comunidad.',
+    heroBadge: 'Pasarela soberana · Beta / Canary',
     
     headerTitleMobile: 'Edge Client',
     
@@ -255,6 +407,55 @@ const localTexts = {
     statusBeta: 'Beta',
     statusComingSoon: 'Próximamente',
     statusSideload: 'Sideload',
+
+    // New keys
+    afterInstallTitle: '¿Qué ocurre después de instalar?',
+    step1: 'Instala DAARION Edge Client',
+    step2: 'Inicia sesión o crea una cuenta de DAARION',
+    step3: 'Crea o únete a una MicroDAO por invitación',
+    step4: 'Activa el Agente de Espíritu Comunitario de tu DAO',
+    step5: 'Invita a miembros',
+    step6: 'Configura roles, memoria, tareas y reglas',
+    step7: 'Conecta la billetera futura, la tesorería, las votaciones y los tokens de la comunidad a medida que estén disponibles',
+
+    unlocksTitle: 'Lo que desbloquea Edge Client',
+    unlockCard1Title: 'Agente de Espíritu Comunitario',
+    unlockCard1Desc: 'El agente comunitario ayuda a incorporar miembros, explicar reglas, recordar acuerdos, crear tareas y preparar decisiones.',
+    unlockCard2Title: 'Mensajero Descentralizado',
+    unlockCard2Desc: 'Mensajería comunitaria vinculada con roles, memoria, tareas y el agente de MicroDAO.',
+    unlockCard3Title: 'Tesorería y Billetera de la DAO',
+    unlockCard3Desc: 'Futura billetera, tesorería y capa de pago de MicroDAO para contribuciones, gastos, accesos y decisiones conjuntas.',
+    unlockCard4Title: 'Votaciones y Gobernanza',
+    unlockCard4Desc: 'Votaciones, roles, reglas, propuestas y gobernanza de la DAO a través del Espíritu Comunitario.',
+    unlockCard5Title: 'Fábrica de Tokens',
+    unlockCard5Desc: 'Capacidad planificada para emitir sus propios tokens de MicroDAO a través de la fábrica de tokens de la ciudad de DAARION.',
+    unlockCard6Title: 'Navegador y Red Protegidos',
+    unlockCard6Desc: 'Futuro navegador seguro, capa de red/VPN y acceso privado para comunidades.',
+    unlockCard7Title: 'Agentes Desarrolladores',
+    unlockCard7Desc: 'Acceso a agentes desarrolladores de DAARION para crear sus propias plataformas, herramientas y redes sociales descentralizadas.',
+
+    roadmapTitle: 'Estado / Plan de desarrollo',
+    roadmapSubtitle: 'Estado actual de las funciones y etapas de implementación en el escenario del ecosistema.',
+    roadmapAvailableTitle: 'Disponible ahora',
+    roadmapComingTitle: 'Próximamente',
+    roadmapLaterTitle: 'Plan de desarrollo (1-3 meses)',
+    roadmapFutureTitle: 'Futuro',
+    roadmapAvail1: 'Instalador de Edge Client',
+    roadmapAvail2: 'Acceso Web / PWA',
+    roadmapAvail3: 'Inducción a MicroDAO',
+    roadmapAvail4: 'Configuración del Agente de Espíritu Comunitario',
+    roadmapComing1: 'mensajería comunitaria descentralizada',
+    roadmapComing2: 'expansión de memoria del agente',
+    roadmapComing3: 'automatización de invitaciones y roles',
+    roadmapComing4: 'base de billetera y tesorería',
+    roadmapLater1: 'capa de tokens de MicroDAO',
+    roadmapLater2: 'integración de fábrica de tokens',
+    roadmapLater3: 'tesorería de la DAO',
+    roadmapLater4: 'flujos de votación y gobernanza',
+    roadmapLater5: 'funciones locales y edge más sólidas',
+    roadmapFuture1: 'navegador descentralizado',
+    roadmapFuture2: 'capa de protección/VPN',
+    roadmapFuture3: 'agentes desarrolladores para crear plataformas y redes sociales descentralizadas',
   }
 };
 
@@ -555,6 +756,189 @@ export function Install() {
             </a>
           </div>
           <p className="text-xs text-muted-foreground mt-4">{texts.heroHelper}</p>
+        </div>
+      </section>
+
+      {/* ── What happens after installation? ── */}
+      <section className="py-16 md:py-24 border-t border-border/10 bg-muted/5 relative">
+        <div className="landing-orb absolute top-10 left-[10%] w-60 h-60 bg-emerald-500/5 rounded-full blur-[80px]" />
+        <div className="container max-w-5xl mx-auto px-4 space-y-10 relative z-10">
+          <div className="text-center space-y-3 landing-reveal">
+            <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">{texts.afterInstallTitle}</h2>
+            <p className="text-sm text-muted-foreground max-w-xl mx-auto">
+              {language === 'uk' ? 'Сім простих кроків для запуску суверенного локального шару вашої спільноти.' :
+               language === 'ru' ? 'Семь простых шагов для запуска суверенного локального слоя вашего сообщества.' :
+               language === 'es' ? 'Siete sencillos pasos para iniciar la capa soberana local de tu comunidad.' :
+               'Seven simple steps to launch the sovereign local layer of your community.'}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 landing-stagger">
+            {[
+              { num: '01', text: texts.step1, icon: Download },
+              { num: '02', text: texts.step2, icon: Shield },
+              { num: '03', text: texts.step3, icon: Layers },
+              { num: '04', text: texts.step4, icon: Zap },
+              { num: '05', text: texts.step5, icon: Globe },
+              { num: '06', text: texts.step6, icon: Cpu },
+              { num: '07', text: texts.step7, icon: Wallet },
+            ].map((step, idx) => (
+              <Card
+                key={idx}
+                className="landing-reveal landing-card-hover bg-card/30 backdrop-blur-md border border-border/40 rounded-2xl p-5 relative overflow-hidden group flex flex-col justify-between"
+              >
+                <div className="absolute top-3 right-3 text-4xl font-black text-emerald-500/10 group-hover:text-emerald-500/20 transition-colors pointer-events-none">
+                  {step.num}
+                </div>
+                <div className="space-y-4">
+                  <div className="p-2.5 bg-emerald-500/10 w-fit rounded-xl text-emerald-400">
+                    <step.icon className="h-5 w-5" />
+                  </div>
+                  <p className="text-sm text-foreground/90 font-medium leading-relaxed text-left">
+                    {step.text}
+                  </p>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── What Edge Client unlocks ── */}
+      <section className="py-16 md:py-24 border-t border-border/10 relative">
+        <div className="container max-w-5xl mx-auto px-4 space-y-12">
+          <div className="text-center space-y-3 landing-reveal">
+            <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">{texts.unlocksTitle}</h2>
+            <p className="text-sm text-muted-foreground max-w-xl mx-auto">
+              {language === 'uk' ? 'Edge Client розширює можливості MicroDAO, створюючи повноцінне децентралізоване середовище.' :
+               language === 'ru' ? 'Edge Client расширяет возможности MicroDAO, создавая полноценную децентрализованную среду.' :
+               language === 'es' ? 'Edge Client amplía las posibilidades de MicroDAO, creando un entorno descentralizado completo.' :
+               'Edge Client extends MicroDAO capabilities, creating a complete decentralized environment.'}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 landing-stagger">
+            {[
+              { title: texts.unlockCard1Title, desc: texts.unlockCard1Desc, icon: Sparkles, badge: 'Agent' },
+              { title: texts.unlockCard2Title, desc: texts.unlockCard2Desc, icon: MessageSquare, badge: 'P2P Messenger' },
+              { title: texts.unlockCard3Title, desc: texts.unlockCard3Desc, icon: Wallet, badge: 'Treasury' },
+              { title: texts.unlockCard4Title, desc: texts.unlockCard4Desc, icon: Vote, badge: 'Governance' },
+              { title: texts.unlockCard5Title, desc: texts.unlockCard5Desc, icon: Coins, badge: 'Token Layer' },
+              { title: texts.unlockCard6Title, desc: texts.unlockCard6Desc, icon: Globe, badge: 'Secure Net' },
+              { title: texts.unlockCard7Title, desc: texts.unlockCard7Desc, icon: Cpu, badge: 'Dev Agents' },
+            ].map((item, idx) => (
+              <Card
+                key={idx}
+                className={`landing-reveal landing-card-hover bg-card/30 backdrop-blur-md border border-border/40 rounded-2xl p-6 flex flex-col justify-between shadow-lg hover:shadow-xl transition-all duration-300 ${
+                  idx === 6 ? 'md:col-span-2 lg:col-span-1' : ''
+                }`}
+              >
+                <div className="space-y-4 text-left">
+                  <div className="flex items-center justify-between">
+                    <div className="p-3 rounded-xl bg-emerald-500/10 text-emerald-400">
+                      <item.icon className="h-6 w-6" />
+                    </div>
+                    <Badge variant="outline" className="text-[10px] uppercase tracking-wider font-semibold border-emerald-500/30 text-emerald-400 bg-emerald-500/5">
+                      {item.badge}
+                    </Badge>
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="font-extrabold text-base text-foreground">{item.title}</h3>
+                    <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                      {item.desc}
+                    </p>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Status / Roadmap ── */}
+      <section className="py-16 md:py-24 border-t border-border/10 bg-muted/5 relative">
+        <div className="landing-orb absolute bottom-10 right-[10%] w-64 h-64 bg-emerald-500/5 rounded-full blur-[90px]" />
+        <div className="container max-w-5xl mx-auto px-4 space-y-12 relative z-10">
+          <div className="text-center space-y-3 landing-reveal">
+            <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">{texts.roadmapTitle}</h2>
+            <p className="text-sm text-muted-foreground max-w-xl mx-auto">
+              {texts.roadmapSubtitle}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 landing-stagger">
+            {/* 1. Available Now */}
+            <Card className="landing-reveal bg-card/20 border-emerald-500/20 backdrop-blur-md rounded-2xl p-5 flex flex-col justify-between shadow-lg">
+              <div className="space-y-4 text-left">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">{texts.roadmapAvailableTitle}</span>
+                  <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-[9px] px-1.5 py-0.5">Live</Badge>
+                </div>
+                <ul className="space-y-2.5 pt-2">
+                  {[texts.roadmapAvail1, texts.roadmapAvail2, texts.roadmapAvail3, texts.roadmapAvail4].map((item, idx) => (
+                    <li key={idx} className="flex items-start gap-2 text-xs text-foreground/80">
+                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 mt-0.5 flex-shrink-0" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </Card>
+
+            {/* 2. Coming Next */}
+            <Card className="landing-reveal bg-card/20 border-blue-500/20 backdrop-blur-md rounded-2xl p-5 flex flex-col justify-between shadow-lg">
+              <div className="space-y-4 text-left">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-wider text-blue-400">{texts.roadmapComingTitle}</span>
+                  <Badge className="bg-blue-500/10 text-blue-400 border-blue-500/20 text-[9px] px-1.5 py-0.5">Soon</Badge>
+                </div>
+                <ul className="space-y-2.5 pt-2">
+                  {[texts.roadmapComing1, texts.roadmapComing2, texts.roadmapComing3, texts.roadmapComing4].map((item, idx) => (
+                    <li key={idx} className="flex items-start gap-2 text-xs text-foreground/80">
+                      <div className="h-1.5 w-1.5 rounded-full bg-blue-400 mt-1.5 flex-shrink-0" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </Card>
+
+            {/* 3. Roadmap (1-3 months) */}
+            <Card className="landing-reveal bg-card/20 border-violet-500/20 backdrop-blur-md rounded-2xl p-5 flex flex-col justify-between shadow-lg">
+              <div className="space-y-4 text-left">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-wider text-violet-400">{texts.roadmapLaterTitle}</span>
+                  <Badge className="bg-violet-500/10 text-violet-400 border-violet-500/20 text-[9px] px-1.5 py-0.5">1-3M</Badge>
+                </div>
+                <ul className="space-y-2.5 pt-2">
+                  {[texts.roadmapLater1, texts.roadmapLater2, texts.roadmapLater3, texts.roadmapLater4, texts.roadmapLater5].map((item, idx) => (
+                    <li key={idx} className="flex items-start gap-2 text-xs text-foreground/80">
+                      <div className="h-1.5 w-1.5 rounded-full bg-violet-400 mt-1.5 flex-shrink-0" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </Card>
+
+            {/* 4. Future */}
+            <Card className="landing-reveal bg-card/20 border-border/40 backdrop-blur-md rounded-2xl p-5 flex flex-col justify-between shadow-lg">
+              <div className="space-y-4 text-left">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{texts.roadmapFutureTitle}</span>
+                  <Badge className="bg-muted text-muted-foreground border-border/20 text-[9px] px-1.5 py-0.5">Future</Badge>
+                </div>
+                <ul className="space-y-2.5 pt-2">
+                  {[texts.roadmapFuture1, texts.roadmapFuture2, texts.roadmapFuture3].map((item, idx) => (
+                    <li key={idx} className="flex items-start gap-2 text-xs text-foreground/80">
+                      <div className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50 mt-1.5 flex-shrink-0" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </Card>
+          </div>
         </div>
       </section>
 
