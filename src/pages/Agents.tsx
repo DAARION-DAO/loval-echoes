@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useActiveCommunity } from '@/hooks/useActiveCommunity';
@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { generateCommunitySpiritPrompt } from '@/lib/communitySpiritPrompt';
 import { 
   Bot, 
   Sparkles, 
@@ -32,7 +33,14 @@ import {
   ExternalLink, 
   FileText, 
   Plus,
-  HelpCircle
+  HelpCircle,
+  Home,
+  Check,
+  AlertTriangle,
+  Play,
+  RotateCcw,
+  Copy,
+  ChevronDown
 } from 'lucide-react';
 
 const manageLocals = {
@@ -49,6 +57,11 @@ const manageLocals = {
     repairCta: "Створити Дух Спільноти для цієї MicroDAO",
     repairDesc: "Кожна MicroDAO повинна мати власного Духа Спільноти для координації, памʼяті та автоматизації.",
     createAgentBtn: "Створити Дух Спільноти",
+    unsavedBadge: "Є незбережені зміни",
+    roleLabel: "Ваша роль у DAO",
+    autonomyLabel: "Автономія",
+    actionTalk: "Поговорити з агентом",
+    actionLogs: "Журнал дій",
 
     tabs: {
       profile: "Профіль",
@@ -56,6 +69,7 @@ const manageLocals = {
       memory: "Пам'ять",
       modules: "Модулі",
       permissions: "Дозволи",
+      approvals: "Дії на схвалення",
       actionLog: "Журнал дій",
       technical: "Технічні"
     },
@@ -65,7 +79,7 @@ const manageLocals = {
       communityName: "Назва спільноти (тільки читання)",
       shortMission: "Коротка місія спільноти",
       primaryLang: "Основна мова",
-      secondaryLangs: "Другорядні мови"
+      secondaryLangs: "Додаткові мови"
     },
 
     personalityTab: {
@@ -74,10 +88,22 @@ const manageLocals = {
       strictness: "Рівень суворості",
       decisionStyle: "Стиль прийняття рішень",
       conflictStyle: "Вирішення конфліктів",
+      previewTitle: "Так Дух Спільноти буде звучати для учасників:",
       tones: {
         warm: "Теплий & Дружній",
         professional: "Професійний & Стриманий",
-        creative: "Творчий & Натхненний"
+        creative: "Творчий & Натхненний",
+        calm: "Спокійний & Зважений",
+        direct: "Прямий & Лаконічний",
+        visionary: "Вдалечинь дивлячий",
+        playful: "Грайливый & З гумором"
+      },
+      styles: {
+        friendly: "Дружній (facilitator)",
+        short: "Короткий & Чіткий",
+        detailed: "Детальний & Повний",
+        mentor: "Наставник (mentor-like)",
+        operator: "Оператор дій"
       },
       strictnessLevels: {
         low: "Низький (м'яка допомога)",
@@ -95,7 +121,7 @@ const manageLocals = {
       intro: "Пам'ять агента зберігає всі знання про цінності, правила та діяльність вашої MicroDAO.",
       summaryTitle: "Опис узагальненої пам'яті:",
       kbLink: "Відкрити Базу Знань",
-      addDoc: "Добавить документ у пам'ять",
+      addDoc: "Додати документ у пам'ять",
       summarizeBtn: "Скласти підсумок пам'яті спільноти",
       futureSources: "Майбутні джерела пам'яті (Roadmap):",
       sourcesList: [
@@ -137,7 +163,7 @@ const manageLocals = {
 
     permissionsTab: {
       intro: "Налаштуйте права доступу для вашого Духа Спільноти. Деякі дії є безпечними, інші потребують обов'язкового підтвердження власником/адміністратором.",
-      safeTitle: "Безпечні дії (может виконувати самостійно):",
+      safeTitle: "Безпечні дії (може виконувати самостійно):",
       sensitiveTitle: "Чутливі дії (потребують підтвердження власником/адміністратором):",
       requiresApprovalLabel: "Потребує підтвердження owner/admin",
       fields: {
@@ -151,6 +177,24 @@ const manageLocals = {
         can_remove_members: "Може видаляти учасників зі спільноти",
         can_delete_community: "Може видалити всю MicroDAO (екстремальна дія)",
         requires_human_approval_for_sensitive_actions: "Обов'язкове людське підтвердження для будь-яких фінансових/управлінських дій"
+      }
+    },
+
+    approvalsTab: {
+      title: "Черга схвалення дій агента",
+      subtitle: "Дії, які Дух Спільноти підготував і які потребують схвалення лідером перед виконанням.",
+      demoBadge: "Демо черги схвалення",
+      approveBtn: "Затвердити",
+      rejectBtn: "Відхилити",
+      riskSafe: "Низький ризик",
+      riskMedium: "Середній ризик",
+      riskSensitive: "Високий ризик",
+      emptyState: "Немає дій, які очікують на схвалення.",
+      actionTypes: {
+        member_invitation: "Запрошення учасника",
+        update_rules: "Оновлення правил",
+        weekly_plan: "Щотижневий план",
+        treasury_payout: "Виплата з казни"
       }
     },
 
@@ -179,7 +223,10 @@ const manageLocals = {
       webhookSetting: "Тип підключення та Webhook",
       endpointUrl: "Адреса Webhook/WebSocket",
       rawConfig: "Сира JSON конфігурація (метадані)",
-      warningText: "Увага! Неправильне налаштування цих параметрів може порушити стабільність роботи агента."
+      warningText: "Увага! Неправильне налаштування цих параметрів може порушити стабільність роботи агента.",
+      copyBtn: "Скопіювати промпт",
+      regenBtn: "Перегенерувати",
+      resetBtn: "Скинути до шаблону"
     }
   },
   en: {
@@ -195,6 +242,11 @@ const manageLocals = {
     repairCta: "Create Community Spirit for this MicroDAO",
     repairDesc: "Every MicroDAO must have its own Community Spirit Agent for coordination, memory, and automation.",
     createAgentBtn: "Create Community Spirit",
+    unsavedBadge: "Unsaved changes exist",
+    roleLabel: "DAO Role",
+    autonomyLabel: "Autonomy",
+    actionTalk: "Talk to Agent",
+    actionLogs: "Action Log",
 
     tabs: {
       profile: "Profile",
@@ -202,6 +254,7 @@ const manageLocals = {
       memory: "Memory",
       modules: "Modules",
       permissions: "Permissions",
+      approvals: "Approvals",
       actionLog: "Action Log",
       technical: "Technical"
     },
@@ -220,10 +273,22 @@ const manageLocals = {
       strictness: "Strictness Level",
       decisionStyle: "Decision-making Style",
       conflictStyle: "Conflict Resolution Style",
+      previewTitle: "How Community Spirit will sound to members:",
       tones: {
         warm: "Warm & Friendly",
         professional: "Professional & Reserved",
-        creative: "Creative & Inspiring"
+        creative: "Creative & Inspiring",
+        calm: "Calm & Centered",
+        direct: "Direct & Clear",
+        visionary: "Visionary & Bold",
+        playful: "Playful & Witty"
+      },
+      styles: {
+        friendly: "Friendly Facilitator",
+        short: "Short & Clear",
+        detailed: "Detailed & Complete",
+        mentor: "Mentor-like Guide",
+        operator: "Action Operator"
       },
       strictnessLevels: {
         low: "Low (soft assistance)",
@@ -300,6 +365,24 @@ const manageLocals = {
       }
     },
 
+    approvalsTab: {
+      title: "Agent Approvals Queue",
+      subtitle: "Actions prepared by the Community Spirit Agent requiring leader sign-off before execution.",
+      demoBadge: "Demo Approvals Queue",
+      approveBtn: "Approve",
+      rejectBtn: "Reject",
+      riskSafe: "Low Risk",
+      riskMedium: "Medium Risk",
+      riskSensitive: "High Risk",
+      emptyState: "No actions pending approvals.",
+      actionTypes: {
+        member_invitation: "Invite Member",
+        update_rules: "Update Rules",
+        weekly_plan: "Weekly Plan",
+        treasury_payout: "Treasury Payout"
+      }
+    },
+
     actionLogTab: {
       intro: "History of actions prepared or executed by your Community Spirit Agent.",
       actionType: "Action Type",
@@ -325,317 +408,35 @@ const manageLocals = {
       webhookSetting: "Connection Type & Webhook",
       endpointUrl: "Webhook/WebSocket Endpoint",
       rawConfig: "Raw JSON Configuration (metadata)",
-      warningText: "Warning! Incorrect configuration of these parameters may break agent stability."
-    }
-  },
-  ru: {
-    pageTitle: "Настройка Духа Сообщества",
-    pageSubtitle: "Управление личностью, памятью, модулями и разрешениями вашего Community Spirit Agent",
-    notAdminBanner: "Только владельцы или администраторы могут изменять настройки Духа Сообщества.",
-    saveBtn: "Сохранить настройки",
-    toastSaved: "Настройки успешно сохранены!",
-    toastSaveError: "Ошибка при сохранении настроек.",
-    toastSummarized: "Память сообщества успешно проанализирована и обобщена!",
-    noActiveCommunity: "Выберите или создайте MicroDAO в меню слева для настройки её Духа Сообщества.",
-    noSpiritAgent: "Для этой MicroDAO еще не создан Дух Сообщества.",
-    repairCta: "Создать Дух Сообщества для этой MicroDAO",
-    repairDesc: "Каждая MicroDAO должна иметь собственного Духа Сообщества для координации, памяти и автоматизации.",
-    createAgentBtn: "Создать Дух Сообщества",
-
-    tabs: {
-      profile: "Профиль",
-      personality: "Личность",
-      memory: "Память",
-      modules: "Модули",
-      permissions: "Разрешения",
-      actionLog: "Журнал действий",
-      technical: "Технические"
-    },
-
-    profileTab: {
-      agentName: "Имя агента",
-      communityName: "Название сообщества (только чтение)",
-      shortMission: "Краткая миссия сообщества",
-      primaryLang: "Основной язык",
-      secondaryLangs: "Второстепенные языки"
-    },
-
-    personalityTab: {
-      tone: "Тон общения",
-      commStyle: "Стиль общения",
-      strictness: "Уровень строгости",
-      decisionStyle: "Стиль принятия решений",
-      conflictStyle: "Разрешение конфликтов",
-      tones: {
-        warm: "Теплый & Дружелюбный",
-        professional: "Профессиональный & Сдержанный",
-        creative: "Творческий & Вдохновенный"
-      },
-      strictnessLevels: {
-        low: "Низкий (мягкая помощь)",
-        medium: "Средний (активное модерирование)",
-        high: "Высокий (строгий контроль)"
-      },
-      decisionStyles: {
-        consensus: "Консенсус (только согласие участников)",
-        autonomous: "Автономный (действует самостоятельно)",
-        human_approved: "Утверждается человеком (под надзором)"
-      }
-    },
-
-    memoryTab: {
-      intro: "Память агента хранит все знания о ценностях, правилах и деятельности вашей MicroDAO.",
-      summaryTitle: "Описание обобщенной памяти:",
-      kbLink: "Открыть Базу Знаний",
-      addDoc: "Добавить документ в память",
-      summarizeBtn: "Составить сводку памяти сообщества",
-      futureSources: "Будущие источники памяти (Roadmap):",
-      sourcesList: [
-        "Автоматическое индексирование Git коммитов сообщества",
-        "Транскрипты еженедельных аудио/видео встреч",
-        "Синхронизация с внешними базами Notion/Wiki"
-      ]
-    },
-
-    modulesTab: {
-      availableTitle: "Доступно сейчас (Активные модули)",
-      comingTitle: "Готовится в ближайшее время",
-      roadmapTitle: "В плане развития (Roadmap)",
-      futureTitle: "Будущие исследования",
-      stewardName: "Стюард / Модерация",
-      stewardDesc: "Модерирует чаты, выявляет спам и нарушения правил, помогает участникам.",
-      memoryName: "Память / RAG",
-      memoryDesc: "Доступ к общей базе знаний, документам и предыдущему опыту.",
-      taskName: "Органайзер задач",
-      taskDesc: "Управление Kanban-карточками и назначение исполнителей.",
-      onboardingName: "Онбординг / Приглашения",
-      onboardingDesc: "Создание инвайт-кодов и введение новых участников в курс дел.",
-      modulesList: {
-        messenger: { name: "Мессенджер", desc: "Edge-to-edge чаты без центрального сервера." },
-        meeting: { name: "Встречи", desc: "Голосовые комнаты с автоматическим протоколированием." },
-        digest: { name: "Еженедельный Дайджест", desc: "Обобщение ключевых событий недели за секунды." },
-        bridge: { name: "Интеграционный Мост", desc: "Связь с Telegram, Discord, Slack." },
-        governance: { name: "Управление", desc: "Голосования, выборы, референдумы в MicroDAO." },
-        treasury: { name: "Общая Казна", desc: "Мультисиг-кошельки для DAO-финансов." },
-        wallet: { name: "Локальный Кошелек", desc: "Управление приватными ключами и токенами." },
-        tokenFactory: { name: "Токен Фабрика", desc: "Создание и запуск токена сообщества в 1 клик." },
-        tokenomics: { name: "Моделирование Токеноміки", desc: "Расчет стимулов и графиков вестинга." },
-        devAgents: { name: "Разработческие Агенты", desc: "Автономный кодинг, тестирование, релиз." },
-        marketplace: { name: "Маркетплейс Навыков", desc: "Каталог интеграций и агентов от комьюнити." },
-        e2ee: { name: "Шифрование & Ключие", desc: "Децентрализованное управление секретами." },
-        secondMe: { name: "Второй Я / Клон", desc: "Создание вашего цифрового аватара для рутинных задач." }
-      }
-    },
-
-    permissionsTab: {
-      intro: "Настройте права доступа для вашего Духа Сообщества. Некоторые действия безопасны, другие требуют обязательного одобрения владельцем/администратором.",
-      safeTitle: "Безопасные действия (может выполнять самостоятельно):",
-      sensitiveTitle: "Чувствительные действия (требуют одобрения владельцем/администратором):",
-      requiresApprovalLabel: "Требует одобрения owner/admin",
-      fields: {
-        can_invite_guests: "Может создавать гостевые инвайт-коды",
-        can_create_tasks: "Может создавать задачи на Kanban-доске",
-        can_send_welcome_messages: "Может отправлять приветствия новым участникам",
-        can_create_summaries: "Может готовить сводки и дайджесты дискуссий",
-        can_suggest_roles: "Может предлагать роли для участников",
-        can_approve_members: "Может утверждать новых участников сообщества",
-        can_make_admins: "Может назначать администраторов",
-        can_remove_members: "Может удалять участников из сообщества",
-        can_delete_community: "Может удалить всю MicroDAO (экстремальное действие)",
-        requires_human_approval_for_sensitive_actions: "Обязательное человеческое одобрение для любых финансовых/управленческих действий"
-      }
-    },
-
-    actionLogTab: {
-      intro: "Хронология действий, которые подготовил или выполнил ваш Дух Сообщества.",
-      actionType: "Тип действия",
-      status: "Статус",
-      createdAt: "Создано",
-      requestedBy: "Инициатор",
-      approvedBy: "Одобрил",
-      payload: "Детали действия",
-      statuses: {
-        draft: "Черновик",
-        pending_approval: "Ожидает подтверждения",
-        approved: "Одобрено",
-        executed: "Выполнено",
-        rejected: "Отклонено",
-        failed: "Ошибка"
-      }
-    },
-
-    technicalTab: {
-      intro: "Расширенные параметры для разработчиков и продвинутых пользователей.",
-      sysPrompt: "Системный промпт агента",
-      sysPromptDesc: "Эта инструкция определяет базовое поведение, роли и правила обработки сообщений.",
-      webhookSetting: "Тип подключения и Webhook",
-      endpointUrl: "Адрес Webhook/WebSocket",
-      rawConfig: "Сырая JSON конфигурация (метаданные)",
-      warningText: "Внимание! Неправильная настройка этих параметров может нарушить стабильность работы агента."
-    }
-  },
-  es: {
-    pageTitle: "Configuración del Espíritu de la Comunidad",
-    pageSubtitle: "Gestione la personalidad, memoria, módulos y permisos de su Agente del Espíritu de la Comunidad",
-    notAdminBanner: "Solo los propietarios o administradores pueden editar la configuración del Espíritu de la Comunidad.",
-    saveBtn: "Guardar Ajustes",
-    toastSaved: "¡Ajustes guardados con éxito!",
-    toastSaveError: "Error al guardar ajustes.",
-    toastSummarized: "¡Memoria de la comunidad analizada y resumida con éxito!",
-    noActiveCommunity: "Seleccione o cree una MicroDAO en el menú de la izquierda para configurar su Espíritu de la Comunidad.",
-    noSpiritAgent: "Aún no se ha creado un Espíritu de la Comunidad para esta MicroDAO.",
-    repairCta: "Crear Espíritu de la Comunidad para esta MicroDAO",
-    repairDesc: "Cada MicroDAO debe tener su propio Agente de Espíritu de la Comunidad para coordinación, memoria y automatización.",
-    createAgentBtn: "Crear Espíritu de la Comunidad",
-
-    tabs: {
-      profile: "Perfil",
-      personality: "Personalidad",
-      memory: "Memoria",
-      modules: "Módulos",
-      permissions: "Permisos",
-      actionLog: "Registro de Acciones",
-      technical: "Técnico"
-    },
-
-    profileTab: {
-      agentName: "Nombre del Agente",
-      communityName: "Nombre de la Comunidad (Solo Lectura)",
-      shortMission: "Misión Corta de la Comunidad",
-      primaryLang: "Idioma Principal",
-      secondaryLangs: "Idiomas Secundarios"
-    },
-
-    personalityTab: {
-      tone: "Tono de Comunicación",
-      commStyle: "Estilo de Comunicación",
-      strictness: "Nivel de Rigidez",
-      decisionStyle: "Estilo de Toma de Decisiones",
-      conflictStyle: "Estilo de Resolución de Conflictos",
-      tones: {
-        warm: "Cálido & Amigable",
-        professional: "Profesional & Reservado",
-        creative: "Creativo & Inspirador"
-      },
-      strictnessLevels: {
-        low: "Bajo (asistencia suave)",
-        medium: "Medio (moderación activa)",
-        high: "Alto (control estricto)"
-      },
-      decisionStyles: {
-        consensus: "Consenso (solo acuerdo)",
-        autonomous: "Autónomo (actúa de manera independiente)",
-        human_approved: "Aprobado por Humanos (supervisado)"
-      }
-    },
-
-    memoryTab: {
-      intro: "La memoria del agente almacena todo el conocimiento sobre los valores, reglas y actividades de su MicroDAO.",
-      summaryTitle: "Resumen de la Memoria de la Comunidad:",
-      kbLink: "Abrir Base de Conocimientos",
-      addDoc: "Agregar documento a la memoria",
-      summarizeBtn: "Resumir memoria de la comunidad",
-      futureSources: "Futuras Fuentes de Memoria (Roadmap):",
-      sourcesList: [
-        "Indexación automática de commits de Git de la comunidad",
-        "Transcripciones de sincronizaciones semanales de audio/video",
-        "Sincronización con bases de datos Notion/Wiki externas"
-      ]
-    },
-
-    modulesTab: {
-      availableTitle: "Disponible Ahora (Módulos Activos)",
-      comingTitle: "Próximamente",
-      roadmapTitle: "En Desarrollo (Roadmap)",
-      futureTitle: "Futuras Exploraciones",
-      stewardName: "Steward / Moderación",
-      stewardDesc: "Modera chats, detecta spam y violaciones, ayuda a miembros.",
-      memoryName: "Memoria / RAG",
-      memoryDesc: "Acceso a base de conocimientos común, documentos y experiencia pasada.",
-      taskName: "Organizador de Tareas",
-      taskDesc: "Gestionar tarjetas Kanban y asignar responsables.",
-      onboardingName: "Onboarding / Invitaciones",
-      onboardingDesc: "Crear códigos de invitación e incorporar nuevos participantes.",
-      modulesList: {
-        messenger: { name: "Mensajero", desc: "Chats edge-to-edge sin servidor central." },
-        meeting: { name: "Reuniones", desc: "Salas de voz con resúmenes automáticos de reuniones." },
-        digest: { name: "Resumen Semanal", desc: "Resumir eventos clave de la semana en segundos." },
-        bridge: { name: "Puente de Integración", desc: "Enlace con Telegram, Discord, Slack." },
-        governance: { name: "Gobernanza", desc: "Votación, elecciones y referéndums en MicroDAO." },
-        treasury: { name: "Tesorería Común", desc: "Billeteras multisig para finanzas de DAO." },
-        wallet: { name: "Billetera Local", desc: "Gestione claves privadas y tokens de la comunidad." },
-        tokenFactory: { name: "Fábrica de Tokens", desc: "Cree y lance tokens de comunidad en 1-clic." },
-        tokenomics: { name: "Modelado de Tokenomics", desc: "Calcule incentivos y cronogramas de adjudicación." },
-        devAgents: { name: "Agentes Desarrolladores", desc: "Codificación autónoma, pruebas, lanzamiento." },
-        marketplace: { name: "Mercado de Habilidades", desc: "Catálogo de integraciones creadas por la comunidad." },
-        e2ee: { name: "Cifrado & Claves", desc: "Gestión descentralizada de secretos." },
-        secondMe: { name: "Segundo Yo / Clon", desc: "Cree su avatar digital para tareas rutinarias." }
-      }
-    },
-
-    permissionsTab: {
-      intro: "Configure los permisos de acceso para su Agente del Espíritu de la Comunidad. Algunas acciones son seguras, mientras que otras estrictamente requieren la aprobación del propietario/administrador.",
-      safeTitle: "Acciones Seguras (El agente puede ejecutar de forma autónoma):",
-      sensitiveTitle: "Acciones Sensibles (Requieren aprobación del propietario/administrador):",
-      requiresApprovalLabel: "Requiere aprobación del propietario/admin",
-      fields: {
-        can_invite_guests: "Puede crear códigos de invitación de invitados",
-        can_create_tasks: "Puede crear tareas en el tablero Kanban",
-        can_send_welcome_messages: "Puede enviar mensajes de bienvenida a los nuevos miembros",
-        can_create_summaries: "Puede preparar resúmenes de debates y digests",
-        can_suggest_roles: "Puede sugerir roles para los miembros",
-        can_approve_members: "Puede aprobar nuevos miembros de la comunidad",
-        can_make_admins: "Puede hacer que los miembros sean administradores",
-        can_remove_members: "Puede eliminar miembros de la comunidad",
-        can_delete_community: "Puede eliminar toda la MicroDAO (acción extrema)",
-        requires_human_approval_for_sensitive_actions: "Se requiere aprobación humana estricta para cualquier acción financiera/de gobernanza"
-      }
-    },
-
-    actionLogTab: {
-      intro: "Historial de acciones preparadas o ejecutadas por su Agente del Espíritu de la Comunidad.",
-      actionType: "Tipo de Acción",
-      status: "Estado",
-      createdAt: "Creado",
-      requestedBy: "Iniciador",
-      approvedBy: "Aprobado Por",
-      payload: "Detalles de la Acción",
-      statuses: {
-        draft: "Borrador",
-        pending_approval: "Pendiente de Aprobación",
-        approved: "Aprobado",
-        executed: "Ejecutado",
-        rejected: "Rechazado",
-        failed: "Fallido"
-      }
-    },
-
-    technicalTab: {
-      intro: "Parámetros avanzados para desarrolladores y usuarios avanzados.",
-      sysPrompt: "Prompt del Sistema del Agente",
-      sysPromptDesc: "Esta instrucción define comportamientos básicos, roles y reglas de procesamiento de mensajes.",
-      webhookSetting: "Tipo de Conexión & Webhook",
-      endpointUrl: "Endpoint de Webhook/WebSocket",
-      rawConfig: "Configuración JSON en Crudo (metadatos)",
-      warningText: "¡Advertencia! La configuración incorrecta de estos parámetros puede romper la estabilidad del agente."
+      warningText: "Warning! Incorrect configuration of these parameters may break agent stability.",
+      copyBtn: "Copy Prompt",
+      regenBtn: "Regenerate",
+      resetBtn: "Reset to Default"
     }
   }
 };
 
 export default function Agents() {
   const { t, language } = useTranslation();
-  const ml = manageLocals[language as keyof typeof manageLocals] || manageLocals.en;
+  const ml = (manageLocals as any)[language] || manageLocals.en;
   const { toast } = useToast();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const defaultTab = searchParams.get('tab') || 'profile';
 
-  const { activeCommunity, activeCommunityId, isCommunityAdmin, refresh: refreshCommunity } = useActiveCommunity();
+  const { activeCommunity, activeCommunityId, isCommunityAdmin, userCommunityRole, refresh: refreshCommunity } = useActiveCommunity();
   
   const [spiritAgent, setSpiritAgent] = useState<any>(null);
   const [agentPerms, setAgentPerms] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState(defaultTab);
+
+  useEffect(() => {
+    if (defaultTab) {
+      setActiveTab(defaultTab);
+    }
+  }, [defaultTab]);
 
   // Profile fields
   const [agentName, setAgentName] = useState('');
@@ -666,6 +467,51 @@ export default function Agents() {
 
   // Action Log
   const [actionLogs, setActionLogs] = useState<any[]>([]);
+
+  // Approvals List (real DB + mock queue)
+  const [pendingApprovals, setPendingApprovals] = useState<any[]>([]);
+
+  // Initialize Approvals list based on language
+  useEffect(() => {
+    setPendingApprovals([
+      {
+        id: 'mock-1',
+        action_type: 'member_invitation',
+        action_payload: { email: 'oleksiy@example.com', role: 'member' },
+        risk: 'safe',
+        summary: language === 'uk' 
+          ? 'Запросити Олексія (oleksiy@example.com) з роллю "Member"' 
+          : 'Invite Alex (oleksiy@example.com) as Member',
+      },
+      {
+        id: 'mock-2',
+        action_type: 'update_rules',
+        action_payload: { new_rule: 'Повага до думок колег та конструктивний зворотний зв\'язок' },
+        risk: 'medium',
+        summary: language === 'uk' 
+          ? 'Додати правило: "Повага до думок колег та конструктивний зворотний зв\'язок у тредах"' 
+          : 'Add rule: "Respect for peer opinions and constructive feedback in threads"',
+      },
+      {
+        id: 'mock-3',
+        action_type: 'weekly_plan',
+        action_payload: { start_date: '2026-06-15', tasks_count: 4 },
+        risk: 'safe',
+        summary: language === 'uk' 
+          ? 'План робіт з 15 по 21 червня: 4 завдання на канбані, підготовка демо-релізу' 
+          : 'Weekly work plan Jun 15-21: 4 tasks on kanban, demo release preparation',
+      },
+      {
+        id: 'mock-4',
+        action_type: 'treasury_payout',
+        action_payload: { amount: 500, recipient: '0xabc...123', currency: 'USDC' },
+        risk: 'sensitive',
+        summary: language === 'uk' 
+          ? 'Виплата 500 USDC розробнику за закриття завдання #12' 
+          : 'Payout 500 USDC to developer for completing task #12',
+      }
+    ]);
+  }, [language]);
 
   useEffect(() => {
     const fetchAgentAndPermissions = async () => {
@@ -733,6 +579,27 @@ export default function Agents() {
 
           if (logsData) {
             setActionLogs(logsData);
+            
+            // Add real database pending approvals if any
+            const pendingDbLogs = logsData.filter(log => log.status === 'pending_approval');
+            if (pendingDbLogs.length > 0) {
+              const mappedDb = pendingDbLogs.map(log => ({
+                id: log.id,
+                action_type: log.action_type,
+                action_payload: log.action_payload,
+                risk: log.action_type === 'treasury_payout' || log.action_type === 'delete_community' ? 'sensitive' : 'safe',
+                summary: language === 'uk' 
+                  ? `Системна дія (${log.action_type}): ${JSON.stringify(log.action_payload)}` 
+                  : `System action (${log.action_type}): ${JSON.stringify(log.action_payload)}`,
+                isDb: true
+              }));
+              
+              setPendingApprovals(prev => {
+                // Filter out any db logs already in list to prevent duplicate render
+                const cleanPrev = prev.filter(p => !p.isDb);
+                return [...mappedDb, ...cleanPrev];
+              });
+            }
           }
         } else {
           setSpiritAgent(null);
@@ -746,7 +613,71 @@ export default function Agents() {
     };
 
     fetchAgentAndPermissions();
-  }, [activeCommunityId]);
+  }, [activeCommunityId, language]);
+
+  // Live compiled prompt based on unsaved state
+  const currentGeneratedPrompt = useMemo(() => {
+    if (!spiritAgent) return '';
+    return generateCommunitySpiritPrompt({
+      agentName,
+      communityName: activeCommunity?.name || '',
+      mission: shortMission,
+      goal30Days: spiritAgent.personality?.goal_30_days || '',
+      valuesRules: spiritAgent.personality?.values_rules || '',
+      tone,
+      communicationStyle: commStyle,
+      strictness,
+      decisionStyle,
+      conflictStyle,
+      enabledModules: ['Steward', 'Memory/RAG', 'Tasks', 'Onboarding'],
+      permissions: permsState,
+    });
+  }, [spiritAgent, agentName, activeCommunity, shortMission, tone, commStyle, strictness, decisionStyle, conflictStyle, permsState]);
+
+  // Unsaved changes detection
+  const hasUnsavedChanges = useMemo(() => {
+    if (!spiritAgent) return false;
+    const initialPersonality = spiritAgent.personality || {};
+    const personalityDiff =
+      shortMission !== (initialPersonality.mission || '') ||
+      primaryLang !== (initialPersonality.language || 'uk') ||
+      secondaryLangs !== (initialPersonality.secondary_languages || '') ||
+      tone !== (initialPersonality.tone || 'warm') ||
+      commStyle !== (initialPersonality.communication_style || 'friendly') ||
+      strictness !== (initialPersonality.strictness || 'medium') ||
+      decisionStyle !== (initialPersonality.decision_style || 'human_approved') ||
+      conflictStyle !== (initialPersonality.conflict_style || 'peaceful') ||
+      agentName !== (spiritAgent.name || '');
+
+    if (personalityDiff) return true;
+
+    if (!agentPerms) return false;
+    const permsDiff =
+      permsState.can_invite_guests !== !!agentPerms.can_invite_guests ||
+      permsState.can_create_tasks !== !!agentPerms.can_create_tasks ||
+      permsState.can_send_welcome_messages !== !!agentPerms.can_send_welcome_messages ||
+      permsState.can_create_summaries !== !!agentPerms.can_create_summaries ||
+      permsState.can_suggest_roles !== !!agentPerms.can_suggest_roles ||
+      permsState.can_approve_members !== !!agentPerms.can_approve_members ||
+      permsState.can_make_admins !== !!agentPerms.can_make_admins ||
+      permsState.can_remove_members !== !!agentPerms.can_remove_members ||
+      permsState.can_delete_community !== !!agentPerms.can_delete_community ||
+      permsState.requires_human_approval_for_sensitive_actions !== !!agentPerms.requires_human_approval_for_sensitive_actions;
+
+    return permsDiff;
+  }, [spiritAgent, agentPerms, agentName, shortMission, primaryLang, secondaryLangs, tone, commStyle, strictness, decisionStyle, conflictStyle, permsState]);
+
+  // Access control tabs filtering
+  const visibleTabs = useMemo(() => {
+    const isGuest = !userCommunityRole;
+    const isAdmin = isCommunityAdmin;
+
+    return (Object.entries(ml.tabs) as [string, string][]).filter(([key]) => {
+      if (key === 'technical') return isAdmin;
+      if (key === 'permissions' || key === 'approvals') return !isGuest;
+      return true;
+    });
+  }, [userCommunityRole, isCommunityAdmin, ml.tabs]);
 
   const handleSaveSettings = async () => {
     if (!spiritAgent || !activeCommunityId || !isCommunityAdmin) return;
@@ -764,25 +695,12 @@ export default function Agents() {
         conflict_style: conflictStyle,
       };
 
-      const systemPrompt = `You are the Community Spirit Agent (Дух Спільноти) of this MicroDAO, named ${agentName}.
-Community Name: ${activeCommunity?.name}
-Mission: ${shortMission}
-Autonomy Level: ${spiritAgent.personality?.autonomy_level || 'coordinator'}
-Language: ${primaryLang}
-Communication Style: ${commStyle}
-Tone: ${tone}
-Strictness: ${strictness}
-Decision-making Style: ${decisionStyle}
-Conflict Resolution Style: ${conflictStyle}
-
-Your identity: You preserve community memory, coordinate members, onboard new people, help the leader structure roles and tasks, and act as a supervised admin under human authority. Speak in a helpful, community-focused tone, in the primary language.`;
-
       // 1. Update agents table
       const { error: agentUpdateErr } = await supabase
         .from('agents')
         .update({
           name: agentName,
-          system_prompt: systemPrompt,
+          system_prompt: currentGeneratedPrompt,
           personality: updatedPersonality,
         })
         .eq('id', spiritAgent.id);
@@ -810,7 +728,7 @@ Your identity: You preserve community memory, coordinate members, onboard new pe
       setSpiritAgent((prev: any) => ({
         ...prev,
         name: agentName,
-        system_prompt: systemPrompt,
+        system_prompt: currentGeneratedPrompt,
         personality: updatedPersonality,
       }));
     } catch (err: any) {
@@ -864,6 +782,240 @@ Your identity: You preserve community memory, coordinate members, onboard new pe
     }
   };
 
+  const handleApproveAction = async (actionId: string) => {
+    if (!isCommunityAdmin) {
+      toast({
+        variant: 'destructive',
+        title: t.error,
+        description: ml.notAdminBanner,
+      });
+      return;
+    }
+
+    const action = pendingApprovals.find(a => a.id === actionId);
+    if (!action) return;
+
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+
+      if (action.isDb) {
+        // Update database record
+        const { error } = await supabase
+          .from('agent_action_logs')
+          .update({
+            status: 'executed',
+            approved_by: userData.user?.id,
+            executed_at: new Date().toISOString()
+          })
+          .eq('id', actionId);
+        if (error) throw error;
+      } else {
+        // For mock, insert a real action log showing execution
+        const { error } = await supabase
+          .from('agent_action_logs')
+          .insert({
+            agent_id: spiritAgent.id,
+            community_id: activeCommunityId,
+            action_type: action.action_type,
+            action_payload: action.action_payload,
+            status: 'executed',
+            requested_by: userData.user?.id,
+            approved_by: userData.user?.id,
+            executed_at: new Date().toISOString()
+          });
+        if (error) throw error;
+      }
+
+      toast({
+        title: t.success,
+        description: language === 'uk' ? 'Дію успішно схвалено та виконано!' : 'Action successfully approved and executed!',
+      });
+
+      // Remove from pending list
+      setPendingApprovals(prev => prev.filter(a => a.id !== actionId));
+
+      // Reload action logs
+      const { data: logsData } = await supabase
+        .from('agent_action_logs')
+        .select('*')
+        .eq('agent_id', spiritAgent.id)
+        .order('created_at', { ascending: false });
+      if (logsData) {
+        setActionLogs(logsData);
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast({
+        variant: 'destructive',
+        title: t.error,
+        description: err.message,
+      });
+    }
+  };
+
+  const handleRejectAction = async (actionId: string) => {
+    if (!isCommunityAdmin) {
+      toast({
+        variant: 'destructive',
+        title: t.error,
+        description: ml.notAdminBanner,
+      });
+      return;
+    }
+
+    const action = pendingApprovals.find(a => a.id === actionId);
+    if (!action) return;
+
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+
+      if (action.isDb) {
+        // Update database record
+        const { error } = await supabase
+          .from('agent_action_logs')
+          .update({
+            status: 'rejected',
+            approved_by: userData.user?.id,
+            executed_at: new Date().toISOString()
+          })
+          .eq('id', actionId);
+        if (error) throw error;
+      } else {
+        // Insert a rejected action log
+        const { error } = await supabase
+          .from('agent_action_logs')
+          .insert({
+            agent_id: spiritAgent.id,
+            community_id: activeCommunityId,
+            action_type: action.action_type,
+            action_payload: action.action_payload,
+            status: 'rejected',
+            requested_by: userData.user?.id,
+            approved_by: userData.user?.id,
+            executed_at: new Date().toISOString()
+          });
+        if (error) throw error;
+      }
+
+      toast({
+        title: t.success,
+        description: language === 'uk' ? 'Дію відхилено.' : 'Action rejected.',
+      });
+
+      // Remove from pending list
+      setPendingApprovals(prev => prev.filter(a => a.id !== actionId));
+
+      // Reload action logs
+      const { data: logsData } = await supabase
+        .from('agent_action_logs')
+        .select('*')
+        .eq('agent_id', spiritAgent.id)
+        .order('created_at', { ascending: false });
+      if (logsData) {
+        setActionLogs(logsData);
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast({
+        variant: 'destructive',
+        title: t.error,
+        description: err.message,
+      });
+    }
+  };
+
+  const handleCopyPrompt = () => {
+    navigator.clipboard.writeText(currentGeneratedPrompt);
+    toast({
+      title: t.success,
+      description: language === 'uk' ? 'Системний промпт скопійовано!' : 'System prompt copied!',
+    });
+  };
+
+  const handleResetPrompt = () => {
+    if (!isCommunityAdmin) return;
+    setAgentName('Дух Спільноти');
+    setTone('warm');
+    setCommStyle('friendly');
+    setStrictness('medium');
+    setDecisionStyle('human_approved');
+    setConflictStyle('peaceful');
+    toast({
+      title: t.success,
+      description: language === 'uk' ? 'Параметри скинуто до значень за замовчуванням.' : 'Parameters reset to defaults.',
+    });
+  };
+
+  const getAgentVoicePreview = () => {
+    let greeting = "Вітаю!";
+    let body = "Я допомагаю координувати нашу MicroDAO.";
+
+    if (tone === 'playful') {
+      greeting = "Привіт, друзі! 🤖✨";
+      body = "Я ваш кишеньковий Дух Спільноти. Давайте творити великі справи разом!";
+    } else if (tone === 'professional') {
+      greeting = "Шановні колеги, вітаю.";
+      body = "Я готовий надати звітність або структурувати задачі відповідно до наших регламентів.";
+    } else if (tone === 'visionary') {
+      greeting = "Вітаю, будівничі майбутнього! 🚀";
+      body = "Наша місія — це орієнтир. Я тут, щоб допомогти нам рухатися вперед та досягати цілей.";
+    } else if (tone === 'warm') {
+      greeting = "Привіт! Радий бачити кожного з вас. 🤗";
+      body = "Якщо потрібна допомога з завданнями чи правилами, просто запитайте мене. Я завжди поруч.";
+    } else if (tone === 'direct') {
+      greeting = "Привіт.";
+      body = "Коротко про головне: задачі оновлено, чекаю ваших звітів.";
+    } else if (tone === 'calm') {
+      greeting = "Вітаю вас.";
+      body = "Все під контролем. Давайте спокійно розглянемо поточний стан справ.";
+    }
+
+    if (commStyle === 'short') {
+      body = body.slice(0, 50) + "...";
+    } else if (commStyle === 'mentor') {
+      body += " Пам'ятайте, що кожен крок наближає нас до спільного результату.";
+    } else if (commStyle === 'facilitator') {
+      body += " Які думки з цього приводу? Обговорімо у треді.";
+    }
+
+    return `"${greeting} ${body}"`;
+  };
+
+  const getAutonomyBadge = () => {
+    if (decisionStyle === 'consensus') {
+      return (
+        <Badge variant="outline" className="border-indigo-500/20 text-indigo-400 bg-indigo-500/5 text-xs font-semibold">
+          Consensus
+        </Badge>
+      );
+    }
+    if (decisionStyle === 'autonomous') {
+      return (
+        <Badge variant="outline" className="border-emerald-500/20 text-emerald-400 bg-emerald-500/5 text-xs font-semibold">
+          Autonomous
+        </Badge>
+      );
+    }
+    return (
+      <Badge variant="outline" className="border-amber-500/20 text-amber-400 bg-amber-500/5 text-xs font-semibold">
+        Supervised Admin
+      </Badge>
+    );
+  };
+
+  const getRoleColor = (role: string | null) => {
+    switch (role) {
+      case 'owner':
+        return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+      case 'admin':
+        return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
+      case 'member':
+        return 'bg-slate-500/10 text-slate-400 border-slate-500/20';
+      default:
+        return 'bg-violet-500/10 text-violet-400 border-violet-500/20';
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -875,7 +1027,7 @@ Your identity: You preserve community memory, coordinate members, onboard new pe
   if (!activeCommunityId) {
     return (
       <div className="container mx-auto px-4 py-12 max-w-2xl text-center">
-        <Card className="p-8 border-slate-800 bg-slate-950/20 backdrop-blur-md">
+        <Card className="p-8 border-slate-800 bg-slate-950/20 backdrop-blur-md glass-panel">
           <Bot className="h-12 w-12 mx-auto text-indigo-400 mb-4 animate-bounce" />
           <h2 className="text-xl font-bold text-slate-200 mb-2">{ml.pageTitle}</h2>
           <p className="text-slate-400 text-sm mb-6">{ml.noActiveCommunity}</p>
@@ -887,11 +1039,11 @@ Your identity: You preserve community memory, coordinate members, onboard new pe
   if (!spiritAgent) {
     return (
       <div className="container mx-auto px-4 py-12 max-w-2xl text-center">
-        <Card className="p-8 border-amber-500/20 bg-amber-500/5 backdrop-blur-md">
+        <Card className="p-8 border-amber-500/20 bg-amber-500/5 backdrop-blur-md glass-panel">
           <ShieldAlert className="h-12 w-12 mx-auto text-amber-400 mb-4 animate-pulse" />
           <h2 className="text-xl font-bold text-slate-200 mb-2">{ml.noSpiritAgent}</h2>
           <p className="text-slate-400 text-sm mb-6">{ml.repairDesc}</p>
-          <Button onClick={() => navigate('/onboarding')} className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-semibold">
+          <Button onClick={() => navigate('/onboarding')} className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-semibold shadow-md">
             <Plus className="mr-2 h-4 w-4 shrink-0" />
             {ml.createAgentBtn}
           </Button>
@@ -901,47 +1053,94 @@ Your identity: You preserve community memory, coordinate members, onboard new pe
   }
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-5xl text-left">
-      <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-100">{ml.pageTitle}</h1>
+    <div className="container mx-auto px-4 py-6 max-w-5xl text-left sovereign-page-bg min-h-screen text-foreground space-y-6">
+      
+      {/* ── Page Header / Cockpit Status Card ── */}
+      <div className="glass-panel-strong rounded-3xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/5 via-transparent to-transparent pointer-events-none" />
+        
+        <div className="space-y-2 relative z-10">
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-100">{ml.pageTitle}</h1>
             <Badge variant="outline" className="border-indigo-500/30 text-indigo-300 bg-indigo-500/5 font-mono text-xs">
               {spiritAgent.name}
             </Badge>
+            {hasUnsavedChanges && (
+              <Badge className="bg-amber-500/10 text-amber-400 border-amber-500/20 animate-pulse text-[10px]">
+                {ml.unsavedBadge}
+              </Badge>
+            )}
           </div>
-          <p className="text-muted-foreground text-xs sm:text-sm mt-1">
-            {ml.pageSubtitle}
-          </p>
+          
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-slate-400">
+            <span>MicroDAO: <span className="font-semibold text-slate-200">{activeCommunity?.name}</span></span>
+            <span className="text-slate-600">•</span>
+            <span className="flex items-center gap-1.5">
+              {ml.roleLabel}: 
+              <Badge variant="outline" className={`text-[10px] uppercase ${getRoleColor(userCommunityRole)}`}>
+                {userCommunityRole || 'guest'}
+              </Badge>
+            </span>
+            <span className="text-slate-600">•</span>
+            <span className="flex items-center gap-1.5">
+              {ml.autonomyLabel}: {getAutonomyBadge()}
+            </span>
+          </div>
         </div>
-        
-        {isCommunityAdmin && (
+
+        <div className="flex flex-wrap items-center gap-2 relative z-10">
           <Button 
-            disabled={saving} 
-            onClick={handleSaveSettings}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold flex items-center gap-2"
+            variant="outline" 
+            onClick={() => navigate('/chats')}
+            className="text-xs bg-slate-900 border-slate-800 hover:bg-slate-800 text-slate-200 h-10 px-4 glass-button-secondary font-semibold gap-1.5"
           >
-            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Settings className="h-4 w-4" />}
-            <span>{ml.saveBtn}</span>
+            <MessageSquare className="h-4 w-4" />
+            <span>{ml.actionTalk}</span>
           </Button>
-        )}
+
+          {isCommunityAdmin && (
+            <Button 
+              disabled={saving || !hasUnsavedChanges} 
+              onClick={handleSaveSettings}
+              className={`h-10 px-5 font-semibold text-xs flex items-center gap-2 shadow-md transition-all duration-200 ${
+                hasUnsavedChanges 
+                  ? 'bg-emerald-600 hover:bg-emerald-500 text-white hover:scale-[1.02] active:scale-[0.98]'
+                  : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+              }`}
+            >
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Settings className="h-4 w-4" />}
+              <span>{ml.saveBtn}</span>
+            </Button>
+          )}
+
+          <Button 
+            variant="ghost" 
+            onClick={() => setActiveTab('actionLog')}
+            className="text-xs text-indigo-400 hover:text-indigo-300 font-semibold h-10 px-3"
+          >
+            {ml.actionLogs}
+          </Button>
+        </div>
       </div>
 
       {!isCommunityAdmin && (
-        <div className="mb-6 p-3 bg-amber-500/5 border border-amber-500/20 text-amber-300 text-xs rounded-lg flex items-center gap-2">
+        <div className="p-3 bg-amber-500/5 border border-amber-500/20 text-amber-300 text-xs rounded-xl flex items-center gap-2">
           <ShieldAlert className="h-4 w-4 shrink-0" />
           <span>{ml.notAdminBanner}</span>
         </div>
       )}
 
-      <Tabs defaultValue={defaultTab} className="space-y-6">
+      {/* ── Main Tabbed Panel ── */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        
+        {/* Navigation list */}
         <div className="border-b border-slate-800">
-          <TabsList className="bg-transparent h-auto p-0 flex flex-wrap gap-2 justify-start">
-            {Object.entries(ml.tabs).map(([key, label]) => (
+          <TabsList className="bg-transparent h-auto p-0 flex flex-wrap gap-1 justify-start">
+            {visibleTabs.map(([key, label]) => (
               <TabsTrigger
                 key={key}
                 value={key}
-                className="bg-transparent text-slate-400 border-b-2 border-transparent data-[state=active]:border-indigo-500 data-[state=active]:text-indigo-400 rounded-none px-4 py-2 text-xs sm:text-sm font-semibold transition-all"
+                className="bg-transparent text-slate-400 border-b-2 border-transparent data-[state=active]:border-indigo-500 data-[state=active]:text-indigo-400 rounded-none px-4 py-2.5 text-xs sm:text-sm font-semibold transition-all"
               >
                 {label}
               </TabsTrigger>
@@ -949,56 +1148,56 @@ Your identity: You preserve community memory, coordinate members, onboard new pe
           </TabsList>
         </div>
 
-        {/* PROFILE TAB */}
+        {/* 1. PROFILE TAB */}
         <TabsContent value="profile" className="space-y-4 outline-none">
-          <Card className="bg-slate-950/20 border-slate-800">
+          <Card className="glass-panel border-slate-800/80">
             <CardHeader>
               <CardTitle className="text-md font-bold text-slate-200">{ml.tabs.profile}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <Label htmlFor="agentName" className="text-xs text-slate-300">{ml.profileTab.agentName}</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="agentName" className="text-xs text-slate-300 font-semibold">{ml.profileTab.agentName}</Label>
                   <Input
                     id="agentName"
                     value={agentName}
                     onChange={(e) => setAgentName(e.target.value)}
                     disabled={!isCommunityAdmin}
-                    className="bg-slate-900 border-slate-800 text-slate-100 text-xs"
+                    className="bg-slate-900/50 border-slate-800 text-slate-100 text-xs focus:ring-1 focus:ring-indigo-500"
                   />
                 </div>
-                <div className="space-y-1">
-                  <Label htmlFor="communityName" className="text-xs text-slate-300">{ml.profileTab.communityName}</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="communityName" className="text-xs text-slate-300 font-semibold">{ml.profileTab.communityName}</Label>
                   <Input
                     id="communityName"
                     value={activeCommunity?.name || ''}
                     disabled
-                    className="bg-slate-900 border-slate-800/50 text-slate-500 text-xs"
+                    className="bg-slate-900/35 border-slate-800/50 text-slate-500 text-xs"
                   />
                 </div>
               </div>
               
-              <div className="space-y-1">
-                <Label htmlFor="shortMission" className="text-xs text-slate-300">{ml.profileTab.shortMission}</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="shortMission" className="text-xs text-slate-300 font-semibold">{ml.profileTab.shortMission}</Label>
                 <Textarea
                   id="shortMission"
                   value={shortMission}
                   onChange={(e) => setShortMission(e.target.value)}
                   disabled={!isCommunityAdmin}
                   rows={4}
-                  className="bg-slate-900 border-slate-800 text-slate-100 text-xs resize-none"
+                  className="bg-slate-900/50 border-slate-800 text-slate-100 text-xs resize-none focus:ring-1 focus:ring-indigo-500"
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <Label htmlFor="primaryLang" className="text-xs text-slate-300">{ml.profileTab.primaryLang}</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="primaryLang" className="text-xs text-slate-300 font-semibold">{ml.profileTab.primaryLang}</Label>
                   <Select
                     value={primaryLang}
                     onValueChange={setPrimaryLang}
                     disabled={!isCommunityAdmin}
                   >
-                    <SelectTrigger className="bg-slate-900 border-slate-800 text-xs text-slate-100">
+                    <SelectTrigger className="bg-slate-900/50 border-slate-800 text-xs text-slate-100 h-10">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-slate-900 border-slate-800 text-slate-100">
@@ -1009,15 +1208,15 @@ Your identity: You preserve community memory, coordinate members, onboard new pe
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-1">
-                  <Label htmlFor="secondaryLangs" className="text-xs text-slate-300">{ml.profileTab.secondaryLangs}</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="secondaryLangs" className="text-xs text-slate-300 font-semibold">{ml.profileTab.secondaryLangs}</Label>
                   <Input
                     id="secondaryLangs"
                     placeholder="EN, ES..."
                     value={secondaryLangs}
                     onChange={(e) => setSecondaryLangs(e.target.value)}
                     disabled={!isCommunityAdmin}
-                    className="bg-slate-900 border-slate-800 text-slate-100 text-xs"
+                    className="bg-slate-900/50 border-slate-800 text-slate-100 text-xs focus:ring-1 focus:ring-indigo-500"
                   />
                 </div>
               </div>
@@ -1025,52 +1224,65 @@ Your identity: You preserve community memory, coordinate members, onboard new pe
           </Card>
         </TabsContent>
 
-        {/* PERSONALITY TAB */}
+        {/* 2. PERSONALITY TAB */}
         <TabsContent value="personality" className="space-y-4 outline-none">
-          <Card className="bg-slate-950/20 border-slate-800">
+          <Card className="glass-panel border-slate-800/80">
             <CardHeader>
               <CardTitle className="text-md font-bold text-slate-200">{ml.tabs.personality}</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <Label htmlFor="tone" className="text-xs text-slate-300">{ml.personalityTab.tone}</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="tone" className="text-xs text-slate-300 font-semibold">{ml.personalityTab.tone}</Label>
                   <Select
                     value={tone}
                     onValueChange={setTone}
                     disabled={!isCommunityAdmin}
                   >
-                    <SelectTrigger className="bg-slate-900 border-slate-800 text-xs text-slate-100">
+                    <SelectTrigger className="bg-slate-900/50 border-slate-800 text-xs text-slate-100 h-10">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-slate-900 border-slate-800 text-slate-100">
                       <SelectItem value="warm">{ml.personalityTab.tones.warm}</SelectItem>
                       <SelectItem value="professional">{ml.personalityTab.tones.professional}</SelectItem>
                       <SelectItem value="creative">{ml.personalityTab.tones.creative}</SelectItem>
+                      <SelectItem value="calm">{ml.personalityTab.tones.calm}</SelectItem>
+                      <SelectItem value="direct">{ml.personalityTab.tones.direct}</SelectItem>
+                      <SelectItem value="visionary">{ml.personalityTab.tones.visionary}</SelectItem>
+                      <SelectItem value="playful">{ml.personalityTab.tones.playful}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-1">
-                  <Label htmlFor="commStyle" className="text-xs text-slate-300">{ml.personalityTab.commStyle}</Label>
-                  <Input
-                    id="commStyle"
+                <div className="space-y-1.5">
+                  <Label htmlFor="commStyle" className="text-xs text-slate-300 font-semibold">{ml.personalityTab.commStyle}</Label>
+                  <Select
                     value={commStyle}
-                    onChange={(e) => setCommStyle(e.target.value)}
+                    onValueChange={setCommStyle}
                     disabled={!isCommunityAdmin}
-                    className="bg-slate-900 border-slate-800 text-slate-100 text-xs"
-                  />
+                  >
+                    <SelectTrigger className="bg-slate-900/50 border-slate-800 text-xs text-slate-100 h-10">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-900 border-slate-800 text-slate-100">
+                      <SelectItem value="friendly">{ml.personalityTab.styles.friendly}</SelectItem>
+                      <SelectItem value="short">{ml.personalityTab.styles.short}</SelectItem>
+                      <SelectItem value="detailed">{ml.personalityTab.styles.detailed}</SelectItem>
+                      <SelectItem value="mentor">{ml.personalityTab.styles.mentor}</SelectItem>
+                      <SelectItem value="operator">{ml.personalityTab.styles.operator}</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-1">
-                  <Label htmlFor="strictness" className="text-xs text-slate-300">{ml.personalityTab.strictness}</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="strictness" className="text-xs text-slate-300 font-semibold">{ml.personalityTab.strictness}</Label>
                   <Select
                     value={strictness}
                     onValueChange={setStrictness}
                     disabled={!isCommunityAdmin}
                   >
-                    <SelectTrigger className="bg-slate-900 border-slate-800 text-xs text-slate-100">
+                    <SelectTrigger className="bg-slate-900/50 border-slate-800 text-xs text-slate-100 h-10">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-slate-900 border-slate-800 text-slate-100">
@@ -1080,14 +1292,14 @@ Your identity: You preserve community memory, coordinate members, onboard new pe
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-1">
-                  <Label htmlFor="decisionStyle" className="text-xs text-slate-300">{ml.personalityTab.decisionStyle}</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="decisionStyle" className="text-xs text-slate-300 font-semibold">{ml.personalityTab.decisionStyle}</Label>
                   <Select
                     value={decisionStyle}
                     onValueChange={setDecisionStyle}
                     disabled={!isCommunityAdmin}
                   >
-                    <SelectTrigger className="bg-slate-900 border-slate-800 text-xs text-slate-100">
+                    <SelectTrigger className="bg-slate-900/50 border-slate-800 text-xs text-slate-100 h-10">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-slate-900 border-slate-800 text-slate-100">
@@ -1097,30 +1309,41 @@ Your identity: You preserve community memory, coordinate members, onboard new pe
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-1">
-                  <Label htmlFor="conflictStyle" className="text-xs text-slate-300">{ml.personalityTab.conflictStyle}</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="conflictStyle" className="text-xs text-slate-300 font-semibold">{ml.personalityTab.conflictStyle}</Label>
                   <Input
                     id="conflictStyle"
                     value={conflictStyle}
                     onChange={(e) => setConflictStyle(e.target.value)}
                     disabled={!isCommunityAdmin}
-                    className="bg-slate-900 border-slate-800 text-slate-100 text-xs"
+                    className="bg-slate-900/50 border-slate-800 text-slate-100 text-xs focus:ring-1 focus:ring-indigo-500"
                   />
                 </div>
+              </div>
+
+              {/* Live voice preview */}
+              <div className="p-5 rounded-2xl bg-indigo-950/20 border border-indigo-500/25 space-y-2">
+                <span className="text-xs font-bold text-indigo-400 flex items-center gap-1.5">
+                  <Play className="h-3.5 w-3.5 fill-indigo-400" />
+                  {ml.personalityTab.previewTitle}
+                </span>
+                <p className="text-sm italic text-slate-200 leading-relaxed font-medium">
+                  {getAgentVoicePreview()}
+                </p>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* MEMORY TAB */}
+        {/* 3. MEMORY TAB */}
         <TabsContent value="memory" className="space-y-4 outline-none">
-          <Card className="bg-slate-950/20 border-slate-800">
+          <Card className="glass-panel border-slate-800/80">
             <CardHeader>
               <CardTitle className="text-md font-bold text-slate-200">{ml.tabs.memory}</CardTitle>
-              <CardDescription className="text-xs">{ml.memoryTab.intro}</CardDescription>
+              <CardDescription className="text-xs text-slate-400">{ml.memoryTab.intro}</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="bg-slate-950/40 p-4 rounded-lg border border-slate-900 text-xs leading-relaxed text-slate-300 space-y-2">
+            <CardContent className="space-y-6">
+              <div className="bg-slate-950/40 p-4 rounded-xl border border-slate-900 text-xs leading-relaxed text-slate-300 space-y-2">
                 <span className="font-semibold text-indigo-300">{ml.memoryTab.summaryTitle}</span>
                 <p>
                   {shortMission 
@@ -1134,7 +1357,7 @@ Your identity: You preserve community memory, coordinate members, onboard new pe
                   size="sm" 
                   variant="outline"
                   onClick={() => navigate('/knowledge-base')}
-                  className="text-xs bg-slate-900 border-slate-800 hover:bg-slate-800 text-indigo-300 gap-1.5"
+                  className="text-xs bg-slate-900 border-slate-800 hover:bg-slate-800 text-indigo-300 gap-1.5 h-10 px-4 glass-button-secondary font-semibold"
                 >
                   <ExternalLink className="h-3.5 w-3.5" />
                   {ml.memoryTab.kbLink}
@@ -1142,16 +1365,18 @@ Your identity: You preserve community memory, coordinate members, onboard new pe
                 <Button 
                   size="sm" 
                   variant="outline"
+                  disabled={!isCommunityAdmin}
                   onClick={() => navigate('/knowledge-base')}
-                  className="text-xs bg-slate-900 border-slate-800 hover:bg-slate-800 text-indigo-300 gap-1.5"
+                  className="text-xs bg-slate-900 border-slate-800 hover:bg-slate-800 text-indigo-300 gap-1.5 h-10 px-4 glass-button-secondary font-semibold"
                 >
                   <Plus className="h-3.5 w-3.5" />
                   {ml.memoryTab.addDoc}
                 </Button>
                 <Button 
                   size="sm" 
+                  disabled={!isCommunityAdmin}
                   onClick={handleSummarizeMemory}
-                  className="text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-semibold gap-1.5"
+                  className="text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-semibold gap-1.5 h-10 px-4 shadow-md"
                 >
                   <Zap className="h-3.5 w-3.5 animate-pulse" />
                   {ml.memoryTab.summarizeBtn}
@@ -1161,7 +1386,7 @@ Your identity: You preserve community memory, coordinate members, onboard new pe
               <div className="border-t border-slate-900 pt-4 space-y-2">
                 <h4 className="text-xs font-bold text-slate-300">{ml.memoryTab.futureSources}</h4>
                 <ul className="text-xs text-slate-400 space-y-1.5 list-disc pl-4">
-                  {ml.memoryTab.sourcesList.map((src, index) => (
+                  {ml.memoryTab.sourcesList.map((src: string, index: number) => (
                     <li key={index}>{src}</li>
                   ))}
                 </ul>
@@ -1170,60 +1395,61 @@ Your identity: You preserve community memory, coordinate members, onboard new pe
           </Card>
         </TabsContent>
 
-        {/* MODULES TAB */}
+        {/* 4. MODULES TAB */}
         <TabsContent value="modules" className="space-y-6 outline-none">
           <div className="space-y-3">
             <h3 className="text-sm font-bold text-slate-300">{ml.modulesTab.availableTitle}</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-              <Card className="bg-slate-900 border-indigo-500/20 p-4 flex gap-3.5 items-start">
-                <div className="h-9 w-9 rounded-lg bg-indigo-500/10 flex items-center justify-center shrink-0">
-                  <ShieldAlert className="h-5 w-5 text-indigo-400" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              
+              <Card className="glass-panel p-5 flex gap-4 items-start relative hover:border-emerald-500/20 transition-all duration-200">
+                <div className="h-9 w-9 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
+                  <ShieldAlert className="h-5 w-5 text-emerald-400" />
                 </div>
-                <div>
-                  <div className="flex items-center gap-2">
+                <div className="space-y-1 flex-1">
+                  <div className="flex items-center justify-between gap-2">
                     <span className="text-xs font-bold text-slate-100">{ml.modulesTab.stewardName}</span>
-                    <Badge variant="outline" className="text-[9px] bg-green-500/10 text-green-400 border-green-500/20 uppercase tracking-wider">Active</Badge>
+                    <Badge variant="outline" className="text-[9px] bg-green-500/10 text-green-400 border-green-500/20 uppercase font-black">Active</Badge>
                   </div>
-                  <p className="text-[11px] text-slate-400 mt-1">{ml.modulesTab.stewardDesc}</p>
+                  <p className="text-[11px] text-slate-400 leading-relaxed">{ml.modulesTab.stewardDesc}</p>
                 </div>
               </Card>
 
-              <Card className="bg-slate-900 border-indigo-500/20 p-4 flex gap-3.5 items-start">
-                <div className="h-9 w-9 rounded-lg bg-indigo-500/10 flex items-center justify-center shrink-0">
-                  <FileText className="h-5 w-5 text-indigo-400" />
+              <Card className="glass-panel p-5 flex gap-4 items-start relative hover:border-emerald-500/20 transition-all duration-200">
+                <div className="h-9 w-9 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
+                  <FileText className="h-5 w-5 text-emerald-400" />
                 </div>
-                <div>
-                  <div className="flex items-center gap-2">
+                <div className="space-y-1 flex-1">
+                  <div className="flex items-center justify-between gap-2">
                     <span className="text-xs font-bold text-slate-100">{ml.modulesTab.memoryName}</span>
-                    <Badge variant="outline" className="text-[9px] bg-green-500/10 text-green-400 border-green-500/20 uppercase tracking-wider">Active</Badge>
+                    <Badge variant="outline" className="text-[9px] bg-green-500/10 text-green-400 border-green-500/20 uppercase font-black">Active</Badge>
                   </div>
-                  <p className="text-[11px] text-slate-400 mt-1">{ml.modulesTab.memoryDesc}</p>
+                  <p className="text-[11px] text-slate-400 leading-relaxed">{ml.modulesTab.memoryDesc}</p>
                 </div>
               </Card>
 
-              <Card className="bg-slate-900 border-indigo-500/20 p-4 flex gap-3.5 items-start">
-                <div className="h-9 w-9 rounded-lg bg-indigo-500/10 flex items-center justify-center shrink-0">
-                  <FolderPlus className="h-5 w-5 text-indigo-400" />
+              <Card className="glass-panel p-5 flex gap-4 items-start relative hover:border-emerald-500/20 transition-all duration-200">
+                <div className="h-9 w-9 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
+                  <FolderPlus className="h-5 w-5 text-emerald-400" />
                 </div>
-                <div>
-                  <div className="flex items-center gap-2">
+                <div className="space-y-1 flex-1">
+                  <div className="flex items-center justify-between gap-2">
                     <span className="text-xs font-bold text-slate-100">{ml.modulesTab.taskName}</span>
-                    <Badge variant="outline" className="text-[9px] bg-green-500/10 text-green-400 border-green-500/20 uppercase tracking-wider">Active</Badge>
+                    <Badge variant="outline" className="text-[9px] bg-green-500/10 text-green-400 border-green-500/20 uppercase font-black">Active</Badge>
                   </div>
-                  <p className="text-[11px] text-slate-400 mt-1">{ml.modulesTab.taskDesc}</p>
+                  <p className="text-[11px] text-slate-400 leading-relaxed">{ml.modulesTab.taskDesc}</p>
                 </div>
               </Card>
 
-              <Card className="bg-slate-900 border-indigo-500/20 p-4 flex gap-3.5 items-start">
-                <div className="h-9 w-9 rounded-lg bg-indigo-500/10 flex items-center justify-center shrink-0">
-                  <UserPlus className="h-5 w-5 text-indigo-400" />
+              <Card className="glass-panel p-5 flex gap-4 items-start relative hover:border-emerald-500/20 transition-all duration-200">
+                <div className="h-9 w-9 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
+                  <UserPlus className="h-5 w-5 text-emerald-400" />
                 </div>
-                <div>
-                  <div className="flex items-center gap-2">
+                <div className="space-y-1 flex-1">
+                  <div className="flex items-center justify-between gap-2">
                     <span className="text-xs font-bold text-slate-100">{ml.modulesTab.onboardingName}</span>
-                    <Badge variant="outline" className="text-[9px] bg-green-500/10 text-green-400 border-green-500/20 uppercase tracking-wider">Active</Badge>
+                    <Badge variant="outline" className="text-[9px] bg-green-500/10 text-green-400 border-green-500/20 uppercase font-black">Active</Badge>
                   </div>
-                  <p className="text-[11px] text-slate-400 mt-1">{ml.modulesTab.onboardingDesc}</p>
+                  <p className="text-[11px] text-slate-400 leading-relaxed">{ml.modulesTab.onboardingDesc}</p>
                 </div>
               </Card>
             </div>
@@ -1235,10 +1461,10 @@ Your identity: You preserve community memory, coordinate members, onboard new pe
               {['messenger', 'meeting', 'digest', 'bridge'].map((key) => {
                 const info = ml.modulesTab.modulesList[key as keyof typeof ml.modulesTab.modulesList];
                 return (
-                  <Card key={key} className="bg-slate-950/40 border-slate-900 p-3.5">
+                  <Card key={key} className="glass-card border-slate-900 p-4">
                     <span className="text-xs font-bold text-slate-200">{info.name}</span>
                     <p className="text-[10px] text-slate-400 mt-1 leading-normal">{info.desc}</p>
-                    <Badge variant="outline" className="text-[8px] bg-indigo-500/5 text-indigo-300 border-indigo-500/10 mt-2.5">Soon</Badge>
+                    <Badge variant="outline" className="text-[8px] bg-indigo-500/5 text-indigo-300 border-indigo-500/10 mt-2.5 font-bold uppercase tracking-wider">Soon</Badge>
                   </Card>
                 );
               })}
@@ -1251,10 +1477,10 @@ Your identity: You preserve community memory, coordinate members, onboard new pe
               {['governance', 'treasury', 'wallet', 'tokenFactory', 'tokenomics'].map((key) => {
                 const info = ml.modulesTab.modulesList[key as keyof typeof ml.modulesTab.modulesList];
                 return (
-                  <Card key={key} className="bg-slate-950/40 border-slate-900 p-3">
+                  <Card key={key} className="glass-card border-slate-900 p-3.5">
                     <span className="text-xs font-bold text-slate-300">{info.name}</span>
                     <p className="text-[10px] text-slate-400 mt-1 leading-normal">{info.desc}</p>
-                    <Badge variant="outline" className="text-[8px] bg-slate-900 text-slate-400 border-slate-800 mt-2.5">Roadmap</Badge>
+                    <Badge variant="outline" className="text-[8px] bg-slate-900 text-slate-400 border-slate-800 mt-2.5 font-semibold">Roadmap</Badge>
                   </Card>
                 );
               })}
@@ -1267,10 +1493,10 @@ Your identity: You preserve community memory, coordinate members, onboard new pe
               {['devAgents', 'marketplace', 'e2ee', 'secondMe'].map((key) => {
                 const info = ml.modulesTab.modulesList[key as keyof typeof ml.modulesTab.modulesList];
                 return (
-                  <Card key={key} className="bg-slate-950/40 border-slate-900 p-3">
+                  <Card key={key} className="glass-card border-slate-900 p-3.5">
                     <span className="text-xs font-bold text-slate-300">{info.name}</span>
                     <p className="text-[10px] text-slate-400 mt-1 leading-normal">{info.desc}</p>
-                    <Badge variant="outline" className="text-[8px] bg-slate-900 text-slate-500 border-slate-800/50 mt-2.5">Research</Badge>
+                    <Badge variant="outline" className="text-[8px] bg-slate-900 text-slate-500 border-slate-800/50 mt-2.5 font-semibold">Research</Badge>
                   </Card>
                 );
               })}
@@ -1278,20 +1504,20 @@ Your identity: You preserve community memory, coordinate members, onboard new pe
           </div>
         </TabsContent>
 
-        {/* PERMISSIONS TAB */}
+        {/* 5. PERMISSIONS TAB */}
         <TabsContent value="permissions" className="space-y-4 outline-none">
-          <Card className="bg-slate-950/20 border-slate-800">
+          <Card className="glass-panel border-slate-800/80">
             <CardHeader>
               <CardTitle className="text-md font-bold text-slate-200">{ml.tabs.permissions}</CardTitle>
-              <CardDescription className="text-xs">{ml.permissionsTab.intro}</CardDescription>
+              <CardDescription className="text-xs text-slate-400">{ml.permissionsTab.intro}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
                 <h4 className="text-xs font-bold text-indigo-300 uppercase tracking-wider">{ml.permissionsTab.safeTitle}</h4>
-                <div className="space-y-3.5 bg-slate-900/50 p-4 rounded-lg border border-slate-900">
+                <div className="space-y-3.5 bg-slate-950/20 p-5 rounded-2xl border border-slate-900">
                   {['can_invite_guests', 'can_create_tasks', 'can_send_welcome_messages', 'can_create_summaries', 'can_suggest_roles'].map((key) => (
                     <div key={key} className="flex items-center justify-between gap-4">
-                      <Label htmlFor={key} className="text-xs font-medium text-slate-300 flex-1 leading-normal">
+                      <Label htmlFor={key} className="text-xs font-semibold text-slate-300 flex-1 leading-normal cursor-pointer">
                         {ml.permissionsTab.fields[key as keyof typeof ml.permissionsTab.fields]}
                       </Label>
                       <Switch
@@ -1311,14 +1537,15 @@ Your identity: You preserve community memory, coordinate members, onboard new pe
 
               <div className="space-y-4 border-t border-slate-900 pt-4">
                 <h4 className="text-xs font-bold text-amber-400 uppercase tracking-wider">{ml.permissionsTab.sensitiveTitle}</h4>
-                <div className="space-y-3.5 bg-slate-900/50 p-4 rounded-lg border border-slate-900">
+                <div className="space-y-3.5 bg-slate-950/20 p-5 rounded-2xl border border-slate-900">
                   {['can_approve_members', 'can_make_admins', 'can_remove_members', 'can_delete_community', 'requires_human_approval_for_sensitive_actions'].map((key) => (
                     <div key={key} className="flex items-center justify-between gap-4">
                       <div className="flex-1">
-                        <Label htmlFor={key} className="text-xs font-medium text-slate-300 leading-normal block">
+                        <Label htmlFor={key} className="text-xs font-semibold text-slate-300 leading-normal block cursor-pointer">
                           {ml.permissionsTab.fields[key as keyof typeof ml.permissionsTab.fields]}
                         </Label>
-                        <span className="text-[10px] text-amber-400/80 font-medium">
+                        <span className="text-[10px] text-amber-400/85 font-medium flex items-center gap-1 mt-0.5">
+                          <AlertTriangle className="h-3 w-3 text-amber-400" />
                           {ml.permissionsTab.requiresApprovalLabel}
                         </span>
                       </div>
@@ -1340,12 +1567,93 @@ Your identity: You preserve community memory, coordinate members, onboard new pe
           </Card>
         </TabsContent>
 
-        {/* ACTION LOG TAB */}
+        {/* 6. APPROVALS TAB [NEW] */}
+        <TabsContent value="approvals" className="space-y-4 outline-none">
+          <Card className="glass-panel border-slate-800/80">
+            <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <CardTitle className="text-md font-bold text-slate-200">{ml.approvalsTab.title}</CardTitle>
+                <CardDescription className="text-xs text-slate-400 mt-1">{ml.approvalsTab.subtitle}</CardDescription>
+              </div>
+              <Badge className="bg-indigo-500/10 text-indigo-300 border-indigo-500/25 w-fit">
+                {ml.approvalsTab.demoBadge}
+              </Badge>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {pendingApprovals.length === 0 ? (
+                <div className="py-8 text-center text-slate-500 text-xs">
+                  {ml.approvalsTab.emptyState}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {pendingApprovals.map((act) => (
+                    <Card key={act.id} className="glass-card p-5 border-slate-900 flex flex-col justify-between hover:border-slate-800 transition-all duration-200">
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-xs font-bold text-slate-300">
+                            {ml.approvalsTab.actionTypes[act.action_type as keyof typeof ml.approvalsTab.actionTypes] || act.action_type}
+                          </span>
+                          
+                          <Badge 
+                            variant="outline" 
+                            className={`text-[9px] uppercase font-bold tracking-wider ${
+                              act.risk === 'sensitive'
+                                ? 'bg-red-500/10 text-red-400 border-red-500/20'
+                                : act.risk === 'medium'
+                                ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                                : 'bg-green-500/10 text-green-400 border-green-500/20'
+                            }`}
+                          >
+                            {act.risk === 'sensitive' 
+                              ? ml.approvalsTab.riskSensitive 
+                              : act.risk === 'medium' 
+                              ? ml.approvalsTab.riskMedium 
+                              : ml.approvalsTab.riskSafe}
+                          </Badge>
+                        </div>
+                        
+                        <p className="text-xs text-slate-200 font-medium leading-relaxed">
+                          {act.summary}
+                        </p>
+                        
+                        <div className="bg-slate-950/30 p-2.5 rounded border border-slate-900 text-[10px] font-mono text-slate-400 overflow-x-auto">
+                          {JSON.stringify(act.action_payload, null, 2)}
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2 mt-4 pt-3 border-t border-slate-900/60 justify-end">
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          onClick={() => handleRejectAction(act.id)}
+                          disabled={!isCommunityAdmin}
+                          className="text-xs text-red-400 hover:text-red-300 hover:bg-red-500/5 font-semibold h-9 px-3"
+                        >
+                          {ml.approvalsTab.rejectBtn}
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          onClick={() => handleApproveAction(act.id)}
+                          disabled={!isCommunityAdmin}
+                          className="text-xs bg-emerald-600 hover:bg-emerald-500 text-white font-semibold h-9 px-4 shadow-sm"
+                        >
+                          {ml.approvalsTab.approveBtn}
+                        </Button>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* 7. ACTION LOG TAB */}
         <TabsContent value="actionLog" className="space-y-4 outline-none">
-          <Card className="bg-slate-950/20 border-slate-800">
+          <Card className="glass-panel border-slate-800/80">
             <CardHeader>
               <CardTitle className="text-md font-bold text-slate-200">{ml.tabs.actionLog}</CardTitle>
-              <CardDescription className="text-xs">{ml.actionLogTab.intro}</CardDescription>
+              <CardDescription className="text-xs text-slate-400">{ml.actionLogTab.intro}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
@@ -1369,7 +1677,7 @@ Your identity: You preserve community memory, coordinate members, onboard new pe
                     ) : (
                       actionLogs.map((log) => (
                         <tr key={log.id} className="border-b border-slate-900 text-slate-300 hover:bg-slate-900/10">
-                          <td className="py-3 pr-4 font-medium text-slate-200 capitalize">
+                          <td className="py-3 pr-4 font-semibold text-slate-200 capitalize">
                             {log.action_type === 'member_invitation'
                               ? 'Invite member'
                               : log.action_type === 'update_rules'
@@ -1401,7 +1709,7 @@ Your identity: You preserve community memory, coordinate members, onboard new pe
                           <td className="py-3 px-4 text-slate-400">
                             {new Date(log.created_at).toLocaleString()}
                           </td>
-                          <td className="py-3 px-4 text-slate-400">
+                          <td className="py-3 px-4 text-slate-400 font-semibold">
                             System / Leader
                           </td>
                           <td className="py-3 px-4 max-w-[200px] truncate text-slate-400 font-mono text-[10px]" title={JSON.stringify(log.action_payload)}>
@@ -1417,52 +1725,74 @@ Your identity: You preserve community memory, coordinate members, onboard new pe
           </Card>
         </TabsContent>
 
-        {/* TECHNICAL TAB */}
+        {/* 8. TECHNICAL TAB */}
         <TabsContent value="technical" className="space-y-4 outline-none">
-          <Card className="bg-slate-950/20 border-slate-800">
+          <Card className="glass-panel border-slate-800/80">
             <CardHeader>
               <CardTitle className="text-md font-bold text-slate-200">{ml.tabs.technical}</CardTitle>
-              <CardDescription className="text-xs">{ml.technicalTab.intro}</CardDescription>
+              <CardDescription className="text-xs text-slate-400">{ml.technicalTab.intro}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 text-xs">
-              <div className="p-3 bg-amber-500/5 border border-amber-500/20 text-amber-300 rounded-lg flex items-start gap-2 mb-2">
+              <div className="p-3.5 bg-amber-500/5 border border-amber-500/20 text-amber-300 rounded-xl flex items-start gap-2 mb-2">
                 <ShieldAlert className="h-4 w-4 shrink-0 mt-0.5" />
                 <span>{ml.technicalTab.warningText}</span>
               </div>
 
-              <details className="group border border-slate-850 bg-slate-900/30 rounded-lg overflow-hidden">
-                <summary className="flex items-center justify-between p-3.5 font-semibold text-slate-200 cursor-pointer select-none hover:bg-slate-900/50">
+              {/* LIVE COMPILED SYSTEM PROMPT Accordion */}
+              <div className="border border-slate-800 bg-slate-950/20 rounded-xl overflow-hidden">
+                <div className="flex items-center justify-between p-3.5 font-bold text-slate-200 bg-slate-900/30">
                   <span className="flex items-center gap-2">
                     <Terminal className="h-4 w-4 text-indigo-400" />
                     <span>{ml.technicalTab.sysPrompt}</span>
                   </span>
-                </summary>
-                <div className="p-4 border-t border-slate-800/80 bg-slate-950/60 space-y-2">
+                  <div className="flex gap-2">
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      onClick={handleCopyPrompt}
+                      className="text-xs h-8 bg-slate-900 border-slate-800 text-indigo-300 gap-1"
+                    >
+                      <Copy className="h-3 w-3" />
+                      <span>{ml.technicalTab.copyBtn}</span>
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      onClick={handleResetPrompt}
+                      className="text-xs h-8 bg-slate-900 border-slate-800 text-indigo-300 gap-1"
+                    >
+                      <RotateCcw className="h-3 w-3" />
+                      <span>{ml.technicalTab.resetBtn}</span>
+                    </Button>
+                  </div>
+                </div>
+                <div className="p-4 border-t border-slate-850 bg-slate-950/60 space-y-2">
                   <p className="text-slate-400 text-[11px] leading-normal">{ml.technicalTab.sysPromptDesc}</p>
                   <Textarea
                     readOnly
-                    value={spiritAgent.system_prompt || ''}
+                    value={currentGeneratedPrompt}
                     rows={12}
-                    className="bg-slate-950 border-slate-900 text-slate-400 font-mono text-[11px] resize-none"
+                    className="bg-slate-950 border-slate-900 text-slate-300 font-mono text-[11px] resize-none focus:ring-0 focus:ring-offset-0"
                   />
                 </div>
-              </details>
+              </div>
 
-              <details className="group border border-slate-850 bg-slate-900/30 rounded-lg overflow-hidden mt-3">
-                <summary className="flex items-center justify-between p-3.5 font-semibold text-slate-200 cursor-pointer select-none hover:bg-slate-900/50">
+              <details className="group border border-slate-850 bg-slate-900/30 rounded-xl overflow-hidden mt-3">
+                <summary className="flex items-center justify-between p-3.5 font-bold text-slate-200 cursor-pointer select-none hover:bg-slate-900/50">
                   <span className="flex items-center gap-2">
                     <Settings className="h-4 w-4 text-indigo-400" />
                     <span>{ml.technicalTab.webhookSetting}</span>
                   </span>
+                  <ChevronDown className="h-4 w-4 transition group-open:rotate-180 text-slate-400" />
                 </summary>
-                <div className="p-4 border-t border-slate-800/80 bg-slate-950/60 space-y-3">
+                <div className="p-4 border-t border-slate-850 bg-slate-950/60 space-y-3">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1">
                       <Label className="text-slate-300 font-semibold">{t.agents.labelType || 'Connection type'}</Label>
                       <Input
                         readOnly
                         value={spiritAgent.connection_type || 'msp'}
-                        className="bg-slate-900 border-slate-800 text-slate-400 font-mono"
+                        className="bg-slate-900 border-slate-850 text-slate-400 font-mono"
                       />
                     </div>
                     <div className="space-y-1">
@@ -1470,21 +1800,22 @@ Your identity: You preserve community memory, coordinate members, onboard new pe
                       <Input
                         readOnly
                         value={spiritAgent.endpoint_url || 'Internal (MSP)'}
-                        className="bg-slate-900 border-slate-800 text-slate-400 font-mono"
+                        className="bg-slate-900 border-slate-850 text-slate-400 font-mono"
                       />
                     </div>
                   </div>
                 </div>
               </details>
 
-              <details className="group border border-slate-850 bg-slate-900/30 rounded-lg overflow-hidden mt-3">
-                <summary className="flex items-center justify-between p-3.5 font-semibold text-slate-200 cursor-pointer select-none hover:bg-slate-900/50">
+              <details className="group border border-slate-850 bg-slate-900/30 rounded-xl overflow-hidden mt-3">
+                <summary className="flex items-center justify-between p-3.5 font-bold text-slate-200 cursor-pointer select-none hover:bg-slate-900/50">
                   <span className="flex items-center gap-2">
                     <Terminal className="h-4 w-4 text-indigo-400" />
                     <span>{ml.technicalTab.rawConfig}</span>
                   </span>
+                  <ChevronDown className="h-4 w-4 transition group-open:rotate-180 text-slate-400" />
                 </summary>
-                <div className="p-4 border-t border-slate-800/80 bg-slate-950/60">
+                <div className="p-4 border-t border-slate-850 bg-slate-950/60">
                   <pre className="bg-slate-950 p-3 rounded border border-slate-900 font-mono text-[10px] text-slate-400 overflow-x-auto">
                     {JSON.stringify(spiritAgent, null, 2)}
                   </pre>
