@@ -404,3 +404,70 @@
 .landing-number {
   animation: landing-number-pulse 2.5s ease-in-out infinite;
 }
+
+/* Glassmorphism Visual System Utilities */
+.glass-panel {
+  background: rgba(8, 16, 34, 0.58);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(125, 211, 252, 0.14);
+  box-shadow:
+    0 12px 44px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.045);
+}
+
+.glass-panel-strong {
+  background: rgba(7, 14, 30, 0.72);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  border: 1px solid rgba(52, 211, 153, 0.20);
+  box-shadow:
+    0 18px 64px rgba(0, 0, 0, 0.36),
+    0 0 40px rgba(16, 185, 129, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.055);
+}
+
+.glass-card {
+  background: rgba(8, 16, 34, 0.48);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow:
+    0 10px 36px rgba(0, 0, 0, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.035);
+}
+
+.glass-card-hover {
+  transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease, background 180ms ease;
+}
+
+.glass-card-hover:hover {
+  border-color: rgba(52, 211, 153, 0.34);
+  background: rgba(10, 22, 42, 0.60);
+  box-shadow:
+    0 14px 48px rgba(0, 0, 0, 0.28),
+    0 0 34px rgba(16, 185, 129, 0.10);
+  transform: translateY(-1px);
+}
+
+.glass-chip {
+  background: rgba(15, 23, 42, 0.58);
+  border: 1px solid rgba(125, 211, 252, 0.16);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.glass-button-secondary {
+  background: rgba(15, 23, 42, 0.52);
+  border: 1px solid rgba(125, 211, 252, 0.18);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.sovereign-page-bg {
+  background:
+    radial-gradient(circle at 20% 10%, rgba(59, 130, 246, 0.13), transparent 34%),
+    radial-gradient(circle at 82% 18%, rgba(16, 185, 129, 0.11), transparent 30%),
+    radial-gradient(circle at 50% 100%, rgba(124, 58, 237, 0.10), transparent 34%),
+    #020817;
+}

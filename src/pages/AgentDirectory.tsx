@@ -39,6 +39,7 @@ import {
   ChevronDown,
   Wallet,
   CheckCircle2,
+  Home,
 } from 'lucide-react';
 
 /* ── Localized Text Mapping ── */
@@ -46,7 +47,7 @@ const localTexts = {
   uk: {
     heroBadge: 'Community Spirit Agent',
     heroTitle: 'Агентна система MicroDAO',
-    heroSubtitle: 'Кожна MicroDAO має власного Духа Спільноти — агента, який памʼятає контекст, координує людей, підключає модулі та діє в межах дозволів спільноти.',
+    heroSubtitle: 'Кожна MicroDAO має власного Духа Спільноти — головного агента, який памʼятає контекст, координує учасників, підключає модулі та діє в межах правил вашої спільноти.',
     ctaCreateMicroDao: 'Створити MicroDAO з Духом Спільноти',
     ctaViewModules: 'Переглянути модулі агентів',
     
@@ -61,7 +62,7 @@ const localTexts = {
     customDesc: 'Один шаблон Духа Спільноти може працювати по-різному для ОСББ, фермерського кооперативу, R&D-групи, мистецької комуни або DAO-мережі. Спільнота визначає місію, тон, правила, модулі та рівень автономії агента.',
     
     modulesTitle: 'Модулі, які підключаються до Духа Спільноти',
-    modulesSubtitle: 'Розширюйте можливості вашого MicroDAO за допомогою спеціалізованих агентних модулів.',
+    modulesSubtitle: 'Модулі розширюють можливості агента конкретної MicroDAO. Власник або адміністратор вмикає потрібні модулі й задає дозволи.',
     
     ctaConnect: 'Підключити до MicroDAO',
     ctaConfigure: 'Налаштувати модуль',
@@ -103,19 +104,29 @@ const localTexts = {
     customDimension10Desc: 'Набір під-агентів, які розширюють можливості головного Духа Спільноти.',
 
     catAll: 'Всі модулі',
-    catCore: 'Системні модулі',
-    catOps: 'Операційна діяльність',
-    catKnowledge: 'Знання та пам\'ять',
-    catDao: 'DAO та економіка',
-    catDev: 'Для розробників та мережі',
-    catPersonal: 'Персональні асистенти',
+    catCore: 'Core / Системні',
+    catOps: 'Координація',
+    catKnowledge: 'Знання',
+    catDao: 'DAO / Управління',
+    catDev: 'Розробники / Мережа',
+    catPersonal: 'Персональні',
+
+    profilesTitle: 'Приклади профілів спільнот',
+    profileHoaTitle: 'ОСББ',
+    profileHoaDesc: 'правила будинку, заявки, голосування, ремонтний фонд',
+    profileCoopTitle: 'Фермерський кооператив',
+    profileCoopDesc: 'поставки, закупівлі, сезонні задачі, спільні рішення',
+    profileRandDTitle: 'R&D-група',
+    profileRandDDesc: 'документи, дослідження, зустрічі, база знань',
+    profileArtTitle: 'Мистецька спільнота',
+    profileArtDesc: 'події, заявки, гранти, публікації, координація учасників',
   },
   en: {
     heroBadge: 'Community Spirit Agent',
     heroTitle: 'MicroDAO Agent System',
-    heroSubtitle: 'Every MicroDAO has its own Community Spirit Agent — an agent that remembers context, coordinates people, connects modules, and acts within community permissions.',
-    ctaCreateMicroDao: 'Create MicroDAO with Spirit Agent',
-    ctaViewModules: 'View Agent Modules',
+    heroSubtitle: 'Every MicroDAO has its own Community Spirit Agent — the primary agent that remembers context, coordinates members, connects modules, and acts within community rules.',
+    ctaCreateMicroDao: 'Create MicroDAO with Community Spirit',
+    ctaViewModules: 'Explore agent modules',
     
     coreCardTitle: 'Community Spirit',
     coreCardLabel: 'Primary MicroDAO Agent',
@@ -128,7 +139,7 @@ const localTexts = {
     customDesc: 'A single Community Spirit template can work differently for a homeowners association, a farmers cooperative, an R&D group, an art community, or a DAO network. The community defines the mission, tone, rules, modules, and autonomy level of the agent.',
     
     modulesTitle: 'Modules Connected to Community Spirit',
-    modulesSubtitle: 'Extend your MicroDAO capabilities with specialized agent modules.',
+    modulesSubtitle: 'Modules extend the capabilities of a specific MicroDAO agent. The owner or administrator enables required modules and sets permissions.',
     
     ctaConnect: 'Connect to MicroDAO',
     ctaConfigure: 'Configure Module',
@@ -170,17 +181,27 @@ const localTexts = {
     customDimension10Desc: 'A set of sub-agents that expand the capabilities of the primary Community Spirit.',
 
     catAll: 'All Modules',
-    catCore: 'Core / System Modules',
-    catOps: 'Community Operations',
-    catKnowledge: 'Knowledge & Memory',
-    catDao: 'DAO & Economy',
-    catDev: 'Developer & Network',
-    catPersonal: 'Personal Assistants',
+    catCore: 'Core / System',
+    catOps: 'Coordination',
+    catKnowledge: 'Knowledge',
+    catDao: 'DAO / Governance',
+    catDev: 'Builder / Network',
+    catPersonal: 'Personal',
+
+    profilesTitle: 'Example Community Profiles',
+    profileHoaTitle: 'Condominium (HOA)',
+    profileHoaDesc: 'house rules, applications, voting, maintenance fund',
+    profileCoopTitle: 'Farmers Cooperative',
+    profileCoopDesc: 'supplies, purchases, seasonal tasks, joint decisions',
+    profileRandDTitle: 'R&D Group',
+    profileRandDDesc: 'documents, research, meetings, knowledge base',
+    profileArtTitle: 'Art Community',
+    profileArtDesc: 'events, applications, grants, publications, member coordination',
   },
   ru: {
     heroBadge: 'Community Spirit Agent',
     heroTitle: 'Агентная система MicroDAO',
-    heroSubtitle: 'Каждая MicroDAO имеет собственного Духа Сообщества — агента, который помнит контекст, координирует людей, подключает модули и действует в рамках разрешений сообщества.',
+    heroSubtitle: 'Каждая MicroDAO имеет собственного Духа Сообщества — главного агента, который помнит контекст, координирует участников, подключает модули и действует в рамках правил сообщества.',
     ctaCreateMicroDao: 'Создать MicroDAO с Духом Сообщества',
     ctaViewModules: 'Просмотреть модули агентов',
     
@@ -195,7 +216,7 @@ const localTexts = {
     customDesc: 'Один шаблон Духа Сообщества может работать по-разному для ОСББ, фермерского кооператива, R&D-группы, художественной коммуны или DAO-сети. Сообщество определяет миссию, тон, правила, модули и уровень автономии агента.',
     
     modulesTitle: 'Модули, подключаемые к Духу Сообщества',
-    modulesSubtitle: 'Расширяйте возможности вашей MicroDAO с помощью специализированных агентных модулей.',
+    modulesSubtitle: 'Модули расширяют возможности агента конкретной MicroDAO. Владелец или администратор включает нужные модули и задает разрешения.',
     
     ctaConnect: 'Подключить к MicroDAO',
     ctaConfigure: 'Настроить модуль',
@@ -237,17 +258,27 @@ const localTexts = {
     customDimension10Desc: 'Набор под-агентов, которые расширяют возможности главного Духа Сообщества.',
 
     catAll: 'Все модули',
-    catCore: 'Системные модули',
-    catOps: 'Операционная деятельность',
-    catKnowledge: 'Знания и память',
-    catDao: 'DAO и экономика',
-    catDev: 'Для разработчиков и сети',
-    catPersonal: 'Персональные ассистенты',
+    catCore: 'Core / Системные',
+    catOps: 'Координация',
+    catKnowledge: 'Знания',
+    catDao: 'DAO / Управление',
+    catDev: 'Разработчики / Сеть',
+    catPersonal: 'Персональные',
+
+    profilesTitle: 'Примеры профилей сообществ',
+    profileHoaTitle: 'ОСББ (ТСЖ)',
+    profileHoaDesc: 'правила дома, заявки, голосования, ремонтный фонд',
+    profileCoopTitle: 'Фермерский кооператив',
+    profileCoopDesc: 'поставки, закупки, сезонные задачи, совместные решения',
+    profileRandDTitle: 'R&D-группа',
+    profileRandDDesc: 'документы, исследования, встречи, база знаний',
+    profileArtTitle: 'Арт-сообщество',
+    profileArtDesc: 'события, заявки, гранты, публикации, координация участников',
   },
   es: {
     heroBadge: 'Community Spirit Agent',
     heroTitle: 'Sistema de agentes MicroDAO',
-    heroSubtitle: 'Cada MicroDAO tiene su propio Agente Espíritu de Comunidad: recuerda el contexto, coordina personas, conecta módulos y actúa dentro de los permisos de la comunidad.',
+    heroSubtitle: 'Cada MicroDAO tiene su propio Agente Espíritu de Comunidad: el agente principal que recuerda el contexto, coordina miembros, conecta módulos y actúa dentro de las reglas de la comunidad.',
     ctaCreateMicroDao: 'Crear MicroDAO con Espíritu Comunitario',
     ctaViewModules: 'Ver módulos de agentes',
     
@@ -262,7 +293,7 @@ const localTexts = {
     customDesc: 'Una sola plantilla de Espíritu Comunitario puede funcionar de manera diferente para una asociación de propietarios, una cooperativa agrícola, un grupo de R&D, una comunidad artística o una red DAO. La comunidad define la misión, el tono, las reglas, los módulos y el nivel de autonomía del agente.',
     
     modulesTitle: 'Módulos conectados al Espíritu Comunitario',
-    modulesSubtitle: 'Amplíe sus capacidades de MicroDAO con módulos de agentes especializados.',
+    modulesSubtitle: 'Los módulos extienden las capacidades de un agente MicroDAO específico. El propietario o administrador habilita los módulos requeridos y establece permisos.',
     
     ctaConnect: 'Conectar a MicroDAO',
     ctaConfigure: 'Configurar módulo',
@@ -304,12 +335,22 @@ const localTexts = {
     customDimension10Desc: 'Un conjunto de subagentes que amplían las capacidades del Espíritu Comunitario principal.',
 
     catAll: 'Todos los módulos',
-    catCore: 'Módulos de Core / Sistema',
-    catOps: 'Operaciones de la Comunidad',
-    catKnowledge: 'Conocimiento y Memoria',
-    catDao: 'DAO y Economía',
-    catDev: 'Desarrolladores y Red',
-    catPersonal: 'Asistentes Personales',
+    catCore: 'Core / Sistema',
+    catOps: 'Coordinación',
+    catKnowledge: 'Conocimiento',
+    catDao: 'DAO / Gobernanza',
+    catDev: 'Desarrolladores / Red',
+    catPersonal: 'Personal',
+
+    profilesTitle: 'Ejemplos de perfiles de comunidad',
+    profileHoaTitle: 'Condominio (HOA)',
+    profileHoaDesc: 'reglas de la casa, solicitudes, votación, fondo de mantenimiento',
+    profileCoopTitle: 'Cooperativa Agrícola',
+    profileCoopDesc: 'suministros, compras, tareas estacionales, decisiones conjuntas',
+    profileRandDTitle: 'Grupo de R&D',
+    profileRandDDesc: 'documentos, investigación, reuniones, base de conocimientos',
+    profileArtTitle: 'Comunidad Artística',
+    profileArtDesc: 'eventos, solicitudes, subvenciones, publicaciones, coordinación de miembros',
   }
 };
 
@@ -406,7 +447,7 @@ export default function AgentDirectory() {
       catId: "core",
       category: texts.catCore,
       icon: User,
-      status: "coming" as const,
+      status: "available" as const,
       desc: {
         uk: "Керує процесом реєстрації нових учасників, генерацією інвайтів, автоматичним призначенням ролей та прив'язкою гаманців.",
         en: "Manages registration of new members, invite generation, automated role assignment, and wallet linking.",
@@ -979,20 +1020,10 @@ export default function AgentDirectory() {
       return (
         <Button
           onClick={handleCtaClick}
-          className="w-full h-10 font-semibold gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white shadow-md transition-all"
+          className="w-full h-10 font-semibold gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white shadow-md transition-all duration-200"
         >
           <Sparkles className="h-4 w-4" />
-          <span>{user ? texts.ctaConfigure : texts.ctaConnect}</span>
-        </Button>
-      );
-    } else if (status === 'coming' || status === 'roadmap') {
-      return (
-        <Button
-          disabled
-          variant="outline"
-          className="w-full h-10 font-semibold gap-1.5 border-border/40 text-muted-foreground bg-muted/5"
-        >
-          <span>{texts.ctaRoadmap}</span>
+          <span>{user && activeCommunity ? texts.ctaConfigure : texts.coreCardCtaCreate}</span>
         </Button>
       );
     } else {
@@ -1002,7 +1033,7 @@ export default function AgentDirectory() {
           variant="outline"
           className="w-full h-10 font-semibold gap-1.5 border-border/40 text-muted-foreground bg-muted/5"
         >
-          <span>{texts.ctaFuture}</span>
+          <span>{status === 'coming' || status === 'roadmap' ? texts.ctaRoadmap : texts.ctaFuture}</span>
         </Button>
       );
     }
@@ -1073,7 +1104,7 @@ export default function AgentDirectory() {
 
       {/* ── Directory Hero ── */}
       <section 
-        className="relative py-20 sm:py-28 text-center overflow-hidden border-b border-border/10"
+        className="relative py-12 md:py-20 text-center overflow-hidden border-b border-border/10 sovereign-page-bg"
         style={{
           backgroundImage: 'url("/agents-hero-bg.jpg")',
           backgroundSize: 'cover',
@@ -1081,39 +1112,109 @@ export default function AgentDirectory() {
         }}
       >
         {/* Readability overlay */}
-        <div className="absolute inset-0 bg-slate-950/80 via-slate-950/60 to-background pointer-events-none" />
+        <div className="absolute inset-0 bg-slate-950/80 via-slate-950/60 to-slate-950/90 pointer-events-none" />
         
         <div className="landing-orb absolute top-10 left-[20%] w-72 h-72 bg-emerald-500/10 rounded-full blur-[100px]" />
         <div className="landing-orb absolute bottom-5 right-[20%] w-80 h-80 bg-indigo-500/10 rounded-full blur-[120px]" />
         
-        <div className="container max-w-4xl mx-auto px-4 relative z-10 space-y-6">
-          <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-xs px-3.5 py-1">
-            {texts.heroBadge}
-          </Badge>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight leading-tight bg-gradient-to-r from-foreground via-emerald-400 to-foreground pb-2">
-            {texts.heroTitle}
-          </h1>
-          <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            {texts.heroSubtitle}
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4">
-            <Button
-              size="lg"
-              onClick={handleCtaClick}
-              className="w-full sm:w-auto h-12 px-8 font-semibold text-base gap-2 bg-emerald-600 hover:bg-emerald-500 text-white shadow-md"
-            >
-              <Sparkles className="h-5 w-5" />
-              <span>{texts.ctaCreateMicroDao}</span>
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              onClick={handleScrollToModules}
-              className="w-full sm:w-auto h-12 px-8 font-semibold text-base gap-2 border-border/60 hover:bg-muted/30 text-foreground"
-            >
-              <LayoutGrid className="h-4 w-4" />
-              <span>{texts.ctaViewModules}</span>
-            </Button>
+        <div className="container max-w-4xl mx-auto px-4 relative z-10">
+          <div className="glass-panel-strong rounded-[2.5rem] p-8 md:p-14 space-y-6 max-w-3xl mx-auto">
+            <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-xs px-3.5 py-1">
+              {texts.heroBadge}
+            </Badge>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight leading-tight bg-gradient-to-r from-foreground via-emerald-400 to-foreground pb-2">
+              {texts.heroTitle}
+            </h1>
+            <p className="text-sm sm:text-base md:text-lg text-slate-300 max-w-2xl mx-auto leading-relaxed">
+              {texts.heroSubtitle}
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 pt-2">
+              <Button
+                size="lg"
+                onClick={handleCtaClick}
+                className="w-full sm:w-auto h-11 px-6 font-semibold text-sm gap-2 bg-emerald-600 hover:bg-emerald-500 text-white shadow-md transition-all duration-200"
+              >
+                <Sparkles className="h-4 w-4" />
+                <span>{texts.ctaCreateMicroDao}</span>
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                onClick={handleScrollToModules}
+                className="w-full sm:w-auto h-11 px-6 font-semibold text-sm gap-2 border-slate-700 hover:bg-slate-800/50 text-slate-200 glass-button-secondary"
+              >
+                <LayoutGrid className="h-4 w-4" />
+                <span>{texts.ctaViewModules}</span>
+              </Button>
+            </div>
+
+            {/* Bottom mini chips */}
+            <div className="border-t border-slate-800/80 pt-6 mt-4 flex flex-wrap justify-center gap-2">
+              <span className="glass-chip text-[11px] font-medium text-slate-300 px-3 py-1.5 rounded-full">
+                {language === 'uk' ? 'Кастомний агент для кожної MicroDAO' : language === 'ru' ? 'Кастомный агент для каждой MicroDAO' : language === 'es' ? 'Agente personalizado para cada MicroDAO' : 'Customizable Agent for each MicroDAO'}
+              </span>
+              <span className="glass-chip text-[11px] font-medium text-slate-300 px-3 py-1.5 rounded-full">
+                {language === 'uk' ? "Пам'ять + правила + модулі" : language === 'ru' ? 'Память + правила + модули' : language === 'es' ? 'Memoria + reglas + módulos' : 'Memory + Rules + Modules'}
+              </span>
+              <span className="glass-chip text-[11px] font-medium text-slate-300 px-3 py-1.5 rounded-full">
+                {language === 'uk' ? 'Людське схвалення для чутливих дій' : language === 'ru' ? 'Человеческое одобрение для важных действий' : language === 'es' ? 'Aprobación humana para acciones sensibles' : 'Human Approval for Sensitive Actions'}
+              </span>
+              <span className="glass-chip text-[11px] font-medium text-slate-300 px-3 py-1.5 rounded-full">
+                {language === 'uk' ? 'Roadmap: казна / голосування / токени' : language === 'ru' ? 'Roadmap: казна / голосование / токены' : language === 'es' ? 'Roadmap: tesorería / votación / tokens' : 'Roadmap: Treasury / Governance / Tokens'}
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── How it Works Section ── */}
+      <section className="py-16 bg-slate-950/20 border-b border-border/10 relative">
+        <div className="container max-w-5xl mx-auto px-4 space-y-10">
+          <div className="text-center space-y-3">
+            <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-100">
+              {language === 'uk' ? 'Як працює агентна система MicroDAO' : language === 'ru' ? 'Как работает агентная система MicroDAO' : language === 'es' ? 'Cómo funciona el sistema de agentes MicroDAO' : 'How the MicroDAO Agent System Works'}
+            </h2>
+            <p className="text-xs sm:text-sm text-muted-foreground max-w-xl mx-auto leading-relaxed">
+              {language === 'uk' 
+                ? 'Простий запуск та конфігурація суверенного координаційного шару для вашої спільноти в чотири простих кроки.' 
+                : 'Simple launch and configuration of the sovereign coordination layer for your community in four easy steps.'}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 relative">
+            {[
+              {
+                step: '01',
+                title: language === 'uk' ? 'Створюєте MicroDAO' : 'Create MicroDAO',
+                desc: language === 'uk' ? 'Зареєструйте простір для вашої команди за кілька секунд.' : 'Register a space for your team in seconds.'
+              },
+              {
+                step: '02',
+                title: language === 'uk' ? 'Запуск Духа Спільноти' : 'Activate Community Spirit',
+                desc: language === 'uk' ? 'Система автоматично генерує вашого головного координаційного агента.' : 'The system automatically spawns your primary coordinating agent.'
+              },
+              {
+                step: '03',
+                title: language === 'uk' ? 'Налаштування під себе' : 'Configure To Your Model',
+                desc: language === 'uk' ? 'Оберіть тон, місію, правила поведінки та межі автономії.' : 'Choose the tone, mission, behavior rules, and autonomy limits.'
+              },
+              {
+                step: '04',
+                title: language === 'uk' ? 'Підключення модулів' : 'Connect Agent Modules',
+                desc: language === 'uk' ? 'Розширюйте можливості агента через завдання, казначейство та месенджери.' : 'Extend agent capabilities with tasks, treasury, and messengers.'
+              }
+            ].map((s, idx) => (
+              <div key={idx} className="glass-card p-6 rounded-2xl relative border border-slate-800/80 hover:border-emerald-500/20 transition-all text-left space-y-4">
+                <div className="text-3xl font-black text-emerald-500/20 font-mono absolute top-4 right-4">{s.step}</div>
+                <div className="h-8 w-8 rounded-full bg-emerald-500/10 flex items-center justify-center text-xs font-bold text-emerald-400">
+                  {idx + 1}
+                </div>
+                <div className="space-y-1">
+                  <h4 className="font-bold text-sm text-slate-100">{s.title}</h4>
+                  <p className="text-xs text-slate-400 leading-relaxed">{s.desc}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -1121,7 +1222,7 @@ export default function AgentDirectory() {
       {/* ── Core Agent (Дух Спільноти) Card ── */}
       <section className="py-16 md:py-20 relative">
         <div className="container max-w-5xl mx-auto px-4">
-          <Card className="max-w-4xl mx-auto border border-emerald-500/30 bg-emerald-500/5 rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row gap-6 md:gap-8 items-center hover:shadow-elegant-emerald transition-all duration-300 relative overflow-hidden group">
+          <Card className="max-w-4xl mx-auto border border-emerald-500/20 bg-slate-950/45 rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row gap-6 md:gap-8 items-center hover:shadow-elegant-emerald transition-all duration-300 relative overflow-hidden group glass-panel">
             {/* Emerald glow background on hover */}
             <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
             
@@ -1136,12 +1237,25 @@ export default function AgentDirectory() {
             </div>
 
             <div className="flex-1 text-center md:text-left space-y-4">
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground">{texts.coreCardTitle}</h2>
-              <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
-                {texts.coreCardDesc}
-              </p>
+              <div className="space-y-1">
+                <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground">{texts.coreCardTitle}</h2>
+                <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+                  {texts.coreCardDesc}
+                </p>
+              </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs sm:text-sm pt-2">
+              {/* Highlight callout box */}
+              <div className="p-4 rounded-2xl bg-emerald-950/20 border border-emerald-500/20 text-xs sm:text-sm text-emerald-300 leading-relaxed text-left font-medium">
+                {language === 'uk' 
+                  ? '💡 Кожна MicroDAO створює і налаштовує власного Духа Спільноти. Це не один універсальний бот для всіх, а агентне ядро конкретної спільноти з власною місією, правилами, пам’яттю, ролями та модулями.' 
+                  : language === 'ru'
+                  ? '💡 Каждая MicroDAO создает и настраивает собственного Духа Сообщества. Это не один универсальный бот для всех, а агентное ядро конкретного сообщества со своей миссией, правилами, памятью, ролями и модулями.'
+                  : language === 'es'
+                  ? '💡 Cada MicroDAO crea y configura su propio Espíritu de Comunidad. No es un bot universal para todos, sino el núcleo de agentes de una comunidad específica con su propia misión, reglas, memoria, roles y módulos.'
+                  : '💡 Every MicroDAO creates and configures its own Community Spirit. It is not a single generic bot for everyone, but the core agent of a specific community with its own mission, rules, memory, roles, and modules.'}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs sm:text-sm pt-2 text-left">
                 {[
                   language === 'uk' ? 'Автоматичний онбординг нових учасників' : 'Automated member onboarding',
                   language === 'uk' ? 'Пояснення та нагляд за правилами простору' : 'Explaining and enforcing rules',
@@ -1157,19 +1271,19 @@ export default function AgentDirectory() {
                 ))}
               </div>
 
-              <div className="pt-4 flex flex-col sm:flex-row justify-center md:justify-start gap-3">
-                {user ? (
+              <div className="pt-2 flex flex-col sm:flex-row justify-center md:justify-start gap-3">
+                {user && activeCommunity ? (
                   <Button
                     onClick={handleCtaClick}
-                    className="h-11 px-6 font-semibold bg-emerald-600 hover:bg-emerald-500 text-white shadow-md flex items-center justify-center gap-2"
+                    className="h-10 px-5 text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white shadow-md flex items-center justify-center gap-2"
                   >
                     <Settings className="h-4 w-4" />
-                    <span>{activeCommunity ? texts.coreCardCtaConfigureMy : texts.coreCardCtaConfigure}</span>
+                    <span>{texts.coreCardCtaConfigure}</span>
                   </Button>
                 ) : (
                   <Button
                     onClick={handleCtaClick}
-                    className="h-11 px-6 font-semibold bg-emerald-600 hover:bg-emerald-500 text-white shadow-md flex items-center justify-center gap-2"
+                    className="h-10 px-5 text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white shadow-md flex items-center justify-center gap-2"
                   >
                     <Sparkles className="h-4 w-4" />
                     <span>{texts.coreCardCtaCreate}</span>
@@ -1207,7 +1321,7 @@ export default function AgentDirectory() {
             ].map((dim, idx) => (
               <Card
                 key={idx}
-                className="bg-card/30 backdrop-blur-sm border border-border/30 rounded-2xl p-4 flex flex-col justify-between hover:border-primary/20 transition-all text-left"
+                className="glass-card glass-card-hover rounded-2xl p-4 flex flex-col justify-between text-left"
               >
                 <div className="space-y-2">
                   <div className="p-2 bg-emerald-500/10 w-fit rounded-lg text-emerald-400 mb-2">
@@ -1220,6 +1334,36 @@ export default function AgentDirectory() {
                 </div>
               </Card>
             ))}
+          </div>
+
+          {/* Example Community Profiles */}
+          <div className="pt-12 border-t border-slate-800/60 space-y-8">
+            <div className="text-center space-y-2">
+              <h3 className="text-xl md:text-2xl font-extrabold tracking-tight text-slate-100">
+                {texts.profilesTitle}
+              </h3>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+              {[
+                { title: texts.profileHoaTitle, desc: texts.profileHoaDesc, icon: Home },
+                { title: texts.profileCoopTitle, desc: texts.profileCoopDesc, icon: Users },
+                { title: texts.profileRandDTitle, desc: texts.profileRandDDesc, icon: Brain },
+                { title: texts.profileArtTitle, desc: texts.profileArtDesc, icon: Sparkles }
+              ].map((prof, idx) => (
+                <div 
+                  key={idx} 
+                  className="glass-card glass-card-hover p-6 rounded-2xl border border-slate-800/80 flex flex-col gap-4 text-left"
+                >
+                  <div className="p-2 bg-emerald-500/10 w-fit rounded-lg text-emerald-400 font-semibold">
+                    <prof.icon className="h-5 w-5" />
+                  </div>
+                  <div className="space-y-1">
+                    <h4 className="font-bold text-sm text-slate-100">{prof.title}</h4>
+                    <p className="text-xs text-slate-400 leading-relaxed">{prof.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -1258,7 +1402,7 @@ export default function AgentDirectory() {
             {filteredModules.map((mod) => (
               <Card
                 key={mod.idx}
-                className="bg-card/20 backdrop-blur-md border border-border/40 hover:border-emerald-500/30 rounded-2xl p-5 sm:p-6 flex flex-col justify-between shadow-lg hover:shadow-xl transition-all duration-300 relative group text-left"
+                className="glass-card glass-card-hover rounded-2xl p-5 sm:p-6 flex flex-col justify-between text-left relative group"
               >
                 <div className="space-y-4">
                   {/* Row 1: Icon, Title, Status */}
