@@ -1072,9 +1072,19 @@ export default function AgentDirectory() {
       </header>
 
       {/* ── Directory Hero ── */}
-      <section className="relative py-16 sm:py-24 text-center overflow-hidden border-b border-border/10">
-        <div className="landing-orb absolute top-10 left-[20%] w-72 h-72 bg-emerald-500/5 rounded-full blur-[100px]" />
-        <div className="landing-orb absolute bottom-5 right-[20%] w-80 h-80 bg-indigo-500/5 rounded-full blur-[120px]" />
+      <section 
+        className="relative py-20 sm:py-28 text-center overflow-hidden border-b border-border/10"
+        style={{
+          backgroundImage: 'url("/agents-hero-bg.jpg")',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        {/* Readability overlay */}
+        <div className="absolute inset-0 bg-slate-950/80 via-slate-950/60 to-background pointer-events-none" />
+        
+        <div className="landing-orb absolute top-10 left-[20%] w-72 h-72 bg-emerald-500/10 rounded-full blur-[100px]" />
+        <div className="landing-orb absolute bottom-5 right-[20%] w-80 h-80 bg-indigo-500/10 rounded-full blur-[120px]" />
         
         <div className="container max-w-4xl mx-auto px-4 relative z-10 space-y-6">
           <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-xs px-3.5 py-1">
