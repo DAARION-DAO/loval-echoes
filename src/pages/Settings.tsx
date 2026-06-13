@@ -256,10 +256,10 @@ export const Settings = () => {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="uk">🇺🇦 {t.settingsExtra.langUk}</SelectItem>
-                <SelectItem value="en">🇬🇧 {t.settingsExtra.langEn}</SelectItem>
-                <SelectItem value="ru">🇷🇺 {t.settingsExtra.langRu}</SelectItem>
-                <SelectItem value="es">🇪🇸 {t.settingsExtra.langEs}</SelectItem>
+                <SelectItem value="uk">UA</SelectItem>
+                <SelectItem value="en">EN</SelectItem>
+                <SelectItem value="ru">RU</SelectItem>
+                <SelectItem value="es">ES</SelectItem>
               </SelectContent>
             </Select>
           </div>

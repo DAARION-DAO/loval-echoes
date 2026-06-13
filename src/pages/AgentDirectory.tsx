@@ -109,10 +109,10 @@ export default function AgentDirectory() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="uk">🇺🇦 UA</SelectItem>
-                <SelectItem value="en">🇬🇧 EN</SelectItem>
-                <SelectItem value="ru">🇷🇺 RU</SelectItem>
-                <SelectItem value="es">🇪🇸 ES</SelectItem>
+                <SelectItem value="uk">UA</SelectItem>
+                <SelectItem value="en">EN</SelectItem>
+                <SelectItem value="ru">RU</SelectItem>
+                <SelectItem value="es">ES</SelectItem>
               </SelectContent>
             </Select>
 
