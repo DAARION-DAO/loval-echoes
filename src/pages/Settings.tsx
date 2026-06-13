@@ -6,6 +6,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
 import { 
   User, 
   Palette, 
@@ -240,6 +241,26 @@ export const Settings = () => {
                 : 'member'
             }
           />
+
+          {/* Access Tier Badge */}
+          {profile?.access_tier && ['founder', 'partner', 'sovereign', 'worker_node'].includes(profile.access_tier) && (
+            <div className="rounded-lg border border-indigo-500/20 bg-indigo-500/5 p-3 space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
+                  {t.advancedAccess.accessTierLabel}
+                </span>
+                <Badge className="bg-indigo-500/10 text-indigo-300 border-indigo-500/20 text-[9px] uppercase font-bold">
+                  {profile.access_tier === 'founder' ? t.advancedAccess.founderName
+                    : profile.access_tier === 'partner' ? t.advancedAccess.partnerName
+                    : profile.access_tier === 'sovereign' ? t.advancedAccess.sovereignName
+                    : t.advancedAccess.workerNodeName}
+                </Badge>
+              </div>
+              <p className="text-[10px] text-slate-500">
+                {t.advancedAccess.accessTierDesc}
+              </p>
+            </div>
+          )}
           
           <Separator />
 

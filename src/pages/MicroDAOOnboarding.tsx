@@ -30,8 +30,13 @@ import {
   Zap, 
   LogOut,
   Building,
-  UserCheck
+  UserCheck,
+  Gem,
+  Building2,
+  Shield,
+  Server
 } from 'lucide-react';
+import { type AdvancedAccessProgram, ADVANCED_ACCESS_PROGRAMS } from '@/lib/subscriptionTypes';
 
 interface AnswersState {
   name: string;
@@ -350,6 +355,7 @@ export default function MicroDAOOnboarding() {
   const [inviteCode, setInviteCode] = useState('');
   const [partnerMessage, setPartnerMessage] = useState('');
   const [partnerSubmitted, setPartnerSubmitted] = useState(false);
+  const [selectedProgram, setSelectedProgram] = useState<AdvancedAccessProgram | null>(null);
   const [draftSession, setDraftSession] = useState<any>(null);
 
   const toggleModule = (mod: string) => {
@@ -445,7 +451,7 @@ export default function MicroDAOOnboarding() {
           email: user?.email,
           display_name: user?.user_metadata?.display_name || user?.email,
           use_case: partnerMessage.trim(),
-          requested_tier: 'founder',
+          requested_tier: selectedProgram || 'founder',
           status: 'pending'
         });
 
@@ -832,52 +838,65 @@ export default function MicroDAOOnboarding() {
                 <CardHeader>
                   <CardTitle className="text-lg font-bold flex items-center gap-2">
                     <Users className="h-5 w-5 text-pink-400" />
-                    <span>{language === 'uk' ? 'Подати заявку на розширений доступ' : 'Apply for Advanced Access'}</span>
+                    <span>{t.advancedAccess.sectionTitle}</span>
                   </CardTitle>
                   <CardDescription>
-                    {language === 'uk' 
-                      ? 'Отримайте доступ до додаткових інструментів та мережевих функцій' 
-                      : 'Request access to advanced sovereign tooling and network capabilities'}
+                    {t.advancedAccess.sectionDesc}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="text-[11px] text-slate-400 space-y-1 bg-slate-950/20 p-3 rounded-lg border border-slate-900 leading-normal">
-                    <div className="flex items-start gap-1">
-                      <span className="text-pink-400 font-semibold">•</span>
-                      <span><strong>Founder Program</strong> — {language === 'uk' ? 'ранній доступ і участь у формуванні продукту' : 'early access and product co-creation'}</span>
-                    </div>
-                    <div className="flex items-start gap-1">
-                      <span className="text-pink-400 font-semibold">•</span>
-                      <span><strong>Partner Access</strong> — {language === 'uk' ? 'керування кількома MicroDAO або клієнтськими просторами' : 'manage multiple MicroDAOs or client workspaces'}</span>
-                    </div>
-                    <div className="flex items-start gap-1">
-                      <span className="text-pink-400 font-semibold">•</span>
-                      <span><strong>Sovereign / Network Access</strong> — {language === 'uk' ? 'власна інфраструктура, edge/network/governance' : 'private deployment, edge/network/governance tools'}</span>
-                    </div>
-                    <div className="flex items-start gap-1">
-                      <span className="text-pink-400 font-semibold">•</span>
-                      <span><strong>Worker Node / Operator Access</strong> — {language === 'uk' ? 'доступ для операторів вузлів та чутливої інфраструктури' : 'node operations & sensitive infrastructure management'}</span>
-                    </div>
+                  {/* Program Selector Tiles */}
+                  <div className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">
+                    {t.advancedAccess.selectProgram}
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {ADVANCED_ACCESS_PROGRAMS.map((prog) => {
+                      const isSelected = selectedProgram === prog.key;
+                      const IconComp = prog.key === 'founder' ? Gem 
+                        : prog.key === 'partner' ? Building2 
+                        : prog.key === 'sovereign' ? Shield 
+                        : Server;
+                      const nameKey = `${prog.key === 'worker_node' ? 'workerNode' : prog.key}Name` as keyof typeof t.advancedAccess;
+                      const descKey = `${prog.key === 'worker_node' ? 'workerNode' : prog.key}Desc` as keyof typeof t.advancedAccess;
+                      return (
+                        <button
+                          key={prog.key}
+                          type="button"
+                          onClick={() => setSelectedProgram(isSelected ? null : prog.key)}
+                          className={`p-3 rounded-lg border text-left transition-all ${
+                            isSelected 
+                              ? `border-${prog.color}-500/40 bg-${prog.color}-500/10 ring-1 ring-${prog.color}-500/30` 
+                              : 'border-slate-800 bg-slate-950/30 hover:border-slate-700'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 mb-1">
+                            <IconComp className={`h-4 w-4 text-${prog.color}-400`} />
+                            <span className="text-xs font-bold text-slate-200">
+                              {t.advancedAccess[nameKey]}
+                            </span>
+                          </div>
+                          <p className="text-[10px] text-slate-400 leading-snug">
+                            {t.advancedAccess[descKey]}
+                          </p>
+                        </button>
+                      );
+                    })}
                   </div>
 
                   {partnerSubmitted ? (
                     <div className="flex flex-col items-center justify-center p-4 text-center space-y-2">
                       <CheckCircle className="h-8 w-8 text-green-400" />
                       <div className="text-xs font-semibold text-green-300">
-                        {language === 'uk' ? 'Заявку успішно надіслано' : 'Application Submitted Successfully'}
+                        {t.advancedAccess.applicationSent}
                       </div>
                       <p className="text-[10px] text-slate-400 max-w-xs">
-                        {language === 'uk'
-                          ? 'Ми розглянемо ваш запит. Ви можете перевірити статус на сторінці waitlist.'
-                          : 'We will review your request. You can check the status on the waitlist page.'}
+                        {t.advancedAccess.applicationSentDesc}
                       </p>
                     </div>
                   ) : (
                     <form onSubmit={handlePartnerSubmit} className="space-y-3">
                       <Textarea 
-                        placeholder={language === 'uk' 
-                          ? 'Опишіть ваш запит (яка програма доступу вас цікавить та для яких цілей)...' 
-                          : 'Describe your request (which access program you are interested in and for what purposes)...'}
+                        placeholder={t.advancedAccess.describePlaceholder}
                         value={partnerMessage}
                         onChange={(e) => setPartnerMessage(e.target.value)}
                         className="bg-slate-950/80 border-slate-800 text-xs min-h-[80px] focus-visible:ring-pink-500"
@@ -885,10 +904,10 @@ export default function MicroDAOOnboarding() {
                       />
                       <Button 
                         type="submit" 
-                        disabled={loading || !partnerMessage.trim()}
+                        disabled={loading || !partnerMessage.trim() || !selectedProgram}
                         className="w-full bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white font-semibold text-xs"
                       >
-                        {loading ? t.onboardingWizard.sendingBtn : (language === 'uk' ? 'Надіслати запит' : 'Send Application')}
+                        {loading ? t.onboardingWizard.sendingBtn : t.advancedAccess.submitApplication}
                       </Button>
                     </form>
                   )}

@@ -128,9 +128,60 @@ export interface MicroDAOSubscription {
   updated_at: string;
 }
 
+// --- Advanced Access Programs ---
+
+export type AdvancedAccessProgram = 'founder' | 'partner' | 'sovereign' | 'worker_node';
+
+export type AdvancedAccessRequestStatus = 'pending' | 'approved' | 'rejected' | 'needs_info';
+
+export interface AdvancedAccessProgramInfo {
+  key: AdvancedAccessProgram;
+  icon: string; // Lucide icon name
+  color: string;
+  requiresManualReview: boolean;
+  accessTierOnApprove: string;
+}
+
+export const ADVANCED_ACCESS_PROGRAMS: AdvancedAccessProgramInfo[] = [
+  {
+    key: 'founder',
+    icon: 'Gem',
+    color: 'indigo',
+    requiresManualReview: true,
+    accessTierOnApprove: 'founder',
+  },
+  {
+    key: 'partner',
+    icon: 'Building2',
+    color: 'purple',
+    requiresManualReview: true,
+    accessTierOnApprove: 'partner',
+  },
+  {
+    key: 'sovereign',
+    icon: 'Shield',
+    color: 'blue',
+    requiresManualReview: true,
+    accessTierOnApprove: 'sovereign',
+  },
+  {
+    key: 'worker_node',
+    icon: 'Server',
+    color: 'emerald',
+    requiresManualReview: true,
+    accessTierOnApprove: 'worker_node',
+  },
+];
+
+export const getAdvancedProgramInfo = (key: string): AdvancedAccessProgramInfo | undefined =>
+  ADVANCED_ACCESS_PROGRAMS.find(p => p.key === key);
+
 // --- Identity Requirements ---
 
-export type IdentityLevel = 'free' | 'member' | 'leader' | 'admin' | 'guardian';
+export type IdentityLevel =
+  | 'free' | 'member' | 'leader'
+  | 'founder' | 'partner' | 'sovereign' | 'worker_node'
+  | 'admin' | 'guardian';
 
 export interface IdentityRequirement {
   email: 'required';
@@ -142,6 +193,10 @@ export const IDENTITY_REQUIREMENTS: Record<IdentityLevel, IdentityRequirement> =
   free: { email: 'required', telegram: 'optional', wallet: 'optional' },
   member: { email: 'required', telegram: 'recommended', wallet: 'optional' },
   leader: { email: 'required', telegram: 'required', wallet: 'required' },
+  founder: { email: 'required', telegram: 'recommended', wallet: 'recommended' },
+  partner: { email: 'required', telegram: 'required', wallet: 'required' },
+  sovereign: { email: 'required', telegram: 'required', wallet: 'required' },
+  worker_node: { email: 'required', telegram: 'required', wallet: 'required' },
   admin: { email: 'required', telegram: 'required', wallet: 'required' },
   guardian: { email: 'required', telegram: 'required', wallet: 'required' },
 };

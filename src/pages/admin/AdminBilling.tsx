@@ -24,7 +24,8 @@ import { Badge } from '@/components/ui/badge';
 import { 
   LEADER_PLAN, 
   SUPPORTED_ASSETS, 
-  SUBSCRIPTION_STATUS_LABELS, 
+  SUBSCRIPTION_STATUS_LABELS,
+  ADVANCED_ACCESS_PROGRAMS,
   type SubscriptionStatus 
 } from '@/lib/subscriptionTypes';
 
@@ -196,6 +197,53 @@ export const AdminBilling = () => {
             <p className="text-xs text-slate-500">
               {t.identity.adminNoSubscriptions}
             </p>
+          </div>
+        </CardContent>
+      </Card>
+      {/* Access Programs */}
+      <Card className="border-slate-800/60 bg-slate-900/15 backdrop-blur-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-bold text-slate-100 flex items-center gap-2">
+            <Wallet className="h-4 w-4 text-purple-400" />
+            {t.advancedAccess.billingProgramsTitle}
+          </CardTitle>
+          <CardDescription className="text-xs text-slate-400">
+            {t.advancedAccess.billingProgramsDesc}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            {/* Leader Plan — paid */}
+            <div className="flex items-center justify-between rounded-lg border border-indigo-500/20 bg-indigo-500/5 p-3">
+              <div className="flex items-center gap-2">
+                <Coins className="h-4 w-4 text-indigo-400" />
+                <div>
+                  <div className="text-xs font-bold text-slate-200">Leader Plan</div>
+                  <div className="text-[10px] text-slate-400">${LEADER_PLAN.priceUsd}/{lang === 'uk' ? 'міс' : lang === 'ru' ? 'мес' : lang === 'es' ? 'mes' : 'mo'} = {LEADER_PLAN.priceDaar} DAAR</div>
+                </div>
+              </div>
+              <Badge className="bg-indigo-500/10 text-indigo-300 border-indigo-500/20 text-[9px] uppercase font-bold">Paid Subscription</Badge>
+            </div>
+
+            {/* Advanced access programs */}
+            {ADVANCED_ACCESS_PROGRAMS.map((prog) => {
+              const nameKey = `${prog.key === 'worker_node' ? 'workerNode' : prog.key}Name` as keyof typeof t.advancedAccess;
+              const descKey = `${prog.key === 'worker_node' ? 'workerNode' : prog.key}Desc` as keyof typeof t.advancedAccess;
+              return (
+                <div key={prog.key} className="flex items-center justify-between rounded-lg border border-slate-800/60 bg-slate-950/30 p-3">
+                  <div className="flex items-center gap-2">
+                    <div className={`h-4 w-4 rounded-full bg-${prog.color}-500/20 flex items-center justify-center`}>
+                      <div className={`h-2 w-2 rounded-full bg-${prog.color}-400`} />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-slate-300">{t.advancedAccess[nameKey]}</div>
+                      <div className="text-[10px] text-slate-500">{t.advancedAccess[descKey]}</div>
+                    </div>
+                  </div>
+                  <Badge className="bg-slate-800 text-slate-400 border-slate-700 text-[9px] uppercase font-bold">Manual Review</Badge>
+                </div>
+              );
+            })}
           </div>
         </CardContent>
       </Card>

@@ -1762,6 +1762,40 @@ export interface Translations {
     adminFiatFallback: string;
     adminNoSubscriptions: string;
   };
+  advancedAccess: {
+    sectionTitle: string;
+    sectionDesc: string;
+    selectProgram: string;
+    submitApplication: string;
+    applicationSent: string;
+    applicationSentDesc: string;
+    describePlaceholder: string;
+    founderName: string;
+    founderDesc: string;
+    partnerName: string;
+    partnerDesc: string;
+    sovereignName: string;
+    sovereignDesc: string;
+    workerNodeName: string;
+    workerNodeDesc: string;
+    statusPending: string;
+    statusApproved: string;
+    statusRejected: string;
+    statusNeedsInfo: string;
+    waitlistTitle: string;
+    waitlistDesc: string;
+    waitlistRequestedProgram: string;
+    waitlistNoRequest: string;
+    waitlistGenericPending: string;
+    adminTitle: string;
+    adminDesc: string;
+    adminApproveMap: string;
+    adminNoRequests: string;
+    accessTierLabel: string;
+    accessTierDesc: string;
+    billingProgramsTitle: string;
+    billingProgramsDesc: string;
+  };
 }
 
 export const translations: Record<Language, Translations> = {
@@ -3504,6 +3538,40 @@ export const translations: Record<Language, Translations> = {
       adminFiatFallback: 'Майбутній fiat fallback (Stripe) — необов\'язковий',
       adminNoSubscriptions: 'Підписок поки немає. Вони з\'являться після активації Leader Plan.',
     },
+    advancedAccess: {
+      sectionTitle: 'Подати заявку на розширений доступ',
+      sectionDesc: 'Отримайте доступ до додаткових інструментів та мережевих функцій',
+      selectProgram: 'Оберіть програму',
+      submitApplication: 'Надіслати запит',
+      applicationSent: 'Заявку успішно надіслано',
+      applicationSentDesc: 'Ми розглянемо ваш запит. Статус можна перевірити на сторінці статусу доступу.',
+      describePlaceholder: 'Опишіть ваш запит (яка програма доступу вас цікавить та для яких цілей)...',
+      founderName: 'Founder Program',
+      founderDesc: 'Ранній доступ і участь у формуванні продукту',
+      partnerName: 'Partner Access',
+      partnerDesc: 'Керування кількома MicroDAO або клієнтськими просторами',
+      sovereignName: 'Sovereign / Network Access',
+      sovereignDesc: 'Власна інфраструктура, edge/network/governance',
+      workerNodeName: 'Worker Node / Sensitive Operator',
+      workerNodeDesc: 'Доступ для операторів вузлів та чутливої інфраструктури',
+      statusPending: 'Очікує розгляду',
+      statusApproved: 'Схвалено',
+      statusRejected: 'Відхилено',
+      statusNeedsInfo: 'Потребує інфо',
+      waitlistTitle: 'Статус розширеного доступу',
+      waitlistDesc: 'Ця сторінка стосується Founder, Partner, Sovereign або Operator доступу. Звичайну MicroDAO можна створити через onboarding.',
+      waitlistRequestedProgram: 'Запитана програма',
+      waitlistNoRequest: 'У вас немає активних заявок на розширений доступ.',
+      waitlistGenericPending: 'Розширений доступ очікує розгляду',
+      adminTitle: 'Заявки на розширений доступ',
+      adminDesc: 'Аналіз та ухвалення запитів на преміум програми (Founder, Partner, Sovereign, Operator).',
+      adminApproveMap: 'При схваленні встановлюється access_tier:',
+      adminNoRequests: 'Наразі немає активних заявок на програми розширеного доступу.',
+      accessTierLabel: 'Рівень доступу',
+      accessTierDesc: 'Ваш поточний рівень доступу в екосистемі DAARION',
+      billingProgramsTitle: 'Програми доступу',
+      billingProgramsDesc: 'Типи доступу окрім стандартної підписки Leader Plan',
+    },
   },
 
   en: {
@@ -5244,6 +5312,40 @@ export const translations: Record<Language, Translations> = {
       adminF3C: 'Sprint F3C — On-chain watcher / automatic verification',
       adminFiatFallback: 'Future fiat fallback (Stripe) — optional',
       adminNoSubscriptions: 'No subscriptions yet. They will appear after Leader Plan activation.',
+    },
+    advancedAccess: {
+      sectionTitle: 'Apply for Advanced Access',
+      sectionDesc: 'Request access to advanced sovereign tooling and network capabilities',
+      selectProgram: 'Select program',
+      submitApplication: 'Send Application',
+      applicationSent: 'Application Submitted Successfully',
+      applicationSentDesc: 'We will review your request. You can check the status on the access status page.',
+      describePlaceholder: 'Describe your request (which access program you are interested in and for what purposes)...',
+      founderName: 'Founder Program',
+      founderDesc: 'Early access and product co-creation',
+      partnerName: 'Partner Access',
+      partnerDesc: 'Manage multiple MicroDAOs or client workspaces',
+      sovereignName: 'Sovereign / Network Access',
+      sovereignDesc: 'Private deployment, edge/network/governance tools',
+      workerNodeName: 'Worker Node / Sensitive Operator',
+      workerNodeDesc: 'Node operations & sensitive infrastructure management',
+      statusPending: 'Pending Review',
+      statusApproved: 'Approved',
+      statusRejected: 'Rejected',
+      statusNeedsInfo: 'Needs Info',
+      waitlistTitle: 'Advanced Access Status',
+      waitlistDesc: 'This page is for Founder, Partner, Sovereign, or Operator access request status. A regular MicroDAO can be created directly via onboarding.',
+      waitlistRequestedProgram: 'Requested Program',
+      waitlistNoRequest: 'You have no active advanced access applications.',
+      waitlistGenericPending: 'Advanced Access Pending Review',
+      adminTitle: 'Access Applications',
+      adminDesc: 'Review and verify access applications for Founder, Partner, Sovereign, and Operator tiers.',
+      adminApproveMap: 'On approval, sets access_tier to:',
+      adminNoRequests: 'There are currently no active advanced access applications.',
+      accessTierLabel: 'Access Tier',
+      accessTierDesc: 'Your current access level in the DAARION ecosystem',
+      billingProgramsTitle: 'Access Programs',
+      billingProgramsDesc: 'Access types beyond standard Leader Plan subscription',
     },
   },
 
@@ -6986,6 +7088,40 @@ export const translations: Record<Language, Translations> = {
       adminFiatFallback: 'Будущий fiat fallback (Stripe) — необязательный',
       adminNoSubscriptions: 'Подписок пока нет. Они появятся после активации Leader Plan.',
     },
+    advancedAccess: {
+      sectionTitle: 'Подать заявку на расширенный доступ',
+      sectionDesc: 'Получите доступ к дополнительным инструментам и сетевым функциям',
+      selectProgram: 'Выберите программу',
+      submitApplication: 'Отправить запрос',
+      applicationSent: 'Заявка успешно отправлена',
+      applicationSentDesc: 'Мы рассмотрим ваш запрос. Статус можно проверить на странице статуса доступа.',
+      describePlaceholder: 'Опишите ваш запрос (какая программа доступа вас интересует и для каких целей)...',
+      founderName: 'Founder Program',
+      founderDesc: 'Ранний доступ и участие в формировании продукта',
+      partnerName: 'Partner Access',
+      partnerDesc: 'Управление несколькими MicroDAO или клиентскими пространствами',
+      sovereignName: 'Sovereign / Network Access',
+      sovereignDesc: 'Собственная инфраструктура, edge/network/governance',
+      workerNodeName: 'Worker Node / Sensitive Operator',
+      workerNodeDesc: 'Доступ для операторов узлов и чувствительной инфраструктуры',
+      statusPending: 'Ожидает рассмотрения',
+      statusApproved: 'Одобрено',
+      statusRejected: 'Отклонено',
+      statusNeedsInfo: 'Требует инфо',
+      waitlistTitle: 'Статус расширенного доступа',
+      waitlistDesc: 'Эта страница для статуса Founder, Partner, Sovereign или Operator доступа. Обычную MicroDAO можно создать через onboarding.',
+      waitlistRequestedProgram: 'Запрошенная программа',
+      waitlistNoRequest: 'У вас нет активных заявок на расширенный доступ.',
+      waitlistGenericPending: 'Расширенный доступ ожидает рассмотрения',
+      adminTitle: 'Заявки на расширенный доступ',
+      adminDesc: 'Анализ и одобрение запросов на премиум программы (Founder, Partner, Sovereign, Operator).',
+      adminApproveMap: 'При одобрении устанавливается access_tier:',
+      adminNoRequests: 'Сейчас нет активных заявок на программы расширенного доступа.',
+      accessTierLabel: 'Уровень доступа',
+      accessTierDesc: 'Ваш текущий уровень доступа в экосистеме DAARION',
+      billingProgramsTitle: 'Программы доступа',
+      billingProgramsDesc: 'Типы доступа помимо стандартной подписки Leader Plan',
+    },
   },
 
   es: {
@@ -8726,6 +8862,40 @@ export const translations: Record<Language, Translations> = {
       adminF3C: 'Sprint F3C — On-chain watcher / verificación automática',
       adminFiatFallback: 'Futuro fiat fallback (Stripe) — opcional',
       adminNoSubscriptions: 'Sin suscripciones aún. Aparecerán tras la activación del Leader Plan.',
+    },
+    advancedAccess: {
+      sectionTitle: 'Solicitar acceso avanzado',
+      sectionDesc: 'Obtenga acceso a herramientas avanzadas y capacidades de red',
+      selectProgram: 'Seleccionar programa',
+      submitApplication: 'Enviar solicitud',
+      applicationSent: 'Solicitud enviada con éxito',
+      applicationSentDesc: 'Revisaremos su solicitud. Puede verificar el estado en la página de estado de acceso.',
+      describePlaceholder: 'Describa su solicitud (qué programa de acceso le interesa y para qué fines)...',
+      founderName: 'Founder Program',
+      founderDesc: 'Acceso temprano y co-creación del producto',
+      partnerName: 'Partner Access',
+      partnerDesc: 'Gestión de múltiples MicroDAOs o espacios de clientes',
+      sovereignName: 'Sovereign / Network Access',
+      sovereignDesc: 'Infraestructura propia, edge/network/governance',
+      workerNodeName: 'Worker Node / Sensitive Operator',
+      workerNodeDesc: 'Operaciones de nodos e infraestructura sensible',
+      statusPending: 'Pendiente de revisión',
+      statusApproved: 'Aprobado',
+      statusRejected: 'Rechazado',
+      statusNeedsInfo: 'Necesita info',
+      waitlistTitle: 'Estado de acceso avanzado',
+      waitlistDesc: 'Esta página es para el estado de solicitud de acceso Founder, Partner, Sovereign u Operator. Se puede crear una MicroDAO regular directamente a través del onboarding.',
+      waitlistRequestedProgram: 'Programa solicitado',
+      waitlistNoRequest: 'No tiene solicitudes activas de acceso avanzado.',
+      waitlistGenericPending: 'Acceso avanzado pendiente de revisión',
+      adminTitle: 'Solicitudes de acceso',
+      adminDesc: 'Revisar y verificar solicitudes de acceso para niveles Founder, Partner, Sovereign y Operator.',
+      adminApproveMap: 'Al aprobar, establece access_tier en:',
+      adminNoRequests: 'Actualmente no hay solicitudes activas de programas de acceso avanzado.',
+      accessTierLabel: 'Nivel de acceso',
+      accessTierDesc: 'Su nivel de acceso actual en el ecosistema DAARION',
+      billingProgramsTitle: 'Programas de acceso',
+      billingProgramsDesc: 'Tipos de acceso más allá de la suscripción estándar Leader Plan',
     },
   },
 };

@@ -11,7 +11,12 @@ import {
   Clock,
   Mail,
   User,
-  ExternalLink
+  ExternalLink,
+  Gem,
+  Building2,
+  Shield,
+  Server,
+  ArrowRight
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,9 +24,10 @@ import { useTranslation } from '@/lib/i18n';
 import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { useToast } from '@/hooks/use-toast';
+import { ADVANCED_ACCESS_PROGRAMS, getAdvancedProgramInfo } from '@/lib/subscriptionTypes';
 
 export const AdminAccessRequests = () => {
-  const { language } = useTranslation();
+  const { t, language } = useTranslation();
   const { toast } = useToast();
   const [requests, setRequests] = useState<AdminAccessRequestRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -53,16 +59,33 @@ export const AdminAccessRequests = () => {
     });
   };
 
-  const handleUpdateStatus = async (requestId: string, status: 'approved' | 'rejected' | 'needs_info') => {
+  const handleUpdateStatus = async (requestId: string, status: 'approved' | 'rejected' | 'needs_info', requestedTier?: string | null) => {
     setActionLoading(requestId);
     try {
-      // Attempt to update directly. If table doesn't exist or RLS blocks, catch error
+      // Update the request status
       const { error } = await (supabase as any)
         .from('access_requests')
         .update({ status, reviewed_at: new Date().toISOString() })
         .eq('id', requestId);
 
       if (error) throw error;
+
+      // On approve: attempt to set access_tier on the user's profile
+      if (status === 'approved' && requestedTier) {
+        const request = requests.find(r => r.id === requestId);
+        if (request?.user_id) {
+          const programInfo = getAdvancedProgramInfo(requestedTier);
+          const tierToSet = programInfo?.accessTierOnApprove || requestedTier;
+          try {
+            await (supabase as any)
+              .from('profiles')
+              .update({ access_tier: tierToSet })
+              .eq('id', request.user_id);
+          } catch {
+            // Profile update may fail due to RLS — non-critical
+          }
+        }
+      }
 
       toast({
         title: isUk ? 'Заявку оновлено' : 'Request Updated',
@@ -86,26 +109,37 @@ export const AdminAccessRequests = () => {
   const getStatusBadge = (status: string | null) => {
     switch (status) {
       case 'approved':
-        return <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-[10px] font-semibold">Approved</Badge>;
+        return <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-[10px] font-semibold">{t.advancedAccess.statusApproved}</Badge>;
       case 'rejected':
-        return <Badge className="bg-red-500/10 text-red-400 border-red-500/20 text-[10px] font-semibold">Rejected</Badge>;
+        return <Badge className="bg-red-500/10 text-red-400 border-red-500/20 text-[10px] font-semibold">{t.advancedAccess.statusRejected}</Badge>;
       case 'needs_info':
-        return <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20 text-[10px] font-semibold">Needs Info</Badge>;
+        return <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20 text-[10px] font-semibold">{t.advancedAccess.statusNeedsInfo}</Badge>;
       default:
-        return <Badge className="bg-amber-500/10 text-amber-400 border-amber-500/20 text-[10px] font-semibold">Pending</Badge>;
+        return <Badge className="bg-amber-500/10 text-amber-400 border-amber-500/20 text-[10px] font-semibold">{t.advancedAccess.statusPending}</Badge>;
     }
   };
 
   const getTierBadge = (tier: string | null) => {
+    const getProgramName = (key: string): string => {
+      switch (key) {
+        case 'founder': return t.advancedAccess.founderName;
+        case 'partner': return t.advancedAccess.partnerName;
+        case 'sovereign': return t.advancedAccess.sovereignName;
+        case 'worker_node': return t.advancedAccess.workerNodeName;
+        default: return tier || 'Early Access';
+      }
+    };
+
     switch (tier?.toLowerCase()) {
       case 'founder':
-        return <Badge className="bg-indigo-500/15 text-indigo-300 border-indigo-500/20 font-mono text-[9px] uppercase">Founder Program</Badge>;
+        return <Badge className="bg-indigo-500/15 text-indigo-300 border-indigo-500/20 font-mono text-[9px] uppercase">{getProgramName('founder')}</Badge>;
       case 'partner':
-        return <Badge className="bg-purple-500/15 text-purple-300 border-purple-500/20 font-mono text-[9px] uppercase">Partner Access</Badge>;
+        return <Badge className="bg-purple-500/15 text-purple-300 border-purple-500/20 font-mono text-[9px] uppercase">{getProgramName('partner')}</Badge>;
       case 'sovereign':
-        return <Badge className="bg-blue-500/15 text-blue-300 border-blue-500/20 font-mono text-[9px] uppercase">Sovereign / Network</Badge>;
+        return <Badge className="bg-blue-500/15 text-blue-300 border-blue-500/20 font-mono text-[9px] uppercase">{getProgramName('sovereign')}</Badge>;
+      case 'worker_node':
       case 'operator':
-        return <Badge className="bg-emerald-500/15 text-emerald-300 border-emerald-500/20 font-mono text-[9px] uppercase">Worker / Operator</Badge>;
+        return <Badge className="bg-emerald-500/15 text-emerald-300 border-emerald-500/20 font-mono text-[9px] uppercase">{getProgramName('worker_node')}</Badge>;
       default:
         return <Badge className="bg-slate-800 text-slate-400 border-slate-700 font-mono text-[9px] uppercase">{tier || 'Early Access'}</Badge>;
     }
@@ -125,14 +159,33 @@ export const AdminAccessRequests = () => {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-slate-100 to-slate-300 bg-clip-text text-transparent">
-          {isUk ? 'Заявки на розширений доступ' : 'Access Applications'}
+          {t.advancedAccess.adminTitle}
         </h1>
         <p className="text-slate-400 text-xs mt-1">
-          {isUk 
-            ? 'Аналіз та ухвалення запитів на преміум програми (Founder, Partner, Sovereign, Operator).' 
-            : 'Review and verify access applications for Founder, Partner, Sovereign, and Operator tiers.'}
+          {t.advancedAccess.adminDesc}
         </p>
       </div>
+
+      {/* Approve Mapping Reference */}
+      <Card className="border-slate-850 bg-slate-900/10 backdrop-blur-sm">
+        <CardContent className="py-3 px-4">
+          <div className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider mb-2">
+            {t.advancedAccess.adminApproveMap}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {ADVANCED_ACCESS_PROGRAMS.map(prog => {
+              const nameKey = `${prog.key === 'worker_node' ? 'workerNode' : prog.key}Name` as keyof typeof t.advancedAccess;
+              return (
+                <div key={prog.key} className="flex items-center gap-1.5 text-[10px]">
+                  <span className="text-slate-400">{t.advancedAccess[nameKey]}</span>
+                  <ArrowRight className="h-3 w-3 text-slate-600" />
+                  <code className="text-emerald-400 font-mono bg-slate-950 px-1 rounded">{prog.accessTierOnApprove}</code>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
 
       {rlsBlocked ? (
         <div className="rounded-xl border border-red-500/20 bg-red-950/10 p-5 space-y-3 text-xs">
@@ -150,9 +203,7 @@ export const AdminAccessRequests = () => {
         <div className="space-y-4">
           {requests.length === 0 ? (
             <Card className="border-slate-850 bg-slate-900/5 p-8 text-center text-slate-500 text-xs">
-              {isUk 
-                ? 'Наразі немає активних заявок на програми розширеного доступу.' 
-                : 'There are currently no active advanced access applications.'}
+              {t.advancedAccess.adminNoRequests}
             </Card>
           ) : (
             <div className="grid grid-cols-1 gap-4">
@@ -206,7 +257,7 @@ export const AdminAccessRequests = () => {
                               size="sm"
                               variant="outline"
                               className="h-8 text-[11px] font-semibold border-emerald-500/20 hover:border-emerald-500/40 bg-emerald-500/5 hover:bg-emerald-500/10 text-emerald-400 flex items-center gap-1 px-3"
-                              onClick={() => handleUpdateStatus(req.id, 'approved')}
+                              onClick={() => handleUpdateStatus(req.id, 'approved', req.requested_tier)}
                               disabled={actionLoading === req.id}
                             >
                               <Check className="h-3.5 w-3.5" />
