@@ -759,6 +759,139 @@ export function Install() {
         </div>
       </section>
 
+      {/* ── Platforms ── */}
+      <section id="platforms" className="py-16 md:py-24 bg-gradient-to-b from-muted/5 to-muted/15 border-t border-border/10">
+        <div className="container max-w-5xl mx-auto px-4 space-y-10">
+          <div className="text-center space-y-3 landing-reveal">
+            <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">{texts.platformsTitle}</h2>
+            <p className="text-sm text-muted-foreground max-w-md mx-auto">
+              {texts.platformsSubtitle}
+            </p>
+          </div>
+
+          {/* Quick Start (Web/PWA) */}
+          <div className="landing-reveal bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent border border-emerald-500/20 rounded-2xl p-5 sm:p-6 flex flex-col md:flex-row items-center justify-between gap-6 max-w-4xl mx-auto shadow-lg hover:shadow-xl transition-all">
+            <div className="flex items-center gap-4 text-left">
+              <div className="p-3 rounded-xl bg-emerald-500/10 text-emerald-400 flex-shrink-0">
+                <Globe className="h-6 sm:h-7 sm:w-7 w-6" />
+              </div>
+              <div>
+                <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-400 block mb-0.5">{texts.quickStartTitle}</span>
+                <h4 className="font-extrabold text-lg sm:text-xl text-foreground">Web / PWA</h4>
+                <p className="text-sm text-muted-foreground mt-0.5">{texts.webDesc}</p>
+              </div>
+            </div>
+            <a href="https://edge.daarion.city" target="_blank" rel="noopener noreferrer" className="w-full md:w-auto">
+              <Button className="w-full md:w-auto h-10 px-6 font-semibold bg-emerald-600 hover:bg-emerald-500 text-white shadow-md flex items-center justify-center gap-2">
+                <Globe className="h-4 w-4" />
+                <span>{texts.webCta}</span>
+              </Button>
+            </a>
+          </div>
+
+          {/* Native Installers */}
+          <div className="space-y-6 max-w-4xl mx-auto">
+            <div className="text-left pt-6 border-t border-border/10 landing-reveal">
+              <h3 className="text-lg sm:text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
+                <Layers className="h-4 w-4 text-emerald-400" />
+                <span>{texts.nativeInstallersTitle}</span>
+              </h3>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 landing-stagger">
+              {platforms.map((platform, index) => (
+                <Card
+                  key={index}
+                  id={`platform-card-${platform.id}`}
+                  className="landing-reveal landing-card-hover group bg-card/30 backdrop-blur-md border border-border/40 rounded-2xl p-4 sm:p-5 flex flex-col justify-between shadow-lg hover:shadow-xl transition-all duration-300"
+                >
+                  <div className="space-y-3">
+                    {/* Row 1: Icon, Title, Badge */}
+                    <div className="flex items-center justify-between gap-2.5">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="p-2 rounded-xl bg-primary/8 group-hover:bg-primary/15 transition-colors flex-shrink-0">
+                          <platform.icon className="h-5 w-5 text-primary" />
+                        </div>
+                        <h4 className="font-extrabold text-sm sm:text-base text-foreground truncate">{platform.name}</h4>
+                      </div>
+                      <Badge
+                        variant="secondary"
+                        className={`text-[9px] px-1.5 py-0.5 font-medium flex-shrink-0 ${
+                          platform.status === 'active'
+                            ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20'
+                            : platform.status === 'coming'
+                            ? 'bg-amber-500/15 text-amber-400 border-amber-500/20'
+                            : 'bg-muted text-muted-foreground'
+                        }`}
+                      >
+                        {platform.status === 'active' && <CheckCircle2 className="h-2 w-2 mr-1 inline" />}
+                        {platform.statusLabel}
+                      </Badge>
+                    </div>
+
+                    {/* Row 2 & 3: Architecture & Format */}
+                    <div className="space-y-1 text-xs text-left pt-1">
+                      <p className="text-muted-foreground text-[11px] sm:text-xs">
+                        <span className="text-muted-foreground/50 mr-1">{texts.architectureLabel}:</span>
+                        <span className="text-foreground/90 font-medium">{platform.arch}</span>
+                      </p>
+                      <p className="text-muted-foreground text-[11px] sm:text-xs">
+                        <span className="text-muted-foreground/50 mr-1">{texts.formatLabel}:</span>
+                        <span className="font-mono text-foreground/80">{platform.format}</span>
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Row 4: Buttons */}
+                  <div className="mt-4 pt-3 border-t border-border/10 space-y-2">
+                    {platform.downloadUrl ? (
+                      <a
+                        href={platform.downloadUrl}
+                        className="block w-full"
+                      >
+                        <Button
+                          className="w-full h-9 text-xs font-semibold gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white shadow-md transition-all"
+                        >
+                          <Download className="h-3.5 w-3.5" />
+                          <span>{platform.cta}</span>
+                        </Button>
+                      </a>
+                    ) : (
+                      <Button
+                        disabled
+                        className="w-full h-9 text-xs font-semibold gap-1.5"
+                      >
+                        <span>{platform.cta}</span>
+                      </Button>
+                    )}
+
+                    {platform.secondaryUrl && (
+                      <div className="pt-1 flex flex-col gap-1 items-center">
+                        <a
+                          href={platform.secondaryUrl}
+                          className="text-[10px] text-primary hover:underline font-semibold"
+                        >
+                          {platform.secondaryCta}
+                        </a>
+                        {platform.helperText && (
+                          <span className="text-[9px] text-muted-foreground/70 text-center block max-w-xs leading-normal">
+                            {platform.helperText}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </div>
+
+          <div className="p-4 bg-muted/20 border border-border/20 rounded-2xl max-w-2xl mx-auto text-center text-xs text-muted-foreground/95">
+            {texts.fallbackVersionDesc}
+          </div>
+        </div>
+      </section>
+
       {/* ── What happens after installation? ── */}
       <section className="py-16 md:py-24 border-t border-border/10 bg-muted/5 relative">
         <div className="landing-orb absolute top-10 left-[10%] w-60 h-60 bg-emerald-500/5 rounded-full blur-[80px]" />
@@ -942,139 +1075,6 @@ export function Install() {
         </div>
       </section>
 
-      {/* ── Platforms ── */}
-      <section id="platforms" className="py-16 md:py-24 bg-gradient-to-b from-muted/5 to-muted/15 border-t border-border/10">
-        <div className="container max-w-5xl mx-auto px-4 space-y-10">
-          <div className="text-center space-y-3 landing-reveal">
-            <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">{texts.platformsTitle}</h2>
-            <p className="text-sm text-muted-foreground max-w-md mx-auto">
-              {texts.platformsSubtitle}
-            </p>
-          </div>
-
-          {/* Quick Start (Web/PWA) */}
-          <div className="landing-reveal bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent border border-emerald-500/20 rounded-2xl p-5 sm:p-6 flex flex-col md:flex-row items-center justify-between gap-6 max-w-4xl mx-auto shadow-lg hover:shadow-xl transition-all">
-            <div className="flex items-center gap-4 text-left">
-              <div className="p-3 rounded-xl bg-emerald-500/10 text-emerald-400 flex-shrink-0">
-                <Globe className="h-6 sm:h-7 sm:w-7 w-6" />
-              </div>
-              <div>
-                <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-400 block mb-0.5">{texts.quickStartTitle}</span>
-                <h4 className="font-extrabold text-lg sm:text-xl text-foreground">Web / PWA</h4>
-                <p className="text-sm text-muted-foreground mt-0.5">{texts.webDesc}</p>
-              </div>
-            </div>
-            <a href="https://edge.daarion.city" target="_blank" rel="noopener noreferrer" className="w-full md:w-auto">
-              <Button className="w-full md:w-auto h-10 px-6 font-semibold bg-emerald-600 hover:bg-emerald-500 text-white shadow-md flex items-center justify-center gap-2">
-                <Globe className="h-4 w-4" />
-                <span>{texts.webCta}</span>
-              </Button>
-            </a>
-          </div>
-
-          {/* Native Installers */}
-          <div className="space-y-6 max-w-4xl mx-auto">
-            <div className="text-left pt-6 border-t border-border/10 landing-reveal">
-              <h3 className="text-lg sm:text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
-                <Layers className="h-4 w-4 text-emerald-400" />
-                <span>{texts.nativeInstallersTitle}</span>
-              </h3>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 landing-stagger">
-              {platforms.map((platform, index) => (
-                <Card
-                  key={index}
-                  id={`platform-card-${platform.id}`}
-                  className="landing-reveal landing-card-hover group bg-card/30 backdrop-blur-md border border-border/40 rounded-2xl p-4 sm:p-5 flex flex-col justify-between shadow-lg hover:shadow-xl transition-all duration-300"
-                >
-                  <div className="space-y-3">
-                    {/* Row 1: Icon, Title, Badge */}
-                    <div className="flex items-center justify-between gap-2.5">
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="p-2 rounded-xl bg-primary/8 group-hover:bg-primary/15 transition-colors flex-shrink-0">
-                          <platform.icon className="h-5 w-5 text-primary" />
-                        </div>
-                        <h4 className="font-extrabold text-sm sm:text-base text-foreground truncate">{platform.name}</h4>
-                      </div>
-                      <Badge
-                        variant="secondary"
-                        className={`text-[9px] px-1.5 py-0.5 font-medium flex-shrink-0 ${
-                          platform.status === 'active'
-                            ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20'
-                            : platform.status === 'coming'
-                            ? 'bg-amber-500/15 text-amber-400 border-amber-500/20'
-                            : 'bg-muted text-muted-foreground'
-                        }`}
-                      >
-                        {platform.status === 'active' && <CheckCircle2 className="h-2 w-2 mr-1 inline" />}
-                        {platform.statusLabel}
-                      </Badge>
-                    </div>
-
-                    {/* Row 2 & 3: Architecture & Format */}
-                    <div className="space-y-1 text-xs text-left pt-1">
-                      <p className="text-muted-foreground text-[11px] sm:text-xs">
-                        <span className="text-muted-foreground/50 mr-1">{texts.architectureLabel}:</span>
-                        <span className="text-foreground/90 font-medium">{platform.arch}</span>
-                      </p>
-                      <p className="text-muted-foreground text-[11px] sm:text-xs">
-                        <span className="text-muted-foreground/50 mr-1">{texts.formatLabel}:</span>
-                        <span className="font-mono text-foreground/80">{platform.format}</span>
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Row 4: Buttons */}
-                  <div className="mt-4 pt-3 border-t border-border/10 space-y-2">
-                    {platform.downloadUrl ? (
-                      <a
-                        href={platform.downloadUrl}
-                        className="block w-full"
-                      >
-                        <Button
-                          className="w-full h-9 text-xs font-semibold gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white shadow-md transition-all"
-                        >
-                          <Download className="h-3.5 w-3.5" />
-                          <span>{platform.cta}</span>
-                        </Button>
-                      </a>
-                    ) : (
-                      <Button
-                        disabled
-                        className="w-full h-9 text-xs font-semibold gap-1.5"
-                      >
-                        <span>{platform.cta}</span>
-                      </Button>
-                    )}
-
-                    {platform.secondaryUrl && (
-                      <div className="pt-1 flex flex-col gap-1 items-center">
-                        <a
-                          href={platform.secondaryUrl}
-                          className="text-[10px] text-primary hover:underline font-semibold"
-                        >
-                          {platform.secondaryCta}
-                        </a>
-                        {platform.helperText && (
-                          <span className="text-[9px] text-muted-foreground/70 text-center block max-w-xs leading-normal">
-                            {platform.helperText}
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </Card>
-              ))}
-            </div>
-          </div>
-
-          <div className="p-4 bg-muted/20 border border-border/20 rounded-2xl max-w-2xl mx-auto text-center text-xs text-muted-foreground/95">
-            {texts.fallbackVersionDesc}
-          </div>
-        </div>
-      </section>
-
       {/* ── Architecture Layers ── */}
       <section className="py-16 md:py-24 border-t border-border/10">
         <div className="container max-w-5xl mx-auto px-4 space-y-12">
@@ -1168,21 +1168,35 @@ export function Install() {
       </section>
 
       {/* ── Developer Setup ── */}
-      <section className="py-16 md:py-24 border-t border-border/10">
-        <div className="container max-w-3xl mx-auto px-4 space-y-8">
-          <div className="text-center space-y-3 landing-reveal">
-            <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">{texts.devToolsLabel}</h2>
-            <p className="text-sm text-muted-foreground">Rust stable + Node.js v20+</p>
-          </div>
-
-          <div className="landing-reveal space-y-4">
-            <div className="bg-card/30 backdrop-blur-sm border border-border/30 rounded-2xl overflow-hidden">
-              <div className="px-4 py-2.5 border-b border-border/20 flex items-center gap-2">
-                <Terminal className="h-3.5 w-3.5 text-muted-foreground" />
-                <span className="text-xs font-medium text-muted-foreground">Terminal</span>
+      <section className="py-12 md:py-16 border-t border-border/10">
+        <div className="container max-w-3xl mx-auto px-4">
+          <details className="group border border-border/30 rounded-2xl bg-card/20 backdrop-blur-sm transition-all duration-300 [&_summary::-webkit-details-marker]:hidden">
+            <summary className="flex items-center justify-between p-5 cursor-pointer focus:outline-none select-none">
+              <div className="flex items-center gap-2.5">
+                <Terminal className="h-4 w-4 text-emerald-400" />
+                <span className="font-bold text-sm sm:text-base text-foreground">
+                  {texts.devToolsLabel} (Git & Build Commands)
+                </span>
               </div>
-              <pre className="p-5 text-sm font-mono text-foreground/80 overflow-x-auto leading-relaxed">
-                <code>{`${t.clientInstall.forDevsStep1}
+              <span className="text-emerald-400 transition group-open:rotate-180">
+                <svg fill="none" height="24" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" width="24"><path d="M6 9l6 6 6-6"></path></svg>
+              </span>
+            </summary>
+            
+            <div className="p-5 pt-0 border-t border-border/10 space-y-4">
+              <p className="text-xs text-muted-foreground text-left mt-2">
+                {texts.githubSourceLinkDesc}{' '}
+                <a href={GITHUB_REPO} target="_blank" rel="noopener noreferrer" className="underline text-emerald-400 hover:text-emerald-300 font-medium">
+                  GitHub
+                </a>
+              </p>
+              <div className="bg-background/50 border border-border/20 rounded-xl overflow-hidden">
+                <div className="px-4 py-2 border-b border-border/20 flex items-center gap-2 bg-muted/10">
+                  <Terminal className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span className="text-xs font-mono text-muted-foreground">Terminal</span>
+                </div>
+                <pre className="p-4 text-xs font-mono text-foreground/80 overflow-x-auto leading-relaxed text-left">
+                  <code>{`${t.clientInstall.forDevsStep1}
 git clone ${GITHUB_REPO}.git
 cd daarion-edge-client
 
@@ -1197,9 +1211,10 @@ npm run tauri dev
 ${t.clientInstall.forDevsStep4}
 npm run build
 npm run tauri build`}</code>
-              </pre>
+                </pre>
+              </div>
             </div>
-          </div>
+          </details>
         </div>
       </section>
 

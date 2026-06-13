@@ -1,4 +1,4 @@
-import { Check, Shield, Zap, Sparkles, Download, LogIn, ArrowRight, Network, Users } from "lucide-react";
+import { Check, Shield, Zap, Sparkles, Download, LogIn, ArrowRight, Network, Users, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -97,28 +97,33 @@ export default function Pricing() {
       {/* ── Navbar ── */}
       <header className="sticky top-0 z-50 w-full border-b border-border/30 bg-background/70 backdrop-blur-xl">
         <div className="container max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/")}>
-            <img src="/logo.jpg" alt="MicroDAO" className="h-9 w-9 rounded-xl object-cover shadow-md" />
-            <span className="font-bold text-lg tracking-tight">MicroDAO</span>
-            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5 font-medium">
+          <div className="flex items-center gap-2.5">
+            <Button variant="ghost" size="sm" onClick={() => navigate("/")} className="gap-1.5 mr-1">
+              <ArrowLeft className="h-4 w-4" />
+              <span className="hidden sm:inline">{t.importExtra.backBtn}</span>
+            </Button>
+            <div className="h-5 w-px bg-border/50 hidden sm:block" />
+            <img src="/logo.jpg" alt="MicroDAO" className="h-8 w-8 rounded-lg object-cover shadow-md" />
+            <span className="font-bold text-base tracking-tight hidden xs:inline">MicroDAO</span>
+            <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4 font-medium hidden sm:inline-flex">
               beta
             </Badge>
           </div>
 
           <div className="flex items-center gap-1.5 sm:gap-3">
-            <Button variant="ghost" size="sm" onClick={() => navigate("/agents")} className="text-xs sm:text-sm font-medium h-9 px-2 sm:px-3">
+            <Button variant="ghost" size="sm" onClick={() => navigate("/agents")} className="hidden md:inline-flex text-xs sm:text-sm font-medium h-9 px-2 sm:px-3">
               {t.nav.agents}
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => navigate("/pricing")} className="text-xs sm:text-sm font-semibold h-9 px-2 sm:px-3 text-primary">
+            <Button variant="ghost" size="sm" onClick={() => navigate("/pricing")} className="hidden md:inline-flex text-xs sm:text-sm font-semibold h-9 px-2 sm:px-3 text-primary">
               {t.pricingExtra.title}
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => navigate("/install")} className="text-xs sm:text-sm font-medium gap-1.5 h-9 px-2 sm:px-3">
+            <Button variant="ghost" size="sm" onClick={() => navigate("/install")} className="hidden md:inline-flex text-xs sm:text-sm font-medium gap-1.5 h-9 px-2 sm:px-3">
               <Download className="h-4 w-4" />
-              <span className="hidden xxs:inline">{t.landing.client}</span>
+              <span>{t.landing.client}</span>
             </Button>
             
             <Select value={language} onValueChange={(value) => setLanguage(value as Language)}>
-              <SelectTrigger className="h-9 w-[70px] sm:w-[90px] bg-background/50 border-border/30 px-2">
+              <SelectTrigger className="h-9 w-[60px] sm:w-[70px] bg-background/50 border-border/30 px-2">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -131,11 +136,11 @@ export default function Pricing() {
 
             <Button variant="ghost" size="sm" onClick={() => navigate("/auth")} className="text-xs sm:text-sm font-medium gap-1 h-9 px-2">
               <LogIn className="h-4 w-4" />
-              <span className="hidden xs:inline">{t.landing.login}</span>
+              <span className="hidden sm:inline">{t.landing.login}</span>
             </Button>
             <Button size="sm" onClick={() => navigate("/auth?signup=true")} className="text-xs sm:text-sm font-semibold gap-1 sm:gap-1.5 shadow-md hover:shadow-lg transition-shadow px-3 sm:px-4 h-9">
               <Sparkles className="h-3.5 w-3.5" />
-              <span>{t.pricingExtra.startBtn}</span>
+              <span className="hidden xs:inline">{t.pricingExtra.startBtn}</span>
             </Button>
           </div>
         </div>
