@@ -41,6 +41,7 @@ import { Layout } from "./components/Layout";
 import { useSessionTimeout } from "./hooks/useSessionTimeout";
 import { useUserApprovalStatus } from "@/hooks/useUserApprovalStatus";
 import { PendingApprovalPage } from "@/components/PendingApprovalPage";
+import { RestrictedPage } from "@/components/RestrictedPage";
 
 const queryClient = new QueryClient();
 
@@ -62,8 +63,8 @@ const PublicStartRoute = () => {
     return <Start />; // Public Landing
   }
 
-  if (approvalStatus !== 'approved') {
-    return <Navigate to="/waitlist" replace />;
+  if (approvalStatus === 'rejected' || approvalStatus === 'blocked') {
+    return <Navigate to="/restricted" replace />;
   }
 
   if (memberships.length === 0) {
@@ -93,8 +94,8 @@ const ProtectedLayout = () => {
     return <Navigate to="/auth" replace />;
   }
 
-  if (approvalStatus !== 'approved') {
-    return <Navigate to="/waitlist" replace />;
+  if (approvalStatus === 'rejected' || approvalStatus === 'blocked') {
+    return <Navigate to="/restricted" replace />;
   }
 
   if (memberships.length === 0) {
@@ -167,8 +168,8 @@ const WaitlistRoute = () => {
     return <Navigate to="/auth" replace />;
   }
 
-  if (approvalStatus === 'approved') {
-    return <Navigate to="/" replace />;
+  if (approvalStatus === 'rejected' || approvalStatus === 'blocked') {
+    return <Navigate to="/restricted" replace />;
   }
 
   return <PendingApprovalPage />;
@@ -191,6 +192,7 @@ const App = () => {
                   <Route path="/auth" element={<PublicRoutes />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/waitlist" element={<WaitlistRoute />} />
+                  <Route path="/restricted" element={<RestrictedPage />} />
                   <Route path="/pricing" element={<Suspense fallback={<LoadingSpinner size="lg" text={t.loading} />}><Pricing /></Suspense>} />
                   <Route path="/agents" element={<Suspense fallback={<LoadingSpinner size="lg" text={t.loading} />}><AgentDirectory /></Suspense>} />
                   <Route path="/onboarding" element={<Suspense fallback={<LoadingSpinner size="lg" text={t.loading} />}><MicroDAOOnboarding /></Suspense>} />

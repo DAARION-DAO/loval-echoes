@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useTranslation } from '@/lib/i18n';
 
-type ApprovalStatus = 'approved' | 'pending' | 'rejected' | 'loading';
+type ApprovalStatus = 'approved' | 'pending' | 'rejected' | 'blocked' | 'loading';
 
 export const useUserApprovalStatus = () => {
   const { user, loading: authLoading } = useAuth();
@@ -45,7 +45,7 @@ export const useUserApprovalStatus = () => {
                            user.user_metadata?.full_name || 
                            user.email?.split('@')[0] || 
                            t.messages.userSender,
-              approval_status: 'pending',
+              approval_status: 'approved',
               access_tier: 'early_access'
             });
 

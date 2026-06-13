@@ -28,8 +28,8 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     return <Navigate to="/auth" replace />;
   }
 
-  if (!isApproved) {
-    return <Navigate to="/waitlist" replace />;
+  if (approvalStatus === 'rejected' || approvalStatus === 'blocked') {
+    return <Navigate to="/restricted" replace />;
   }
 
   return <>{children}</>;

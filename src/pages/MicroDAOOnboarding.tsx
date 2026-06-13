@@ -559,6 +559,7 @@ export default function MicroDAOOnboarding() {
       const combinedMission = answers.mission.trim() + (answers.desired_result ? `\nDesired Result: ${answers.desired_result.trim()}` : '');
       const combinedRules = answers.values_rules.trim() + (answers.boundaries ? `\nBoundaries: ${answers.boundaries.trim()}` : '');
 
+      // TODO Sprint F3: enforce Leader Plan subscription before activating paid MicroDAO resources.
       // 1. Call atomic database transaction RPC
       const { data, error: rpcErr } = await supabase.rpc('create_microdao_with_spirit_agent', {
         p_name: answers.name.trim(),
@@ -754,6 +755,11 @@ export default function MicroDAOOnboarding() {
                   <p className="text-xs text-slate-400 leading-relaxed">
                     {t.onboarding.createCommunityDesc}
                   </p>
+                  <div className="mt-3 p-2.5 rounded bg-indigo-500/5 border border-indigo-500/10 text-[11px] text-indigo-300">
+                    {language === 'uk' 
+                      ? 'Leader Plan — $20/міс після запуску оплати (зараз створення безкоштовне для тестування)' 
+                      : 'Leader Plan — $20/month after billing is enabled (currently free for testing)'}
+                  </div>
                 </CardContent>
                 <CardFooter>
                   <Button onClick={handleStartSetup} className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold transition-all hover:shadow-lg hover:shadow-indigo-500/20">
@@ -795,33 +801,60 @@ export default function MicroDAOOnboarding() {
                 </CardFooter>
               </Card>
 
-              {/* Card 3: Apply for Founder Tier */}
+              {/* Card 3: Apply for Advanced Access */}
               <Card className="bg-slate-900/40 border-slate-800 backdrop-blur-lg hover:border-pink-500/30 transition-all shadow-xl">
                 <CardHeader>
                   <CardTitle className="text-lg font-bold flex items-center gap-2">
                     <Users className="h-5 w-5 text-pink-400" />
-                    <span>{t.onboardingWizard.partnerTitle}</span>
+                    <span>{language === 'uk' ? 'Подати заявку на розширений доступ' : 'Apply for Advanced Access'}</span>
                   </CardTitle>
                   <CardDescription>
-                    {t.onboardingWizard.partnerDesc}
+                    {language === 'uk' 
+                      ? 'Отримайте доступ до додаткових інструментів та мережевих функцій' 
+                      : 'Request access to advanced sovereign tooling and network capabilities'}
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-4">
+                  <div className="text-[11px] text-slate-400 space-y-1 bg-slate-950/20 p-3 rounded-lg border border-slate-900 leading-normal">
+                    <div className="flex items-start gap-1">
+                      <span className="text-pink-400 font-semibold">•</span>
+                      <span><strong>Founder Program</strong> — {language === 'uk' ? 'ранній доступ і участь у формуванні продукту' : 'early access and product co-creation'}</span>
+                    </div>
+                    <div className="flex items-start gap-1">
+                      <span className="text-pink-400 font-semibold">•</span>
+                      <span><strong>Partner Access</strong> — {language === 'uk' ? 'керування кількома MicroDAO або клієнтськими просторами' : 'manage multiple MicroDAOs or client workspaces'}</span>
+                    </div>
+                    <div className="flex items-start gap-1">
+                      <span className="text-pink-400 font-semibold">•</span>
+                      <span><strong>Sovereign / Network Access</strong> — {language === 'uk' ? 'власна інфраструктура, edge/network/governance' : 'private deployment, edge/network/governance tools'}</span>
+                    </div>
+                    <div className="flex items-start gap-1">
+                      <span className="text-pink-400 font-semibold">•</span>
+                      <span><strong>Worker Node / Operator Access</strong> — {language === 'uk' ? 'доступ для операторів вузлів та чутливої інфраструктури' : 'node operations & sensitive infrastructure management'}</span>
+                    </div>
+                  </div>
+
                   {partnerSubmitted ? (
                     <div className="flex flex-col items-center justify-center p-4 text-center space-y-2">
                       <CheckCircle className="h-8 w-8 text-green-400" />
-                      <div className="text-xs font-semibold text-green-300">{t.onboardingWizard.partnerPendingTitle}</div>
+                      <div className="text-xs font-semibold text-green-300">
+                        {language === 'uk' ? 'Заявку успішно надіслано' : 'Application Submitted Successfully'}
+                      </div>
                       <p className="text-[10px] text-slate-400 max-w-xs">
-                        {t.onboardingWizard.partnerPendingDesc}
+                        {language === 'uk'
+                          ? 'Ми розглянемо ваш запит. Ви можете перевірити статус на сторінці waitlist.'
+                          : 'We will review your request. You can check the status on the waitlist page.'}
                       </p>
                     </div>
                   ) : (
                     <form onSubmit={handlePartnerSubmit} className="space-y-3">
                       <Textarea 
-                        placeholder={t.onboardingWizard.partnerPlaceholder}
+                        placeholder={language === 'uk' 
+                          ? 'Опишіть ваш запит (яка програма доступу вас цікавить та для яких цілей)...' 
+                          : 'Describe your request (which access program you are interested in and for what purposes)...'}
                         value={partnerMessage}
                         onChange={(e) => setPartnerMessage(e.target.value)}
-                        className="bg-slate-950/80 border-slate-800 text-xs min-h-[80px]"
+                        className="bg-slate-950/80 border-slate-800 text-xs min-h-[80px] focus-visible:ring-pink-500"
                         required
                       />
                       <Button 
@@ -829,7 +862,7 @@ export default function MicroDAOOnboarding() {
                         disabled={loading || !partnerMessage.trim()}
                         className="w-full bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white font-semibold text-xs"
                       >
-                        {loading ? t.onboardingWizard.sendingBtn : t.onboardingWizard.sendRequestBtn}
+                        {loading ? t.onboardingWizard.sendingBtn : (language === 'uk' ? 'Надіслати запит' : 'Send Application')}
                       </Button>
                     </form>
                   )}
@@ -1291,6 +1324,16 @@ export default function MicroDAOOnboarding() {
                             />
                           </div>
                         </div>
+                      </div>
+
+                      <div className="p-3 bg-amber-500/5 border border-amber-500/20 text-amber-300 rounded-lg text-xs space-y-1 leading-normal">
+                        <span className="font-semibold flex items-center gap-1.5">
+                          <Zap className="h-3.5 w-3.5 text-amber-400" />
+                          <span>Leader Plan — $20/міс після запуску білінгу</span>
+                        </span>
+                        <p className="text-[10px] text-slate-400 leading-normal">
+                          Зараз створення та тестування MicroDAO з Духом Спільноти повністю безкоштовне.
+                        </p>
                       </div>
 
                       <div className="space-y-2 pt-2 border-t border-slate-800">
