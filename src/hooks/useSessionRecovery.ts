@@ -2,10 +2,12 @@ import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from '@/lib/i18n';
 
 export const useSessionRecovery = () => {
   const { user, session } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (!user || !session) return;
@@ -34,7 +36,7 @@ export const useSessionRecovery = () => {
               display_name: user.user_metadata?.display_name || 
                            user.user_metadata?.full_name || 
                            user.email?.split('@')[0] || 
-                           'Пользователь',
+                           t.messages.userSender,
               approval_status: 'pending'
             });
 
@@ -57,7 +59,7 @@ export const useSessionRecovery = () => {
     const interval = setInterval(checkSessionIntegrity, 300000);
 
     return () => clearInterval(interval);
-  }, [user, session]);
+  }, [user, session, t]);
 
   useEffect(() => {
     // Handle auth errors and expired tokens
@@ -68,8 +70,8 @@ export const useSessionRecovery = () => {
         console.log('Session expired, redirecting to login...');
         
         toast({
-          title: 'Сессия истекла',
-          description: 'Пожалуйста, войдите в систему заново',
+          title: t.session.expiredTitle,
+          description: t.session.expiredDesc,
           variant: 'destructive',
         });
 
@@ -90,5 +92,5 @@ export const useSessionRecovery = () => {
     );
 
     return () => subscription.unsubscribe();
-  }, [user, toast]);
+  }, [user, toast, t]);
 };

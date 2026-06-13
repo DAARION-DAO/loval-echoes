@@ -57,8 +57,8 @@ export const ErrorToast = ({
           
           {showDetails && error.showDetails && (
             <div className="mt-2 p-2 bg-destructive/5 rounded text-xs font-mono text-destructive">
-              <div><strong>Код:</strong> {error.code}</div>
-              <div><strong>Повторяемая:</strong> {error.retryable ? 'Да' : 'Нет'}</div>
+              <div><strong>{t.errors.errorCode}</strong> {error.code}</div>
+              <div><strong>{t.errors.errorRetryable}</strong> {error.retryable ? t.errors.yes : t.errors.no}</div>
             </div>
           )}
         </div>

@@ -108,18 +108,18 @@ export const CreateModal = ({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               {getIcon(formData.type)}
-              Создать {getTypeLabel(formData.type).toLowerCase()}
+              {t.createModal.createTitle.replace('{type}', getTypeLabel(formData.type).toLowerCase())}
             </DialogTitle>
             <DialogDescription>
-              {formData.type === 'chat' && 'Создайте новый общий чат для обсуждений'}
-              {formData.type === 'branch' && 'Создайте ветку из существующего сообщения'}
-              {formData.type === 'project' && 'Создайте новый проект для совместной работы'}
+              {formData.type === 'chat' && t.createModal.chatDesc}
+              {formData.type === 'branch' && t.createModal.branchDesc}
+              {formData.type === 'project' && t.createModal.projectDesc}
             </DialogDescription>
           </DialogHeader>
-
+ 
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="type">Тип чата</Label>
+              <Label htmlFor="type">{t.createModal.chatTypeLabel}</Label>
               <Select
                 value={formData.type}
                 onValueChange={(value: 'chat' | 'branch' | 'project') =>
@@ -151,7 +151,7 @@ export const CreateModal = ({
                 </SelectContent>
               </Select>
             </div>
-
+ 
             <div className="space-y-2">
               <Label htmlFor="name">{t.name}</Label>
               <Input
@@ -161,13 +161,13 @@ export const CreateModal = ({
                   setFormData(prev => ({ ...prev, name: e.target.value }))
                 }
                 placeholder={
-                  formData.type === 'chat' ? 'Название чата' :
-                  formData.type === 'project' ? 'Название проекта' : 'Название ветки'
+                  formData.type === 'chat' ? t.createModal.chatTitleLabel :
+                  formData.type === 'project' ? t.createModal.projectTitleLabel : t.createModal.branchTitleLabel
                 }
                 required
               />
             </div>
-
+ 
             <div className="space-y-2">
               <Label htmlFor="description">{t.description}</Label>
               <Textarea
@@ -176,27 +176,27 @@ export const CreateModal = ({
                 onChange={(e) =>
                   setFormData(prev => ({ ...prev, description: e.target.value }))
                 }
-                placeholder="Краткое описание (необязательно)"
+                placeholder={t.createModal.descPlaceholder}
                 rows={3}
               />
             </div>
-
+ 
             <div className="space-y-2">
               <Label htmlFor="tags">{t.tags}</Label>
               <Input
                 id="tags"
                 value={tagsInput}
                 onChange={(e) => setTagsInput(e.target.value)}
-                placeholder="Теги через запятую: общение, работа, проект"
+                placeholder={t.createModal.tagsPlaceholder}
               />
               <p className="text-xs text-muted-foreground">
-                Разделите теги запятыми
+                {t.createModal.tagsHint}
               </p>
             </div>
-
+ 
             {formData.type === 'branch' && (
               <div className="space-y-2">
-                <Label htmlFor="messageId">ID сообщения</Label>
+                <Label htmlFor="messageId">{t.createModal.messageIdLabel}</Label>
                 <Input
                   id="messageId"
                   value={formData.forkedFromMessageId || ''}
@@ -206,11 +206,11 @@ export const CreateModal = ({
                       forkedFromMessageId: e.target.value 
                     }))
                   }
-                  placeholder="ID сообщения для создания ветки"
+                  placeholder={t.createModal.messageIdPlaceholder}
                 />
               </div>
             )}
-
+ 
             {error && (
               <div className="text-sm text-destructive bg-destructive/10 p-2 rounded">
                 {error}

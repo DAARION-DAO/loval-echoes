@@ -10,6 +10,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 
 import { lazy, Suspense } from "react";
+import { useTranslation } from "@/lib/i18n";
 import { ChatsPage } from "./pages/Chats";
 import { Auth } from "./pages/Auth";
 import { NewIndex } from "./pages/NewIndex";
@@ -47,11 +48,12 @@ const PublicStartRoute = () => {
   const { user, loading } = useAuth();
   const { approvalStatus } = useUserApprovalStatus();
   const { loading: commLoading, memberships } = useActiveCommunity();
+  const { t } = useTranslation();
 
   if (loading || (user && (approvalStatus === 'loading' || commLoading))) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <LoadingSpinner size="lg" text="Завантаження..." />
+        <LoadingSpinner size="lg" text={t.loading} />
       </div>
     );
   }
@@ -77,11 +79,12 @@ const ProtectedLayout = () => {
   const { approvalStatus } = useUserApprovalStatus();
   useSessionTimeout();
   const { loading: commLoading, memberships } = useActiveCommunity();
+  const { t } = useTranslation();
 
   if (loading || (user && (approvalStatus === 'loading' || commLoading))) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <LoadingSpinner size="lg" text="Завантаження..." />
+        <LoadingSpinner size="lg" text={t.loading} />
       </div>
     );
   }
@@ -101,7 +104,7 @@ const ProtectedLayout = () => {
   return (
     <Layout sidebar={<ChatSidebar />}>
       <ProtectedRoute>
-        <Suspense fallback={<LoadingSpinner size="lg" text="Завантаження..." />}>
+        <Suspense fallback={<LoadingSpinner size="lg" text={t.loading} />}>
           <Routes>
             <Route path="/dashboard" element={<NewIndex />} />
             <Route path="/chats" element={<ChatsPage />} />
@@ -130,11 +133,12 @@ const ProtectedLayout = () => {
 
 const PublicRoutes = () => {
   const { user, loading } = useAuth();
+  const { t } = useTranslation();
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <LoadingSpinner size="lg" text="Завантаження..." />
+        <LoadingSpinner size="lg" text={t.loading} />
       </div>
     );
   }
@@ -149,11 +153,12 @@ const PublicRoutes = () => {
 const WaitlistRoute = () => {
   const { user, loading } = useAuth();
   const { approvalStatus } = useUserApprovalStatus();
+  const { t } = useTranslation();
 
   if (loading || approvalStatus === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <LoadingSpinner size="lg" text="Завантаження..." />
+        <LoadingSpinner size="lg" text={t.loading} />
       </div>
     );
   }
@@ -169,32 +174,35 @@ const WaitlistRoute = () => {
   return <PendingApprovalPage />;
 };
 
-const App = () => (
-  <ErrorBoundary>
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AuthProvider>
-            <ActiveCommunityProvider>
-              <Routes>
-                <Route path="/" element={<PublicStartRoute />} />
-                <Route path="/install" element={<Suspense fallback={<LoadingSpinner size="lg" text="Завантаження..." />}><Install /></Suspense>} />
-                <Route path="/auth" element={<PublicRoutes />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="/waitlist" element={<WaitlistRoute />} />
-                <Route path="/pricing" element={<Suspense fallback={<LoadingSpinner size="lg" text="Завантаження..." />}><Pricing /></Suspense>} />
-                <Route path="/agents" element={<Suspense fallback={<LoadingSpinner size="lg" text="Завантаження..." />}><AgentDirectory /></Suspense>} />
-                <Route path="/onboarding" element={<Suspense fallback={<LoadingSpinner size="lg" text="Завантаження..." />}><MicroDAOOnboarding /></Suspense>} />
-                <Route path="/*" element={<ProtectedLayout />} />
-              </Routes>
-            </ActiveCommunityProvider>
-          </AuthProvider>
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
-  </ErrorBoundary>
-);
+const App = () => {
+  const { t } = useTranslation();
+  return (
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AuthProvider>
+              <ActiveCommunityProvider>
+                <Routes>
+                  <Route path="/" element={<PublicStartRoute />} />
+                  <Route path="/install" element={<Suspense fallback={<LoadingSpinner size="lg" text={t.loading} />}><Install /></Suspense>} />
+                  <Route path="/auth" element={<PublicRoutes />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
+                  <Route path="/waitlist" element={<WaitlistRoute />} />
+                  <Route path="/pricing" element={<Suspense fallback={<LoadingSpinner size="lg" text={t.loading} />}><Pricing /></Suspense>} />
+                  <Route path="/agents" element={<Suspense fallback={<LoadingSpinner size="lg" text={t.loading} />}><AgentDirectory /></Suspense>} />
+                  <Route path="/onboarding" element={<Suspense fallback={<LoadingSpinner size="lg" text={t.loading} />}><MicroDAOOnboarding /></Suspense>} />
+                  <Route path="/*" element={<ProtectedLayout />} />
+                </Routes>
+              </ActiveCommunityProvider>
+            </AuthProvider>
+          </BrowserRouter>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
+  );
+};
 
 export default App;

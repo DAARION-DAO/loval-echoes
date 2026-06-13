@@ -45,7 +45,7 @@ export const ChatsPage = () => {
       console.error('Error loading chats:', error);
       const friendlyMessage = getErrorMessage(error);
       toast({
-        title: "Ошибка",
+        title: t.error,
         description: friendlyMessage,
         variant: 'destructive',
       });
@@ -56,19 +56,19 @@ export const ChatsPage = () => {
 
   const handleCreateChat = async () => {
     try {
-      const newChat = await createChat("Новый чат");
+      const newChat = await createChat(t.chats.newChat);
       setChats(prev => [newChat, ...prev]);
       navigate(`/chats/${newChat.id}`);
       
       toast({
-        title: "Чат создан",
-        description: 'Чат создан успешно',
+        title: t.chats.successCreate,
+        description: t.chats.successCreate,
       });
     } catch (error: unknown) {
       console.error('Error creating chat:', error);
       const friendlyMessage = getErrorMessage(error);
       toast({
-        title: "Ошибка",
+        title: t.error,
         description: friendlyMessage,
         variant: 'destructive',
       });
@@ -81,9 +81,9 @@ export const ChatsPage = () => {
     const diffTime = Math.abs(now.getTime() - date.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    if (diffDays === 1) return 'Сегодня';
-    if (diffDays === 2) return 'Вчера';
-    if (diffDays <= 7) return `${diffDays} дней назад`;
+    if (diffDays === 1) return t.chatsExtra.today;
+    if (diffDays === 2) return t.chatsExtra.yesterday;
+    if (diffDays <= 7) return t.chatsExtra.daysAgo.replace('{days}', String(diffDays));
     
     return date.toLocaleDateString();
   };
@@ -93,7 +93,7 @@ export const ChatsPage = () => {
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">Загрузка...</p>
+          <p className="text-muted-foreground">{t.loading}</p>
         </div>
       </div>
     );
@@ -104,9 +104,9 @@ export const ChatsPage = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold mb-2">Чаты</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold mb-2">{t.chats.title}</h1>
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
-            <span>{filteredChats.length} чатов</span>
+            <span>{t.chatsExtra.totalChats.replace('{count}', String(filteredChats.length))}</span>
             <Badge variant="secondary" className="flex items-center gap-1">
               <Users className="h-3 w-3" />
               {onlineCount}/12
@@ -123,12 +123,12 @@ export const ChatsPage = () => {
                 size="lg"
               >
                 <Phone className="h-4 w-4 mr-2" />
-                Начать встречу
+                {t.chatsExtra.voiceMeetingBtn}
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-md">
               <DialogHeader>
-                <DialogTitle>Голосовая встреча</DialogTitle>
+                <DialogTitle>{t.chatsExtra.voiceMeetingDialogTitle}</DialogTitle>
               </DialogHeader>
               <AgoraVoiceCall 
                 channelName="community-voice" 
@@ -143,7 +143,7 @@ export const ChatsPage = () => {
             size="lg"
           >
             <Plus className="h-4 w-4 mr-2" />
-            Новый чат
+            {t.chats.newChat}
           </Button>
         </div>
       </div>
@@ -152,7 +152,7 @@ export const ChatsPage = () => {
       <div className="relative mb-6">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Поиск чатов..."
+          placeholder={t.chatsExtra.searchChatsPlaceholder}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="pl-9 h-11 text-base w-full sm:max-w-md"
@@ -164,18 +164,18 @@ export const ChatsPage = () => {
         <div className="text-center py-12">
           <MessageSquare className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
           <h3 className="text-xl font-semibold mb-2">
-            {searchQuery ? 'Чаты не найдены' : 'Пока нет чатов'}
+            {searchQuery ? t.chatsExtra.noChatsFound : t.chatsExtra.noChatsYet}
           </h3>
           <p className="text-muted-foreground mb-6">
             {searchQuery 
-              ? 'Попробуйте изменить поисковый запрос'
-              : 'Создайте первый чат сообщества'
+              ? t.chatsExtra.filterNoChatsFoundDesc
+              : t.chatsExtra.filterNoChatsYetDesc
             }
           </p>
           {!searchQuery && (
             <Button onClick={handleCreateChat}>
               <Plus className="h-4 w-4 mr-2" />
-              Новый чат
+              {t.chats.newChat}
             </Button>
           )}
         </div>
@@ -206,7 +206,7 @@ export const ChatsPage = () => {
                     <div className="space-y-2">
                       {chat.forked_from_chat && (
                         <p className="text-sm text-muted-foreground">
-                          Ветка из {chat.forked_from_chat.slice(0, 8)}...
+                          {t.chatsExtra.forkedFrom.replace('{id}', chat.forked_from_chat.slice(0, 8))}
                         </p>
                       )}
                       
@@ -214,7 +214,7 @@ export const ChatsPage = () => {
                         <span>{chat.updatedAt && formatDate(chat.updatedAt)}</span>
                         {chat.dify_conversation_id && (
                           <Badge variant="outline" className="text-xs">
-                            Активный
+                            {t.chatsExtra.active}
                           </Badge>
                         )}
                       </div>

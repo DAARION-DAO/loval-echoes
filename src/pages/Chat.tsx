@@ -137,7 +137,7 @@ export const ChatPage = () => {
       if (user) {
         const userInfo = {
           user_id: user.id,
-          user_name: user.user_metadata?.display_name || user.email?.split('@')[0] || 'Пользователь',
+          user_name: user.user_metadata?.display_name || user.email?.split('@')[0] || t.chatPage.userFallbackName,
           online_at: new Date().toISOString(),
         };
 
@@ -199,9 +199,9 @@ export const ChatPage = () => {
           // Получаем имя пользователя из профиля
           let senderName = newMessage.sender_name;
           if (!senderName && newMessage.role === 'user') {
-            senderName = 'Пользователь';
+            senderName = t.chatPage.userFallbackName;
           } else if (newMessage.role === 'assistant') {
-            senderName = 'Дух Общины';
+            senderName = t.chatPage.agentFallbackName;
           }
           
           const difyMessage: DifyMessage = {
@@ -299,8 +299,8 @@ export const ChatPage = () => {
     const updatedMessages = nonReplyMessages.map(msg => ({
       ...msg,
       sender_name: msg.answer 
-        ? 'Дух Общины' 
-        : (msg.sender_name || 'Пользователь')
+        ? t.chatPage.agentFallbackName 
+        : (msg.sender_name || t.chatPage.userFallbackName)
     }));
     
     setMessages(updatedMessages);
@@ -325,7 +325,7 @@ export const ChatPage = () => {
       
       toast({
         title: t.zhosBanner.pauseButton,
-        description: 'Узел зафиксирован в беседе',
+        description: t.chatPage.knotFixedDesc,
       });
     } catch (error) {
       console.error('Error creating pause node:', error);
@@ -344,7 +344,7 @@ export const ChatPage = () => {
 
       // Создаем новый чат как ветку
       const newChat = await difyClient.createChat(
-        `Ветка из "${chat?.name}"`,
+        t.chatPage.forkedFromTitle.replace('{name}', chat?.name || ''),
         chatId,
         messageId
       );
@@ -353,7 +353,7 @@ export const ChatPage = () => {
       
       toast({
         title: t.chats.fork,
-        description: 'Ветка создана успешно',
+        description: t.chatPage.branchSuccessDesc,
       });
     } catch (error) {
       console.error('Error creating fork:', error);
@@ -370,7 +370,7 @@ export const ChatPage = () => {
       // Логирование нарушения (это будет обработано в backend)
       toast({
         title: t.messages.report,
-        description: 'Нарушение зафиксировано в журнале аудита',
+        description: t.chatPage.auditViolationDesc,
       });
     } catch (error) {
       console.error('Error reporting message:', error);
@@ -422,7 +422,7 @@ export const ChatPage = () => {
           <h2 className="text-xl font-semibold mb-2">{t.errors.chatNotFound}</h2>
           <Button onClick={() => navigate('/chats')} variant="outline">
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Вернуться к чатам
+            {t.chatPage.returnToChats}
           </Button>
         </div>
       </div>
@@ -470,7 +470,7 @@ export const ChatPage = () => {
                       className="flex items-center gap-1 text-xs px-3 py-1.5 min-h-[36px] sm:min-h-[auto]"
                     >
                       <AlertTriangle className="h-3 w-3" />
-                      <span className="hidden sm:inline">Узел</span>
+                      <span className="hidden sm:inline">{t.chatPage.btnKnot}</span>
                     </Button>
                   </div>
                 </div>
@@ -513,7 +513,7 @@ export const ChatPage = () => {
                         metadata: currentMessage.metadata,
                       }}
                       isAgent={true}
-                      senderName="Дух Общины"
+                      senderName={t.chatPage.agentFallbackName}
                       onFork={handleForkMessage}
                       onReport={handleReportMessage}
                       onDelete={handleDeleteMessage}
@@ -523,7 +523,7 @@ export const ChatPage = () => {
                   {/* Индикатор печати других пользователей */}
                   {typingUsers.length > 0 && (
                     <div className="text-xs text-muted-foreground italic px-3 py-1 animate-pulse">
-                      {typingUsers.join(', ')} {typingUsers.length === 1 ? 'печатает...' : 'печатают...'}
+                      {typingUsers.join(', ')} {typingUsers.length === 1 ? t.chatPage.indicatorTypingSingle : t.chatPage.indicatorTypingMultiple}
                     </div>
                   )}
 

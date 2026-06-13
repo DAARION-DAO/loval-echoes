@@ -118,8 +118,8 @@ export const Settings = () => {
     // Check file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast({
-        title: 'Ошибка',
-        description: 'Размер файла не должен превышать 5MB',
+        title: t.settingsExtra.errorTitle,
+        description: t.settingsExtra.errorTooLarge,
         variant: 'destructive'
       });
       return;
@@ -128,8 +128,8 @@ export const Settings = () => {
     // Check file type
     if (!file.type.startsWith('image/')) {
       toast({
-        title: 'Ошибка',
-        description: 'Можно загружать только изображения',
+        title: t.settingsExtra.errorTitle,
+        description: t.settingsExtra.errorImageOnly,
         variant: 'destructive'
       });
       return;
@@ -155,10 +155,10 @@ export const Settings = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <User className="h-5 w-5" />
-            {t.profile}
+          {t.profile}
           </CardTitle>
           <CardDescription>
-            Управление профилем и персональными данными
+            {t.settingsExtra.profileDesc}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -184,7 +184,7 @@ export const Settings = () => {
                 disabled={loading}
               >
                 <Upload className="h-4 w-4 mr-2" />
-                Загрузить фото
+                {t.settingsExtra.uploadPhoto}
               </Button>
             </div>
           </div>
@@ -201,10 +201,10 @@ export const Settings = () => {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="displayName">Отображаемое имя</Label>
+              <Label htmlFor="displayName">{t.settingsExtra.labelDisplayName}</Label>
               <Input 
                 id="displayName" 
-                placeholder="Ваше имя в чатах"
+                placeholder={t.settingsExtra.placeholderDisplayName}
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
               />
@@ -221,7 +221,7 @@ export const Settings = () => {
             {t.theme}
           </CardTitle>
           <CardDescription>
-            Настройка внешнего вида приложения
+            {t.settingsExtra.themeSectionTitle}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -229,7 +229,7 @@ export const Settings = () => {
             <div className="space-y-0.5">
               <Label className="text-base">{t.theme}</Label>
               <p className="text-sm text-muted-foreground">
-                Выберите тему оформления
+                {t.settingsExtra.themeSectionDesc}
               </p>
             </div>
             <ThemeSwitch />
@@ -245,7 +245,7 @@ export const Settings = () => {
             {t.language}
           </CardTitle>
           <CardDescription>
-            {language === 'uk' ? 'Мова інтерфейсу' : language === 'en' ? 'Interface language' : language === 'es' ? 'Idioma de la interfaz' : 'Язык интерфейса'}
+            {t.settingsExtra.langSelectLabel}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -256,10 +256,10 @@ export const Settings = () => {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="uk">🇺🇦 Українська</SelectItem>
-                <SelectItem value="en">🇬🇧 English</SelectItem>
-                <SelectItem value="ru">🇷🇺 Русский</SelectItem>
-                <SelectItem value="es">🇪🇸 Español</SelectItem>
+                <SelectItem value="uk">🇺🇦 {t.settingsExtra.langUk}</SelectItem>
+                <SelectItem value="en">🇬🇧 {t.settingsExtra.langEn}</SelectItem>
+                <SelectItem value="ru">🇷🇺 {t.settingsExtra.langRu}</SelectItem>
+                <SelectItem value="es">🇪🇸 {t.settingsExtra.langEs}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -269,9 +269,9 @@ export const Settings = () => {
       {/* ZHOS Settings */}
       <Card>
         <CardHeader>
-          <CardTitle>Настройки ЖОС</CardTitle>
+          <CardTitle>{t.settingsExtra.zhosSectionTitle}</CardTitle>
           <CardDescription>
-            Специфичные настройки для сообщества ЖОС
+            {t.settingsExtra.zhosSectionDesc}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -279,7 +279,7 @@ export const Settings = () => {
             <div className="space-y-0.5">
               <Label className="text-base">{t.showPrinciplesBanner}</Label>
               <p className="text-sm text-muted-foreground">
-                Показывать баннер с принципами ЖОС в интерфейсе
+                {t.settingsExtra.zhosShowPrinciples}
               </p>
             </div>
             <Switch
@@ -296,10 +296,10 @@ export const Settings = () => {
               <div className="space-y-0.5">
                 <Label className="text-base flex items-center gap-2">
                   <Bell className="h-4 w-4" />
-                  Push-сповіщення
+                  {t.settingsExtra.pushTitle}
                 </Label>
                 <p className="text-sm text-muted-foreground">
-                  Налаштування push-сповіщень для браузера
+                  {t.settingsExtra.pushDesc}
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -310,7 +310,7 @@ export const Settings = () => {
                 ) : null}
                 {!pushEnabled && permissionStatus !== 'denied' && (
                   <Button size="sm" onClick={requestPermission}>
-                    Увімкнути
+                    {t.settingsExtra.enableBtn}
                   </Button>
                 )}
               </div>
@@ -318,7 +318,7 @@ export const Settings = () => {
 
             {permissionStatus === 'denied' && (
               <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-md text-sm text-red-600 dark:text-red-400">
-                Доступ заборонено. Дозвольте сповіщення в налаштуваннях браузера.
+                {t.settingsExtra.pushDeniedAlert}
               </div>
             )}
 
@@ -331,10 +331,10 @@ export const Settings = () => {
                   <div className="space-y-0.5">
                     <Label className="text-base flex items-center gap-2">
                       <Bell className="h-4 w-4" />
-                      Новостна стрічка
+                      {t.settingsExtra.notifyNewsTitle}
                     </Label>
                     <p className="text-sm text-muted-foreground">
-                      Отримувати сповіщення про нові термінові новини
+                      {t.settingsExtra.notifyNewsDesc}
                     </p>
                   </div>
                   <Switch
@@ -350,17 +350,17 @@ export const Settings = () => {
                   <div className="space-y-0.5">
                     <Label className="text-base flex items-center gap-2">
                       <MessageSquare className="h-4 w-4" />
-                      Сповіщення з чатів
+                      {t.settingsExtra.notifyChatsTitle}
                     </Label>
                     <p className="text-sm text-muted-foreground">
-                      Оберіть чати, з яких ви хочете отримувати сповіщення
+                      {t.settingsExtra.notifyChatsDesc}
                     </p>
                   </div>
                   
                   {loadingChats ? (
-                    <div className="text-sm text-muted-foreground">Завантаження чатів...</div>
+                    <div className="text-sm text-muted-foreground">{t.settingsExtra.loadingChats}</div>
                   ) : chats.length === 0 ? (
-                    <div className="text-sm text-muted-foreground">У вас поки немає чатів</div>
+                    <div className="text-sm text-muted-foreground">{t.settingsExtra.noChats}</div>
                   ) : (
                     <ScrollArea className="h-48 border rounded-md p-3">
                       <div className="space-y-2">
@@ -375,7 +375,7 @@ export const Settings = () => {
                               htmlFor={`chat-${chat.id}`}
                               className="text-sm font-normal cursor-pointer flex-1"
                             >
-                              {chat.name || `Чат ${chat.id.slice(0, 8)}`}
+                              {chat.name || t.settingsExtra.chatFallbackName.replace('{id}', chat.id.slice(0, 8))}
                             </Label>
                           </div>
                         ))}
@@ -390,11 +390,11 @@ export const Settings = () => {
           <Separator />
 
           <div className="space-y-2">
-            <Label>Лимиты участия</Label>
+            <Label>{t.settingsExtra.limitsTitle}</Label>
             <div className="text-sm text-muted-foreground space-y-1">
-              <div>• Максимум участников онлайн: 50</div>
-              <div>• Размер файлов: до 10MB</div>
-              <div>• Длина сообщений: до 4000 символов</div>
+              <div>• {t.settingsExtra.limitsOnline}</div>
+              <div>• {t.settingsExtra.limitsFileSize}</div>
+              <div>• {t.settingsExtra.limitsMessageLength}</div>
             </div>
           </div>
         </CardContent>
@@ -407,7 +407,7 @@ export const Settings = () => {
           onClick={handleSaveProfile}
           disabled={loading}
         >
-          {loading ? 'Сохранение...' : t.save}
+          {loading ? t.settingsExtra.saving : t.save}
         </Button>
       </div>
     </div>

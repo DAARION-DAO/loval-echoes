@@ -96,7 +96,7 @@ export const AuthForm = () => {
       if (error) {
         console.error('Auth callback error:', error, errorDescription);
         toast({
-          title: 'Ошибка аутентификации',
+          title: t.authForm.authErrorTitle,
           description: errorDescription || error,
           variant: 'destructive',
         });
@@ -124,7 +124,7 @@ export const AuthForm = () => {
     if (!formData.email || !formData.password) {
       toast({
         title: t.error,
-        description: 'Будь ласка, заповніть усі обов\'язкові поля',
+        description: t.authForm.fillRequired,
         variant: 'destructive',
       });
       return;
@@ -147,8 +147,8 @@ export const AuthForm = () => {
       if (error) {
         if (error.message.includes('User already registered') || error.message.includes('already been registered')) {
           toast({
-            title: 'Пользователь уже существует',
-            description: 'Этот email уже зарегистрирован. Перейдите на вкладку "Вход" для входа в систему.',
+            title: t.authForm.userExistsTitle,
+            description: t.authForm.userExistsDesc,
             variant: 'destructive',
           });
           setTimeout(() => {
@@ -167,19 +167,19 @@ export const AuthForm = () => {
 
       if (data.user && !data.session) {
         toast({
-          title: 'Регистрация успешна',
-          description: 'Проверьте email для подтверждения аккаунта. Письмо может прийти в папку "Спам".',
+          title: t.authForm.regSuccessTitle,
+          description: t.authForm.regSuccessDesc,
         });
       } else if (data.session) {
         toast({
-          title: 'Добро пожаловать!',
-          description: 'Вы успешно зарегистрированы и вошли в систему',
+          title: t.authForm.welcomeTitle,
+          description: t.authForm.welcomeDesc,
         });
       }
     } catch (error) {
       toast({
         title: t.error,
-        description: 'Ошибка при регистрации',
+        description: t.authForm.regErrorDesc,
         variant: 'destructive',
       });
     } finally {
@@ -192,7 +192,7 @@ export const AuthForm = () => {
     if (!formData.email || !formData.password) {
       toast({
         title: t.error,
-        description: 'Пожалуйста, заполните все поля',
+        description: t.authForm.fillRequired,
         variant: 'destructive',
       });
       return;
@@ -212,8 +212,8 @@ export const AuthForm = () => {
         if (error.message.includes('Email not confirmed')) {
           setShowResendButton(true);
           toast({
-            title: 'Email не подтвержден',
-            description: 'Пожалуйста, подтвердите ваш email. Проверьте почту и папку "Спам".',
+            title: t.authForm.emailNotVerifiedTitle,
+            description: t.authForm.emailNotVerifiedDesc,
             variant: 'destructive',
           });
           return;
@@ -223,15 +223,15 @@ export const AuthForm = () => {
           setShowResendButton(true);
           setShowForgotPassword(true);
           toast({
-            title: 'Неверные данные для входа',
-            description: 'Email или пароль неверны. Нажмите "Забыли пароль?" для восстановления доступа.',
+            title: t.authForm.invalidCredentialsTitle,
+            description: t.authForm.invalidCredentialsDesc,
             variant: 'destructive',
           });
           return;
         }
 
         toast({
-          title: 'Ошибка входа',
+          title: t.authForm.loginErrorTitle,
           description: error.message,
           variant: 'destructive',
         });
@@ -243,8 +243,8 @@ export const AuthForm = () => {
         saveCredentials(formData.email, rememberMe);
         
         toast({
-          title: 'Добро пожаловать!',
-          description: 'Вы успешно вошли в систему',
+          title: t.authForm.welcomeTitle,
+          description: t.authForm.welcomeLoginDesc,
         });
       }
 
@@ -252,7 +252,7 @@ export const AuthForm = () => {
       console.error('Login error:', error);
       toast({
         title: t.error,
-        description: 'Ошибка при входе',
+        description: t.authForm.loginErrorDesc,
         variant: 'destructive',
       });
     } finally {
@@ -264,7 +264,7 @@ export const AuthForm = () => {
     if (!formData.email) {
       toast({
         title: t.error,
-        description: 'Введите email для повторной отправки письма подтверждения',
+        description: t.authForm.resendConfirmRequired,
         variant: 'destructive',
       });
       return;
@@ -288,14 +288,14 @@ export const AuthForm = () => {
         });
       } else {
         toast({
-          title: 'Письмо отправлено',
-          description: 'Проверьте email (включая папку "Спам") и перейдите по ссылке для подтверждения',
+          title: t.authForm.resendConfirmSuccessTitle,
+          description: t.authForm.resendConfirmSuccessDesc,
         });
       }
     } catch (error) {
       toast({
         title: t.error,
-        description: 'Ошибка при отправке письма подтверждения',
+        description: t.authForm.resendConfirmErrorDesc,
         variant: 'destructive',
       });
     } finally {
@@ -307,7 +307,7 @@ export const AuthForm = () => {
     if (!formData.email) {
       toast({
         title: t.error,
-        description: 'Введите email для восстановления пароля',
+        description: t.authForm.forgotPasswordRequired,
         variant: 'destructive',
       });
       return;
@@ -327,15 +327,15 @@ export const AuthForm = () => {
         });
       } else {
         toast({
-          title: 'Письмо отправлено',
-          description: 'Проверьте email. Мы отправили ссылку для восстановления пароля.',
+          title: t.authForm.forgotPasswordSuccessTitle,
+          description: t.authForm.forgotPasswordSuccessDesc,
         });
         setShowForgotPassword(false);
       }
     } catch (error) {
       toast({
         title: t.error,
-        description: 'Ошибка при отправке письма восстановления',
+        description: t.authForm.forgotPasswordErrorDesc,
         variant: 'destructive',
       });
     } finally {
@@ -349,7 +349,7 @@ export const AuthForm = () => {
     if (!newPassword || !confirmPassword) {
       toast({
         title: t.error,
-        description: 'Пожалуйста, заполните оба поля пароля',
+        description: t.authForm.fillBothPasswords,
         variant: 'destructive',
       });
       return;
@@ -358,7 +358,7 @@ export const AuthForm = () => {
     if (newPassword !== confirmPassword) {
       toast({
         title: t.error,
-        description: 'Пароли не совпадают',
+        description: t.authForm.passwordsDoNotMatch,
         variant: 'destructive',
       });
       return;
@@ -367,7 +367,7 @@ export const AuthForm = () => {
     if (newPassword.length < 6) {
       toast({
         title: t.error,
-        description: 'Пароль должен содержать минимум 6 символов',
+        description: t.authForm.passwordMinLength,
         variant: 'destructive',
       });
       return;
@@ -382,14 +382,14 @@ export const AuthForm = () => {
       if (error) {
         console.error('Password update error:', error);
         toast({
-          title: 'Ошибка обновления пароля',
+          title: t.authForm.updatePasswordErrorTitle,
           description: error.message,
           variant: 'destructive',
         });
       } else {
         toast({
-          title: 'Пароль обновлен',
-          description: 'Ваш пароль успешно изменен. Теперь вы можете войти с новым паролем.',
+          title: t.authForm.updatePasswordSuccessTitle,
+          description: t.authForm.updatePasswordSuccessDesc,
         });
         
         // Reset the form and exit password reset mode
@@ -404,7 +404,7 @@ export const AuthForm = () => {
       console.error('Password update error:', error);
       toast({
         title: t.error,
-        description: 'Произошла ошибка при обновлении пароля',
+        description: t.authForm.updatePasswordErrorDesc,
         variant: 'destructive',
       });
     } finally {
@@ -418,19 +418,19 @@ export const AuthForm = () => {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted/20 p-4">
         <Card className="w-full max-w-md shadow-elegant">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold">Новый пароль</CardTitle>
+            <CardTitle className="text-2xl font-bold">{t.authForm.newPasswordTitle}</CardTitle>
             <CardDescription>
-              Создайте новый пароль для вашего аккаунта
+              {t.authForm.newPasswordDesc}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleUpdatePassword} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="new-password">Новый пароль</Label>
+                <Label htmlFor="new-password">{t.authForm.labelNewPassword}</Label>
                 <Input
                   id="new-password"
                   type="password"
-                  placeholder="введите новый пароль (мин. 6 символов)"
+                  placeholder={t.authForm.placeholderNewPassword}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   minLength={6}
@@ -438,11 +438,11 @@ export const AuthForm = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="confirm-password">Подтвердите пароль</Label>
+                <Label htmlFor="confirm-password">{t.authForm.labelConfirmPassword}</Label>
                 <Input
                   id="confirm-password"
                   type="password"
-                  placeholder="повторите новый пароль"
+                  placeholder={t.authForm.placeholderConfirmPassword}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   minLength={6}
@@ -450,7 +450,7 @@ export const AuthForm = () => {
                 />
               </div>
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? 'Обновление...' : 'Обновить пароль'}
+                {loading ? t.authForm.btnUpdatingPassword : t.authForm.btnUpdatePassword}
               </Button>
               <div className="text-center">
                 <Button 
@@ -461,7 +461,7 @@ export const AuthForm = () => {
                     window.history.replaceState({}, document.title, '/auth');
                   }}
                 >
-                  Вернуться к входу
+                  {t.authForm.btnBackToLogin}
                 </Button>
               </div>
             </form>
@@ -477,10 +477,10 @@ export const AuthForm = () => {
         {/* Temporary help banner */}
         <div className="rounded-lg border border-accent/30 bg-accent/10 p-4 text-center space-y-2">
           <p className="text-sm font-medium text-foreground">
-            🔑 Не вдається увійти?
+            🔑 {t.authForm.cantLoginTitle}
           </p>
           <p className="text-xs text-muted-foreground">
-            Якщо ви забули пароль або маєте проблеми зі входом — скористайтесь відновленням паролю.
+            {t.authForm.cantLoginDesc}
           </p>
           <Button
             type="button"
@@ -492,7 +492,7 @@ export const AuthForm = () => {
               if (signinTab) signinTab.click();
             }}
           >
-            Відновити пароль
+            {t.authForm.btnResetPassword}
           </Button>
         </div>
 
@@ -536,7 +536,7 @@ export const AuthForm = () => {
                   </div>
                   
                   <p className="text-xs text-muted-foreground text-center">
-                    🔒 Цей пристрій буде запам'ятовано. Вхід потрібен лише після виходу.
+                    🔒 {t.authForm.deviceRemembered}
                   </p>
 
                   <Button type="submit" className="w-full" disabled={loading}>
@@ -551,14 +551,14 @@ export const AuthForm = () => {
                     onClick={() => setShowForgotPassword(true)}
                     className="text-muted-foreground hover:text-foreground"
                   >
-                    Забыли пароль?
+                    {t.authForm.forgotPasswordLink}
                   </Button>
                 </div>
                 
                 {showResendButton && (
                   <div className="mt-4 p-3 bg-muted/50 rounded-lg border">
                     <p className="text-sm text-muted-foreground mb-2">
-                      Не можете войти? Возможно, нужно подтвердить email.
+                      {t.authForm.emailUnconfirmedAlert}
                     </p>
                     <Button 
                       type="button" 
@@ -568,7 +568,7 @@ export const AuthForm = () => {
                       onClick={handleResendConfirmation}
                       disabled={resendLoading}
                     >
-                      {resendLoading ? 'Отправка...' : 'Отправить письмо подтверждения повторно'}
+                      {resendLoading ? t.authForm.btnResendingConfirm : t.authForm.btnResendConfirm}
                     </Button>
                   </div>
                 )}
@@ -576,10 +576,10 @@ export const AuthForm = () => {
                 {showForgotPassword && (
                   <div className="mt-4 p-3 bg-muted/50 rounded-lg border">
                     <p className="text-sm text-muted-foreground mb-2">
-                      Восстановление пароля
+                      {t.authForm.forgotPasswordSectionTitle}
                     </p>
                     <p className="text-xs text-muted-foreground mb-3">
-                      Мы отправим вам ссылку для создания нового пароля на указанный email.
+                      {t.authForm.forgotPasswordSectionDesc}
                     </p>
                     <div className="flex gap-2">
                       <Button 
@@ -590,7 +590,7 @@ export const AuthForm = () => {
                         onClick={handlePasswordReset}
                         disabled={resetLoading}
                       >
-                        {resetLoading ? 'Отправка...' : 'Восстановить пароль'}
+                        {resetLoading ? t.authForm.btnResendingConfirm : t.authForm.btnResetPassword}
                       </Button>
                       <Button 
                         type="button" 
@@ -598,7 +598,7 @@ export const AuthForm = () => {
                         size="sm" 
                         onClick={() => setShowForgotPassword(false)}
                       >
-                        Отмена
+                        {t.cancel}
                       </Button>
                     </div>
                   </div>
@@ -610,7 +610,7 @@ export const AuthForm = () => {
               <form onSubmit={handleSignUp} className="space-y-4">
                 <div className="rounded-lg bg-accent/10 border border-accent/20 p-3 text-center mb-2">
                   <p className="text-xs text-muted-foreground">
-                    MicroDAO зараз знаходиться в режимі обмеженого тестування. Подайте заявку, щоб отримати ранній доступ.
+                    {t.onboarding.errorLimitDesc}
                   </p>
                 </div>
 
@@ -650,7 +650,7 @@ export const AuthForm = () => {
                 </div>
                 
                 <Button type="submit" className="w-full mt-6 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold">
-                  {loading ? t.loading : "Зареєструватися"}
+                  {loading ? t.loading : t.auth.signUp}
                 </Button>
               </form>
             </TabsContent>

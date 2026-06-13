@@ -7,6 +7,7 @@ import { Plus, X } from 'lucide-react';
 import { KanbanCard as KanbanCardComponent } from './KanbanCard';
 import { KanbanCard as KanbanCardType } from '@/types/kanban';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/lib/i18n';
 
 interface KanbanColumnProps {
   id: string;
@@ -27,6 +28,7 @@ export function KanbanColumn({
   onUpdateCard,
   onDeleteCard,
 }: KanbanColumnProps) {
+  const { t } = useTranslation();
   const [isAddingCard, setIsAddingCard] = useState(false);
   const [newCardTitle, setNewCardTitle] = useState('');
 
@@ -70,7 +72,7 @@ export function KanbanColumn({
             size="sm"
             onClick={() => setIsAddingCard(true)}
             className="h-7 w-7 p-0 shrink-0"
-            title="Добавить задачу"
+            title={t.kanban.addTaskTooltip}
           >
             <Plus className="h-4 w-4" />
           </Button>
@@ -93,7 +95,7 @@ export function KanbanColumn({
               value={newCardTitle}
               onChange={(e) => setNewCardTitle(e.target.value)}
               onKeyDown={handleKeyPress}
-              placeholder="Введите название задачи..."
+              placeholder={t.kanban.taskTitlePlaceholder}
               className="text-sm"
               autoFocus
             />
@@ -103,7 +105,7 @@ export function KanbanColumn({
                 onClick={handleAddCard}
                 disabled={!newCardTitle.trim()}
               >
-                Добавить
+                {t.kanban.addBtn}
               </Button>
               <Button
                 size="sm"
@@ -121,7 +123,7 @@ export function KanbanColumn({
         
         {!isAddingCard && cards.length === 0 && (
           <div className="text-center py-8 text-muted-foreground text-sm">
-            Перетащите карточки сюда или нажмите + для создания
+            {t.kanban.dragPlaceholder}
           </div>
         )}
       </CardContent>

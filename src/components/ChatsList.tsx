@@ -4,17 +4,26 @@ import { ChatEmptyState } from "@/components/ChatEmptyState";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { uk, ru, es, enUS } from 'date-fns/locale';
 import { getErrorMessage } from "@/utils/errorHelper";
 import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/ui/button";
 import { Pin, PinOff } from "lucide-react";
+import { useTranslation } from "@/lib/i18n";
 
 export function ChatsList() {
+  const { t, language } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState<ChatLite[]>([]);
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  const getDateFnsLocale = (lang: string) => {
+    if (lang === 'uk') return uk;
+    if (lang === 'es') return es;
+    if (lang === 'ru') return ru;
+    return enUS;
+  };
 
   const loadChats = async () => {
     try {
@@ -27,7 +36,7 @@ export function ChatsList() {
       console.error('Error loading chats:', e);
       toast({
         variant: "destructive",
-        title: "Ошибка загрузки",
+        title: t.chatsExtra.loadErrorTitle,
         description: getErrorMessage(e),
       });
     } finally {
@@ -48,16 +57,16 @@ export function ChatsList() {
       await pinChat(chatId, !currentPinned);
       await loadChats(); // Перезагружаем список чатов
       toast({
-        title: currentPinned ? 'Чат откреплен' : 'Чат закреплен',
+        title: currentPinned ? t.chatsExtra.unpinSuccess : t.chatsExtra.pinSuccess,
         description: currentPinned 
-          ? 'Чат перемещен в общий список' 
-          : 'Чат закреплен в верхней части списка',
+          ? t.chatsExtra.unpinDesc 
+          : t.chatsExtra.pinDesc,
       });
     } catch (error) {
       console.error('Error pinning chat:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось изменить статус закрепления',
+        title: t.chatsExtra.error,
+        description: t.chatsExtra.pinError,
         variant: 'destructive',
       });
     }
@@ -66,7 +75,7 @@ export function ChatsList() {
   if (loading) {
     return (
       <div className="p-4 text-sm text-muted-foreground flex items-center justify-center">
-        Загружаем чаты...
+        {t.chatsExtra.loading}
       </div>
     );
   }
@@ -109,7 +118,7 @@ export function ChatsList() {
                     handlePinChat(chat.id, chat.is_pinned || false);
                   }}
                   className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                  title={chat.is_pinned ? 'Открепить чат' : 'Закрепить чат'}
+                  title={chat.is_pinned ? t.chatsExtra.unpinTooltip : t.chatsExtra.pinTooltip}
                 >
                   {chat.is_pinned ? <PinOff className="h-3 w-3" /> : <Pin className="h-3 w-3" />}
                 </Button>
@@ -143,7 +152,7 @@ export function ChatsList() {
                   )}
                   {(chat.onlineCount || 0) > 0 && (
                     <span className="text-xs text-muted-foreground ml-2">
-                      {chat.onlineCount} онлайн
+                      {t.chatsExtra.onlineCount.replace('{count}', String(chat.onlineCount))}
                     </span>
                   )}
                 </div>
@@ -153,7 +162,7 @@ export function ChatsList() {
                   <div className="text-xs text-muted-foreground">
                     {formatDistanceToNow(new Date(chat.updatedAt), { 
                       addSuffix: true, 
-                      locale: ru 
+                      locale: getDateFnsLocale(language) 
                     })}
                   </div>
                 )}

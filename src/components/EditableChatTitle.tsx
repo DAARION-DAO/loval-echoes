@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/lib/i18n';
 
 interface EditableChatTitleProps {
   chatId: string;
@@ -22,6 +23,7 @@ export const EditableChatTitle = ({
   onPin,
   className 
 }: EditableChatTitleProps) => {
+  const { t } = useTranslation();
   const [isEditing, setIsEditing] = useState(false);
   const [newName, setNewName] = useState(currentName);
   const [isLoading, setIsLoading] = useState(false);
@@ -39,14 +41,14 @@ export const EditableChatTitle = ({
       await onRename(chatId, newName.trim());
       setIsEditing(false);
       toast({
-        title: 'Название изменено',
-        description: 'Название чата успешно обновлено',
+        title: t.chats.renameSuccessTitle,
+        description: t.chats.renameSuccessDesc,
       });
     } catch (error) {
       console.error('Error renaming chat:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось изменить название чата',
+        title: t.chatsExtra.error,
+        description: t.chatSidebar.renameErrorDesc,
         variant: 'destructive',
       });
       setNewName(currentName);
@@ -67,16 +69,16 @@ export const EditableChatTitle = ({
       setIsLoading(true);
       await onPin(chatId, !isPinned);
       toast({
-        title: isPinned ? 'Чат откреплен' : 'Чат закреплен',
+        title: isPinned ? t.chatsExtra.unpinSuccess : t.chatsExtra.pinSuccess,
         description: isPinned 
-          ? 'Чат перемещен в общий список' 
-          : 'Чат закреплен в верхней части списка',
+          ? t.chatsExtra.unpinDesc 
+          : t.chatsExtra.pinDesc,
       });
     } catch (error) {
       console.error('Error pinning chat:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось изменить статус закрепления',
+        title: t.chatsExtra.error,
+        description: t.chatsExtra.pinError,
         variant: 'destructive',
       });
     } finally {
@@ -139,7 +141,7 @@ export const EditableChatTitle = ({
             onClick={handlePin}
             disabled={isLoading}
             className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
-            title={isPinned ? 'Открепить чат' : 'Закрепить чат'}
+            title={isPinned ? t.chatsExtra.unpinTooltip : t.chatsExtra.pinTooltip}
           >
             {isPinned ? <PinOff className="h-3 w-3" /> : <Pin className="h-3 w-3" />}
           </Button>
@@ -151,7 +153,7 @@ export const EditableChatTitle = ({
           onClick={() => setIsEditing(true)}
           disabled={isLoading}
           className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
-          title="Редактировать название"
+          title={t.chats.rename}
         >
           <Edit3 className="h-3 w-3" />
         </Button>

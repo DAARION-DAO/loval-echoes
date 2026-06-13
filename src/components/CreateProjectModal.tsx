@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from "@/integrations/supabase/client";
+import { useTranslation } from '@/lib/i18n';
 
 interface CreateProjectModalProps {
   open: boolean;
@@ -14,6 +15,7 @@ interface CreateProjectModalProps {
 }
 
 export function CreateProjectModal({ open, onOpenChange, onProjectCreated }: CreateProjectModalProps) {
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [loading, setLoading] = useState(false);
@@ -22,8 +24,8 @@ export function CreateProjectModal({ open, onOpenChange, onProjectCreated }: Cre
   const handleCreate = async () => {
     if (!name.trim()) {
       toast({
-        title: "Ошибка",
-        description: "Введите название проекта",
+        title: t.error,
+        description: t.projects.titleRequired,
         variant: "destructive",
       });
       return;
@@ -46,8 +48,8 @@ export function CreateProjectModal({ open, onOpenChange, onProjectCreated }: Cre
       const { project } = response.data;
       
       toast({
-        title: "Успех",
-        description: "Проект создан успешно",
+        title: t.success,
+        description: t.projects.successCreate,
       });
 
       // Reset form
@@ -63,8 +65,8 @@ export function CreateProjectModal({ open, onOpenChange, onProjectCreated }: Cre
     } catch (error) {
       console.error('Error creating project:', error);
       toast({
-        title: "Ошибка",
-        description: "Не удалось создать проект",
+        title: t.error,
+        description: t.projects.createError,
         variant: "destructive",
       });
     } finally {
@@ -76,31 +78,31 @@ export function CreateProjectModal({ open, onOpenChange, onProjectCreated }: Cre
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Создать проект</DialogTitle>
+          <DialogTitle>{t.projects.createModalTitle}</DialogTitle>
           <DialogDescription>
-            Создайте новый проект для совместной работы с командой
+            {t.projects.createModalDesc}
           </DialogDescription>
         </DialogHeader>
         
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
-            <Label htmlFor="name">Название проекта</Label>
+            <Label htmlFor="name">{t.projects.labelName}</Label>
             <Input
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Введите название проекта"
+              placeholder={t.projects.placeholderName}
               maxLength={100}
             />
           </div>
           
           <div className="grid gap-2">
-            <Label htmlFor="description">Описание (необязательно)</Label>
+            <Label htmlFor="description">{t.projects.labelDesc}</Label>
             <Textarea
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Краткое описание проекта"
+              placeholder={t.projects.placeholderDesc}
               rows={3}
               maxLength={500}
             />
@@ -109,10 +111,10 @@ export function CreateProjectModal({ open, onOpenChange, onProjectCreated }: Cre
         
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
-            Отмена
+            {t.projects.cancelBtn}
           </Button>
           <Button onClick={handleCreate} disabled={loading}>
-            {loading ? 'Создание...' : 'Создать проект'}
+            {loading ? t.projects.creatingBtn : t.projects.createBtn}
           </Button>
         </DialogFooter>
       </DialogContent>

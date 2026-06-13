@@ -9,8 +9,10 @@ import {
 } from '@/components/ui/popover';
 import { useNewsNotifications } from '@/hooks/useNewsNotifications';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from '@/lib/i18n';
 
 export const NewsNotificationsPopover = () => {
+  const { t, language } = useTranslation();
   const { 
     notifications, 
     unreadCount, 
@@ -34,11 +36,13 @@ export const NewsNotificationsPopover = () => {
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMins < 1) return 'только что';
-    if (diffMins < 60) return `${diffMins} мин назад`;
-    if (diffHours < 24) return `${diffHours} ч назад`;
-    if (diffDays < 7) return `${diffDays} д назад`;
-    return date.toLocaleDateString('ru-RU');
+    if (diffMins < 1) return t.notifications.justNow;
+    if (diffMins < 60) return t.notifications.minsAgo.replace('{count}', String(diffMins));
+    if (diffHours < 24) return t.notifications.hoursAgo.replace('{count}', String(diffHours));
+    if (diffDays < 7) return t.notifications.daysAgo.replace('{count}', String(diffDays));
+    
+    const dateLocale = language === 'uk' ? 'uk-UA' : language === 'es' ? 'es-ES' : language === 'ru' ? 'ru-RU' : 'en-US';
+    return date.toLocaleDateString(dateLocale);
   };
 
   return (
@@ -59,7 +63,7 @@ export const NewsNotificationsPopover = () => {
       <PopoverContent className="w-80 p-0" align="end">
         <div className="flex flex-col gap-2 p-4 border-b">
           <div className="flex items-center justify-between">
-            <h3 className="font-semibold">Уведомления</h3>
+            <h3 className="font-semibold">{t.notifications.title}</h3>
             {unreadCount > 0 && (
               <Button
                 variant="ghost"
@@ -67,7 +71,7 @@ export const NewsNotificationsPopover = () => {
                 onClick={markAllAsRead}
                 className="text-xs h-7"
               >
-                Отметить все
+                {t.notifications.markAllAsRead}
               </Button>
             )}
           </div>
@@ -81,21 +85,21 @@ export const NewsNotificationsPopover = () => {
               className="w-full text-xs"
             >
               <Bell className="h-3 w-3 mr-2" />
-              Включить push-уведомления
+              {t.notifications.enablePush}
             </Button>
           )}
           
           {pushEnabled && (
             <div className="text-xs text-muted-foreground flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-green-500" />
-              Push-уведомления включены
+              {t.notifications.pushEnabled}
             </div>
           )}
         </div>
         <ScrollArea className="h-[400px]">
           {notifications.length === 0 ? (
             <div className="p-8 text-center text-sm text-muted-foreground">
-              Нет уведомлений
+              {t.notifications.noNotifications}
             </div>
           ) : (
             <div className="divide-y">

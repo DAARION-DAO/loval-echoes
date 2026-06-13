@@ -26,6 +26,7 @@ import { difyClient, type DifyMessage } from '@/utils/difyClient';
 import { supabase } from '@/integrations/supabase/client';
 import { Avatar as CustomAvatar } from '@/components/Avatar';
 import { ReactionsBar } from '@/components/ReactionsBar';
+import { useTranslation } from '@/lib/i18n';
 
 const formatDuration = (seconds: number) => {
   const mins = Math.floor(seconds / 60);
@@ -58,6 +59,24 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   participantsReadTimes,
   onReplyInThread,
 }) => {
+  const { t, language } = useTranslation();
+  const localeStr = language === 'ru' ? 'ru-RU' : (language === 'uk' ? 'uk-UA' : (language === 'es' ? 'es-ES' : 'en-US'));
+
+  const getReplyText = (count: number) => {
+    if (language === 'en' || language === 'es') {
+      return count === 1 ? t.messages.reply1 : t.messages.reply24;
+    }
+    const mod10 = count % 10;
+    const mod100 = count % 100;
+    if (mod10 === 1 && mod100 !== 11) {
+      return t.messages.reply1;
+    } else if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) {
+      return t.messages.reply24;
+    } else {
+      return t.messages.reply5;
+    }
+  };
+
   const { toast } = useToast();
   const [isPlaying, setIsPlaying] = useState(false);
   const [showActions, setShowActions] = useState(false);
@@ -202,18 +221,18 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   const handleCopyCode = useCallback((code: string) => {
     navigator.clipboard.writeText(code);
     toast({
-      title: 'Код скопирован',
-      description: 'Текст скопирован в буфер обмена',
+      title: t.messages.copySuccessTitle,
+      description: t.messages.copySuccessDesc,
     });
-  }, [toast]);
+  }, [toast, t]);
 
   const handleFeedback = useCallback(async (rating: 'like' | 'dislike') => {
     try {
       // Используем dify_message_id для feedback
       if (!message.dify_message_id) {
         toast({
-          title: 'Невозможно отправить отзыв',
-          description: 'Это сообщение не поддерживает обратную связь',
+          title: t.messages.feedbackDisabledTitle,
+          description: t.messages.feedbackDisabledDesc,
           variant: 'destructive',
         });
         return;
@@ -221,24 +240,24 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
       
       await difyClient.sendFeedback(message.dify_message_id, rating);
       toast({
-        title: 'Обратная связь отправлена',
-        description: 'Спасибо за оценку!',
+        title: t.messages.feedbackSuccessTitle,
+        description: t.messages.feedbackSuccessDesc,
       });
     } catch (error) {
       console.error('Error sending feedback:', error);
       toast({
-        title: 'Ошибка',
-        description: error instanceof Error ? error.message : 'Не удалось отправить обратную связь',
+        title: t.messages.feedbackErrorTitle,
+        description: error instanceof Error ? error.message : t.messages.feedbackErrorDesc,
         variant: 'destructive',
       });
     }
-  }, [message.dify_message_id, toast]);
+  }, [message.dify_message_id, toast, t]);
 
   // TTS now handled automatically through Dify stream - Play button disabled
   const handlePlayAudio = async () => {
     toast({
-      title: 'Озвучивание отключено',
-      description: 'Включите голосовой режим в настройках для автоматического озвучивания ответов',
+      title: t.messages.voiceDisabledTitle,
+      description: t.messages.voiceDisabledDesc,
     });
   };
 
@@ -249,14 +268,14 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
       await onDelete(message.id);
       setIsDeleted(true);
       toast({
-        title: 'Сообщение удалено',
-        description: 'Сообщение было успешно удалено',
+        title: t.messages.deleteSuccessTitle,
+        description: t.messages.deleteSuccessDesc,
       });
     } catch (error) {
       console.error('Error deleting message:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось удалить сообщение',
+        title: t.messages.deleteErrorTitle,
+        description: t.messages.deleteErrorDesc,
         variant: 'destructive',
       });
     }
@@ -290,7 +309,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
               className="h-6 px-2 text-xs"
             >
               <Copy className="h-3 w-3 mr-1" />
-              Копировать
+              {t.messages.copyBtn}
             </Button>
           </div>
           <pre className="p-3 text-sm font-mono overflow-x-auto">
@@ -358,10 +377,10 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
           {/* Компактный заголовок */}
           <div className={cn('flex items-center gap-2 mb-0.5', isAgent ? 'justify-start' : 'justify-end')}>
             <span className="font-medium text-[11px] text-muted-foreground">
-              {senderName || (isSystem ? 'Система' : (isAgent ? 'Дух Общины' : 'Пользователь'))}
+              {senderName || (isSystem ? t.messages.systemSender : (isAgent ? t.messages.spiritSender : t.messages.userSender))}
             </span>
             <span className="text-[10px] text-muted-foreground/60 flex items-center gap-1">
-              {new Date(message.created_at).toLocaleTimeString('ru-RU', { 
+              {new Date(message.created_at).toLocaleTimeString(localeStr, { 
                 hour: '2-digit', 
                 minute: '2-digit' 
               })}
@@ -383,7 +402,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                 variant="ghost"
                 onClick={handleDeleteMessage}
                 className="h-3 w-3 p-0 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                title="Удалить сообщение"
+                title={t.messages.deleteTooltip}
               >
                 <Trash2 className="h-2 w-2" />
               </Button>
@@ -393,7 +412,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
           {/* Компактный текст сообщения */}
           <div className={cn('prose prose-sm max-w-none', isAgent ? 'text-left' : 'text-right')}>
             {isDeleted ? (
-              <em className="text-muted-foreground text-sm">Сообщение удалено</em>
+              <em className="text-muted-foreground text-sm">{t.messages.deletedText}</em>
             ) : (
               <div className="text-foreground leading-tight text-sm">
                 {message.message_type === 'voice' ? (
@@ -418,7 +437,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                         <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
                           <span>
                             {!message.file_url
-                              ? 'Файл недоступен'
+                              ? t.messages.fileUnavailable
                               : voicePlaying && voiceAudioRef.current
                                 ? formatDuration(voiceAudioRef.current.currentTime)
                                 : '0:00'}
@@ -437,7 +456,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                           className="p-0 h-auto text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
                         >
                           <MessageSquare className="h-3 w-3" />
-                          {showTranscript ? 'Скрыть транскрипцию' : 'Показать транскрипцию'}
+                          {showTranscript ? t.messages.hideTranscript : t.messages.showTranscript}
                         </Button>
                         {showTranscript && (
                           <p className="mt-1 text-xs italic text-foreground text-left whitespace-pre-wrap">
@@ -457,7 +476,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
           {/* Источники */}
           {!isDeleted && message.retriever_resources && message.retriever_resources.length > 0 && (
             <div className="space-y-2 mt-3">
-              <h4 className="text-xs font-medium text-muted-foreground">Источники</h4>
+              <h4 className="text-xs font-medium text-muted-foreground">{t.messages.sourcesTitle}</h4>
               <div className="space-y-2">
                 {message.retriever_resources.map((source, index) => (
                   <div key={index} className="p-3 rounded-lg bg-muted/20 text-xs">
@@ -481,13 +500,13 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
             <div className="p-2 rounded-lg bg-muted/10 text-xs text-muted-foreground mt-3">
               <div className="flex items-center gap-4">
                 {message.metadata.usage.total_tokens && (
-                  <span>Токены: {message.metadata.usage.total_tokens}</span>
+                  <span>{t.messages.tokensCount.replace('{count}', String(message.metadata.usage.total_tokens))}</span>
                 )}
                 {message.metadata.usage.latency && (
-                  <span>Задержка: {message.metadata.usage.latency}</span>
+                  <span>{t.messages.latency.replace('{count}', String(message.metadata.usage.latency))}</span>
                 )}
                 {message.metadata.usage.total_price && (
-                  <span>Стоимость: ${message.metadata.usage.total_price}</span>
+                  <span>{t.messages.cost.replace('{count}', String(message.metadata.usage.total_price))}</span>
                 )}
               </div>
             </div>
@@ -503,7 +522,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                   variant="ghost"
                   onClick={() => onReplyInThread(message)}
                   className="h-5 w-5 p-0 text-muted-foreground hover:text-foreground hover:bg-muted/30 rounded"
-                  title="Ответить в ветке"
+                  title={t.messages.replyTooltip}
                 >
                   <MessageSquare className="h-3 w-3" />
                 </Button>
@@ -517,7 +536,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                     variant="ghost"
                     onClick={handlePlayAudio}
                     className="h-6 w-6 p-0 text-muted-foreground hover:text-primary hover:bg-primary/10"
-                    title={isPlaying ? 'Остановить' : 'Озвучить текст'}
+                    title={isPlaying ? t.messages.stopTtsTooltip : t.messages.startTtsTooltip}
                   >
                     {isPlaying ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
                   </Button>
@@ -528,7 +547,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                       variant="ghost"
                       onClick={() => onFork(message.id)}
                       className="h-5 w-5 p-0 text-muted-foreground hover:text-foreground"
-                      title="Создать ветку"
+                      title={t.messages.createThreadTooltip}
                     >
                       <GitBranch className="h-2.5 w-2.5" />
                     </Button>
@@ -551,7 +570,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                 className="h-auto p-0 text-xs text-primary flex items-center gap-1 hover:no-underline"
               >
                 <MessageSquare className="h-3 w-3" />
-                {replyCount} {replyCount === 1 ? 'ответ' : (replyCount < 5 ? 'ответа' : 'ответов')}
+                {replyCount} {getReplyText(replyCount)}
               </Button>
             </div>
           )}

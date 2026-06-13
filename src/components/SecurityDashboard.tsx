@@ -6,6 +6,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Shield, AlertTriangle, Activity, Users, FileText, Eye } from 'lucide-react';
+import { useTranslation } from '@/lib/i18n';
 
 interface SecurityEvent {
   id: string;
@@ -26,6 +27,9 @@ interface SecurityStats {
 }
 
 export const SecurityDashboard = () => {
+  const { t, language } = useTranslation();
+  const localeStr = language === 'ru' ? 'ru-RU' : (language === 'uk' ? 'uk-UA' : (language === 'es' ? 'es-ES' : 'en-US'));
+
   const [events, setEvents] = useState<SecurityEvent[]>([]);
   const [stats, setStats] = useState<SecurityStats>({
     totalEvents: 0,
@@ -112,8 +116,8 @@ export const SecurityDashboard = () => {
     } catch (error) {
       console.error('Error loading security data:', error);
       toast({
-        title: 'Ошибка загрузки данных безопасности',
-        description: 'Не удалось загрузить информацию о безопасности',
+        title: t.security.loadErrorTitle,
+        description: t.security.loadErrorDesc,
         variant: 'destructive'
       });
     } finally {
@@ -143,19 +147,19 @@ export const SecurityDashboard = () => {
     const data = event.event_data;
     
     if (eventType.includes('auth_login_success')) {
-      return `Успешный вход пользователя ${data?.email || 'неизвестно'}`;
+      return t.security.successLoginLog.replace('{email}', String(data?.email || t.security.unknownUser));
     }
     if (eventType.includes('auth_login_failed')) {
-      return `Неудачная попытка входа ${data?.email || 'неизвестно'}`;
+      return t.security.failedLoginLog.replace('{email}', String(data?.email || t.security.unknownUser));
     }
     if (eventType.includes('auth_signup_success')) {
-      return `Успешная регистрация ${data?.email || 'неизвестно'}`;
+      return t.security.successRegisterLog.replace('{email}', String(data?.email || t.security.unknownUser));
     }
     if (eventType.includes('rate_limit')) {
-      return `Превышен лимит запросов для действия: ${data?.action || 'неизвестно'}`;
+      return t.security.rateLimitLog.replace('{action}', String(data?.action || t.security.unknownUser));
     }
     if (eventType.includes('file_upload')) {
-      return `Загрузка файла: ${data?.original_filename || 'неизвестно'}`;
+      return t.security.fileUploadLog.replace('{file}', String(data?.original_filename || t.security.unknownUser));
     }
     
     return eventType.replace(/_/g, ' ');
@@ -166,7 +170,7 @@ export const SecurityDashboard = () => {
       <div className="flex items-center justify-center p-8">
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-          <span>Загрузка данных безопасности...</span>
+          <span>{t.security.loading}</span>
         </div>
       </div>
     );
@@ -176,34 +180,34 @@ export const SecurityDashboard = () => {
     <div className="space-y-6">
       <div className="flex items-center gap-2">
         <Shield className="w-6 h-6 text-primary" />
-        <h2 className="text-2xl font-bold">Панель безопасности</h2>
+        <h2 className="text-2xl font-bold">{t.security.panelTitle}</h2>
       </div>
 
       {/* Security Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Всего событий</CardTitle>
+            <CardTitle className="text-sm font-medium">{t.security.totalEvents}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalEvents}</div>
-            <p className="text-xs text-muted-foreground">За последние 24 часа</p>
+            <p className="text-xs text-muted-foreground">{t.security.last24h}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Критические</CardTitle>
+            <CardTitle className="text-sm font-medium">{t.security.criticalEvents}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-destructive">{stats.criticalEvents}</div>
-            <p className="text-xs text-muted-foreground">Требуют внимания</p>
+            <p className="text-xs text-muted-foreground">{t.security.requireAttention}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Блокировки</CardTitle>
+            <CardTitle className="text-sm font-medium">{t.security.blocks}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-orange-500">{stats.rateLimitEvents}</div>
@@ -213,21 +217,21 @@ export const SecurityDashboard = () => {
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Неудачные входы</CardTitle>
+            <CardTitle className="text-sm font-medium">{t.security.failedLogins}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-yellow-500">{stats.authFailures}</div>
-            <p className="text-xs text-muted-foreground">Попытки взлома</p>
+            <p className="text-xs text-muted-foreground">{t.security.hackAttempts}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Загрузки файлов</CardTitle>
+            <CardTitle className="text-sm font-medium">{t.security.fileUploads}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-500">{stats.fileUploads}</div>
-            <p className="text-xs text-muted-foreground">Проверенные файлы</p>
+            <p className="text-xs text-muted-foreground">{t.security.verifiedFiles}</p>
           </CardContent>
         </Card>
       </div>
@@ -237,8 +241,7 @@ export const SecurityDashboard = () => {
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
-            Обнаружено {stats.criticalEvents} критических событий безопасности за последние 24 часа. 
-            Рекомендуется немедленная проверка.
+            {t.security.criticalWarning.replace('{count}', String(stats.criticalEvents))}
           </AlertDescription>
         </Alert>
       )}
@@ -248,16 +251,16 @@ export const SecurityDashboard = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Eye className="w-5 h-5" />
-            Последние события безопасности
+            {t.security.recentEventsTitle}
           </CardTitle>
           <CardDescription>
-            События за последние 24 часа (максимум 50)
+            {t.security.max50Events}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {events.length === 0 ? (
             <p className="text-muted-foreground text-center py-4">
-              Нет событий безопасности за последние 24 часа
+              {t.security.noEvents}
             </p>
           ) : (
             <div className="space-y-3">
@@ -272,7 +275,7 @@ export const SecurityDashboard = () => {
                         {event.event_type}
                       </Badge>
                       <span className="text-xs text-muted-foreground">
-                        {new Date(event.created_at).toLocaleString('ru-RU')}
+                        {new Date(event.created_at).toLocaleString(localeStr)}
                       </span>
                     </div>
                     <p className="text-sm">{formatEventDescription(event)}</p>
@@ -293,7 +296,7 @@ export const SecurityDashboard = () => {
       <div className="flex justify-center">
         <Button onClick={loadSecurityData} variant="outline">
           <Activity className="w-4 h-4 mr-2" />
-          Обновить данные
+          {t.security.refreshBtn}
         </Button>
       </div>
     </div>

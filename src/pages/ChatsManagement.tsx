@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useTranslation } from '@/lib/i18n';
 
 interface Chat {
   id: string;
@@ -27,6 +28,7 @@ interface Chat {
 export const ChatsManagement = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t, language } = useTranslation();
   
   const [chats, setChats] = useState<Chat[]>([]);
   const [selectedChats, setSelectedChats] = useState<string[]>([]);
@@ -81,7 +83,7 @@ export const ChatsManagement = () => {
             ...chat,
             status: chat.status as 'active' | 'archived' | 'deleted',
             messageCount: messageCount || 0,
-            lastMessage: lastMessageData?.content?.substring(0, 50) + '...' || 'Нет сообщений',
+            lastMessage: lastMessageData?.content?.substring(0, 50) + '...' || t.chatsManagement.noMessages,
           };
         })
       );
@@ -90,8 +92,8 @@ export const ChatsManagement = () => {
     } catch (error) {
       console.error('Error loading chats:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось загрузить список чатов',
+        title: t.chatsManagement.loadErrorTitle,
+        description: t.chatsManagement.loadErrorDesc,
         variant: 'destructive',
       });
     } finally {
@@ -131,8 +133,8 @@ export const ChatsManagement = () => {
       if (error) throw error;
 
       toast({
-        title: archive ? 'Чаты архивированы' : 'Чаты восстановлены',
-        description: `${chatIds.length} чат(ов) ${archive ? 'перемещены в архив' : 'восстановлены из архива'}`,
+        title: archive ? t.chatsManagement.chatsArchivedTitle : t.chatsManagement.chatsRestoredTitle,
+        description: (archive ? t.chatsManagement.chatsArchivedDesc : t.chatsManagement.chatsRestoredDesc).replace('{count}', chatIds.length.toString()),
       });
 
       setSelectedChats([]);
@@ -140,8 +142,8 @@ export const ChatsManagement = () => {
     } catch (error) {
       console.error('Error archiving chats:', error);
       toast({
-        title: 'Ошибка',
-        description: `Не удалось ${archive ? 'архивировать' : 'восстановить'} чаты`,
+        title: t.chatsManagement.archiveErrorTitle,
+        description: archive ? t.chatsManagement.archiveErrorDesc : t.chatsManagement.restoreErrorDesc,
         variant: 'destructive',
       });
     }
@@ -158,8 +160,8 @@ export const ChatsManagement = () => {
       if (error) throw error;
 
       toast({
-        title: 'Чаты удалены',
-        description: `${chatIds.length} чат(ов) перемещены в корзину`,
+        title: t.chatsManagement.chatsDeletedTitle,
+        description: t.chatsManagement.chatsDeletedDesc.replace('{count}', chatIds.length.toString()),
       });
 
       setSelectedChats([]);
@@ -167,8 +169,8 @@ export const ChatsManagement = () => {
     } catch (error) {
       console.error('Error deleting chats:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось удалить выбранные чаты',
+        title: t.chatsManagement.deleteErrorTitle,
+        description: t.chatsManagement.deleteErrorDesc,
         variant: 'destructive',
       });
     }
@@ -180,10 +182,10 @@ export const ChatsManagement = () => {
     const diffTime = Math.abs(now.getTime() - date.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    if (diffDays === 1) return 'Сегодня';
-    if (diffDays === 2) return 'Вчера';
-    if (diffDays <= 7) return `${diffDays} дн. назад`;
-    return date.toLocaleDateString('ru-RU');
+    if (diffDays === 1) return t.chatsExtra.today;
+    if (diffDays === 2) return t.chatsExtra.yesterday;
+    if (diffDays <= 7) return t.chatsExtra.daysAgo.replace('{days}', (diffDays - 1).toString());
+    return date.toLocaleDateString(language === 'uk' ? 'uk-UA' : language === 'es' ? 'es-ES' : language === 'en' ? 'en-US' : 'ru-RU');
   };
 
   if (loading) {
@@ -191,7 +193,7 @@ export const ChatsManagement = () => {
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">Загрузка чатов...</p>
+          <p className="text-muted-foreground">{t.chatsManagement.loadingChats}</p>
         </div>
       </div>
     );
@@ -209,20 +211,20 @@ export const ChatsManagement = () => {
               onClick={() => navigate('/chats')}
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Назад к чатам
+              {t.chatsManagement.backToChatsBtn}
             </Button>
             <div>
               <h1 className="text-xl font-semibold flex items-center gap-2">
                 <Settings className="h-5 w-5" />
-                Управление чатами
+                {t.chatsManagement.pageTitle}
               </h1>
               <p className="text-sm text-muted-foreground">
-                Архивирование и удаление чатов
+                {t.chatsManagement.pageSubtitle}
               </p>
             </div>
           </div>
           <Badge variant="outline">
-            {chats.length} всего чатов
+            {t.chatsManagement.totalChatsCount.replace('{count}', chats.length.toString())}
           </Badge>
         </div>
       </div>
@@ -233,7 +235,7 @@ export const ChatsManagement = () => {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Поиск по названию чата..."
+              placeholder={t.chatsManagement.searchPlaceholder}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
@@ -244,11 +246,11 @@ export const ChatsManagement = () => {
             <TabsList>
               <TabsTrigger value="active">
                 <MessageSquare className="h-4 w-4 mr-2" />
-                Активные ({chats.filter(c => c.status === 'active').length})
+                {t.chatsManagement.tabActive.replace('{count}', chats.filter(c => c.status === 'active').length.toString())}
               </TabsTrigger>
               <TabsTrigger value="archived">
                 <Archive className="h-4 w-4 mr-2" />
-                Архивные ({chats.filter(c => c.status === 'archived').length})
+                {t.chatsManagement.tabArchived.replace('{count}', chats.filter(c => c.status === 'archived').length.toString())}
               </TabsTrigger>
             </TabsList>
 
@@ -265,8 +267,8 @@ export const ChatsManagement = () => {
                         />
                         <span className="text-sm">
                           {selectedChats.length > 0
-                            ? `Выбрано ${selectedChats.length} из ${filteredChats.length}`
-                            : `Выбрать все (${filteredChats.length})`}
+                            ? t.chatsManagement.selectedChatsCount.replace('{selected}', selectedChats.length.toString()).replace('{total}', filteredChats.length.toString())
+                            : t.chatsManagement.selectAllChats.replace('{count}', filteredChats.length.toString())}
                         </span>
                       </div>
 
@@ -279,7 +281,7 @@ export const ChatsManagement = () => {
                               onClick={() => archiveChats(selectedChats, true)}
                             >
                               <Archive className="h-4 w-4 mr-2" />
-                              В архив
+                              {t.chatsManagement.btnToArchive}
                             </Button>
                           ) : (
                             <>
@@ -289,31 +291,31 @@ export const ChatsManagement = () => {
                                 onClick={() => archiveChats(selectedChats, false)}
                               >
                                 <RotateCcw className="h-4 w-4 mr-2" />
-                                Восстановить
+                                {t.chatsManagement.btnRestore}
                               </Button>
 
                               <AlertDialog>
                                 <AlertDialogTrigger asChild>
                                   <Button variant="destructive" size="sm">
                                     <Trash2 className="h-4 w-4 mr-2" />
-                                    Удалить
+                                    {t.chatsManagement.btnDelete}
                                   </Button>
                                 </AlertDialogTrigger>
                                 <AlertDialogContent>
                                   <AlertDialogHeader>
-                                    <AlertDialogTitle>Удалить выбранные чаты?</AlertDialogTitle>
+                                    <AlertDialogTitle>{t.chatsManagement.deleteConfirmTitle}</AlertDialogTitle>
                                     <AlertDialogDescription>
-                                      Это действие необратимо. Будут удалены {selectedChats.length} чат(ов) и все их сообщения.
-                                      Все действия записываются в журнал.
+                                      {t.chatsManagement.deleteConfirmDesc.replace('{count}', selectedChats.length.toString())}
+                                      {" "}{t.chatsManagement.deleteLogNote}
                                     </AlertDialogDescription>
                                   </AlertDialogHeader>
                                   <AlertDialogFooter>
-                                    <AlertDialogCancel>Отмена</AlertDialogCancel>
+                                    <AlertDialogCancel>{t.chatsManagement.cancelBtn}</AlertDialogCancel>
                                     <AlertDialogAction
                                       onClick={() => deleteChats(selectedChats)}
                                       className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                     >
-                                      Удалить навсегда
+                                      {t.chatsManagement.deleteForeverBtn}
                                     </AlertDialogAction>
                                   </AlertDialogFooter>
                                 </AlertDialogContent>
@@ -335,10 +337,10 @@ export const ChatsManagement = () => {
                       <CardContent className="pt-8 pb-8 text-center">
                         <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                         <h3 className="text-lg font-medium mb-2">
-                          {searchQuery ? 'Чаты не найдены' : activeTab === 'active' ? 'Нет активных чатов' : 'Нет архивных чатов'}
+                          {searchQuery ? t.chatsManagement.noChatsFound : activeTab === 'active' ? t.chatsManagement.noActiveChats : t.chatsManagement.noArchivedChats}
                         </h3>
                         <p className="text-muted-foreground">
-                          {searchQuery ? 'Попробуйте изменить поисковый запрос' : 'Создайте новый чат для начала общения'}
+                          {searchQuery ? t.chatsManagement.searchEmptyStateDesc : t.chatsManagement.activeEmptyStateDesc}
                         </p>
                       </CardContent>
                     </Card>
@@ -356,15 +358,15 @@ export const ChatsManagement = () => {
                               <div className="flex items-center justify-between mb-2">
                                 <h3 className="font-medium truncate">{chat.name}</h3>
                                 <Badge variant="outline" className="text-xs">
-                                  {chat.messageCount} сообщений
+                                  {t.chatsManagement.messagesCount.replace('{count}', chat.messageCount?.toString() || '0')}
                                 </Badge>
                               </div>
                               <p className="text-sm text-muted-foreground truncate mb-2">
                                 {chat.lastMessage}
                               </p>
                               <div className="flex items-center justify-between text-xs text-muted-foreground">
-                                <span>Создан: {formatDate(chat.created_at)}</span>
-                                <span>Обновлен: {formatDate(chat.updated_at)}</span>
+                                <span>{t.chatsManagement.chatCreatedDate.replace('{date}', formatDate(chat.created_at))}</span>
+                                <span>{t.chatsManagement.chatUpdatedDate.replace('{date}', formatDate(chat.updated_at))}</span>
                               </div>
                             </div>
 
@@ -373,7 +375,7 @@ export const ChatsManagement = () => {
                               size="sm"
                               onClick={() => navigate(`/chats/${chat.id}`)}
                             >
-                              Открыть
+                              {t.chatsManagement.btnOpenChat}
                             </Button>
                           </div>
                         </CardContent>

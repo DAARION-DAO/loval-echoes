@@ -1,6 +1,7 @@
 import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useTranslation } from '@/lib/i18n';
 
 const LS_KEY = 'zhos-active-community-id';
 
@@ -35,6 +36,7 @@ const ActiveCommunityContext = createContext<ActiveCommunityState | undefined>(u
 
 export const ActiveCommunityProvider = ({ children }: { children: ReactNode }) => {
   const { user, loading: authLoading } = useAuth();
+  const { t } = useTranslation();
   const [memberships, setMemberships] = useState<CommunityMembership[]>([]);
   const [activeCommunityId, setActiveCommunityIdState] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -76,11 +78,11 @@ export const ActiveCommunityProvider = ({ children }: { children: ReactNode }) =
       }
     } catch (err: any) {
       console.error('useActiveCommunity error:', err);
-      setError(err?.message || 'Не вдалося завантажити спільноти');
+      setError(err?.message || t.errors.loadCommunitiesError);
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, t]);
 
   useEffect(() => {
     if (authLoading) return;

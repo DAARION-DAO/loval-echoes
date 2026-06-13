@@ -4,6 +4,7 @@ import { useAuth } from './useAuth';
 import { useToast } from './use-toast';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { useTranslation } from '@/lib/i18n';
 
 interface NewsNotification {
   id: string;
@@ -22,25 +23,26 @@ export function useNewsNotifications() {
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   // Регистрация Service Worker
   const registerServiceWorker = useCallback(async () => {
     if (!('serviceWorker' in navigator)) {
-      console.log('Service Workers не поддерживаются');
+      console.log('Service Workers not supported');
       return null;
     }
 
     try {
       const registration = await navigator.serviceWorker.register('/sw.js');
-      console.log('Service Worker зарегистрирован:', registration.scope);
+      console.log('Service Worker registered:', registration.scope);
       
-      // Ждем когда SW станет активным
+      // Wait until SW is active
       await navigator.serviceWorker.ready;
       setServiceWorkerReady(true);
       
       return registration;
     } catch (error) {
-      console.error('Ошибка регистрации Service Worker:', error);
+      console.error('Service Worker registration error:', error);
       return null;
     }
   }, []);
@@ -65,7 +67,7 @@ export function useNewsNotifications() {
         });
       }
 
-      // Сохраняем подписку на сервере
+      // Save subscription on server
       const deviceId = localStorage.getItem('deviceId') || crypto.randomUUID();
       localStorage.setItem('deviceId', deviceId);
 
@@ -81,21 +83,21 @@ export function useNewsNotifications() {
 
       setPushEnabled(true);
       toast({
-        title: '✅ Push-уведомления включены',
-        description: 'Вы будете получать уведомления даже при закрытой вкладке',
+        title: t.notifications.pushEnabledTitle,
+        description: t.notifications.pushEnabledDesc,
       });
 
       return true;
     } catch (error: unknown) {
-      console.error('Ошибка подписки на push:', error);
+      console.error('Push subscription error:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось включить push-уведомления',
+        title: t.notifications.enablePushErrorTitle,
+        description: t.notifications.enablePushErrorDesc,
         variant: 'destructive',
       });
       return false;
     }
-  }, [user, toast]);
+  }, [user, toast, t]);
 
   // Helper для конвертации VAPID ключа
   const urlBase64ToUint8Array = (base64String: string): BufferSource => {
@@ -113,8 +115,8 @@ export function useNewsNotifications() {
   const requestPushPermission = async () => {
     if (!('Notification' in window)) {
       toast({
-        title: 'Не поддерживается',
-        description: 'Ваш браузер не поддерживает уведомления',
+        title: t.notifications.notSupportedTitle,
+        description: t.notifications.notSupportedDesc,
         variant: 'destructive',
       });
       return false;
@@ -125,32 +127,32 @@ export function useNewsNotifications() {
       
       if (permission !== 'granted') {
         toast({
-          title: 'Доступ запрещен',
-          description: 'Разрешите уведомления в настройках браузера',
+          title: t.notifications.permissionDeniedTitle,
+          description: t.notifications.permissionDeniedDesc,
           variant: 'destructive',
         });
         return false;
       }
 
-      // Регистрируем Service Worker
+      // Register Service Worker
       const registration = await registerServiceWorker();
       if (!registration) {
         toast({
-          title: 'Ошибка',
-          description: 'Не удалось зарегистрировать Service Worker',
+          title: t.notifications.swRegisterErrorTitle,
+          description: t.notifications.swRegisterErrorDesc,
           variant: 'destructive',
         });
         return false;
       }
 
-      // Подписываемся на push
+      // Subscribe to push
       return await subscribeToPush(registration);
       
     } catch (error: unknown) {
       console.error('Error requesting notification permission:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось включить уведомления',
+        title: t.notifications.generalErrorTitle,
+        description: t.notifications.generalErrorDesc,
         variant: 'destructive',
       });
       return false;
@@ -158,7 +160,7 @@ export function useNewsNotifications() {
   };
 
   // Show browser push notification
-  const showPushNotification = (title: string, message: string) => {
+  const showPushNotification = useCallback((title: string, message: string) => {
     if (!pushEnabled || Notification.permission !== 'granted') return;
 
     try {
@@ -182,7 +184,7 @@ export function useNewsNotifications() {
     } catch (error) {
       console.error('Error showing push notification:', error);
     }
-  };
+  }, [pushEnabled, navigate]);
 
   // Инициализация Service Worker при загрузке
   useEffect(() => {
@@ -242,13 +244,13 @@ export function useNewsNotifications() {
           
           // Show browser push notification first
           showPushNotification(
-            '📢 Новое срочное сообщение',
+            t.notifications.newUrgentMessage,
             newNotification.message
           );
 
           // Then show interactive toast with action button
           toast({
-            title: '📢 Новое срочное сообщение',
+            title: t.notifications.newUrgentMessage,
             description: newNotification.message,
             duration: 5000,
             action: (
@@ -257,7 +259,7 @@ export function useNewsNotifications() {
                 variant="outline"
                 onClick={() => navigate('/news')}
               >
-                Посмотреть
+                {t.notifications.viewBtn}
               </Button>
             )
           });
@@ -272,7 +274,7 @@ export function useNewsNotifications() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user]);
+  }, [user, t, toast, navigate, showPushNotification]);
 
   // Mark notification as read
   const markAsRead = async (notificationId: string) => {

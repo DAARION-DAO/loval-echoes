@@ -36,7 +36,7 @@ export const GlobalSearchDialog = ({
   onClose, 
   onNavigate 
 }: GlobalSearchDialogProps) => {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -177,12 +177,15 @@ export const GlobalSearchDialog = ({
           const mappedResults: SearchResult[] = fallbackData.map((msg: any) => ({
             id: msg.id,
             type: 'message',
-            title: msg.role === 'user' ? 'Сообщение' : 'Ответ Духа Общины',
+            title: msg.role === 'user' ? t.globalSearch.userMessage : t.globalSearch.spiritAnswer,
             content: msg.content,
-            timestamp: new Date(msg.created_at).toLocaleString('ru-RU', {
-              hour: '2-digit',
-              minute: '2-digit'
-            }),
+            timestamp: new Date(msg.created_at).toLocaleString(
+              language === 'ru' ? 'ru-RU' : (language === 'uk' ? 'uk-UA' : (language === 'es' ? 'es-ES' : 'en-US')),
+              {
+                hour: '2-digit',
+                minute: '2-digit'
+              }
+            ),
             chatName: msg.conversations?.name,
           }));
           setResults(mappedResults);
@@ -193,12 +196,15 @@ export const GlobalSearchDialog = ({
         const mappedResults: SearchResult[] = data.map((msg: any) => ({
           id: msg.id,
           type: 'message',
-          title: msg.role === 'user' ? 'Сообщение' : 'Ответ Духа Общины',
+          title: msg.role === 'user' ? t.globalSearch.userMessage : t.globalSearch.spiritAnswer,
           content: msg.content,
-          timestamp: new Date(msg.created_at).toLocaleString('ru-RU', {
-            hour: '2-digit',
-            minute: '2-digit'
-          }),
+          timestamp: new Date(msg.created_at).toLocaleString(
+            language === 'ru' ? 'ru-RU' : (language === 'uk' ? 'uk-UA' : (language === 'es' ? 'es-ES' : 'en-US')),
+            {
+              hour: '2-digit',
+              minute: '2-digit'
+            }
+          ),
           chatName: msg.conversations?.name,
         }));
         setResults(mappedResults);
@@ -270,15 +276,15 @@ export const GlobalSearchDialog = ({
   const getResultTypeLabel = (type: string) => {
     switch (type) {
       case 'chat':
-        return 'Чат';
+        return t.globalSearch.typeChat;
       case 'message':
-        return 'Сообщение';
+        return t.globalSearch.typeMessage;
       case 'project':
-        return 'Проект';
+        return t.globalSearch.typeProject;
       case 'user':
-        return 'Пользователь';
+        return t.globalSearch.typeUser;
       case 'file':
-        return 'Файл';
+        return t.globalSearch.typeFile;
       default:
         return '';
     }
@@ -315,14 +321,14 @@ export const GlobalSearchDialog = ({
 
         {/* Filters Section */}
         <div className="flex flex-wrap items-center gap-2 p-3 border-b bg-muted/10 text-xs">
-          <span className="text-muted-foreground">Фильтры:</span>
+          <span className="text-muted-foreground">{t.globalSearch.filtersLabel}</span>
           
           <select 
             value={filterChatId} 
             onChange={(e) => setFilterChatId(e.target.value)}
             className="bg-background border rounded px-2 py-1 text-xs text-foreground focus:outline-none max-w-[150px] truncate"
           >
-            <option value="all">Все чаты</option>
+            <option value="all">{t.globalSearch.allChats}</option>
             {conversations.map(conv => (
               <option key={conv.id} value={conv.id}>{conv.name}</option>
             ))}
@@ -333,7 +339,7 @@ export const GlobalSearchDialog = ({
             value={filterStartDate}
             onChange={(e) => setFilterStartDate(e.target.value)}
             className="bg-background border rounded px-2 py-1 text-xs text-foreground focus:outline-none"
-            placeholder="С"
+            placeholder={t.globalSearch.startDatePlaceholder}
           />
           
           <span className="text-muted-foreground">—</span>
@@ -343,7 +349,7 @@ export const GlobalSearchDialog = ({
             value={filterEndDate}
             onChange={(e) => setFilterEndDate(e.target.value)}
             className="bg-background border rounded px-2 py-1 text-xs text-foreground focus:outline-none"
-            placeholder="По"
+            placeholder={t.globalSearch.endDatePlaceholder}
           />
 
           {(filterChatId !== 'all' || filterStartDate || filterEndDate) && (
@@ -357,7 +363,7 @@ export const GlobalSearchDialog = ({
               }}
               className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
             >
-              Сбросить
+              {t.globalSearch.resetBtn}
             </Button>
           )}
         </div>
@@ -395,7 +401,7 @@ export const GlobalSearchDialog = ({
                       )}
                       {result.chatName && (
                         <div className="text-xs text-muted-foreground">
-                          в чате: {result.chatName}
+                          {t.globalSearch.inChat} {result.chatName}
                         </div>
                       )}
                     </div>
@@ -416,16 +422,16 @@ export const GlobalSearchDialog = ({
           ) : query.trim() ? (
             <div className="text-center p-8 text-muted-foreground">
               <Search className="h-8 w-8 mx-auto mb-2 opacity-50" />
-              <p>Ничего не найдено</p>
-              <p className="text-sm">Попробуйте изменить запрос</p>
+              <p>{t.globalSearch.nothingFound}</p>
+              <p className="text-sm">{t.globalSearch.tryAnotherQuery}</p>
             </div>
           ) : (
             <div className="text-center p-8 text-muted-foreground">
               <Search className="h-8 w-8 mx-auto mb-2 opacity-50" />
-              <p>Начните вводить для поиска</p>
+              <p>{t.globalSearch.startTypingToSearch}</p>
               <div className="mt-4 space-y-1 text-xs">
-                <p>🔍 Поиск по чатам, сообщениям и проектам</p>
-                <p>⌨️ Используйте ↑↓ для навигации, Enter для выбора</p>
+                <p>{t.globalSearch.searchHint}</p>
+                <p>{t.globalSearch.keyboardHint}</p>
               </div>
             </div>
           )}
@@ -433,7 +439,7 @@ export const GlobalSearchDialog = ({
 
         {results.length > 0 && (
           <div className="p-2 border-t bg-muted/30 text-xs text-muted-foreground text-center">
-            ↑↓ навигация • Enter выбрать • Esc закрыть
+            {t.globalSearch.footerNavigation}
           </div>
         )}
       </DialogContent>

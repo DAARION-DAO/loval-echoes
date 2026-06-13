@@ -6,6 +6,7 @@ import { CompactName } from "./CompactName";
 import { Folder, Calendar, Users, CheckCircle2, AlertCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useProjectTaskStats } from "@/hooks/useProjectTaskStats";
+import { useTranslation } from "@/lib/i18n";
 
 interface ProjectCardProps {
   project: {
@@ -27,6 +28,7 @@ interface ProjectCardProps {
 }
 
 export function ProjectCard({ project }: ProjectCardProps) {
+  const { t, language } = useTranslation();
   const navigate = useNavigate();
   const participants = project.conversation_participants || [];
   const admin = participants.find(p => p.role === 'admin');
@@ -38,10 +40,10 @@ export function ProjectCard({ project }: ProjectCardProps) {
     const diffTime = Math.abs(now.getTime() - date.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     
-    if (diffDays === 1) return 'сегодня';
-    if (diffDays === 2) return 'вчера';
-    if (diffDays <= 7) return `${diffDays} дня назад`;
-    return date.toLocaleDateString('ru-RU');
+    if (diffDays === 1) return t.projects.today;
+    if (diffDays === 2) return t.projects.yesterday;
+    if (diffDays <= 7) return t.projects.daysAgo.replace('{count}', String(diffDays));
+    return date.toLocaleDateString(language === 'ru' ? 'ru-RU' : (language === 'uk' ? 'uk-UA' : (language === 'es' ? 'es-ES' : 'en-US')));
   };
 
   return (
@@ -80,16 +82,16 @@ export function ProjectCard({ project }: ProjectCardProps) {
           <div className="flex items-center gap-2 mb-3 flex-wrap">
             <Badge variant="outline" className="text-xs">
               <CheckCircle2 className="h-3 w-3 mr-1" />
-              {stats.progress + stats.review} активных
+              {t.projects.activeCount.replace('{count}', String(stats.progress + stats.review))}
             </Badge>
             {stats.overdue > 0 && (
               <Badge variant="destructive" className="text-xs">
                 <AlertCircle className="h-3 w-3 mr-1" />
-                {stats.overdue} просрочено
+                {t.projects.overdueCount.replace('{count}', String(stats.overdue))}
               </Badge>
             )}
             <Badge variant="secondary" className="text-xs">
-              {stats.done}/{stats.total} завершено
+              {t.projects.completedCount.replace('{done}', String(stats.done)).replace('{total}', String(stats.total))}
             </Badge>
           </div>
         )}
@@ -143,7 +145,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
               navigate(`/projects/${project.id}`);
             }}
           >
-            Открыть
+            {t.projects.openBtn}
           </Button>
         </div>
       </CardContent>

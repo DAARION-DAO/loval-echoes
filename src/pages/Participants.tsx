@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { useTranslation } from '@/lib/i18n';
 import { Users, Clock, CheckCircle, XCircle, UserCheck } from 'lucide-react';
 
 interface ApprovalRequest {
@@ -38,6 +39,7 @@ interface UserProfile {
 export const Participants = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation();
   
   const [pendingRequests, setPendingRequests] = useState<ApprovalRequest[]>([]);
   const [approvedUsers, setApprovedUsers] = useState<UserProfile[]>([]);
@@ -88,7 +90,7 @@ export const Participants = () => {
           const profile = profiles?.find(p => p.user_id === request.user_id);
           pendingWithProfiles.push({
             ...request,
-            display_name: profile?.display_name || 'Пользователь',
+            display_name: profile?.display_name || t.participantsExtra.userFallbackName,
             avatar_url: profile?.avatar_url ?? undefined,
             email: profile?.email ?? undefined,
           });
@@ -113,8 +115,8 @@ export const Participants = () => {
     } catch (error) {
       console.error('Error loading data:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось загрузить данные участников',
+        title: t.error,
+        description: t.participantsExtra.loadErrorDesc,
         variant: 'destructive'
       });
     } finally {
@@ -220,8 +222,8 @@ export const Participants = () => {
         if (profileError) {
           console.error('Profile update error:', profileError);
           toast({
-            title: "Ошибка обновления профиля",
-            description: `Ошибка RLS: ${profileError.message}. Проверьте права доступа.`,
+            title: t.participantsExtra.updateProfileErrorTitle,
+            description: t.participantsExtra.updateProfileErrorDesc.replace('{message}', profileError.message),
             variant: "destructive",
           });
           throw profileError;
@@ -241,17 +243,17 @@ export const Participants = () => {
       await loadData();
       
       toast({
-        title: decision === 'approve' ? 'Заявка одобрена' : 'Заявка отклонена',
+        title: decision === 'approve' ? t.participantsExtra.requestApprovedTitle : t.participantsExtra.requestRejectedTitle,
         description: finalStatus !== 'pending' 
-          ? `Пользователь ${finalStatus === 'approved' ? 'принят в сообщество' : 'отклонён'}`
-          : `Ваш голос учтён. Требуется ${requiredApprovals - approveCount} дополнительных одобрений.`
+          ? (finalStatus === 'approved' ? t.participantsExtra.userApprovedDesc : t.participantsExtra.userRejectedDesc)
+          : t.participantsExtra.voteRegisteredDesc.replace('{count}', String(requiredApprovals - approveCount))
       });
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error processing approval:', error);
       toast({
-        title: 'Ошибка',
-        description: `Не удалось обработать заявку: ${error.message}`,
+        title: t.error,
+        description: t.participantsExtra.requestErrorDesc.replace('{message}', error.message || ''),
         variant: 'destructive'
       });
     } finally {
@@ -278,7 +280,7 @@ export const Participants = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <LoadingSpinner size="lg" text="Загрузка участников..." />
+        <LoadingSpinner size="lg" text={t.participantsExtra.loadingText} />
       </div>
     );
   }
@@ -286,9 +288,9 @@ export const Participants = () => {
   return (
     <div className="h-full p-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-2">Управление участниками</h1>
+        <h1 className="text-2xl font-bold mb-2">{t.participantsExtra.pageTitle}</h1>
         <p className="text-muted-foreground">
-          Просмотр и управление заявками на вступление в сообщество
+          {t.participantsExtra.pageSubtitle}
         </p>
       </div>
 
@@ -296,15 +298,15 @@ export const Participants = () => {
         <TabsList className="mb-4">
           <TabsTrigger value="pending" className="flex items-center gap-2">
             <Clock className="h-4 w-4" />
-            Ожидают одобрения ({pendingRequests.length})
+            {t.participantsExtra.tabPending.replace('{count}', String(pendingRequests.length))}
           </TabsTrigger>
           <TabsTrigger value="approved" className="flex items-center gap-2">
             <CheckCircle className="h-4 w-4" />
-            Одобренные ({approvedUsers.length})
+            {t.participantsExtra.tabApproved.replace('{count}', String(approvedUsers.length))}
           </TabsTrigger>
           <TabsTrigger value="rejected" className="flex items-center gap-2">
             <XCircle className="h-4 w-4" />
-            Отклонённые ({rejectedUsers.length})
+            {t.participantsExtra.tabRejected.replace('{count}', String(rejectedUsers.length))}
           </TabsTrigger>
         </TabsList>
 
@@ -313,9 +315,9 @@ export const Participants = () => {
             {pendingRequests.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center">
                 <Users className="h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium mb-2">Нет ожидающих заявок</h3>
+                <h3 className="text-lg font-medium mb-2">{t.participantsExtra.noPendingTitle}</h3>
                 <p className="text-muted-foreground">
-                  Все заявки на вступление обработаны
+                  {t.participantsExtra.noPendingDesc}
                 </p>
               </div>
             ) : (
@@ -338,25 +340,25 @@ export const Participants = () => {
                             <p className="text-sm text-muted-foreground font-mono">{request.email}</p>
                           )}
                           <p className="text-sm text-muted-foreground">
-                            Подал заявку: {formatDate(request.created_at)}
+                            {t.participantsExtra.requestedDate.replace('{date}', formatDate(request.created_at))}
                           </p>
                           <div className="flex gap-4 mt-2 text-sm">
                             <span className="flex items-center gap-1">
                               <CheckCircle className="h-4 w-4 text-green-500" />
-                              Одобрили: {request.approved_by?.length || 0}
+                              {t.participantsExtra.approvedVotes.replace('{count}', String(request.approved_by?.length || 0))}
                             </span>
                             <span className="flex items-center gap-1">
                               <XCircle className="h-4 w-4 text-red-500" />
-                              Отклонили: {request.rejected_by?.length || 0}
+                              {t.participantsExtra.rejectedVotes.replace('{count}', String(request.rejected_by?.length || 0))}
                             </span>
                             <span className="text-muted-foreground">
-                              Требуется: {request.total_existing_users} голосов
+                              {t.participantsExtra.requiredVotes.replace('{count}', String(request.total_existing_users))}
                             </span>
                           </div>
                         </div>
                         <Badge variant="outline">
                           <Clock className="h-3 w-3 mr-1" />
-                          Ожидает
+                          {t.participantsExtra.statusPending}
                         </Badge>
                       </div>
                     </CardHeader>
@@ -365,7 +367,7 @@ export const Participants = () => {
                       <CardContent>
                         <div className="space-y-4">
                           <Textarea
-                            placeholder="Комментарий (необязательно)..."
+                            placeholder={t.participantsExtra.commentPlaceholder}
                             value={userNotes[request.id] || ''}
                             onChange={(e) => setUserNotes(prev => ({
                               ...prev,
@@ -380,7 +382,7 @@ export const Participants = () => {
                               className="bg-green-600 hover:bg-green-700"
                             >
                               <CheckCircle className="mr-2 h-4 w-4" />
-                              Одобрить
+                              {t.participantsExtra.btnApprove}
                             </Button>
                             <Button
                               variant="destructive"
@@ -388,7 +390,7 @@ export const Participants = () => {
                               disabled={submitting === request.id}
                             >
                               <XCircle className="mr-2 h-4 w-4" />
-                              Отклонить
+                              {t.participantsExtra.btnReject}
                             </Button>
                           </div>
                         </div>
@@ -397,7 +399,7 @@ export const Participants = () => {
                       <CardContent>
                         <div className="flex items-center gap-2 text-muted-foreground">
                           <UserCheck className="h-4 w-4" />
-                          Вы уже проголосовали по этой заявке
+                          {t.participantsExtra.alreadyVoted}
                         </div>
                       </CardContent>
                     )}
@@ -427,12 +429,12 @@ export const Participants = () => {
                           <p className="text-xs text-muted-foreground font-mono">{user.email}</p>
                         )}
                         <p className="text-sm text-muted-foreground">
-                          Вступил: {formatDate(user.created_at)}
+                          {t.participantsExtra.joinedDate.replace('{date}', formatDate(user.created_at))}
                         </p>
                       </div>
                       <Badge variant="secondary" className="text-green-700 bg-green-100">
                         <CheckCircle className="h-3 w-3 mr-1" />
-                        Участник
+                        {t.participantsExtra.roleMember}
                       </Badge>
                     </div>
                   </CardContent>
@@ -461,12 +463,12 @@ export const Participants = () => {
                           <p className="text-xs text-muted-foreground font-mono">{user.email}</p>
                         )}
                         <p className="text-sm text-muted-foreground">
-                          Заявка отклонена: {formatDate(user.created_at)}
+                          {t.participantsExtra.rejectedDate.replace('{date}', formatDate(user.created_at))}
                         </p>
                       </div>
                       <Badge variant="destructive">
                         <XCircle className="h-3 w-3 mr-1" />
-                        Отклонён
+                        {t.participantsExtra.roleRejected}
                       </Badge>
                     </div>
                   </CardContent>

@@ -23,12 +23,12 @@ export const ChatEmptyState = ({ onCreateChat, className = '' }: ChatEmptyStateP
     try {
       setCreating(true);
       console.log('Creating first chat...');
-      const chat = await createChat('Мой первый чат');
+      const chat = await createChat(t.chatSidebar.defaultChatName);
       console.log('Created chat:', chat);
       
       toast({
-        title: "Чат создан",
-        description: "Первый чат успешно создан!",
+        title: t.chatSidebar.chatCreatedDesc,
+        description: t.chats.successCreate,
       });
       
       onCreateChat(); // Refresh the chat list
@@ -37,7 +37,7 @@ export const ChatEmptyState = ({ onCreateChat, className = '' }: ChatEmptyStateP
       console.error('Error creating chat:', error);
       toast({
         variant: "destructive",
-        title: "Ошибка создания",
+        title: t.chatSidebar.createErrorTitle,
         description: getErrorMessage(error),
       });
     } finally {
@@ -54,9 +54,9 @@ export const ChatEmptyState = ({ onCreateChat, className = '' }: ChatEmptyStateP
           </div>
           
           <div className="space-y-2">
-            <h3 className="text-lg font-semibold">Пока нет чатов</h3>
+            <h3 className="text-lg font-semibold">{t.chatSidebar.noChatsYet}</h3>
             <p className="text-sm text-muted-foreground">
-              Создайте свой первый чат, чтобы начать общение
+              {t.chatsManagement.activeEmptyStateDesc}
             </p>
           </div>
           
@@ -67,19 +67,19 @@ export const ChatEmptyState = ({ onCreateChat, className = '' }: ChatEmptyStateP
               disabled={creating}
             >
               <MessageSquarePlus className="h-4 w-4 mr-2" />
-              {creating ? 'Создаем...' : 'Создать первый чат'}
+              {creating ? t.loading : t.chatSidebar.createFirstChatBtn}
             </Button>
             
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Users className="h-3 w-3" />
-              <span>Все ответы видны участникам</span>
+              <span>{t.allRepliesVisible}</span>
             </div>
           </div>
           
           <div className="pt-4 border-t border-border">
             <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground">
               <Sparkles className="h-3 w-3" />
-              <span>Пригласить участников</span>
+              <span>{t.inviteParticipants}</span>
             </div>
           </div>
         </CardContent>

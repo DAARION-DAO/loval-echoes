@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useTranslation } from '@/lib/i18n';
 
 interface NewsMessage {
   id: string;
@@ -24,6 +25,7 @@ interface NewsMessage {
 }
 
 export const CommunityNewsFeed = () => {
+  const { t, language } = useTranslation();
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<NewsMessage[]>([]);
   const [loading, setLoading] = useState(false);
@@ -108,15 +110,15 @@ export const CommunityNewsFeed = () => {
       if (response.error) throw response.error;
 
       toast({
-        title: 'Срочная новость отправлена',
-        description: 'Push-уведомления отправлены всем участникам',
+        title: t.communityNewsFeed.urgentSentTitle,
+        description: t.communityNewsFeed.urgentSentDesc,
       });
       setMessage('');
     } catch (error) {
       console.error('Error sending news:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось отправить новость',
+        title: t.communityNewsFeed.sendErrorTitle,
+        description: t.communityNewsFeed.sendErrorDesc,
         variant: 'destructive',
       });
     } finally {
@@ -125,15 +127,17 @@ export const CommunityNewsFeed = () => {
   };
 
   const formatTime = (timestamp: string) => {
-    return new Date(timestamp).toLocaleTimeString('ru-RU', {
+    const localeMap: Record<string, string> = { ru: 'ru-RU', uk: 'uk-UA', es: 'es-ES', en: 'en-US' };
+    const localeStr = localeMap[language] || 'en-US';
+    return new Date(timestamp).toLocaleTimeString(localeStr, {
       hour: '2-digit',
       minute: '2-digit'
     });
   };
 
   const getAuthorName = (message: NewsMessage) => {
-    if (message.is_agent) return 'ЖОС';
-    return message.profiles?.display_name || 'Пользователь';
+    if (message.is_agent) return t.communityNewsFeed.agentBadge;
+    return message.profiles?.display_name || t.communityNewsFeed.userBadge;
   };
 
   const getAvatarUrl = (message: NewsMessage) => {
@@ -152,9 +156,9 @@ export const CommunityNewsFeed = () => {
     <Card className="w-full">
       <CardHeader className="pb-4">
         <CardTitle className="flex items-center justify-between">
-          <span>Новостная лента</span>
+          <span>{t.communityNewsFeed.title}</span>
           <Badge variant="secondary" className="text-xs">
-            {messages.length} сообщений
+            {t.communityNewsFeed.messagesCount.replace('{count}', String(messages.length))}
           </Badge>
         </CardTitle>
       </CardHeader>
@@ -197,7 +201,7 @@ export const CommunityNewsFeed = () => {
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Напишите срочную новость для всех участников сообщества..."
+            placeholder={t.communityNewsFeed.placeholder}
             className="min-h-[120px] resize-none"
             maxLength={500}
             disabled={loading || !user}
@@ -227,15 +231,16 @@ export const CommunityNewsFeed = () => {
                   className="flex items-center justify-center gap-2 w-full sm:w-auto"
                 >
                   <Send className="h-4 w-4" />
-                  Надіслати всім
+                  {t.communityNewsFeed.sendAllBtn}
                 </Button>
               </div>
             </div>
         </div>
         
-        <div className="text-xs text-muted-foreground p-3 bg-muted/50 rounded-lg">
-          💡 <strong>Подсказка:</strong> Новости будут показаны всем участникам. Для вызова агента используйте @ЖОС
-        </div>
+        <div 
+          className="text-xs text-muted-foreground p-3 bg-muted/50 rounded-lg"
+          dangerouslySetInnerHTML={{ __html: t.communityNewsFeed.hint }}
+        />
       </CardContent>
     </Card>
   );

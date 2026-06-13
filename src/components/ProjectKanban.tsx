@@ -6,23 +6,25 @@ import { useAuth } from '@/hooks/useAuth';
 import { KanbanColumn } from './KanbanColumn';
 import { KanbanCard as KanbanCardType } from '@/types/kanban';
 import { toast } from '@/hooks/use-toast';
+import { useTranslation } from '@/lib/i18n';
 
 interface ProjectKanbanProps {
   projectId: string;
 }
 
-const COLUMNS = [
-  { id: 'backlog', title: 'Бэклог', color: 'bg-gray-100' },
-  { id: 'todo', title: 'К выполнению', color: 'bg-blue-100' },
-  { id: 'progress', title: 'В процессе', color: 'bg-yellow-100' },
-  { id: 'review', title: 'На проверке', color: 'bg-purple-100' },
-  { id: 'done', title: 'Готово', color: 'bg-green-100' },
-] as const;
-
 export function ProjectKanban({ projectId }: ProjectKanbanProps) {
+  const { t } = useTranslation();
   const [cards, setCards] = useState<KanbanCardType[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+
+  const columns = [
+    { id: 'backlog', title: t.kanban.backlog, color: 'bg-gray-100' },
+    { id: 'todo', title: t.kanban.todo, color: 'bg-blue-100' },
+    { id: 'progress', title: t.kanban.inProgress, color: 'bg-yellow-100' },
+    { id: 'review', title: t.kanban.inReview, color: 'bg-purple-100' },
+    { id: 'done', title: t.kanban.done, color: 'bg-green-100' },
+  ] as const;
 
   // Load cards
   useEffect(() => {
@@ -73,8 +75,8 @@ export function ProjectKanban({ projectId }: ProjectKanbanProps) {
     } catch (error) {
       console.error('Error loading kanban cards:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось загрузить карточки',
+        title: t.error,
+        description: t.kanban.loadError,
         variant: 'destructive',
       });
     } finally {
@@ -105,14 +107,14 @@ export function ProjectKanban({ projectId }: ProjectKanbanProps) {
 
       // Card will be added via realtime subscription
       toast({
-        title: 'Успех',
-        description: 'Карточка создана',
+        title: t.kanban.success,
+        description: t.kanban.taskCreated,
       });
     } catch (error) {
       console.error('Error creating card:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось создать карточку',
+        title: t.error,
+        description: t.kanban.createError,
         variant: 'destructive',
       });
     }
@@ -135,8 +137,8 @@ export function ProjectKanban({ projectId }: ProjectKanbanProps) {
     } catch (error) {
       console.error('Error updating card:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось обновить карточку',
+        title: t.error,
+        description: t.kanban.updateError,
         variant: 'destructive',
       });
     }
@@ -156,14 +158,14 @@ export function ProjectKanban({ projectId }: ProjectKanbanProps) {
       }
 
       toast({
-        title: 'Успех',
-        description: 'Карточка удалена',
+        title: t.kanban.success,
+        description: t.kanban.taskDeleted,
       });
     } catch (error) {
       console.error('Error deleting card:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось удалить карточку',
+        title: t.error,
+        description: t.kanban.deleteError,
         variant: 'destructive',
       });
     }
@@ -178,7 +180,7 @@ export function ProjectKanban({ projectId }: ProjectKanbanProps) {
     const newColumnId = over.id as string;
     
     // Check if we're dropping on a column or another card
-    const targetColumn = COLUMNS.find(col => col.id === newColumnId);
+    const targetColumn = columns.find(col => col.id === newColumnId);
     
     if (targetColumn) {
       // Dropping on a column
@@ -208,7 +210,7 @@ export function ProjectKanban({ projectId }: ProjectKanbanProps) {
       >
         <div className="h-full overflow-x-auto overflow-y-auto md:overflow-y-hidden">
           <div className="flex flex-col md:flex-row gap-4 p-4 h-full md:min-w-max">
-            {COLUMNS.map((column) => {
+            {columns.map((column) => {
               const columnCards = cards.filter(card => card.column_type === column.id);
               
               return (

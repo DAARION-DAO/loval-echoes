@@ -63,98 +63,102 @@ function useScrollReveal() {
 }
 
 /* ── Platform data ── */
-const platforms = [
-  {
-    name: 'macOS Apple Silicon',
-    arch: 'ARM64 (M1 / M2 / M3 / M4)',
-    format: '.dmg',
-    icon: Apple,
-    status: 'active' as const,
-    statusLabel: 'Beta',
-  },
-  {
-    name: 'macOS Intel',
-    arch: 'x86_64',
-    format: '.dmg',
-    icon: Apple,
-    status: 'active' as const,
-    statusLabel: 'Beta',
-  },
-  {
-    name: 'Windows',
-    arch: 'x86_64',
-    format: '.exe / .msi',
-    icon: Monitor,
-    status: 'pending' as const,
-    statusLabel: 'Canary',
-  },
-  {
-    name: 'Linux',
-    arch: 'x86_64',
-    format: '.AppImage',
-    icon: Terminal,
-    status: 'pending' as const,
-    statusLabel: 'Canary',
-  },
-  {
-    name: 'Android',
-    arch: 'arm64-v8a',
-    format: '.apk',
-    icon: Smartphone,
-    status: 'pending' as const,
-    statusLabel: 'Sideload',
-  },
-  {
-    name: 'iOS',
-    arch: 'arm64',
-    format: 'Native App',
-    icon: Smartphone,
-    status: 'coming' as const,
-    statusLabel: 'Скоро',
-  },
-];
+function getPlatforms(t: any) {
+  return [
+    {
+      name: t.clientInstall.macSilicon,
+      arch: 'ARM64 (M1 / M2 / M3 / M4)',
+      format: '.dmg',
+      icon: Apple,
+      status: 'active' as const,
+      statusLabel: t.clientInstall.beta,
+    },
+    {
+      name: t.clientInstall.macIntel,
+      arch: 'x86_64',
+      format: '.dmg',
+      icon: Apple,
+      status: 'active' as const,
+      statusLabel: t.clientInstall.beta,
+    },
+    {
+      name: t.clientInstall.windows,
+      arch: 'x86_64',
+      format: '.exe / .msi',
+      icon: Monitor,
+      status: 'pending' as const,
+      statusLabel: t.clientInstall.canary,
+    },
+    {
+      name: t.clientInstall.linux,
+      arch: 'x86_64',
+      format: '.AppImage',
+      icon: Terminal,
+      status: 'pending' as const,
+      statusLabel: t.clientInstall.canary,
+    },
+    {
+      name: t.clientInstall.android,
+      arch: 'arm64-v8a',
+      format: '.apk',
+      icon: Smartphone,
+      status: 'pending' as const,
+      statusLabel: t.clientInstall.sideload,
+    },
+    {
+      name: t.clientInstall.ios,
+      arch: 'arm64',
+      format: 'Native App',
+      icon: Smartphone,
+      status: 'coming' as const,
+      statusLabel: t.clientInstall.comingSoon,
+    },
+  ];
+}
 
-const architectureLayers = [
-  {
-    level: 'L1',
-    title: 'Client Device',
-    subtitle: 'Sovereign Entry',
-    icon: Shield,
-    color: 'from-emerald-500/20 to-teal-500/20',
-    points: [
-      'Встановлення на локальне залізо користувача',
-      'Автогенерація Ed25519 криптоідентичності',
-      'Приватний ключ ізольований в Keychain / Credential Manager',
-      'Базова синхронізація з мережею DAARION',
-    ],
-  },
-  {
-    level: 'L2',
-    title: 'Personal Agent',
-    subtitle: 'Local Runtime',
-    icon: Cpu,
-    color: 'from-blue-500/20 to-indigo-500/20',
-    points: [
-      'Інтерактивний Genesis Wizard для створення агента',
-      'Виявлення локальних обчислювальних ресурсів (CPU, RAM, GPU)',
-      'Завантаження та виконання LLM (Gemma, Qwen) у форматі GGUF',
-      'Управління гаманцем та локальними промптами',
-    ],
-  },
-  {
-    level: 'L3',
-    title: 'Worker Node',
-    subtitle: 'Gated Compute',
-    icon: HardDrive,
-    color: 'from-violet-500/20 to-purple-500/20',
-    points: [
-      'Внесок обчислювальних ресурсів у мережу (ping_math, text_hash)',
-      'Жорстка пісочниця: Docker/Colima, --network none',
-      'Доступ лише після верифікації оператора',
-      'Нульовий мережевий вихід з контейнерів',
-    ],
-  },
-];
+function getArchitectureLayers(t: any) {
+  return [
+    {
+      level: 'L1',
+      title: t.clientInstall.l1Title,
+      subtitle: t.clientInstall.l1Subtitle,
+      icon: Shield,
+      color: 'from-emerald-500/20 to-teal-500/20',
+      points: [
+        t.clientInstall.l1Point1,
+        t.clientInstall.l1Point2,
+        t.clientInstall.l1Point3,
+        t.clientInstall.l1Point4,
+      ],
+    },
+    {
+      level: 'L2',
+      title: t.clientInstall.l2Title,
+      subtitle: t.clientInstall.l2Subtitle,
+      icon: Cpu,
+      color: 'from-blue-500/20 to-indigo-500/20',
+      points: [
+        t.clientInstall.l2Point1,
+        t.clientInstall.l2Point2,
+        t.clientInstall.l2Point3,
+        t.clientInstall.l2Point4,
+      ],
+    },
+    {
+      level: 'L3',
+      title: t.clientInstall.l3Title,
+      subtitle: t.clientInstall.l3Subtitle,
+      icon: HardDrive,
+      color: 'from-violet-500/20 to-purple-500/20',
+      points: [
+        t.clientInstall.l3Point1,
+        t.clientInstall.l3Point2,
+        t.clientInstall.l3Point3,
+        t.clientInstall.l3Point4,
+      ],
+    },
+  ];
+}
 
 const GITHUB_REPO = 'https://github.com/DAARION-DAO/daarion-edge-client';
 const GITHUB_RELEASES = `${GITHUB_REPO}/releases`;
@@ -165,6 +169,9 @@ export function Install() {
   const { t, language, setLanguage } = useTranslation();
   const { isInstallable, install } = usePwaInstall();
 
+  const platforms = getPlatforms(t);
+  const architectureLayers = getArchitectureLayers(t);
+
   return (
     <div ref={scrollRef} className="min-h-screen bg-background text-foreground flex flex-col overflow-x-hidden">
 
@@ -174,7 +181,7 @@ export function Install() {
           <div className="flex items-center gap-2.5">
             <Button variant="ghost" size="sm" onClick={() => navigate('/')} className="gap-1.5 mr-1">
               <ArrowLeft className="h-4 w-4" />
-              <span className="hidden sm:inline">Назад</span>
+              <span className="hidden sm:inline">{t.importExtra.backBtn}</span>
             </Button>
             <div className="h-5 w-px bg-border/50 hidden sm:block" />
             <img src="/daarion-logo.jpg" alt="DAARION" className="h-8 w-8 rounded-lg object-cover shadow-md" />
@@ -183,10 +190,10 @@ export function Install() {
 
           <div className="flex items-center gap-1.5 sm:gap-3">
             <Button variant="ghost" size="sm" onClick={() => navigate('/agents')} className="text-xs sm:text-sm font-medium h-9 px-2 sm:px-3">
-              Агенти
+              {t.agentDirectory.navbarAgents}
             </Button>
             <Button variant="ghost" size="sm" onClick={() => navigate('/pricing')} className="text-xs sm:text-sm font-medium h-9 px-2 sm:px-3">
-              Тарифи
+              {t.agentDirectory.navbarPricing}
             </Button>
             {/* Language Selector */}
             <Select value={language} onValueChange={(value) => setLanguage(value as Language)}>
@@ -221,7 +228,7 @@ export function Install() {
             >
               <Button size="sm" className="text-xs sm:text-sm font-semibold gap-1.5 shadow-md hover:shadow-lg transition-shadow px-3 sm:px-4 h-9">
                 <Download className="h-3.5 w-3.5" />
-                <span>Завантажити</span>
+                <span>{t.clientInstall.downloadBtn}</span>
               </Button>
             </a>
           </div>
@@ -245,7 +252,7 @@ export function Install() {
           </h1>
 
           <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed mt-4 mb-10">
-            Суверенний інтерфейс та edge-клієнт для створення, управління та координації персональних AI-агентів локально на вашому залізі.
+            {t.clientInstall.installSubtitle}
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto sm:max-w-none">
@@ -255,7 +262,7 @@ export function Install() {
                 className="w-full sm:w-auto h-13 px-10 font-semibold text-base gap-2 shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98] bg-emerald-600 hover:bg-emerald-500 text-white"
               >
                 <Download className="h-5 w-5" />
-                Завантажити з GitHub
+                {t.clientInstall.downloadFromGithub}
               </Button>
             </a>
             <a href={GITHUB_REPO} target="_blank" rel="noopener noreferrer">
@@ -277,9 +284,9 @@ export function Install() {
       <section className="py-16 md:py-24 bg-gradient-to-b from-muted/5 to-muted/15 border-t border-border/10">
         <div className="container max-w-6xl mx-auto px-4 space-y-10">
           <div className="text-center space-y-3 landing-reveal">
-            <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">Підтримувані платформи</h2>
+            <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">{t.clientInstall.supportedPlatforms}</h2>
             <p className="text-sm text-muted-foreground max-w-md mx-auto">
-              Крос-платформний клієнт, побудований на Tauri v2
+              {t.clientInstall.platformDesc}
             </p>
           </div>
 
@@ -311,7 +318,7 @@ export function Install() {
                     </Badge>
                   </div>
                   <p className="text-xs text-muted-foreground">{platform.arch}</p>
-                  <p className="text-xs text-muted-foreground/70">Формат: {platform.format}</p>
+                  <p className="text-xs text-muted-foreground/70">{t.clientInstall.platformFormat.replace('{format}', platform.format)}</p>
                 </div>
               </div>
             ))}
@@ -321,7 +328,7 @@ export function Install() {
             <a href={GITHUB_RELEASES} target="_blank" rel="noopener noreferrer">
               <Button variant="outline" className="gap-2">
                 <Download className="h-4 w-4" />
-                Всі релізи на GitHub
+                {t.clientInstall.viewReleasesGithub}
                 <ExternalLink className="h-3 w-3 opacity-50" />
               </Button>
             </a>
@@ -333,9 +340,9 @@ export function Install() {
       <section className="py-16 md:py-24 border-t border-border/10">
         <div className="container max-w-5xl mx-auto px-4 space-y-12">
           <div className="text-center space-y-3 landing-reveal">
-            <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">Архітектура Edge Client</h2>
+            <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">{t.clientInstall.archLayersTitle}</h2>
             <p className="text-sm text-muted-foreground max-w-lg mx-auto">
-              Три рівні суверенної агентської інфраструктури
+              {t.clientInstall.archLayersSubtitle}
             </p>
           </div>
 
@@ -380,30 +387,30 @@ export function Install() {
       <section className="py-16 md:py-24 bg-gradient-to-b from-muted/5 to-muted/15 border-t border-border/10">
         <div className="container max-w-4xl mx-auto px-4 space-y-10">
           <div className="text-center space-y-3 landing-reveal">
-            <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">Безпека та оновлення</h2>
+            <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">{t.clientInstall.securityTitle}</h2>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 landing-stagger">
             {[
               {
                 icon: Shield,
-                title: 'Суверенна безпека',
-                desc: 'Приватний ключ ніколи не покидає пристрій. Зберігається в macOS Keychain або Windows Credential Manager через нативний keyring API.',
+                title: t.clientInstall.secSovereignTitle,
+                desc: t.clientInstall.secSovereignDesc,
               },
               {
                 icon: Lock,
-                title: 'Пісочниця Worker Mode',
-                desc: 'Всі edge-задачі виконуються у закритому контейнері (Docker/Colima) з --network none та очищеними змінними середовища.',
+                title: t.clientInstall.secSandboxTitle,
+                desc: t.clientInstall.secSandboxDesc,
               },
               {
                 icon: Download,
-                title: 'Ручні оновлення',
-                desc: 'Автоматичні оновлення поки вимкнені. Завантажуйте нові версії вручну з GitHub Releases.',
+                title: t.clientInstall.secUpdatesTitle,
+                desc: t.clientInstall.secUpdatesDesc,
               },
               {
                 icon: Zap,
                 title: 'Status: Beta / Canary',
-                desc: 'Потребує proof of performance, стабільності та безпеки на кожній платформі перед production-релізом.',
+                desc: t.clientInstall.secVerificationDesc,
               },
             ].map((item, index) => (
               <div
@@ -425,7 +432,7 @@ export function Install() {
       <section className="py-16 md:py-24 border-t border-border/10">
         <div className="container max-w-3xl mx-auto px-4 space-y-8">
           <div className="text-center space-y-3 landing-reveal">
-            <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">Для розробників</h2>
+            <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">{t.clientInstall.forDevsTitle}</h2>
             <p className="text-sm text-muted-foreground">Rust stable + Node.js v20+</p>
           </div>
 
@@ -436,19 +443,19 @@ export function Install() {
                 <span className="text-xs font-medium text-muted-foreground">Terminal</span>
               </div>
               <pre className="p-5 text-sm font-mono text-foreground/80 overflow-x-auto leading-relaxed">
-                <code>{`# 1. Клонувати репозиторій
+                <code>{`${t.clientInstall.forDevsStep1}
 git clone ${GITHUB_REPO}.git
 cd daarion-edge-client
 
-# 2. Встановити залежності
+${t.clientInstall.forDevsStep2}
 npm install
 
-# 3. Запустити dev-режим (Vite + Tauri)
+${t.clientInstall.forDevsStep3}
 npm run dev
-# В іншому терміналі:
+${t.clientInstall.forDevsTerminal}
 npm run tauri dev
 
-# 4. Збірка release-пакетів
+${t.clientInstall.forDevsStep4}
 npm run build
 npm run tauri build`}</code>
               </pre>
@@ -459,7 +466,7 @@ npm run tauri build`}</code>
             <a href={GITHUB_REPO} target="_blank" rel="noopener noreferrer">
               <Button variant="outline" className="gap-2">
                 <Globe className="h-4 w-4" />
-                Відкрити на GitHub
+                {t.clientInstall.openOnGithub}
                 <ExternalLink className="h-3 w-3 opacity-50" />
               </Button>
             </a>
@@ -475,10 +482,10 @@ npm run tauri build`}</code>
               <div className="p-2 bg-amber-500/10 rounded-xl">
                 <AlertTriangle className="h-5 w-5 text-amber-400" />
               </div>
-              <h3 className="font-bold text-base">Діагностичні логи</h3>
+              <h3 className="font-bold text-base">{t.clientInstall.diagnosticsTitle}</h3>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Якщо застосунок крашиться або показує білий екран — зберіть і надішліть діагностичний лог:
+              {t.clientInstall.diagnosticsDesc}
             </p>
             <div className="space-y-2">
               <div className="flex items-start gap-2 text-sm">
@@ -498,10 +505,10 @@ npm run tauri build`}</code>
       <section className="py-16 md:py-24 border-t border-border/10">
         <div className="container max-w-3xl mx-auto px-4 text-center space-y-6 landing-reveal">
           <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">
-            Готові запустити свого агента?
+            {t.clientInstall.readyTitle}
           </h2>
           <p className="text-sm text-muted-foreground max-w-lg mx-auto">
-            Завантажте DAARION Edge Client, створіть свою суверенну криптоідентичність та почніть координацію через MicroDAO.
+            {t.clientInstall.readyDesc}
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <a href={GITHUB_RELEASES} target="_blank" rel="noopener noreferrer">
@@ -510,7 +517,7 @@ npm run tauri build`}</code>
                 className="h-13 px-10 font-semibold text-base gap-2 shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98] bg-emerald-600 hover:bg-emerald-500 text-white"
               >
                 <Download className="h-5 w-5" />
-                Завантажити
+                {t.clientInstall.downloadBtn}
               </Button>
             </a>
             <Button
@@ -520,7 +527,7 @@ npm run tauri build`}</code>
               className="h-13 px-10 font-semibold text-base gap-1.5 border-border/60 hover:bg-muted/30"
             >
               <Layers className="h-4 w-4" />
-              Повернутись до MicroDAO
+              {t.clientInstall.returnToMicroDAO}
             </Button>
           </div>
         </div>
@@ -556,9 +563,9 @@ npm run tauri build`}</code>
               <img src="/daarion-logo.jpg" alt="DAARION.city" className="h-4 w-4 rounded-sm object-cover" />
               <span>DAARION.city</span>
             </a>
-            <span>— Всі права захищено.</span>
+            <span>— {t.clientInstall.footerCopyright}</span>
           </div>
-          <div className="text-[10px] text-muted-foreground/60">Побудовано для гнучкої координації та живих спільнот.</div>
+          <div className="text-[10px] text-muted-foreground/60">{t.clientInstall.footerDesc}</div>
         </div>
       </footer>
     </div>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -61,7 +62,7 @@ const defaultAnswers: AnswersState = {
   mission: '',
   goal_30_days: '',
   values_rules: '',
-  agent_name: 'Дух Спільноти',
+  agent_name: '',
   tone: 'warm',
   autonomy_level: 'coordinator',
   can_invite_guests: true,
@@ -73,31 +74,41 @@ const defaultAnswers: AnswersState = {
   admin_code: '',
   code_max_uses: 50,
   initial_notes: '',
-  first_task_title: 'Ознайомитися з Духом Спільноти',
-  first_task_desc: 'Прочитати правила спільноти та провести перше знайомство з Духом Спільноти в чаті.'
-};
-
-const agentMessages: Record<number, string> = {
-  1: "Вітаю! Я — ваш майбутній Дух Спільноти. Давайте разом створимо наше MicroDAO. Почнемо з ідентичності: як буде називатися наша спільнота, до якого типу вона належить та який її короткий опис?",
-  2: "Чудовий початок! Тепер сформуємо місію та першу 30-денну ціль. Це стане ядром моєї пам'яті, щоб я міг допомагати координувати діяльність та тримати фокус.",
-  3: "Правила спільноти визначають наші цінності та межі спілкування. Які принципи поведінки та межі ви хочете встановити? У разі суперечок я нагадуватиму про ці правила.",
-  4: "Тепер налаштуємо мій характер. Як мене зватимуть (наприклад, 'Дух Спільноти' або інше ім'я)? Який тон спілкування мені обрати — дружній, філософський чи офіційний?",
-  5: "Вкажіть рівень моєї автономії та дозволи. Я можу діяти як простий Помічник, Координатор (створення задач, нагадування) або Адмін під вашим наглядом. Чутливі дії завжди вимагатимуть вашого підтвердження.",
-  6: "Створимо перші коди доступу. Ви можете згенерувати унікальні коди для адміністраторів або учасників. Наприклад, 'MYSPACE-MEMBER' чи 'MYSPACE-ADMIN'.",
-  7: "Давайте додамо перші знання! Введіть початкові правила, замітки або інструкції. Це насіння нашої спільної бази знань, яке я проіндексую першим.",
-  8: "Останній крок — заплануємо перші дії. Створимо перше завдання, яке ви побачите на дашборді. Це допоможе відразу перейти до роботи."
+  first_task_title: '',
+  first_task_desc: ''
 };
 
 export default function MicroDAOOnboarding() {
   const { user, signOut } = useAuth();
   const { memberships, refresh, setActiveCommunityId } = useActiveCommunity();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   // Onboarding modes: 'lobby' | 'wizard'
   const [mode, setMode] = useState<'lobby' | 'wizard'>('lobby');
   const [step, setStep] = useState(1);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [answers, setAnswers] = useState<AnswersState>(defaultAnswers);
+
+  const agentMessages: Record<number, string> = {
+    1: t.onboardingWizard.agentMsg1,
+    2: t.onboardingWizard.agentMsg2,
+    3: t.onboardingWizard.agentMsg3,
+    4: t.onboardingWizard.agentMsg4,
+    5: t.onboardingWizard.agentMsg5,
+    6: t.onboardingWizard.agentMsg6,
+    7: t.onboardingWizard.agentMsg7,
+    8: t.onboardingWizard.agentMsg8,
+  };
+
+  useEffect(() => {
+    setAnswers(prev => ({
+      ...prev,
+      agent_name: prev.agent_name || t.onboardingWizard.defaultAgentName,
+      first_task_title: prev.first_task_title || t.onboardingWizard.defaultFirstTaskTitle,
+      first_task_desc: prev.first_task_desc || t.onboardingWizard.defaultFirstTaskDesc,
+    }));
+  }, [t]);
   const [loading, setLoading] = useState(false);
   const [inviteCode, setInviteCode] = useState('');
   const [partnerMessage, setPartnerMessage] = useState('');
@@ -141,8 +152,8 @@ export default function MicroDAOOnboarding() {
   const handleJoinByCode = async () => {
     if (!inviteCode.trim()) {
       toast({
-        title: "Помилка",
-        description: "Будь ласка, введіть код запрошення",
+        title: t.onboardingWizard.toastErrorTitle,
+        description: t.onboardingWizard.toastEnterInviteCode,
         variant: "destructive"
       });
       return;
@@ -156,8 +167,8 @@ export default function MicroDAOOnboarding() {
       if (error) throw error;
 
       toast({
-        title: "Успішно приєднано!",
-        description: "Ви стали учасником MicroDAO спільноти."
+        title: t.onboardingWizard.toastJoinSuccessTitle,
+        description: t.onboardingWizard.toastJoinSuccessDesc
       });
       
       const newCommId = (data as any).community_id;
@@ -167,8 +178,8 @@ export default function MicroDAOOnboarding() {
     } catch (err: any) {
       toast({
         variant: "destructive",
-        title: "Помилка приєднання",
-        description: err.message || "Недійсний код запрошення."
+        title: t.onboardingWizard.toastJoinErrorTitle,
+        description: err.message || t.onboardingWizard.toastJoinErrorDesc
       });
     } finally {
       setLoading(false);
@@ -195,13 +206,13 @@ export default function MicroDAOOnboarding() {
       if (error) throw error;
       setPartnerSubmitted(true);
       toast({
-        title: "Заявку надіслано!",
-        description: "Ми розглянемо ваш запит на партнерський доступ найближчим часом."
+        title: t.onboardingWizard.toastPartnerSuccessTitle,
+        description: t.onboardingWizard.toastPartnerSuccessDesc
       });
     } catch (err: any) {
       toast({
         variant: "destructive",
-        title: "Помилка надсилання",
+        title: t.onboardingWizard.toastPartnerErrorTitle,
         description: err.message
       });
     } finally {
@@ -219,8 +230,8 @@ export default function MicroDAOOnboarding() {
     setStep(savedStep);
     setMode('wizard');
     toast({
-      title: "Чернетку відновлено",
-      description: `Повертаємося до кроку ${savedStep}.`
+      title: t.onboardingWizard.toastDraftRestoredTitle,
+      description: t.onboardingWizard.toastDraftRestoredDesc.replace('{step}', savedStep.toString())
     });
   };
 
@@ -246,14 +257,14 @@ export default function MicroDAOOnboarding() {
       if (data) {
         setSessionId(data.id);
         toast({
-          title: "Чернетку збережено",
-          description: "Ви зможете продовжити налаштування пізніше."
+          title: t.onboardingWizard.toastDraftSavedTitle,
+          description: t.onboardingWizard.toastDraftSavedDesc
         });
       }
     } catch (err: any) {
       toast({
         variant: "destructive",
-        title: "Помилка збереження",
+        title: t.onboardingWizard.toastDraftSaveErrorTitle,
         description: err.message
       });
     } finally {
@@ -289,8 +300,8 @@ export default function MicroDAOOnboarding() {
     if (!user) return;
     if (!answers.name.trim()) {
       toast({
-        title: "Помилка",
-        description: "Будь ласка, введіть назву спільноти на кроці 1.",
+        title: t.onboardingWizard.toastStep1ErrorTitle,
+        description: t.onboardingWizard.toastStep1ErrorDesc,
         variant: "destructive"
       });
       setStep(1);
@@ -347,7 +358,7 @@ export default function MicroDAOOnboarding() {
       const { data: conv, error: convErr } = await (supabase as any)
         .from('conversations')
         .insert({
-          name: 'Загальний чат',
+          name: t.onboardingWizard.defaultChatName,
           type: 'group',
           community_id: community_id,
           created_by: user.id
@@ -366,8 +377,8 @@ export default function MicroDAOOnboarding() {
       }
 
       toast({
-        title: "Спільноту успішно створено!",
-        description: `Вітаємо у MicroDAO "${answers.name}" з Духом Спільноти "${answers.agent_name}"!`
+        title: t.onboardingWizard.toastCreateSuccessTitle,
+        description: t.onboardingWizard.toastCreateSuccessDesc.replace('{name}', answers.name).replace('{agentName}', answers.agent_name)
       });
 
       setActiveCommunityId(community_id);
@@ -377,8 +388,8 @@ export default function MicroDAOOnboarding() {
       console.error('Error creating microdao:', err);
       toast({
         variant: "destructive",
-        title: "Помилка створення",
-        description: err.message || "Сталася помилка під час створення MicroDAO."
+        title: t.onboardingWizard.toastCreateErrorTitle,
+        description: err.message || t.onboardingWizard.toastCreateErrorDesc
       });
     } finally {
       setLoading(false);
@@ -399,7 +410,7 @@ export default function MicroDAOOnboarding() {
           <span className="text-xs text-slate-400 hidden sm:inline">{user?.email}</span>
           <Button variant="ghost" size="sm" onClick={() => signOut()} className="text-slate-300 hover:text-red-400 gap-2">
             <LogOut className="h-4 w-4" />
-            <span>Вийти</span>
+            <span>{t.onboardingWizard.exitBtn}</span>
           </Button>
         </div>
       </header>
@@ -412,16 +423,16 @@ export default function MicroDAOOnboarding() {
             {/* Left side info */}
             <div className="lg:col-span-5 space-y-6 text-left pr-0 lg:pr-4 py-4">
               <span className="px-3 py-1 text-xs font-semibold rounded-full bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">
-                MicroDAO Екосистема
+                {t.onboardingWizard.ecosystemTitle}
               </span>
               <h2 className="text-4xl font-extrabold tracking-tight leading-tight">
-                Живий простір вашої <br/>
+                {t.onboardingWizard.ecosystemSubtitle1} <br/>
                 <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">
-                  мікро-спільноти
+                  {t.onboardingWizard.ecosystemSubtitle2}
                 </span>
               </h2>
               <p className="text-slate-400 leading-relaxed text-sm">
-                MicroDAO — це новий підхід до організації команд та спільнот. Тут немає класичного глобального waitlist-контролю. Замість цього кожен простір формується навколо автономного **Духа Спільноти** — штучного інтелекту, що зберігає пам’ять, веде онбординг, призначає ролі та координує спільні дії.
+                {t.onboardingWizard.ecosystemDesc}
               </p>
 
               {draftSession && (
@@ -429,14 +440,16 @@ export default function MicroDAOOnboarding() {
                   <CardContent className="pt-6 space-y-3">
                     <div className="flex items-center gap-2 text-indigo-300">
                       <Zap className="h-5 w-5 animate-pulse" />
-                      <span className="font-semibold text-sm">Знайдено незавершене налаштування</span>
+                      <span className="font-semibold text-sm">{t.onboardingWizard.draftFoundTitle}</span>
                     </div>
                     <p className="text-xs text-slate-400">
-                      Ви зупинилися на кроці {draftSession.current_step} для створення спільноти {draftSession.answers?.name || 'без назви'}.
+                      {t.onboardingWizard.draftFoundDesc
+                        .replace('{step}', draftSession.current_step)
+                        .replace('{name}', draftSession.answers?.name || '...')}
                     </p>
                     <Button onClick={handleRestoreDraft} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs gap-2">
                       <Sparkles className="h-4 w-4" />
-                      <span>Відновити чернетку</span>
+                      <span>{t.onboardingWizard.restoreDraftBtn}</span>
                     </Button>
                   </CardContent>
                 </Card>
@@ -445,7 +458,7 @@ export default function MicroDAOOnboarding() {
               {memberships.length > 0 && (
                 <div className="space-y-3">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                    Ваші чинні MicroDAO
+                    {t.onboardingWizard.existingCommTitle}
                   </h3>
                   <div className="space-y-2">
                     {memberships.map((m) => (
@@ -482,21 +495,21 @@ export default function MicroDAOOnboarding() {
                 <CardHeader>
                   <CardTitle className="text-lg font-bold flex items-center gap-2">
                     <Sparkles className="h-5 w-5 text-indigo-400" />
-                    <span>Створити нову спільноту (MicroDAO)</span>
+                    <span>{t.onboardingWizard.createCommTitle}</span>
                   </CardTitle>
                   <CardDescription>
-                    Станьте лідером і запустіть простір з персональним Духом Спільноти
+                    {t.onboardingWizard.createCommDesc}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <p className="text-xs text-slate-400 leading-relaxed">
-                    Я, як Дух Спільноти, проведу вас через покроковий процес створення: ідентичність спільноти, місія, правила, мій власний характер, рівні автономії та перші запрошення.
+                    {t.onboarding.createCommunityDesc}
                   </p>
                 </CardContent>
                 <CardFooter>
                   <Button onClick={handleStartSetup} className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold transition-all hover:shadow-lg hover:shadow-indigo-500/20">
                     <Plus className="mr-2 h-4 w-4" />
-                    <span>Почати створення з Агентом</span>
+                    <span>{t.onboardingWizard.startCreationBtn}</span>
                   </Button>
                 </CardFooter>
               </Card>
@@ -506,16 +519,16 @@ export default function MicroDAOOnboarding() {
                 <CardHeader>
                   <CardTitle className="text-lg font-bold flex items-center gap-2">
                     <Key className="h-5 w-5 text-purple-400" />
-                    <span>Приєднатися за кодом запрошення</span>
+                    <span>{t.onboardingWizard.joinCommTitle}</span>
                   </CardTitle>
                   <CardDescription>
-                    Введіть код від лідера, щоб автоматично отримати доступ
+                    {t.onboardingWizard.joinCommDesc}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <Input 
-                      placeholder="Введіть код, напр: ECO-MEMBER-492"
+                      placeholder={t.onboardingWizard.joinCommPlaceholder}
                       value={inviteCode}
                       onChange={(e) => setInviteCode(e.target.value)}
                       className="bg-slate-950/80 border-slate-800 focus-visible:ring-purple-500 uppercase tracking-widest text-center"
@@ -528,7 +541,7 @@ export default function MicroDAOOnboarding() {
                     disabled={loading || !inviteCode.trim()}
                     className="w-full bg-slate-900 border border-slate-700 hover:bg-slate-800 text-slate-200"
                   >
-                    {loading ? "Приєднання..." : "Приєднатися до спільноти"}
+                    {loading ? t.onboardingWizard.joiningBtn : t.onboardingWizard.joinBtn}
                   </Button>
                 </CardFooter>
               </Card>
@@ -538,25 +551,25 @@ export default function MicroDAOOnboarding() {
                 <CardHeader>
                   <CardTitle className="text-lg font-bold flex items-center gap-2">
                     <Users className="h-5 w-5 text-pink-400" />
-                    <span>Подати заявку на статус Співзасновника</span>
+                    <span>{t.onboardingWizard.partnerTitle}</span>
                   </CardTitle>
                   <CardDescription>
-                    Запит на розширений партнерський доступ до інструментів платформи
+                    {t.onboardingWizard.partnerDesc}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   {partnerSubmitted ? (
                     <div className="flex flex-col items-center justify-center p-4 text-center space-y-2">
                       <CheckCircle className="h-8 w-8 text-green-400" />
-                      <div className="text-xs font-semibold text-green-300">Заявку прийнято на розгляд</div>
+                      <div className="text-xs font-semibold text-green-300">{t.onboardingWizard.partnerPendingTitle}</div>
                       <p className="text-[10px] text-slate-400 max-w-xs">
-                        Дякуємо за інтерес! Ми звʼяжемося з вами за вказаною адресою email після перевірки.
+                        {t.onboardingWizard.partnerPendingDesc}
                       </p>
                     </div>
                   ) : (
                     <form onSubmit={handlePartnerSubmit} className="space-y-3">
                       <Textarea 
-                        placeholder="Опишіть вашу мету, команду та чому ви хочете отримати статус партнера..."
+                        placeholder={t.onboardingWizard.partnerPlaceholder}
                         value={partnerMessage}
                         onChange={(e) => setPartnerMessage(e.target.value)}
                         className="bg-slate-950/80 border-slate-800 text-xs min-h-[80px]"
@@ -567,7 +580,7 @@ export default function MicroDAOOnboarding() {
                         disabled={loading || !partnerMessage.trim()}
                         className="w-full bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white font-semibold text-xs"
                       >
-                        {loading ? "Надсилання..." : "Подати заявку"}
+                        {loading ? t.onboardingWizard.sendingBtn : t.onboardingWizard.sendRequestBtn}
                       </Button>
                     </form>
                   )}
@@ -591,10 +604,10 @@ export default function MicroDAOOnboarding() {
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-slate-200">
-                    {answers.agent_name || "Дух Спільноти"}
+                    {answers.agent_name || t.onboardingWizard.defaultAgentName}
                   </h3>
                   <div className="text-[10px] text-indigo-400 font-semibold tracking-wide uppercase">
-                    Ваш ШІ-провідник
+                    {t.onboardingWizard.aiGuide}
                   </div>
                 </div>
               </div>
@@ -604,21 +617,21 @@ export default function MicroDAOOnboarding() {
                 <div className="bg-slate-900/80 border border-slate-800 rounded-2xl rounded-bl-none p-4 shadow-lg text-left max-w-[90%] self-start space-y-3 relative group">
                   <MessageSquare className="h-4 w-4 text-indigo-400 absolute -top-2 -left-2 bg-slate-950 p-0.5 rounded-full border border-indigo-400/20" />
                   <p className="text-xs md:text-sm text-slate-200 leading-relaxed font-medium">
-                    {agentMessages[step] || "Давайте продовжувати налаштування."}
+                    {agentMessages[step] || t.onboardingWizard.defaultStepMsg}
                   </p>
                 </div>
                 
                 {/* Micro animation representation */}
                 <div className="flex items-center gap-1.5 self-start pl-2 text-[10px] text-indigo-300">
                   <span className="inline-block h-1.5 w-1.5 rounded-full bg-indigo-400 animate-ping" />
-                  <span>Дух Спільноти слухає...</span>
+                  <span>{t.onboardingWizard.listening}</span>
                 </div>
               </div>
 
               {/* Autonomy Badge */}
               <div className="p-3 bg-slate-900/30 border-t border-slate-800/50 flex justify-between items-center text-[10px] text-slate-400">
-                <span>Рівень автономії: <strong className="text-indigo-400 capitalize">{answers.autonomy_level}</strong></span>
-                <span>Крок {step} з 8</span>
+                <span>{t.onboardingWizard.autonomy}: <strong className="text-indigo-400 capitalize">{t.onboardingWizard.autonomyLevels[answers.autonomy_level === 'supervised_admin' ? 'admin' : answers.autonomy_level]}</strong></span>
+                <span>{t.onboardingWizard.stepOf.replace('{step}', step.toString()).replace('{total}', '8')}</span>
               </div>
             </div>
 
@@ -629,17 +642,10 @@ export default function MicroDAOOnboarding() {
                 <CardHeader className="border-b border-slate-800/50 pb-4">
                   <div className="flex justify-between items-center">
                     <CardTitle className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-300 to-purple-400">
-                      {step === 1 && "1. Ідентичність спільноти"}
-                      {step === 2 && "2. Місія спільноти"}
-                      {step === 3 && "3. Цінності та правила"}
-                      {step === 4 && "4. Обличчя Духа Спільноти"}
-                      {step === 5 && "5. Автономія та повноваження"}
-                      {step === 6 && "6. Перші коди доступу"}
-                      {step === 7 && "7. Початкові знання (Сімʼя)"}
-                      {step === 8 && "8. Перші кроки (Задачі)"}
+                      {t.onboardingWizard.stepsTitle[step - 1]}
                     </CardTitle>
                     <span className="text-xs text-slate-500 font-semibold">
-                      {Math.round((step / 8) * 100)}% завершено
+                      {Math.round((step / 8) * 100)}% {t.onboardingWizard.completed}
                     </span>
                   </div>
                   <Progress value={(step / 8) * 100} className="h-1 bg-slate-950 mt-2" />
@@ -651,10 +657,10 @@ export default function MicroDAOOnboarding() {
                   {step === 1 && (
                     <div className="space-y-4">
                       <div className="space-y-2">
-                        <Label htmlFor="comm-name" className="text-xs font-bold text-slate-300">Назва MicroDAO *</Label>
+                        <Label htmlFor="comm-name" className="text-xs font-bold text-slate-300">{t.onboardingWizard.labelCommName}</Label>
                         <Input 
                           id="comm-name"
-                          placeholder="Введіть назву спільноти..."
+                          placeholder={t.onboardingWizard.placeholderCommName}
                           value={answers.name}
                           onChange={(e) => setAnswers(prev => ({ ...prev, name: e.target.value }))}
                           className="bg-slate-950/80 border-slate-800 focus-visible:ring-indigo-500"
@@ -663,30 +669,30 @@ export default function MicroDAOOnboarding() {
                       </div>
                       
                       <div className="space-y-2">
-                        <Label htmlFor="comm-type" className="text-xs font-bold text-slate-300">Тип спільноти</Label>
+                        <Label htmlFor="comm-type" className="text-xs font-bold text-slate-300">{t.onboardingWizard.labelCommType}</Label>
                         <Select 
                           value={answers.type}
                           onValueChange={(val) => setAnswers(prev => ({ ...prev, type: val }))}
                         >
                           <SelectTrigger id="comm-type" className="bg-slate-950/80 border-slate-800">
-                            <SelectValue placeholder="Оберіть тип..." />
+                            <SelectValue placeholder={t.onboardingWizard.placeholderCommType} />
                           </SelectTrigger>
                           <SelectContent className="bg-slate-900 border-slate-800 text-slate-100">
-                            <SelectItem value="workspace">Робочий простір / Команда</SelectItem>
-                            <SelectItem value="eco-village">Еко-поселення / Локальна громада</SelectItem>
-                            <SelectItem value="dao">DAO / Web3 гільдія</SelectItem>
-                            <SelectItem value="club">Закритий Клуб / Товариство</SelectItem>
-                            <SelectItem value="charity">Благодійна ініціатива</SelectItem>
-                            <SelectItem value="other">Інше</SelectItem>
+                            <SelectItem value="workspace">{t.onboardingWizard.types.workspace}</SelectItem>
+                            <SelectItem value="eco-village">{t.onboardingWizard.types.village}</SelectItem>
+                            <SelectItem value="dao">{t.onboardingWizard.types.dao}</SelectItem>
+                            <SelectItem value="club">{t.onboardingWizard.types.club}</SelectItem>
+                            <SelectItem value="charity">{t.onboardingWizard.types.charity}</SelectItem>
+                            <SelectItem value="other">{t.onboardingWizard.types.other}</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="comm-desc" className="text-xs font-bold text-slate-300">Короткий опис</Label>
+                        <Label htmlFor="comm-desc" className="text-xs font-bold text-slate-300">{t.onboardingWizard.labelCommDesc}</Label>
                         <Textarea 
                           id="comm-desc"
-                          placeholder="Опишіть, чим займається ваша спільнота та хто її учасники..."
+                          placeholder={t.onboardingWizard.placeholderCommDesc}
                           value={answers.description}
                           onChange={(e) => setAnswers(prev => ({ ...prev, description: e.target.value }))}
                           className="bg-slate-950/80 border-slate-800 text-xs min-h-[100px]"
@@ -699,10 +705,10 @@ export default function MicroDAOOnboarding() {
                   {step === 2 && (
                     <div className="space-y-4">
                       <div className="space-y-2">
-                        <Label htmlFor="comm-mission" className="text-xs font-bold text-slate-300">Місія та візія спільноти</Label>
+                        <Label htmlFor="comm-mission" className="text-xs font-bold text-slate-300">{t.onboarding.labelMission}</Label>
                         <Textarea 
                           id="comm-mission"
-                          placeholder="Чому ця спільнота існує? Яку головну проблему вона вирішує?"
+                          placeholder={t.onboardingWizard.placeholderCommMission}
                           value={answers.mission}
                           onChange={(e) => setAnswers(prev => ({ ...prev, mission: e.target.value }))}
                           className="bg-slate-950/80 border-slate-800 text-xs min-h-[100px]"
@@ -710,10 +716,10 @@ export default function MicroDAOOnboarding() {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="comm-goal" className="text-xs font-bold text-slate-300">Ціль на перші 30 днів</Label>
+                        <Label htmlFor="comm-goal" className="text-xs font-bold text-slate-300">{t.onboarding.labelGoal30Days}</Label>
                         <Textarea 
                           id="comm-goal"
-                          placeholder="Що спільнота має зробити протягом наступного місяця?"
+                          placeholder={t.onboardingWizard.placeholderCommGoal}
                           value={answers.goal_30_days}
                           onChange={(e) => setAnswers(prev => ({ ...prev, goal_30_days: e.target.value }))}
                           className="bg-slate-950/80 border-slate-800 text-xs min-h-[100px]"
@@ -726,10 +732,10 @@ export default function MicroDAOOnboarding() {
                   {step === 3 && (
                     <div className="space-y-4">
                       <div className="space-y-2">
-                        <Label htmlFor="comm-values" className="text-xs font-bold text-slate-300">Цінності, правила поведінки та межі</Label>
+                        <Label htmlFor="comm-values" className="text-xs font-bold text-slate-300">{t.onboarding.labelCommunityRules}</Label>
                         <Textarea 
                           id="comm-values"
-                          placeholder="Наприклад: 1. Повага один до одного. 2. Прозорість процесів. 3. Нейтральність при суперечках. Що заборонено робити?"
+                          placeholder={t.onboardingWizard.placeholderCommValues}
                           value={answers.values_rules}
                           onChange={(e) => setAnswers(prev => ({ ...prev, values_rules: e.target.value }))}
                           className="bg-slate-950/80 border-slate-800 text-xs min-h-[180px]"
@@ -742,7 +748,7 @@ export default function MicroDAOOnboarding() {
                   {step === 4 && (
                     <div className="space-y-4">
                       <div className="space-y-2">
-                        <Label htmlFor="agent-name" className="text-xs font-bold text-slate-300">Імʼя Духа Спільноти</Label>
+                        <Label htmlFor="agent-name" className="text-xs font-bold text-slate-300">{t.onboardingWizard.labelAgentName}</Label>
                         <Input 
                           id="agent-name"
                           value={answers.agent_name}
@@ -752,19 +758,19 @@ export default function MicroDAOOnboarding() {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="agent-tone" className="text-xs font-bold text-slate-300">Тональність агента</Label>
+                        <Label htmlFor="agent-tone" className="text-xs font-bold text-slate-300">{t.onboardingWizard.labelAgentTone}</Label>
                         <Select 
                           value={answers.tone}
                           onValueChange={(val) => setAnswers(prev => ({ ...prev, tone: val }))}
                         >
                           <SelectTrigger id="agent-tone" className="bg-slate-950/80 border-slate-800">
-                            <SelectValue placeholder="Оберіть тон..." />
+                            <SelectValue placeholder={t.onboardingWizard.placeholderAgentTone} />
                           </SelectTrigger>
                           <SelectContent className="bg-slate-900 border-slate-800 text-slate-100">
-                            <SelectItem value="warm">Теплий та дружній (Духовний)</SelectItem>
-                            <SelectItem value="philosophical">Філософський та спокійний (Еонарх)</SelectItem>
-                            <SelectItem value="technical">Технічний та точний (Яромир)</SelectItem>
-                            <SelectItem value="formal">Діловий та стриманий</SelectItem>
+                            <SelectItem value="warm">{t.onboardingWizard.tones.warm}</SelectItem>
+                            <SelectItem value="philosophical">{t.onboardingWizard.tones.philosophical}</SelectItem>
+                            <SelectItem value="technical">{t.onboardingWizard.tones.technical}</SelectItem>
+                            <SelectItem value="formal">{t.onboardingWizard.tones.formal}</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -775,7 +781,7 @@ export default function MicroDAOOnboarding() {
                   {step === 5 && (
                     <div className="space-y-4">
                       <div className="space-y-2">
-                        <Label className="text-xs font-bold text-slate-300">Рівень автономії агента</Label>
+                        <Label className="text-xs font-bold text-slate-300">{t.onboardingWizard.autonomyLevelLabel}</Label>
                         <RadioGroup 
                           value={answers.autonomy_level} 
                           onValueChange={(val: any) => setAnswers(prev => ({ ...prev, autonomy_level: val }))}
@@ -784,31 +790,31 @@ export default function MicroDAOOnboarding() {
                           <div className="flex items-start gap-3 p-3 rounded-lg border border-slate-800 bg-slate-950/40 hover:bg-slate-900/20 cursor-pointer">
                             <RadioGroupItem value="assistant" id="autonomy-assistant" className="mt-1" />
                             <div className="text-xs">
-                              <Label htmlFor="autonomy-assistant" className="font-semibold text-slate-200">Помічник (Assistant)</Label>
-                              <p className="text-slate-400 text-[10px] mt-0.5">Лише пропонує ідеї, робить підсумки та створює чернетки повідомлень.</p>
+                              <Label htmlFor="autonomy-assistant" className="font-semibold text-slate-200">{t.onboardingWizard.autonomyLevels.assistant}</Label>
+                              <p className="text-slate-400 text-[10px] mt-0.5">{t.onboardingWizard.autonomyLevels.assistantDesc}</p>
                             </div>
                           </div>
 
                           <div className="flex items-start gap-3 p-3 rounded-lg border border-indigo-500/30 bg-slate-950/40 hover:bg-slate-900/20 cursor-pointer">
                             <RadioGroupItem value="coordinator" id="autonomy-coordinator" className="mt-1" />
                             <div className="text-xs">
-                              <Label htmlFor="autonomy-coordinator" className="font-semibold text-indigo-300">Координатор (Coordinator)</Label>
-                              <p className="text-slate-400 text-[10px] mt-0.5">Вміє створювати чернетки завдань, готувати регламенти та нагадувати учасникам після підтвердження.</p>
+                              <Label htmlFor="autonomy-coordinator" className="font-semibold text-indigo-300">{t.onboardingWizard.autonomyLevels.coordinator}</Label>
+                              <p className="text-slate-400 text-[10px] mt-0.5">{t.onboardingWizard.autonomyLevels.coordinatorDesc}</p>
                             </div>
                           </div>
 
                           <div className="flex items-start gap-3 p-3 rounded-lg border border-slate-800 bg-slate-950/40 hover:bg-slate-900/20 cursor-pointer">
                             <RadioGroupItem value="supervised_admin" id="autonomy-admin" className="mt-1" />
                             <div className="text-xs">
-                              <Label htmlFor="autonomy-admin" className="font-semibold text-slate-200">Адміністратор (Supervised Admin)</Label>
-                              <p className="text-slate-400 text-[10px] mt-0.5">Може автоматично надсилати вітання, ставити задачі, оновлювати базу знань. Чутливі дії узгоджує.</p>
+                              <Label htmlFor="autonomy-admin" className="font-semibold text-slate-200">{t.onboardingWizard.autonomyLevels.admin}</Label>
+                              <p className="text-slate-400 text-[10px] mt-0.5">{t.onboardingWizard.autonomyLevels.adminDesc}</p>
                             </div>
                           </div>
                         </RadioGroup>
                       </div>
 
                       <div className="space-y-2 pt-2">
-                        <Label className="text-xs font-bold text-slate-300">Дозволи для Агента</Label>
+                        <Label className="text-xs font-bold text-slate-300">{t.onboardingWizard.permissionsLabel}</Label>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                           <div className="flex items-center space-x-2">
                             <Checkbox 
@@ -816,7 +822,7 @@ export default function MicroDAOOnboarding() {
                               checked={answers.can_send_welcome_messages} 
                               onCheckedChange={(checked) => setAnswers(prev => ({ ...prev, can_send_welcome_messages: !!checked }))}
                             />
-                            <Label htmlFor="perm-welcome" className="text-xs text-slate-300 font-normal">Надсилати вітання новачкам</Label>
+                            <Label htmlFor="perm-welcome" className="text-xs text-slate-300 font-normal">{t.onboardingWizard.permissions.welcome}</Label>
                           </div>
                           
                           <div className="flex items-center space-x-2">
@@ -825,7 +831,7 @@ export default function MicroDAOOnboarding() {
                               checked={answers.can_create_tasks} 
                               onCheckedChange={(checked) => setAnswers(prev => ({ ...prev, can_create_tasks: !!checked }))}
                             />
-                            <Label htmlFor="perm-tasks" className="text-xs text-slate-300 font-normal">Створювати чернетки задач</Label>
+                            <Label htmlFor="perm-tasks" className="text-xs text-slate-300 font-normal">{t.onboardingWizard.permissions.tasks}</Label>
                           </div>
 
                           <div className="flex items-center space-x-2">
@@ -834,7 +840,7 @@ export default function MicroDAOOnboarding() {
                               checked={answers.can_invite_guests} 
                               onCheckedChange={(checked) => setAnswers(prev => ({ ...prev, can_invite_guests: !!checked }))}
                             />
-                            <Label htmlFor="perm-invites" className="text-xs text-slate-300 font-normal">Створювати інвайти для гостей</Label>
+                            <Label htmlFor="perm-invites" className="text-xs text-slate-300 font-normal">{t.onboardingWizard.permissions.invites}</Label>
                           </div>
 
                           <div className="flex items-center space-x-2">
@@ -843,7 +849,7 @@ export default function MicroDAOOnboarding() {
                               checked={answers.can_create_summaries} 
                               onCheckedChange={(checked) => setAnswers(prev => ({ ...prev, can_create_summaries: !!checked }))}
                             />
-                            <Label htmlFor="perm-summaries" className="text-xs text-slate-300 font-normal">Генерувати підсумки зустрічей</Label>
+                            <Label htmlFor="perm-summaries" className="text-xs text-slate-300 font-normal">{t.onboardingWizard.permissions.summaries}</Label>
                           </div>
                         </div>
                       </div>
@@ -851,7 +857,7 @@ export default function MicroDAOOnboarding() {
                       <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg flex gap-2.5 items-start text-[10px] text-amber-300 leading-relaxed">
                         <ShieldAlert className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
                         <div>
-                          <strong>Чутливі дії завжди заблоковані</strong>: видалення спільноти, зміна прав доступу, передача власності та модифікація білінгу вимагають прямого підтвердження лідера.
+                          {t.onboardingWizard.sensitiveActionsWarning}
                         </div>
                       </div>
                     </div>
@@ -861,7 +867,7 @@ export default function MicroDAOOnboarding() {
                   {step === 6 && (
                     <div className="space-y-4">
                       <div className="space-y-2">
-                        <Label htmlFor="invite-member" className="text-xs font-bold text-slate-300">Код для Учасників (Members)</Label>
+                        <Label htmlFor="invite-member" className="text-xs font-bold text-slate-300">{t.onboardingWizard.labelInviteMember}</Label>
                         <Input 
                           id="invite-member"
                           value={answers.member_code}
@@ -871,7 +877,7 @@ export default function MicroDAOOnboarding() {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="invite-admin" className="text-xs font-bold text-slate-300">Код для Адміністраторів (Admins)</Label>
+                        <Label htmlFor="invite-admin" className="text-xs font-bold text-slate-300">{t.onboardingWizard.labelInviteAdmin}</Label>
                         <Input 
                           id="invite-admin"
                           value={answers.admin_code}
@@ -881,7 +887,7 @@ export default function MicroDAOOnboarding() {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="max-uses" className="text-xs font-bold text-slate-300">Максимальна кількість використань коду</Label>
+                        <Label htmlFor="max-uses" className="text-xs font-bold text-slate-300">{t.onboardingWizard.labelMaxUses}</Label>
                         <Input 
                           id="max-uses"
                           type="number"
@@ -897,10 +903,10 @@ export default function MicroDAOOnboarding() {
                   {step === 7 && (
                     <div className="space-y-4">
                       <div className="space-y-2">
-                        <Label htmlFor="kb-seed" className="text-xs font-bold text-slate-300">Початкова заправка знаннями (Замітки / Правила)</Label>
+                        <Label htmlFor="kb-seed" className="text-xs font-bold text-slate-300">{t.onboardingWizard.labelKbSeed}</Label>
                         <Textarea 
                           id="kb-seed"
-                          placeholder="Тут ви можете ввести правила спільноти, загальний регламент або перелік корисних посилань. Я проіндексую цю інформацію, щоб миттєво відповідати на запитання..."
+                          placeholder={t.onboardingWizard.placeholderKbSeed}
                           value={answers.initial_notes}
                           onChange={(e) => setAnswers(prev => ({ ...prev, initial_notes: e.target.value }))}
                           className="bg-slate-950/80 border-slate-800 text-xs min-h-[180px]"
@@ -915,11 +921,11 @@ export default function MicroDAOOnboarding() {
                       <div className="p-3 bg-indigo-950/30 border border-indigo-500/20 rounded-lg space-y-2 text-xs text-indigo-200">
                         <span className="font-bold flex items-center gap-1">
                           <CheckCircle className="h-4 w-4 text-indigo-400" />
-                          <span>Сплануємо перше завдання спільноти:</span>
+                          <span>{t.onboardingWizard.taskPlanningTitle}</span>
                         </span>
                         <div className="space-y-2 pt-1 text-slate-100">
                           <div>
-                            <Label htmlFor="task-title" className="text-[10px] text-slate-400">Назва завдання</Label>
+                            <Label htmlFor="task-title" className="text-[10px] text-slate-400">{t.onboardingWizard.taskTitleLabel}</Label>
                             <Input 
                               id="task-title"
                               value={answers.first_task_title}
@@ -928,7 +934,7 @@ export default function MicroDAOOnboarding() {
                             />
                           </div>
                           <div>
-                            <Label htmlFor="task-desc" className="text-[10px] text-slate-400">Опис завдання</Label>
+                            <Label htmlFor="task-desc" className="text-[10px] text-slate-400">{t.onboardingWizard.taskDescLabel}</Label>
                             <Textarea 
                               id="task-desc"
                               value={answers.first_task_desc}
@@ -940,13 +946,13 @@ export default function MicroDAOOnboarding() {
                       </div>
 
                       <div className="space-y-2 pt-2 border-t border-slate-800">
-                        <h4 className="text-xs font-bold text-slate-300">Огляд конфігурації MicroDAO:</h4>
+                        <h4 className="text-xs font-bold text-slate-300">{t.onboardingWizard.configReviewTitle}</h4>
                         <div className="grid grid-cols-2 gap-2 text-[10px] bg-slate-950/60 p-3 rounded-lg border border-slate-900 text-slate-400">
-                          <div><span className="font-semibold text-slate-200">Назва:</span> {answers.name}</div>
-                          <div><span className="font-semibold text-slate-200">Тип:</span> {answers.type}</div>
-                          <div><span className="font-semibold text-slate-200">Агент:</span> {answers.agent_name} ({answers.tone})</div>
-                          <div><span className="font-semibold text-slate-200">Автономія:</span> {answers.autonomy_level}</div>
-                          <div className="col-span-2 truncate"><span className="font-semibold text-slate-200">Код інвайту:</span> {answers.member_code}</div>
+                          <div><span className="font-semibold text-slate-200">{t.onboardingWizard.reviewLabels.name}</span> {answers.name}</div>
+                          <div><span className="font-semibold text-slate-200">{t.onboardingWizard.reviewLabels.type}</span> {t.onboardingWizard.types[answers.type as keyof typeof t.onboardingWizard.types] || answers.type}</div>
+                          <div><span className="font-semibold text-slate-200">{t.onboardingWizard.reviewLabels.agent}</span> {answers.agent_name} ({t.onboardingWizard.tones[answers.tone as keyof typeof t.onboardingWizard.tones] || answers.tone})</div>
+                          <div><span className="font-semibold text-slate-200">{t.onboardingWizard.reviewLabels.autonomy}</span> {t.onboardingWizard.autonomyLevels[answers.autonomy_level === 'supervised_admin' ? 'admin' : answers.autonomy_level]}</div>
+                          <div className="col-span-2 truncate"><span className="font-semibold text-slate-200">{t.onboardingWizard.reviewLabels.code}</span> {answers.member_code}</div>
                         </div>
                       </div>
                     </div>
@@ -964,7 +970,7 @@ export default function MicroDAOOnboarding() {
                         className="text-slate-400 hover:text-slate-200 text-xs"
                       >
                         <ArrowLeft className="mr-1 h-3.5 w-3.5" />
-                        <span>Назад</span>
+                        <span>{t.onboarding.btnPrevStep}</span>
                       </Button>
                     ) : (
                       <Button 
@@ -974,7 +980,7 @@ export default function MicroDAOOnboarding() {
                         className="text-slate-400 hover:text-slate-200 text-xs"
                       >
                         <ArrowLeft className="mr-1 h-3.5 w-3.5" />
-                        <span>В лобі</span>
+                        <span>{t.onboardingWizard.lobbyBtn}</span>
                       </Button>
                     )}
                     
@@ -986,7 +992,7 @@ export default function MicroDAOOnboarding() {
                       className="border-slate-800 text-slate-400 hover:text-slate-200 text-xs gap-1.5"
                     >
                       <Save className="h-3.5 w-3.5" />
-                      <span>Чернетка</span>
+                      <span>{t.onboardingWizard.draftBtn}</span>
                     </Button>
                   </div>
 
@@ -995,8 +1001,8 @@ export default function MicroDAOOnboarding() {
                       onClick={() => {
                         if (step === 1 && !answers.name.trim()) {
                           toast({
-                            title: "Назва обовʼязкова",
-                            description: "Будь ласка, назвіть ваше MicroDAO",
+                            title: t.onboardingWizard.errorNameRequired,
+                            description: t.onboardingWizard.errorNameDesc,
                             variant: "destructive"
                           });
                           return;
@@ -1005,7 +1011,7 @@ export default function MicroDAOOnboarding() {
                       }} 
                       className="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs"
                     >
-                      <span>Далі</span>
+                      <span>{t.onboardingWizard.nextBtn}</span>
                       <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
                     </Button>
                   ) : (
@@ -1014,7 +1020,7 @@ export default function MicroDAOOnboarding() {
                       disabled={loading}
                       className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:to-pink-500 text-white font-bold text-xs shadow-lg shadow-indigo-500/20"
                     >
-                      {loading ? "Створення..." : "Запустити MicroDAO"}
+                      {loading ? t.onboarding.btnCompleting : t.onboardingWizard.launchBtn}
                     </Button>
                   )}
                 </CardFooter>

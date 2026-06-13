@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useActiveCommunity } from '@/hooks/useActiveCommunity';
+import { useTranslation } from '@/lib/i18n';
 import { 
   Bot, 
   RefreshCw, 
@@ -34,6 +35,7 @@ interface PromptVersion {
 export function PromptEditor() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const { activeCommunity, activeCommunityId, isCommunityAdmin, loading: communityLoading } = useActiveCommunity();
 
   const [activeTab, setActiveTab] = useState<'system' | 'responses' | 'fallback'>('system');
@@ -64,7 +66,7 @@ export function PromptEditor() {
       setVersions((data ?? []) as PromptVersion[]);
     } catch (err: any) {
       console.error('Load versions error:', err);
-      setLoadError(err?.message || 'Не вдалося завантажити версії');
+      setLoadError(err?.message || t.promptEditor.loadErrorDesc);
     } finally {
       setLoadingVersions(false);
     }
@@ -100,15 +102,15 @@ export function PromptEditor() {
     : promptContent.trim() !== '';
 
   const handleRefresh = () => {
-    loadVersions().then(() => toast({ description: 'Дані оновлено' }));
+    loadVersions().then(() => toast({ description: t.promptEditor.refreshSuccessDesc }));
   };
 
   const handleSaveVersion = async () => {
     if (!promptContent.trim()) return;
     if (!versionName.trim()) {
       toast({
-        title: "Помилка",
-        description: "Будь ласка, введіть назву версії",
+        title: t.error,
+        description: t.promptEditor.errorEmptyVersionNameDesc,
         variant: "destructive",
       });
       return;
@@ -133,12 +135,12 @@ export function PromptEditor() {
       if (error) throw error;
       await loadVersions();
       setSelectedVersionId(data.id);
-      toast({ description: 'Версію промпту збережено' });
+      toast({ description: t.promptEditor.saveSuccessDesc });
     } catch (err: any) {
       console.error('Save error:', err);
       toast({
-        title: 'Помилка збереження',
-        description: err?.message || 'Спробуйте ще раз',
+        title: t.promptEditor.saveErrorTitle,
+        description: err?.message || t.promptEditor.saveErrorDesc,
         variant: 'destructive',
       });
     } finally {
@@ -156,12 +158,12 @@ export function PromptEditor() {
         setPromptContent(activated.content);
         setSelectedVersionId(activated.id);
       }
-      toast({ description: 'Версію активовано' });
+      toast({ description: t.promptEditor.activateSuccessDesc });
     } catch (err: any) {
       console.error('Activate error:', err);
       toast({
-        title: 'Помилка активації',
-        description: err?.message || 'Спробуйте ще раз',
+        title: t.promptEditor.activateErrorTitle,
+        description: err?.message || t.promptEditor.activateErrorDesc,
         variant: 'destructive',
       });
     }
@@ -172,7 +174,7 @@ export function PromptEditor() {
     setVersionName(v.version_name);
     setSelectedVersionId(v.id);
     toast({
-      description: `Завантажено версію ${v.version_name} для редагування`,
+      description: t.promptEditor.editVersionLoadedDesc.replace('{name}', v.version_name),
     });
   };
 
@@ -182,7 +184,7 @@ export function PromptEditor() {
   if (communityLoading) {
     return (
       <div className="container max-w-5xl mx-auto p-6">
-        <div className="text-sm text-muted-foreground">Завантаження спільноти...</div>
+        <div className="text-sm text-muted-foreground">{t.promptEditor.loadingCommunity}</div>
       </div>
     );
   }
@@ -192,8 +194,8 @@ export function PromptEditor() {
       <div className="container max-w-5xl mx-auto p-6">
         <Card>
           <CardHeader>
-            <CardTitle>Немає активної спільноти</CardTitle>
-            <CardDescription>Створіть або оберіть спільноту, щоб редагувати промпти.</CardDescription>
+            <CardTitle>{t.promptEditor.noActiveCommunityTitle}</CardTitle>
+            <CardDescription>{t.promptEditor.noActiveCommunityDesc}</CardDescription>
           </CardHeader>
         </Card>
       </div>
@@ -207,10 +209,10 @@ export function PromptEditor() {
         <div>
           <div className="flex items-center gap-2">
             <Bot className="h-6 w-6 text-primary" />
-            <h1 className="text-2xl font-bold tracking-tight">Редактор промптів</h1>
+            <h1 className="text-2xl font-bold tracking-tight">{t.promptEditor.pageTitle}</h1>
           </div>
           <p className="text-muted-foreground text-sm mt-1">
-            Налаштування інструкцій та поведінки агента{activeCommunity ? ` · ${activeCommunity.name}` : ''}
+            {t.promptEditor.pageSubtitle}{activeCommunity ? ` · ${activeCommunity.name}` : ''}
           </p>
         </div>
         
@@ -222,7 +224,7 @@ export function PromptEditor() {
             className="flex items-center gap-1.5"
           >
             <RefreshCw className="h-4 w-4" />
-            Оновити
+            {t.promptEditor.btnRefresh}
           </Button>
           
           {isAdmin && (
@@ -234,7 +236,7 @@ export function PromptEditor() {
               className="flex items-center gap-1.5"
             >
               <Save className="h-4 w-4" />
-              {saving ? 'Збереження...' : 'Зберегти версію'}
+              {saving ? t.promptEditor.btnSavingVersion : t.promptEditor.btnSaveVersion}
             </Button>
           )}
         </div>
@@ -253,9 +255,9 @@ export function PromptEditor() {
         className="w-full space-y-4"
       >
         <TabsList className="grid w-full grid-cols-3 max-w-md">
-          <TabsTrigger value="system">Системний</TabsTrigger>
-          <TabsTrigger value="responses">Відповіді</TabsTrigger>
-          <TabsTrigger value="fallback">Фолбек</TabsTrigger>
+          <TabsTrigger value="system">{t.promptEditor.tabSystem}</TabsTrigger>
+          <TabsTrigger value="responses">{t.promptEditor.tabResponses}</TabsTrigger>
+          <TabsTrigger value="fallback">{t.promptEditor.tabFallback}</TabsTrigger>
         </TabsList>
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
@@ -266,20 +268,20 @@ export function PromptEditor() {
                 <div className="flex items-center justify-between flex-wrap gap-2">
                   <div>
                     <CardTitle className="text-lg">
-                      {activeTab === 'system' && 'Системні інструкції (System Prompt)'}
-                      {activeTab === 'responses' && 'Формат та стиль відповідей'}
-                      {activeTab === 'fallback' && 'Фолбек інструкції (запасні відповіді)'}
+                      {activeTab === 'system' && t.promptEditor.labelSystemInstructions}
+                      {activeTab === 'responses' && t.promptEditor.labelResponsesInstructions}
+                      {activeTab === 'fallback' && t.promptEditor.labelFallbackInstructions}
                     </CardTitle>
                     <CardDescription className="text-xs mt-0.5">
-                      {activeTab === 'system' && 'Базові правила, знання та ідентичність ШІ-агента спільноти'}
-                      {activeTab === 'responses' && 'Налаштування стилю спілкування, мови та довжини повідомлень'}
-                      {activeTab === 'fallback' && 'Інструкції на випадок відсутності відповіді в базі знань або помилок'}
+                      {activeTab === 'system' && t.promptEditor.descSystemInstructions}
+                      {activeTab === 'responses' && t.promptEditor.descResponsesInstructions}
+                      {activeTab === 'fallback' && t.promptEditor.descFallbackInstructions}
                     </CardDescription>
                   </div>
                   
                   {activePromptVersion && (
                     <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
-                      Активна версія: {activePromptVersion.version_name}
+                      {t.promptEditor.activeVersionLabel.replace('{name}', activePromptVersion.version_name)}
                     </Badge>
                   )}
                 </div>
@@ -291,7 +293,7 @@ export function PromptEditor() {
                   <div className="p-3 rounded-lg border border-warning/30 bg-warning/10 text-warning text-xs flex items-start gap-2 mb-2">
                     <Lock className="h-4 w-4 shrink-0 mt-0.5" />
                     <div>
-                      <span className="font-semibold">Перегляд обмежено.</span> Ви можете бачити активні інструкції, але редагування та створення нових версій дозволено лише адміністраторам команди.
+                      {t.promptEditor.viewOnlyWarning}
                     </div>
                   </div>
                 )}
@@ -300,17 +302,17 @@ export function PromptEditor() {
                 {hasUnsavedChanges && isAdmin && (
                   <div className="p-3 rounded-lg border border-accent/30 bg-accent/5 text-accent text-xs flex items-center gap-2 animate-pulse">
                     <AlertTriangle className="h-4 w-4 shrink-0 text-accent" />
-                    <span>Маєте незбережені зміни в цьому промпті. Натисніть <strong>"Зберегти версію"</strong> для збереження чернетки.</span>
+                    <span>{t.promptEditor.unsavedChangesAlert}</span>
                   </div>
                 )}
 
                 <div className="space-y-2">
-                  <Label htmlFor="version-name">Назва версії</Label>
+                  <Label htmlFor="version-name">{t.promptEditor.labelVersionName}</Label>
                   <Input 
                     id="version-name"
                     value={versionName}
                     onChange={(e) => setVersionName(e.target.value)}
-                    placeholder="Наприклад: v1, v1.1, draft-new"
+                    placeholder={t.promptEditor.placeholderVersionName}
                     className="max-w-[200px]"
                     disabled={!isAdmin}
                   />
@@ -318,9 +320,9 @@ export function PromptEditor() {
 
                 <div className="space-y-2">
                   <Label htmlFor="prompt-textarea">
-                    {activeTab === 'system' && 'Контент промпту (system)'}
-                    {activeTab === 'responses' && 'Контент промпту (responses)'}
-                    {activeTab === 'fallback' && 'Контент промпту (fallback)'}
+                    {activeTab === 'system' && t.promptEditor.labelPromptContentSystem}
+                    {activeTab === 'responses' && t.promptEditor.labelPromptContentResponses}
+                    {activeTab === 'fallback' && t.promptEditor.labelPromptContentFallback}
                   </Label>
                   <Textarea
                     id="prompt-textarea"
@@ -328,10 +330,10 @@ export function PromptEditor() {
                     onChange={(e) => setPromptContent(e.target.value)}
                     placeholder={
                       activeTab === 'system' 
-                        ? 'Введіть системні інструкції для агента спільноти…' 
+                        ? t.promptEditor.placeholderPromptContentSystem
                         : activeTab === 'responses' 
-                        ? 'Введіть вимоги до стилю та формату відповідей асистента…' 
-                        : 'Введіть інструкції для поведінки у невідомих ситуаціях…'
+                        ? t.promptEditor.placeholderPromptContentResponses
+                        : t.promptEditor.placeholderPromptContentFallback
                     }
                     className="min-h-[350px] font-mono text-sm leading-relaxed p-4 border-border/80 focus-visible:ring-primary bg-background/50"
                     disabled={!isAdmin}
@@ -346,17 +348,17 @@ export function PromptEditor() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5">
                 <History className="h-4 w-4 text-muted-foreground" />
-                <h3 className="font-semibold text-sm">Версії промпту</h3>
+                <h3 className="font-semibold text-sm">{t.promptEditor.versionsListTitle}</h3>
               </div>
               <Badge variant="outline" className="text-xs">
-                Всього: {filteredVersions.length}
+                {t.promptEditor.totalVersionsCount.replace('{count}', String(filteredVersions.length))}
               </Badge>
             </div>
 
             <div className="space-y-3 max-h-[550px] overflow-y-auto pr-1">
               {filteredVersions.length === 0 ? (
                 <div className="text-center p-6 border rounded-lg border-dashed">
-                  <p className="text-xs text-muted-foreground">Версій не знайдено</p>
+                  <p className="text-xs text-muted-foreground">{t.promptEditor.noVersionsFound}</p>
                 </div>
               ) : (
                 filteredVersions.map((v) => (
@@ -373,11 +375,11 @@ export function PromptEditor() {
                         <span className="font-bold text-sm text-foreground">{v.version_name}</span>
                         {v.is_active ? (
                           <Badge className="bg-primary/20 text-primary border-primary/30 text-[10px] px-1.5 py-0.5">
-                            Активна
+                            {t.promptEditor.badgeActive}
                           </Badge>
                         ) : (
                           <Badge variant="outline" className="text-[10px] px-1.5 py-0.5">
-                            Чернетка
+                            {t.promptEditor.badgeDraft}
                           </Badge>
                         )}
                       </div>
@@ -405,7 +407,7 @@ export function PromptEditor() {
                             onClick={() => handleActivateVersion(v.id)}
                           >
                             <Play className="h-3 w-3" />
-                            Активувати
+                            {t.promptEditor.btnActivate}
                           </Button>
                         )}
                         <Button 
@@ -415,7 +417,7 @@ export function PromptEditor() {
                           onClick={() => handleEditVersion(v)}
                         >
                           <Edit3 className="h-3 w-3" />
-                          {isAdmin ? 'Редагувати' : 'Переглянути'}
+                          {isAdmin ? t.promptEditor.btnEdit : t.promptEditor.btnView}
                         </Button>
                       </div>
                     </CardContent>

@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from '@/lib/i18n';
 
 interface ValidationResult {
   valid: boolean;
@@ -10,6 +11,7 @@ interface ValidationResult {
 
 export const useEnhancedFileValidation = () => {
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const validateFile = async (file: File): Promise<ValidationResult> => {
     try {
@@ -17,11 +19,11 @@ export const useEnhancedFileValidation = () => {
       const maxSize = 50 * 1024 * 1024; // 50MB
       if (file.size > maxSize) {
         toast({
-          title: 'Файл слишком большой',
-          description: 'Максимальный размер файла: 50MB',
+          title: t.fileValidation.tooLargeTitle,
+          description: t.fileValidation.tooLargeDesc,
           variant: 'destructive'
         });
-        return { valid: false, error: 'Файл слишком большой' };
+        return { valid: false, error: t.fileValidation.tooLargeTitle };
       }
 
       // Check for dangerous file extensions
@@ -33,11 +35,11 @@ export const useEnhancedFileValidation = () => {
       const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
       if (dangerousExtensions.includes(fileExtension)) {
         toast({
-          title: 'Недопустимый тип файла',
-          description: 'Этот тип файла не разрешен для загрузки',
+          title: t.fileValidation.invalidTypeTitle,
+          description: t.fileValidation.invalidTypeDesc,
           variant: 'destructive'
         });
-        return { valid: false, error: 'Недопустимый тип файла' };
+        return { valid: false, error: t.fileValidation.invalidTypeTitle };
       }
 
       // Rate limit check for file uploads
@@ -62,26 +64,26 @@ export const useEnhancedFileValidation = () => {
       if (error) {
         console.error('File validation error:', error);
         toast({
-          title: 'Ошибка валидации файла',
-          description: 'Не удалось проверить файл',
+          title: t.fileValidation.validationErrorTitle,
+          description: t.fileValidation.validationErrorDesc,
           variant: 'destructive'
         });
-        return { valid: false, error: 'Ошибка валидации файла' };
+        return { valid: false, error: t.fileValidation.validationErrorTitle };
       }
 
       if (data.rateLimited) {
         toast({
-          title: 'Слишком много попыток',
-          description: 'Попробуйте загрузить файл позже',
+          title: t.fileValidation.rateLimitTitle,
+          description: t.fileValidation.rateLimitDesc,
           variant: 'destructive'
         });
-        return { valid: false, rateLimited: true, error: 'Слишком много попыток' };
+        return { valid: false, rateLimited: true, error: t.fileValidation.rateLimitTitle };
       }
 
       if (!data.success) {
         toast({
-          title: 'Файл отклонен',
-          description: data.error || 'Файл не соответствует требованиям безопасности',
+          title: t.fileValidation.rejectedTitle,
+          description: data.error || t.fileValidation.rejectedDesc,
           variant: 'destructive'
         });
         return { valid: false, error: data.error };
@@ -95,11 +97,11 @@ export const useEnhancedFileValidation = () => {
     } catch (error) {
       console.error('Enhanced file validation error:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось проверить файл',
+        title: t.fileValidation.errorTitle,
+        description: t.fileValidation.errorDesc,
         variant: 'destructive'
       });
-      return { valid: false, error: 'Не удалось проверить файл' };
+      return { valid: false, error: t.fileValidation.errorDesc };
     }
   };
 

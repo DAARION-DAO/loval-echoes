@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { supabase } from '@/integrations/supabase/client';
+import { useTranslation } from '@/lib/i18n';
 
 interface Participant {
   user_id: string;
@@ -20,6 +21,7 @@ interface ParticipantsListProps {
 }
 
 export const ParticipantsList = ({ chatId, onlineUsers }: ParticipantsListProps) => {
+  const { t } = useTranslation();
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -50,11 +52,12 @@ export const ParticipantsList = ({ chatId, onlineUsers }: ParticipantsListProps)
 
       const participantsList: Participant[] = (participantData || []).map(p => {
         const profile = p.profiles as { display_name?: string; avatar_url?: string } | null;
+        const fallbackName = t.participantsExtra.userFallbackName;
         return {
           user_id: p.user_id,
-          display_name: profile?.display_name || 'Участник',
+          display_name: profile?.display_name || fallbackName,
           avatar_url: profile?.avatar_url,
-          isOnline: onlineUsers.includes(profile?.display_name || 'Участник'),
+          isOnline: onlineUsers.includes(profile?.display_name || fallbackName),
         };
       });
 
@@ -88,7 +91,7 @@ export const ParticipantsList = ({ chatId, onlineUsers }: ParticipantsListProps)
           className="touch-target h-10 px-3 flex items-center gap-2"
         >
           <Users className="h-4 w-4" />
-          <span className="hidden sm:inline">Участники</span>
+          <span className="hidden sm:inline">{t.participantsExtra.triggerButton}</span>
           <Badge variant="secondary" className="flex items-center gap-1">
             <Circle className="h-2 w-2 fill-green-500 text-green-500" />
             <span className="text-xs">{onlineCount}/{totalCount}</span>
@@ -100,10 +103,10 @@ export const ParticipantsList = ({ chatId, onlineUsers }: ParticipantsListProps)
         <SheetHeader className="p-6 border-b">
           <SheetTitle className="flex items-center gap-2 text-lg">
             <Users className="h-5 w-5" />
-            Участники чата
+            {t.participantsExtra.pageTitle}
           </SheetTitle>
           <p className="text-sm text-muted-foreground mt-1">
-            {onlineCount} из {totalCount} онлайн
+            {t.participantsExtra.onlineCountDesc.replace('{online}', String(onlineCount)).replace('{total}', String(totalCount))}
           </p>
         </SheetHeader>
         
@@ -114,7 +117,7 @@ export const ParticipantsList = ({ chatId, onlineUsers }: ParticipantsListProps)
                 <div className="flex items-center justify-center py-12">
                   <div className="text-center">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-3" />
-                    <p className="text-sm text-muted-foreground">Загрузка участников...</p>
+                    <p className="text-sm text-muted-foreground">{t.participantsExtra.loadingText}</p>
                   </div>
                 </div>
               ) : (
@@ -123,7 +126,7 @@ export const ParticipantsList = ({ chatId, onlineUsers }: ParticipantsListProps)
                   {participants.filter(p => p.isOnline).length > 0 && (
                     <div>
                       <h3 className="text-sm font-medium text-muted-foreground mb-3">
-                        Онлайн ({participants.filter(p => p.isOnline).length})
+                        {t.participantsExtra.onlineHeader.replace('{count}', String(participants.filter(p => p.isOnline).length))}
                       </h3>
                       <div className="space-y-3">
                         {participants.filter(p => p.isOnline).map((participant) => (
@@ -142,7 +145,7 @@ export const ParticipantsList = ({ chatId, onlineUsers }: ParticipantsListProps)
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium truncate">{participant.display_name}</p>
-                              <p className="text-xs text-green-600">онлайн</p>
+                              <p className="text-xs text-green-600">{t.participantsExtra.online}</p>
                             </div>
                           </div>
                         ))}
@@ -154,7 +157,7 @@ export const ParticipantsList = ({ chatId, onlineUsers }: ParticipantsListProps)
                   {participants.filter(p => !p.isOnline).length > 0 && (
                     <div>
                       <h3 className="text-sm font-medium text-muted-foreground mb-3">
-                        Офлайн ({participants.filter(p => !p.isOnline).length})
+                        {t.participantsExtra.offlineHeader.replace('{count}', String(participants.filter(p => !p.isOnline).length))}
                       </h3>
                       <div className="space-y-3">
                         {participants.filter(p => !p.isOnline).map((participant) => (
@@ -173,7 +176,7 @@ export const ParticipantsList = ({ chatId, onlineUsers }: ParticipantsListProps)
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium truncate">{participant.display_name}</p>
-                              <p className="text-xs text-muted-foreground">не в сети</p>
+                              <p className="text-xs text-muted-foreground">{t.participantsExtra.notInNetwork}</p>
                             </div>
                           </div>
                         ))}
@@ -185,7 +188,7 @@ export const ParticipantsList = ({ chatId, onlineUsers }: ParticipantsListProps)
                   {participants.length === 0 && (
                     <div className="text-center py-12">
                       <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <p className="text-sm text-muted-foreground">Нет данных об участниках</p>
+                      <p className="text-sm text-muted-foreground">{t.participantsExtra.noParticipants}</p>
                     </div>
                   )}
                 </>

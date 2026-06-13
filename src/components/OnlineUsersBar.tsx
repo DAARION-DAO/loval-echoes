@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { supabase } from '@/integrations/supabase/client';
 import { Users } from 'lucide-react';
+import { useTranslation } from '@/lib/i18n';
 
 interface OnlineUser {
   user_id: string;
@@ -21,6 +22,7 @@ export const OnlineUsersBar: React.FC<OnlineUsersBarProps> = ({
   maxVisible = 6,
   className = "" 
 }) => {
+  const { t } = useTranslation();
   const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
   const [totalOnline, setTotalOnline] = useState(0);
 
@@ -60,7 +62,7 @@ export const OnlineUsersBar: React.FC<OnlineUsersBarProps> = ({
               const presence = userPresences[0] as Record<string, unknown>;
               users.push({
                 user_id: userId,
-                display_name: (presence.display_name as string) || 'Участник',
+                display_name: (presence.display_name as string) || t.participantsExtra.userFallbackName,
                 avatar_url: presence.avatar_url as string | undefined,
                 email: presence.email as string | undefined,
               });
@@ -85,7 +87,7 @@ export const OnlineUsersBar: React.FC<OnlineUsersBarProps> = ({
             // Track user presence
             await presenceChannel.track({
               user_id: user.id,
-              display_name: profile?.display_name || user.email?.split('@')[0] || 'Участник',
+              display_name: profile?.display_name || user.email?.split('@')[0] || t.participantsExtra.userFallbackName,
               avatar_url: profile?.avatar_url,
               email: profile?.email || user.email,
               online_at: new Date().toISOString(),
@@ -114,7 +116,7 @@ export const OnlineUsersBar: React.FC<OnlineUsersBarProps> = ({
     return (
       <div className={`flex items-center gap-2 text-muted-foreground ${className}`}>
         <Users className="h-4 w-4" />
-        <span className="text-sm">0 онлайн</span>
+        <span className="text-sm">{t.chatsExtra.onlineCount.replace('{count}', '0')}</span>
       </div>
     );
   }
@@ -136,7 +138,7 @@ export const OnlineUsersBar: React.FC<OnlineUsersBarProps> = ({
                 </Avatar>
               </TooltipTrigger>
               <TooltipContent>
-                {user.display_name} (онлайн)
+                {user.display_name} ({t.participantsExtra.online})
               </TooltipContent>
             </Tooltip>
           ))}
@@ -149,7 +151,7 @@ export const OnlineUsersBar: React.FC<OnlineUsersBarProps> = ({
         </div>
         
         <span className="text-sm text-muted-foreground">
-          {totalOnline} онлайн
+          {t.chatsExtra.onlineCount.replace('{count}', String(totalOnline))}
         </span>
       </div>
     </TooltipProvider>

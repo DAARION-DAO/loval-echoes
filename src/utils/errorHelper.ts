@@ -1,3 +1,5 @@
+import { translations, Language } from "@/lib/i18n";
+
 export interface ErrorDetails {
   title: string;
   message: string;
@@ -12,5 +14,8 @@ export function getErrorMessage(error: unknown): string {
   if (error && typeof error === 'object' && 'message' in error) {
     return String((error as { message: unknown }).message);
   }
-  return String(error || 'Неизвестная ошибка');
+  
+  const saved = localStorage.getItem('language');
+  const lang: Language = (saved && ['uk', 'en', 'ru', 'es'].includes(saved)) ? (saved as Language) : 'en';
+  return String(error || translations[lang].errors.unknownError);
 }

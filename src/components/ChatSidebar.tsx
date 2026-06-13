@@ -80,7 +80,7 @@ export const ChatSidebar = () => {
       
       // Count unique active users (excluding agent)
       const uniqueUsers = new Set(
-        recentMessages?.filter(m => m.sender_name && m.sender_name !== 'ЖОС')
+        recentMessages?.filter(m => m.sender_name && m.sender_name !== '\u0416\u041e\u0421')
           .map(m => m.sender_name) || []
       );
       
@@ -91,7 +91,7 @@ export const ChatSidebar = () => {
       setOnlineUsers(1); // Fallback to at least current user
     }
   };
-
+ 
   const loadChats = async () => {
     try {
       setLoading(true);
@@ -100,11 +100,11 @@ export const ChatSidebar = () => {
         .select('id, name, updated_at, created_at, status')
         .eq('status', 'active')
         .order('updated_at', { ascending: false });
-
+ 
       if (error) {
         throw new Error(`Failed to fetch chats: ${error.message}`);
       }
-
+ 
       const chats = (conversations || []).map(conv => ({
         id: conv.id,
         name: conv.name,
@@ -115,8 +115,8 @@ export const ChatSidebar = () => {
     } catch (error: unknown) {
       console.error("Error loading chats:", error);
       toast({
-        title: "Ошибка",
-        description: "Не удалось загрузить чаты",
+        title: t.chatSidebar.loadErrorTitle,
+        description: t.chatSidebar.loadErrorDesc,
         variant: "destructive",
       });
     } finally {
@@ -141,7 +141,7 @@ export const ChatSidebar = () => {
       const { data: newChat, error } = await supabase
         .from('conversations')
         .insert({
-          name: 'Новый чат',
+          name: t.chatSidebar.defaultChatName,
           user_id: user.id,
         })
         .select('id, name, updated_at')
@@ -183,13 +183,13 @@ export const ChatSidebar = () => {
       console.log('Chat added to local state, navigating to chat:', newChat.id);
       navigate(`/chats/${newChat.id}`);
       toast({
-        description: "Чат создан",
+        description: t.chatSidebar.chatCreatedDesc,
       });
     } catch (error) {
       console.error("Error creating chat:", error);
       toast({
-        title: "Ошибка",
-        description: error instanceof Error ? error.message : "Не удалось создать чат",
+        title: t.chatSidebar.createErrorTitle,
+        description: error instanceof Error ? error.message : t.chats.errorCreate,
         variant: "destructive",
       });
     }
@@ -210,20 +210,20 @@ export const ChatSidebar = () => {
         chat.id === chatId ? { ...chat, name: newName } : chat
       ));
       toast({
-        description: "Чат переименован",
+        description: t.chatSidebar.chatRenamedDesc,
       });
     } catch (error) {
       console.error("Error renaming chat:", error);
       toast({
-        title: "Ошибка", 
-        description: "Не удалось переименовать чат",
+        title: t.chatSidebar.renameErrorTitle,
+        description: t.chatSidebar.renameErrorDesc,
         variant: "destructive",
       });
     }
   };
 
   const handleArchiveChat = async (chatId: string) => {
-    if (!confirm("Архивировать этот чат? Удалить его можно только из панели управления.")) {
+    if (!confirm(t.chatSidebar.archiveConfirm)) {
       return;
     }
     
@@ -243,14 +243,14 @@ export const ChatSidebar = () => {
       }
       
       toast({
-        title: "Чат архивирован",
-        description: "Чат перемещен в архив. Удалить его можно из панели управления чатами.",
+        title: t.chatSidebar.chatArchivedTitle,
+        description: t.chatSidebar.chatArchivedDesc,
       });
     } catch (error) {
       console.error("Error archiving chat:", error);
       toast({
-        title: "Ошибка",
-        description: "Не удалось архивировать чат",
+        title: t.chatSidebar.archiveErrorTitle,
+        description: t.chatSidebar.archiveErrorDesc,
         variant: "destructive",
       });
     }
@@ -266,9 +266,9 @@ export const ChatSidebar = () => {
     const diff = now.getTime() - date.getTime();
     
     if (diff < 24 * 60 * 60 * 1000) {
-      return "Сегодня";
+      return t.chatSidebar.today;
     } else if (diff < 2 * 24 * 60 * 60 * 1000) {
-      return "Вчера";
+      return t.chatSidebar.yesterday;
     } else {
       return date.toLocaleDateString();
     }
@@ -280,7 +280,7 @@ export const ChatSidebar = () => {
         <ActiveCommunityHeader />
         <div className="flex items-center gap-2 mb-3">
           <Input 
-            placeholder="Поиск чатов..."
+            placeholder={t.chatSidebar.searchPlaceholder}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="flex-1"
@@ -303,10 +303,10 @@ export const ChatSidebar = () => {
           <div className="flex flex-col items-center justify-center h-full text-center p-6">
             <MessageCircle className="h-12 w-12 text-muted-foreground mb-3" />
             <p className="text-muted-foreground mb-4">
-              {searchQuery ? "Чаты не найдены" : "Пока нет чатов"}
+              {searchQuery ? t.chatSidebar.noChatsFound : t.chatSidebar.noChatsYet}
             </p>
             <Button size="sm" onClick={handleCreateChat}>
-              Создать первый чат
+              {t.chatSidebar.createFirstChatBtn}
             </Button>
           </div>
         ) : (
@@ -340,7 +340,7 @@ export const ChatSidebar = () => {
                     e.preventDefault();
                     handleArchiveChat(chat.id);
                   }}
-                  title="Архивировать чат"
+                  title={t.chatSidebar.archiveTooltip}
                 >
                   <Archive className="h-4 w-4" />
                 </Button>

@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from '@/lib/i18n';
 
 interface Reaction {
   id: string;
@@ -20,6 +21,7 @@ interface ReactionsBarProps {
 const STANDARD_REACTIONS = ['👍', '👎', '❤️', '🔥', '👀', '🎉'];
 
 export const ReactionsBar = ({ messageId, className }: ReactionsBarProps) => {
+  const { t } = useTranslation();
   const [reactions, setReactions] = useState<Record<string, Reaction>>({});
   const [showPicker, setShowPicker] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -93,8 +95,8 @@ export const ReactionsBar = ({ messageId, className }: ReactionsBarProps) => {
   const handleReactionToggle = async (emoji: string) => {
     if (!currentUserId) {
       toast({
-        title: 'Требуется авторизация',
-        description: 'Войдите в систему для добавления реакций',
+        title: t.reactions.authRequiredTitle,
+        description: t.reactions.authRequiredDesc,
         variant: 'destructive',
       });
       return;
@@ -130,8 +132,8 @@ export const ReactionsBar = ({ messageId, className }: ReactionsBarProps) => {
     } catch (error) {
       console.error('Error toggling reaction:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось добавить реакцию',
+        title: t.reactions.addErrorTitle,
+        description: t.reactions.addErrorDesc,
         variant: 'destructive',
       });
     }
@@ -171,7 +173,7 @@ export const ReactionsBar = ({ messageId, className }: ReactionsBarProps) => {
           variant="ghost"
           onClick={() => setShowPicker(!showPicker)}
           className="h-4 w-4 p-0 text-muted-foreground hover:text-foreground"
-          title="Добавить реакцию"
+          title={t.reactions.addTooltip}
         >
           <span className="text-xs">+</span>
         </Button>

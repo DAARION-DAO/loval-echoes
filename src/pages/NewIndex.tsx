@@ -93,11 +93,11 @@ export const NewIndex = () => {
     try {
       setIsCreating(true);
       if (data.type === 'chat') {
-        const newChat = await createChat(data.name || "Новий чат");
+        const newChat = await createChat(data.name || t.chats.newChat);
         navigate(`/chats/${newChat.id}`);
         toast({
-          title: "Чат створено",
-          description: `Чат "${data.name}" успішно створено`,
+          title: t.chats.successCreate,
+          description: `${t.chats.newChat} "${data.name}"`,
         });
         setCreateModalOpen(false);
       } else if (data.type === 'project') {
@@ -116,15 +116,15 @@ export const NewIndex = () => {
         const { project } = response.data;
         
         toast({
-          title: "Проєкт створено",
-          description: `Проєкт "${data.name}" успішно створено`,
+          title: t.projects.successCreate,
+          description: `${t.projects.title} "${data.name}"`,
         });
         setCreateModalOpen(false);
         navigate(`/projects/${project.id}`);
       } else {
         toast({
-          title: "В розробці",
-          description: `Створення ${data.type} буде додано пізніше`,
+          title: t.chats.wipTitle,
+          description: t.chats.wipDesc,
         });
         setCreateModalOpen(false);
       }
@@ -132,8 +132,8 @@ export const NewIndex = () => {
       console.error('Error creating:', error);
       toast({
         variant: 'destructive',
-        title: 'Помилка створення',
-        description: error instanceof Error ? error.message : 'Не вдалося виконати створення',
+        title: t.projects.errorCreate,
+        description: error instanceof Error ? error.message : t.chats.errorCreate,
       });
     } finally {
       setIsCreating(false);
@@ -171,7 +171,7 @@ export const NewIndex = () => {
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 sm:gap-4">
-              <h1 className="text-lg sm:text-xl md:text-2xl font-bold truncate">{t.zhosBanner.line1.split(' ')[0]} Мессенджер</h1>
+              <h1 className="text-lg sm:text-xl md:text-2xl font-bold truncate">{t.zhosBanner.line1.split(' ')[0]} {t.chats.messenger}</h1>
               <Button
                 variant="outline"
                 size="sm"
@@ -179,8 +179,8 @@ export const NewIndex = () => {
                 className="hidden sm:flex items-center gap-2 min-w-[200px] justify-start text-muted-foreground"
               >
                 <Search className="h-4 w-4" />
-                <span className="hidden md:inline">Глобальный поиск...</span>
-                <span className="md:hidden">Поиск...</span>
+                <span className="hidden md:inline">{t.chats.search}...</span>
+                <span className="md:hidden">{t.chats.search}</span>
                 <kbd className="ml-auto text-xs hidden md:inline">⌘K</kbd>
               </Button>
             </div>
@@ -193,7 +193,7 @@ export const NewIndex = () => {
                 className="flex items-center gap-2"
               >
                 <MessageSquarePlus className="h-4 w-4" />
-                <span className="hidden sm:inline">Создать</span>
+                <span className="hidden sm:inline">{t.create}</span>
               </Button>
               
               <Button 
@@ -251,71 +251,71 @@ export const NewIndex = () => {
                 </div>
                 <div>
                   <CardTitle className="text-lg font-bold text-slate-100 flex items-center gap-2">
-                    <span>{spiritAgent ? spiritAgent.name : "Дух Спільноти"}</span>
-                    <span className="px-2 py-0.5 text-[9px] font-semibold rounded bg-green-500/10 text-green-400 border border-green-500/20 uppercase tracking-wider">активний</span>
+                    <span>{spiritAgent ? spiritAgent.name : t.spiritWidget.widgetTitle}</span>
+                    <span className="px-2 py-0.5 text-[9px] font-semibold rounded bg-green-500/10 text-green-400 border border-green-500/20 uppercase tracking-wider">{t.spiritWidget.activeStatus}</span>
                   </CardTitle>
                   <CardDescription className="text-xs text-indigo-300 font-medium tracking-wide">
-                    Головний AI Організатор • {spiritAgent?.personality?.autonomy_level === 'supervised_admin' ? 'Супервізований Адмін' : spiritAgent?.personality?.autonomy_level === 'coordinator' ? 'Координатор' : 'Асистент'}
+                    {t.spiritWidget.mainOrganizer} • {spiritAgent?.personality?.autonomy_level === 'supervised_admin' ? t.spiritWidget.supervisorAdmin : spiritAgent?.personality?.autonomy_level === 'coordinator' ? t.spiritWidget.coordinator : t.spiritWidget.assistant}
                   </CardDescription>
                 </div>
               </div>
               <Badge variant="outline" className="bg-indigo-500/5 text-indigo-300 border-indigo-500/20 text-[10px] py-1 px-2.5">
-                Дух MicroDAO
+                {t.spiritWidget.spiritDAO}
               </Badge>
             </CardHeader>
             <CardContent className="space-y-4">
               {spiritAgent ? (
                 <div className="space-y-3">
                   <div className="text-xs text-slate-300 leading-relaxed bg-slate-950/40 p-3 rounded-lg border border-slate-900">
-                    <span className="font-semibold text-slate-200">Місія памʼяті:</span> {spiritAgent.personality?.mission || "Збереження колективного розуму та координація цілей спільноти."}
+                    <span className="font-semibold text-slate-200">{t.spiritWidget.memoryMission}</span> {spiritAgent.personality?.mission || t.spiritWidget.defaultMission}
                   </div>
                   {spiritAgent.personality?.goal_30_days && (
                     <div className="text-xs text-slate-400">
-                      <span className="font-medium text-slate-300">Ціль на 30 днів:</span> {spiritAgent.personality.goal_30_days}
+                      <span className="font-medium text-slate-300">{t.spiritWidget.goal30Days}</span> {spiritAgent.personality.goal_30_days}
                     </div>
                   )}
                 </div>
               ) : (
                 <div className="text-xs text-slate-400">
-                  Дух Спільноти готовий до налаштування. Спільнота працює в автономному режимі.
+                  {t.spiritWidget.agentReady}
                 </div>
               )}
 
               <div className="pt-2 border-t border-slate-800/60">
-                <div className="text-xs font-semibold text-slate-400 mb-2">Швидкі дії Агента:</div>
+                <div className="text-xs font-semibold text-slate-400 mb-2">{t.spiritWidget.quickActions}</div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
                   <Button 
                     variant="outline" 
                     size="sm" 
                     onClick={() => {
                       navigate('/chats');
-                      toast({ title: "Діалог з Агентом", description: "Дух Спільноти підключається до вашого чату..." });
+                      toast({ title: t.spiritWidget.talkToastTitle, description: t.spiritWidget.talkToastDesc });
                     }}
                     className="text-xs border-slate-800 bg-slate-950/20 hover:bg-slate-900 text-slate-300 gap-1.5 h-9"
                   >
                     <MessageSquare className="h-3.5 w-3.5 text-indigo-400" />
-                    <span>Поговорити</span>
+                    <span>{t.spiritWidget.talkBtn}</span>
                   </Button>
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    onClick={() => toast({ title: "Підсумок роботи", description: "Дух Спільноти аналізує базу знань та повідомлення для підсумку." })}
+                    onClick={() => toast({ title: t.spiritWidget.summarizeToastTitle, description: t.spiritWidget.summarizeToastDesc })}
                     className="text-xs border-slate-800 bg-slate-950/20 hover:bg-slate-900 text-slate-300 gap-1.5 h-9"
                   >
                     <Sparkles className="h-3.5 w-3.5 text-indigo-400" />
-                    <span>Підсумувати</span>
+                    <span>{t.spiritWidget.summarizeBtn}</span>
                   </Button>
                   <Button 
                     variant="outline" 
                     size="sm" 
                     onClick={() => {
                       navigate('/settings');
-                      toast({ title: "Коди доступу", description: "Створення та керування запрошеннями до MicroDAO." });
+                      toast({ title: t.spiritWidget.inviteToastTitle, description: t.spiritWidget.inviteToastDesc });
                     }}
                     className="text-xs border-slate-800 bg-slate-950/20 hover:bg-slate-900 text-slate-300 gap-1.5 h-9"
                   >
                     <UserPlus className="h-3.5 w-3.5 text-indigo-400" />
-                    <span>Запрошення</span>
+                    <span>{t.spiritWidget.inviteBtn}</span>
                   </Button>
                   <Button 
                     variant="outline" 
@@ -326,25 +326,25 @@ export const NewIndex = () => {
                     className="text-xs border-slate-800 bg-slate-950/20 hover:bg-slate-900 text-slate-300 gap-1.5 h-9"
                   >
                     <FolderPlus className="h-3.5 w-3.5 text-indigo-400" />
-                    <span>Створити задачу</span>
+                    <span>{t.spiritWidget.createTaskBtn}</span>
                   </Button>
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    onClick={() => toast({ title: "Аналіз правил", description: "Агент готує оновлений регламент на основі культури спілкування." })}
+                    onClick={() => toast({ title: t.spiritWidget.rulesToastTitle, description: t.spiritWidget.rulesToastDesc })}
                     className="text-xs border-slate-800 bg-slate-950/20 hover:bg-slate-900 text-slate-300 gap-1.5 h-9"
                   >
                     <Layers className="h-3.5 w-3.5 text-indigo-400" />
-                    <span>Правила</span>
+                    <span>{t.spiritWidget.rulesBtn}</span>
                   </Button>
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    onClick={() => toast({ title: "Планування", description: "Аналіз завдань та формування тижневого спринту." })}
+                    onClick={() => toast({ title: t.spiritWidget.planWeekToastTitle, description: t.spiritWidget.planWeekToastDesc })}
                     className="text-xs border-slate-800 bg-slate-950/20 hover:bg-slate-900 text-slate-300 gap-1.5 h-9"
                   >
                     <Zap className="h-3.5 w-3.5 text-indigo-400 animate-bounce" style={{ animationDuration: '3s' }} />
-                    <span>Запланувати тиждень</span>
+                    <span>{t.spiritWidget.planWeekBtn}</span>
                   </Button>
                 </div>
               </div>

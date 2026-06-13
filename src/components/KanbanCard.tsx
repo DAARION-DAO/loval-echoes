@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { CalendarDays, User, Trash2, Edit3, Check, X } from 'lucide-react';
 import { KanbanCard as KanbanCardType } from '@/types/kanban';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/lib/i18n';
 
 interface KanbanCardProps {
   card: KanbanCardType;
@@ -17,6 +18,7 @@ interface KanbanCardProps {
 }
 
 export function KanbanCard({ card, onUpdate, onDelete }: KanbanCardProps) {
+  const { t, language } = useTranslation();
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(card.title);
   const [editDescription, setEditDescription] = useState(card.description || '');
@@ -64,13 +66,13 @@ export function KanbanCard({ card, onUpdate, onDelete }: KanbanCardProps) {
             value={editTitle}
             onChange={(e) => setEditTitle(e.target.value)}
             className="min-h-[40px] resize-none text-sm font-medium"
-            placeholder="Название задачи..."
+            placeholder={t.kanban.taskTitlePlaceholder}
           />
           <Textarea
             value={editDescription}
             onChange={(e) => setEditDescription(e.target.value)}
             className="min-h-[60px] resize-none text-sm"
-            placeholder="Описание (опционально)..."
+            placeholder={t.kanban.taskDescPlaceholder}
           />
           <div className="flex gap-2">
             <Button size="sm" onClick={handleSave} disabled={!editTitle.trim()}>
@@ -148,7 +150,7 @@ export function KanbanCard({ card, onUpdate, onDelete }: KanbanCardProps) {
               {card.due_date && (
                 <Badge variant="outline" className="text-xs">
                   <CalendarDays className="h-3 w-3 mr-1" />
-                  {new Date(card.due_date).toLocaleDateString('ru')}
+                  {new Date(card.due_date).toLocaleDateString(language === 'ru' ? 'ru-RU' : (language === 'uk' ? 'uk-UA' : (language === 'es' ? 'es-ES' : 'en-US')))}
                 </Badge>
               )}
             </div>
@@ -164,7 +166,7 @@ export function KanbanCard({ card, onUpdate, onDelete }: KanbanCardProps) {
                 }}
               >
                 <User className="h-3 w-3 mr-1" />
-                Назначить
+                {t.kanban.assignBtn}
               </Button>
             )}
           </div>

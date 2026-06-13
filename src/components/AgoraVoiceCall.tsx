@@ -9,6 +9,7 @@ import { Card } from '@/components/ui/card';
 import { Phone, PhoneOff, Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useTranslation } from '@/lib/i18n';
 
 interface AgoraVoiceCallProps {
   channelName: string;
@@ -20,6 +21,7 @@ export const AgoraVoiceCall: React.FC<AgoraVoiceCallProps> = ({
   onLeave,
 }) => {
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [isJoined, setIsJoined] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [isSpeakerOff, setIsSpeakerOff] = useState(false);
@@ -42,7 +44,7 @@ export const AgoraVoiceCall: React.FC<AgoraVoiceCallProps> = ({
       // Получаем текущего пользователя
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        throw new Error('Пользователь не авторизован');
+        throw new Error(t.errors.unauthorized);
       }
       setUserId(user.id);
 
@@ -77,10 +79,10 @@ export const AgoraVoiceCall: React.FC<AgoraVoiceCallProps> = ({
       });
 
     } catch (error) {
-      console.error('Ошибка инициализации Agora:', error);
+      console.error('Agora init error:', error);
       toast({
-        title: 'Ошибка',
-        description: error instanceof Error ? error.message : 'Не удалось инициализировать голосовой звонок',
+        title: t.error,
+        description: error instanceof Error ? error.message : t.agoraVoiceCall.loadErrorInit,
         variant: 'destructive',
       });
     }
@@ -91,8 +93,8 @@ export const AgoraVoiceCall: React.FC<AgoraVoiceCallProps> = ({
 
     try {
       toast({
-        title: 'Подключение...',
-        description: 'Получение токена доступа',
+        title: t.agoraVoiceCall.connectingTitle,
+        description: t.agoraVoiceCall.connectingDesc,
       });
 
       // Получаем токен с сервера
@@ -101,7 +103,7 @@ export const AgoraVoiceCall: React.FC<AgoraVoiceCallProps> = ({
       });
 
       if (tokenError || !tokenData) {
-        throw new Error(tokenError?.message || 'Не удалось получить токен');
+        throw new Error(tokenError?.message || t.agoraVoiceCall.connectErrorToken);
       }
 
       const { token, appId: serverAppId } = tokenData;
@@ -119,14 +121,14 @@ export const AgoraVoiceCall: React.FC<AgoraVoiceCallProps> = ({
 
       setIsJoined(true);
       toast({
-        title: 'Подключено',
-        description: 'Вы присоединились к голосовому каналу',
+        title: t.agoraVoiceCall.connectedTitle,
+        description: t.agoraVoiceCall.connectedDesc,
       });
     } catch (error) {
-      console.error('Ошибка подключения:', error);
+      console.error('Connection error:', error);
       toast({
-        title: 'Ошибка',
-        description: error instanceof Error ? error.message : 'Не удалось присоединиться к каналу',
+        title: t.error,
+        description: error instanceof Error ? error.message : t.agoraVoiceCall.connectErrorChannel,
         variant: 'destructive',
       });
     }
@@ -147,13 +149,13 @@ export const AgoraVoiceCall: React.FC<AgoraVoiceCallProps> = ({
       setRemoteUsers(new Map());
       
       toast({
-        title: 'Отключено',
-        description: 'Вы покинули голосовой канал',
+        title: t.agoraVoiceCall.disconnectedTitle,
+        description: t.agoraVoiceCall.disconnectedDesc,
       });
 
       onLeave?.();
     } catch (error) {
-      console.error('Ошибка отключения:', error);
+      console.error('Disconnect error:', error);
     }
   };
 
@@ -186,11 +188,11 @@ export const AgoraVoiceCall: React.FC<AgoraVoiceCallProps> = ({
   return (
     <Card className="p-6 space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Голосовой канал</h3>
+        <h3 className="text-lg font-semibold">{t.agoraVoiceCall.channelHeader}</h3>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <div className="flex items-center gap-1">
             <div className={`w-2 h-2 rounded-full ${isJoined ? 'bg-green-500' : 'bg-gray-400'}`} />
-            <span>{remoteUsers.size + (isJoined ? 1 : 0)} участников</span>
+            <span>{t.agoraVoiceCall.participantsCount.replace('{count}', String(remoteUsers.size + (isJoined ? 1 : 0)))}</span>
           </div>
         </div>
       </div>
@@ -199,7 +201,7 @@ export const AgoraVoiceCall: React.FC<AgoraVoiceCallProps> = ({
         {!isJoined ? (
           <Button onClick={joinChannel} className="flex-1">
             <Phone className="h-4 w-4 mr-2" />
-            Начать встречу
+            {t.agoraVoiceCall.btnStartMeeting}
           </Button>
         ) : (
           <>
@@ -209,7 +211,7 @@ export const AgoraVoiceCall: React.FC<AgoraVoiceCallProps> = ({
               className="flex-1"
             >
               {isMuted ? <MicOff className="h-4 w-4 mr-2" /> : <Mic className="h-4 w-4 mr-2" />}
-              {isMuted ? 'Включить микрофон' : 'Выключить микрофон'}
+              {isMuted ? t.agoraVoiceCall.tooltipUnmute : t.agoraVoiceCall.tooltipMute}
             </Button>
 
             <Button
@@ -233,7 +235,7 @@ export const AgoraVoiceCall: React.FC<AgoraVoiceCallProps> = ({
 
       {isJoined && remoteUsers.size > 0 && (
         <div className="space-y-2">
-          <p className="text-sm font-medium">Участники:</p>
+          <p className="text-sm font-medium">{t.agoraVoiceCall.labelParticipants}</p>
           <div className="space-y-1">
             {Array.from(remoteUsers.values()).map((user) => (
               <div
@@ -241,7 +243,7 @@ export const AgoraVoiceCall: React.FC<AgoraVoiceCallProps> = ({
                 className="flex items-center gap-2 text-sm text-muted-foreground p-2 rounded-md bg-muted/50"
               >
                 <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                <span>Участник {user.uid.toString().slice(0, 8)}</span>
+                <span>{t.agoraVoiceCall.participantFallback.replace('{id}', user.uid.toString().slice(0, 8))}</span>
               </div>
             ))}
           </div>

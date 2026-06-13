@@ -9,6 +9,7 @@ import { useDropzone } from "react-dropzone";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { useTranslation } from "@/lib/i18n";
 
 interface FileUploadDialogProps {
   open: boolean;
@@ -27,6 +28,7 @@ export const FileUploadDialog = ({
   folderId,
   scope = 'community'
 }: FileUploadDialogProps) => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
@@ -215,11 +217,11 @@ export const FileUploadDialog = ({
             <Upload className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
             <p className="text-sm text-muted-foreground mb-2">
               {isDragActive
-                ? 'Отпустите файлы здесь'
-                : 'Перетащите файлы сюда или нажмите для выбора'}
+                ? t.fileUploadDialog.dragActive
+                : t.fileUploadDialog.dragInactive}
             </p>
             <p className="text-xs text-muted-foreground">
-              Поддерживаются: PDF, TXT, MD, DOCX, DOC, CSV, JSON, изображения (макс. 25MB)
+              {t.fileUploadDialog.supportedFormats}
             </p>
           </div>
 
@@ -248,10 +250,10 @@ export const FileUploadDialog = ({
 
                   <div className="space-y-2">
                     <div>
-                      <Label htmlFor={`desc-${file.name}`} className="text-xs">Описание (необязательно)</Label>
+                      <Label htmlFor={`desc-${file.name}`} className="text-xs">{t.fileUploadDialog.labelDescription}</Label>
                       <Textarea
                         id={`desc-${file.name}`}
-                        placeholder="Краткое описание файла..."
+                        placeholder={t.fileUploadDialog.placeholderDescription}
                         value={descriptions[file.name] || ''}
                         onChange={(e) => setDescriptions(prev => ({ ...prev, [file.name]: e.target.value }))}
                         className="text-sm"
@@ -259,10 +261,10 @@ export const FileUploadDialog = ({
                       />
                     </div>
                     <div>
-                      <Label htmlFor={`tags-${file.name}`} className="text-xs">Теги (через запятую)</Label>
+                      <Label htmlFor={`tags-${file.name}`} className="text-xs">{t.fileUploadDialog.labelTags}</Label>
                       <Input
                         id={`tags-${file.name}`}
-                        placeholder="тег1, тег2, тег3"
+                        placeholder={t.fileUploadDialog.placeholderTags}
                         value={tags[file.name] || ''}
                         onChange={(e) => setTags(prev => ({ ...prev, [file.name]: e.target.value }))}
                         className="text-sm"
@@ -277,18 +279,18 @@ export const FileUploadDialog = ({
           {/* Actions */}
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={onClose} disabled={uploading}>
-              Отмена
+              {t.cancel}
             </Button>
             <Button onClick={handleUpload} disabled={uploading || files.length === 0}>
               {uploading ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Загрузка...
+                  {t.fileUploadDialog.progress}
                 </>
               ) : (
                 <>
                   <Upload className="h-4 w-4 mr-2" />
-                  Загрузить {files.length > 0 && `(${files.length})`}
+                  {t.fileUploadDialog.btnUpload.replace('{count}', files.length > 0 ? ` (${files.length})` : '')}
                 </>
               )}
             </Button>

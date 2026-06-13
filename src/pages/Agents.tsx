@@ -13,6 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { User, Users } from 'lucide-react';
+import { useTranslation } from '@/lib/i18n';
 
 interface Agent {
   id: string;
@@ -27,6 +28,7 @@ interface Agent {
 }
 
 export default function Agents() {
+  const { t } = useTranslation();
   const [agents, setAgents] = useState<Agent[]>([]);
   const [loading, setLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -43,13 +45,13 @@ export default function Agents() {
 
   const CATALOG_AGENTS = [
     {
-      name: 'Яромир',
-      description: 'Агент співдії — контекстні підказки, синхронізація задач',
+      name: t.agents.yaroName,
+      description: t.agents.yaroDesc,
       scopes: ['read.messages', 'write.messages', 'read.tasks', 'create.tasks']
     },
     {
-      name: 'Еонарх Синергетон',
-      description: 'Агент синергії — аналітика взаємодій, оптимізація процесів',
+      name: t.agents.eonName,
+      description: t.agents.eonDesc,
       scopes: ['read.messages', 'read.tasks', 'create.tasks']
     }
   ];
@@ -73,8 +75,8 @@ export default function Agents() {
     } catch (error) {
       console.error('Error fetching agents:', error);
       toast({
-        title: 'Помилка',
-        description: 'Не вдалося завантажити агентів',
+        title: t.error,
+        description: t.agents.errLoad,
         variant: 'destructive',
       });
     } finally {
@@ -85,8 +87,8 @@ export default function Agents() {
   const handleCreateAgent = async () => {
     if (!newAgent.name.trim()) {
       toast({
-        title: 'Помилка',
-        description: 'Вкажіть ім\'я агента',
+        title: t.error,
+        description: t.agents.errNameRequired,
         variant: 'destructive',
       });
       return;
@@ -111,8 +113,8 @@ export default function Agents() {
       if (error) throw error;
 
       toast({
-        title: 'Успішно',
-        description: 'Агента створено',
+        title: t.success,
+        description: t.agents.successCreate,
       });
 
       setCreateDialogOpen(false);
@@ -121,8 +123,8 @@ export default function Agents() {
     } catch (error) {
       console.error('Error creating agent:', error);
       toast({
-        title: 'Помилка',
-        description: 'Не вдалося створити агента',
+        title: t.error,
+        description: t.agents.errCreate,
         variant: 'destructive',
       });
     }
@@ -138,13 +140,13 @@ export default function Agents() {
         .from('agents')
         .select('id')
         .eq('owner_user_id', userData.user.id)
-        .eq('name', `${catalogAgent.name} (особистий)`)
+        .eq('name', `${catalogAgent.name} ${t.agents.labelPersonalSuffix}`)
         .maybeSingle();
 
       if (existing) {
         toast({
-          title: 'Вже встановлено',
-          description: 'Цей агент вже є у вашому списку',
+          title: t.agents.errAlreadyInstalled,
+          description: t.agents.errAlreadyInstalled,
         });
         return;
       }
@@ -153,7 +155,7 @@ export default function Agents() {
       const { data: agent, error: agentError } = await supabase
         .from('agents')
         .insert({
-          name: `${catalogAgent.name} (особистий)`,
+          name: `${catalogAgent.name} ${t.agents.labelPersonalSuffix}`,
           description: catalogAgent.description,
           owner_user_id: userData.user.id,
           connection_type: 'msp',
@@ -168,7 +170,7 @@ export default function Agents() {
       const { data: conversation, error: convError } = await supabase
         .from('conversations')
         .insert({
-          name: `Особистий чат з ${catalogAgent.name}`,
+          name: t.agents.personalChatName.replace('{name}', catalogAgent.name),
           user_id: userData.user.id,
           type: 'chat',
           is_group_chat: false,
@@ -215,8 +217,8 @@ export default function Agents() {
       if (personalChatError) throw personalChatError;
 
       toast({
-        title: 'Успішно',
-        description: `${catalogAgent.name} встановлено та готовий до роботи!`,
+        title: t.success,
+        description: t.agents.successInstall.replace('{name}', catalogAgent.name),
       });
 
       setCatalogDialogOpen(false);
@@ -224,8 +226,8 @@ export default function Agents() {
     } catch (error) {
       console.error('Error installing catalog agent:', error);
       toast({
-        title: 'Помилка',
-        description: 'Не вдалося встановити агента',
+        title: t.error,
+        description: t.agents.errInstall,
         variant: 'destructive',
       });
     }
@@ -243,23 +245,23 @@ export default function Agents() {
       if (error) throw error;
 
       toast({
-        title: 'Успішно',
-        description: newStatus === 'active' ? 'Агента активовано' : 'Агента призупинено',
+        title: t.success,
+        description: newStatus === 'active' ? t.agents.successActive : t.agents.successPaused,
       });
 
       fetchAgents();
     } catch (error) {
       console.error('Error toggling agent status:', error);
       toast({
-        title: 'Помилка',
-        description: 'Не вдалося змінити статус',
+        title: t.error,
+        description: t.agents.errStatus,
         variant: 'destructive',
       });
     }
   };
 
   const handleDeleteAgent = async (agentId: string) => {
-    if (!confirm('Ви впевнені, що хочете видалити цього агента?')) return;
+    if (!confirm(t.agents.deleteConfirm)) return;
 
     try {
       const { error } = await supabase
@@ -270,16 +272,16 @@ export default function Agents() {
       if (error) throw error;
 
       toast({
-        title: 'Успішно',
-        description: 'Агента видалено',
+        title: t.success,
+        description: t.agents.successDelete,
       });
 
       fetchAgents();
     } catch (error) {
       console.error('Error deleting agent:', error);
       toast({
-        title: 'Помилка',
-        description: 'Не вдалося видалити агента',
+        title: t.error,
+        description: t.agents.errDelete,
         variant: 'destructive',
       });
     }
@@ -287,9 +289,9 @@ export default function Agents() {
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      active: { label: 'Активний', variant: 'default' as const },
-      paused: { label: 'Пауза', variant: 'secondary' as const },
-      disconnected: { label: 'Відключений', variant: 'destructive' as const },
+      active: { label: t.agents.statusActive, variant: 'default' as const },
+      paused: { label: t.agents.statusPaused, variant: 'secondary' as const },
+      disconnected: { label: t.agents.statusDisconnected, variant: 'destructive' as const },
     };
     const config = statusConfig[status as keyof typeof statusConfig];
     return <Badge variant={config.variant}>{config.label}</Badge>;
@@ -307,9 +309,9 @@ export default function Agents() {
     <div className="container mx-auto px-4 py-8 max-w-6xl">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Агенти</h1>
+          <h1 className="text-3xl font-bold mb-2">{t.agents.pageTitle}</h1>
           <p className="text-muted-foreground">
-            Управління особистими агентами та їх інтеграція в проєкти
+            {t.agents.pageSubtitle}
           </p>
         </div>
         
@@ -318,12 +320,12 @@ export default function Agents() {
             <DialogTrigger asChild>
               <Button variant="outline">
                 <Bot className="mr-2 h-4 w-4" />
-                Каталог агентів
+                {t.agents.catalogBtn}
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
-                <DialogTitle>Каталог агентів</DialogTitle>
+                <DialogTitle>{t.agents.catalogTitle}</DialogTitle>
               </DialogHeader>
               <div className="grid gap-4 mt-4">
                 {CATALOG_AGENTS.map((agent) => (
@@ -349,7 +351,7 @@ export default function Agents() {
                         size="sm"
                         onClick={() => handleInstallCatalogAgent(agent)}
                       >
-                        Встановити
+                        {t.agents.btnInstall}
                       </Button>
                     </div>
                   </Card>
@@ -362,35 +364,35 @@ export default function Agents() {
             <DialogTrigger asChild>
               <Button>
                 <Plus className="mr-2 h-4 w-4" />
-                Підключити свій агент
+                {t.agents.connectCustomBtn}
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Підключити власного агента</DialogTitle>
+                <DialogTitle>{t.agents.connectCustomTitle}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 mt-4">
                 <div>
-                  <Label htmlFor="name">Ім'я агента</Label>
+                  <Label htmlFor="name">{t.agents.labelAgentName}</Label>
                   <Input
                     id="name"
                     value={newAgent.name}
                     onChange={(e) => setNewAgent({ ...newAgent, name: e.target.value })}
-                    placeholder="Введіть ім'я агента"
+                    placeholder={t.agents.placeholderAgentName}
                   />
                 </div>
                 <div>
-                  <Label htmlFor="description">Опис</Label>
+                  <Label htmlFor="description">{t.agents.labelAgentDesc}</Label>
                   <Textarea
                     id="description"
                     value={newAgent.description}
                     onChange={(e) => setNewAgent({ ...newAgent, description: e.target.value })}
-                    placeholder="Опишіть функції агента"
+                    placeholder={t.agents.placeholderAgentDesc}
                     rows={3}
                   />
                 </div>
                 <div>
-                  <Label htmlFor="connection">Тип підключення</Label>
+                  <Label htmlFor="connection">{t.agents.labelConnectionType}</Label>
                   <Select
                     value={newAgent.connection_type}
                     onValueChange={(value: 'webhook' | 'websocket' | 'msp') =>
@@ -401,7 +403,7 @@ export default function Agents() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="msp">MSP (Рекомендовано)</SelectItem>
+                      <SelectItem value="msp">{t.agents.connectionTypeMsp}</SelectItem>
                       <SelectItem value="webhook">Webhook</SelectItem>
                       <SelectItem value="websocket">WebSocket</SelectItem>
                     </SelectContent>
@@ -419,7 +421,7 @@ export default function Agents() {
                   </div>
                 )}
                 <Button onClick={handleCreateAgent} className="w-full">
-                  Створити агента
+                  {t.agents.btnCreateAgent}
                 </Button>
               </div>
             </DialogContent>
@@ -430,121 +432,121 @@ export default function Agents() {
       {agents.length === 0 ? (
         <Card className="p-12 text-center">
           <Bot className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-          <h3 className="text-lg font-semibold mb-2">Немає агентів</h3>
+          <h3 className="text-lg font-semibold mb-2">{t.agents.noAgentsTitle}</h3>
           <p className="text-muted-foreground mb-4">
-            Почніть з підключення свого першого агента
+            {t.agents.noAgentsDesc}
           </p>
           <Button onClick={() => setCreateDialogOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
-            Підключити агента
+            {t.agents.btnConnectAgent}
           </Button>
         </Card>
       ) : (
         <>
           {/* Фільтр за scope */}
           <div className="mb-6">
-        <Tabs value={scopeFilter} onValueChange={(v) => setScopeFilter(v as 'all' | 'community' | 'personal')}>
+            <Tabs value={scopeFilter} onValueChange={(v) => setScopeFilter(v as 'all' | 'community' | 'personal')}>
               <TabsList>
-                <TabsTrigger value="all">Всі</TabsTrigger>
+                <TabsTrigger value="all">{t.kb.allFiles.split(' ')[0]}</TabsTrigger>
                 <TabsTrigger value="community">
                   <Users className="h-4 w-4 mr-2" />
-                  Спільні
+                  {t.integrationsExtra.scopeTeam}
                 </TabsTrigger>
                 <TabsTrigger value="personal">
                   <User className="h-4 w-4 mr-2" />
-                  Приватні
+                  {t.integrationsExtra.scopePrivate}
                 </TabsTrigger>
               </TabsList>
             </Tabs>
           </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {agents
-          .filter(agent => {
-            if (scopeFilter === 'all') return true;
-            const agentScope = agent.owner_user_id ? 'personal' : 'community';
-            return agentScope === scopeFilter;
-          })
-          .map((agent) => (
-            <Card key={agent.id} className="p-6 hover:shadow-lg transition-shadow">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Bot className="h-6 w-6 text-primary" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {agents
+              .filter(agent => {
+                if (scopeFilter === 'all') return true;
+                const agentScope = agent.owner_user_id ? 'personal' : 'community';
+                return agentScope === scopeFilter;
+              })
+              .map((agent) => (
+                <Card key={agent.id} className="p-6 hover:shadow-lg transition-shadow">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Bot className="h-6 w-6 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold">{agent.name}</h3>
+                        {agent.is_preset && (
+                          <Badge variant="outline" className="mt-1">
+                            {t.agents.preset}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                    {getStatusBadge(agent.status)}
                   </div>
-                  <div>
-                    <h3 className="font-semibold">{agent.name}</h3>
-                    {agent.is_preset && (
-                      <Badge variant="outline" className="mt-1">
-                        Пресет
-                      </Badge>
+
+                  {agent.description && (
+                    <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+                      {agent.description}
+                    </p>
+                  )}
+
+                  <div className="flex items-center gap-2 mb-4 flex-wrap">
+                    <Badge variant={!agent.owner_user_id ? 'default' : 'outline'}>
+                      {!agent.owner_user_id ? (
+                        <>
+                          <Users className="h-3 w-3 mr-1" />
+                          {t.integrationsExtra.scopeTeam}
+                        </>
+                      ) : (
+                        <>
+                          <User className="h-3 w-3 mr-1" />
+                          {t.integrationsExtra.scopePrivate}
+                        </>
+                      )}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">
+                      {t.agents.labelType}: {agent.connection_type.toUpperCase()}
+                    </span>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => navigate('/news')}
+                    >
+                      <MessageSquare className="mr-2 h-4 w-4" />
+                      {t.agents.btnToChat}
+                    </Button>
+                    {!agent.is_preset && (
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleToggleStatus(agent.id, agent.status)}
+                        >
+                          {agent.status === 'active' ? (
+                            <Pause className="h-4 w-4" />
+                          ) : (
+                            <Play className="h-4 w-4" />
+                          )}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteAgent(agent.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </>
                     )}
                   </div>
-                </div>
-                {getStatusBadge(agent.status)}
-              </div>
-
-              {agent.description && (
-                <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-                  {agent.description}
-                </p>
-              )}
-
-              <div className="flex items-center gap-2 mb-4 flex-wrap">
-                <Badge variant={!agent.owner_user_id ? 'default' : 'outline'}>
-                  {!agent.owner_user_id ? (
-                    <>
-                      <Users className="h-3 w-3 mr-1" />
-                      Спільний
-                    </>
-                  ) : (
-                    <>
-                      <User className="h-3 w-3 mr-1" />
-                      Приватний
-                    </>
-                  )}
-                </Badge>
-                <span className="text-xs text-muted-foreground">
-                  Тип: {agent.connection_type.toUpperCase()}
-                </span>
-              </div>
-
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex-1"
-                  onClick={() => navigate('/news')}
-                >
-                  <MessageSquare className="mr-2 h-4 w-4" />
-                  В чат
-                </Button>
-                {!agent.is_preset && (
-                  <>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleToggleStatus(agent.id, agent.status)}
-                    >
-                      {agent.status === 'active' ? (
-                        <Pause className="h-4 w-4" />
-                      ) : (
-                        <Play className="h-4 w-4" />
-                      )}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDeleteAgent(agent.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </>
-                )}
-              </div>
-            </Card>
-          ))}
-        </div>
+                </Card>
+              ))}
+          </div>
         </>
       )}
     </div>

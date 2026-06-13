@@ -1,4 +1,11 @@
 import { supabase } from "@/integrations/supabase/client";
+import { translations, Language } from "@/lib/i18n";
+
+const getTranslation = () => {
+  const saved = typeof window !== 'undefined' ? localStorage.getItem('language') : null;
+  const lang = (saved && ['uk', 'en', 'ru', 'es'].includes(saved) ? saved : 'uk') as Language;
+  return translations[lang];
+};
 
 export interface ChatLite {
   id: string;
@@ -63,10 +70,11 @@ export async function createChat(name: string): Promise<ChatLite> {
 
   // Create conversation
   console.log('Inserting conversation into database...');
+  const t = getTranslation();
   const { data: newChat, error } = await supabase
     .from('conversations')
     .insert({
-      name: name || 'Новый чат',
+      name: name || t.chatSidebar.defaultChatName,
       user_id: user.id,
       status: 'active'
     })
@@ -191,7 +199,8 @@ export const deleteMessage = async (messageId: string): Promise<void> => {
 
 // Генерация названия чата на основе первого сообщения
 export const generateChatName = (firstMessage: string): string => {
-  if (!firstMessage.trim()) return "Новый диалог";
+  const t = getTranslation();
+  if (!firstMessage.trim()) return t.chatSidebar.defaultChatName;
   
   const cleaned = firstMessage.trim().replace(/\n+/g, ' ');
   return cleaned.slice(0, 30) + (cleaned.length > 30 ? "..." : "");
@@ -199,8 +208,11 @@ export const generateChatName = (firstMessage: string): string => {
 
 // Генерация названия для ветки
 export const generateBranchName = (parentMessage: string, parentChatName: string): string => {
+  const t = getTranslation();
   const base = parentMessage.trim().slice(0, 20);
-  return `Ветка: "${base}..." из ${parentChatName}`;
+  const template = t.chatPage.forkedFromTitle;
+  const branchName = template.replace('{name}', parentChatName);
+  return `${branchName} (${base}...)`;
 };
 
 export async function fetchChatsByStatus(status: 'active' | 'archived' | 'deleted'): Promise<ChatLite[]> {

@@ -1,11 +1,13 @@
 import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from '@/lib/i18n';
 
 const IDLE_TIMEOUT_MINUTES = 30;
 
 export const useSessionTimeout = () => {
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   useEffect(() => {
     let idleTimeout: ReturnType<typeof setTimeout>;
@@ -15,8 +17,8 @@ export const useSessionTimeout = () => {
       idleTimeout = setTimeout(async () => {
         await supabase.auth.signOut();
         toast({
-          title: 'Сессия истекла',
-          description: 'Вы были автоматически выведены из системы из-за неактивности',
+          title: t.session.timeoutTitle,
+          description: t.session.timeoutDesc,
           variant: 'destructive',
         });
         window.location.href = '/auth?reason=idle';
@@ -36,5 +38,5 @@ export const useSessionTimeout = () => {
         document.removeEventListener(event, resetIdleTimer);
       });
     };
-  }, [toast]);
+  }, [toast, t]);
 };

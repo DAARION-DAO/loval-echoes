@@ -92,7 +92,7 @@ export const PresenceBar = ({
               </div>
             </TooltipTrigger>
             <TooltipContent>
-              <p>Ещё {remainingCount} участников онлайн</p>
+              <p>{t.participantsExtra.remainingOnline.replace('{count}', String(remainingCount))}</p>
             </TooltipContent>
           </Tooltip>
         )}

@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { VolumeX, Volume2 } from 'lucide-react';
 import { useVideoIntro } from '@/hooks/useVideoIntro';
+import { useTranslation } from '@/lib/i18n';
 
 interface VideoIntroProps {
   onComplete?: () => void;
@@ -9,6 +10,7 @@ interface VideoIntroProps {
 }
 
 export const VideoIntro = ({ onComplete, className = '' }: VideoIntroProps) => {
+  const { t } = useTranslation();
   const { showIntro, isMuted, completeIntro, toggleMute } = useVideoIntro();
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -52,7 +54,7 @@ export const VideoIntro = ({ onComplete, className = '' }: VideoIntroProps) => {
           preload="auto"
         >
           <source src="/assets/zhos-logo-video.mp4" type="video/mp4" />
-          Ваш браузер не поддерживает воспроизведение видео.
+          {t.videoIntro.notSupported}
         </video>
 
         {/* Overlay Controls */}
@@ -67,7 +69,7 @@ export const VideoIntro = ({ onComplete, className = '' }: VideoIntroProps) => {
             >
               {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
               <span className="ml-2 hidden sm:inline">
-                {isMuted ? 'Включить звук' : 'Выключить звук'}
+                {isMuted ? t.videoIntro.unmute : t.videoIntro.mute}
               </span>
             </Button>
             
@@ -77,14 +79,14 @@ export const VideoIntro = ({ onComplete, className = '' }: VideoIntroProps) => {
               onClick={handleSkip}
               className="bg-black/50 hover:bg-black/70 text-white border-white/20"
             >
-              Пропустить
+              {t.videoIntro.skip}
             </Button>
           </div>
 
           {/* Bottom Progress Indicator */}
           <div className="absolute bottom-4 left-4 right-4 pointer-events-auto">
             <div className="text-white/80 text-sm text-center">
-              Добро пожаловать в ЖОС Мессенджер
+              {t.videoIntro.welcome}
             </div>
           </div>
         </div>

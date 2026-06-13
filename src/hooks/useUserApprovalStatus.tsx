@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useTranslation } from '@/lib/i18n';
 
 type ApprovalStatus = 'approved' | 'pending' | 'rejected' | 'loading';
 
@@ -8,6 +9,7 @@ export const useUserApprovalStatus = () => {
   const { user, loading: authLoading } = useAuth();
   const [approvalStatus, setApprovalStatus] = useState<ApprovalStatus>('loading');
   const [accessTier, setAccessTier] = useState<string | null>(null);
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (authLoading || !user) {
@@ -42,7 +44,7 @@ export const useUserApprovalStatus = () => {
               display_name: user.user_metadata?.display_name || 
                            user.user_metadata?.full_name || 
                            user.email?.split('@')[0] || 
-                           'Пользователь',
+                           t.messages.userSender,
               approval_status: 'pending',
               access_tier: 'early_access'
             });
@@ -90,7 +92,7 @@ export const useUserApprovalStatus = () => {
     return () => {
       subscription.unsubscribe();
     };
-  }, [user, authLoading]);
+  }, [user, authLoading, t]);
 
   return { 
     approvalStatus, 

@@ -64,7 +64,7 @@ export const PrinciplesBanner = ({ onDismiss, className = '' }: PrinciplesBanner
           className="h-6 w-6 p-0 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-blue-600 dark:text-blue-400"
         >
           <X className="h-4 w-4" />
-          <span className="sr-only">Закрыть</span>
+          <span className="sr-only">{t.cancel}</span>
         </Button>
       </div>
     </div>

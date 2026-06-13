@@ -17,7 +17,7 @@ import {
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
 import { formatDistanceToNow } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, uk, es, enUS } from 'date-fns/locale';
 import { useTranslation } from '@/lib/i18n';
 import { Chat } from '@/utils/difyClient';
 import { NavLink } from 'react-router-dom';
@@ -43,7 +43,8 @@ export const ChatCard = ({
   const formatTime = (dateString: string) => {
     try {
       const date = new Date(dateString);
-      const locale = language === 'ru' ? ru : undefined;
+      const locales: Record<string, any> = { ru, uk, es, en: enUS };
+      const locale = locales[language] || enUS;
       return formatDistanceToNow(date, { 
         addSuffix: true, 
         locale 
@@ -77,7 +78,7 @@ export const ChatCard = ({
               {chat.forked_from_chat && (
                 <div className="flex items-center gap-1 text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
                   <GitBranch className="h-3 w-3" />
-                  <span>ветка</span>
+                  <span>{t.branch}</span>
                 </div>
               )}
             </div>
@@ -107,7 +108,7 @@ export const ChatCard = ({
                     className="h-8 w-8 p-0 hover:bg-muted"
                   >
                     <MoreHorizontal className="h-4 w-4" />
-                    <span className="sr-only">Действия</span>
+                    <span className="sr-only">{t.actions}</span>
                   </Button>
                 </DropdownMenuTrigger>
                 
@@ -115,7 +116,7 @@ export const ChatCard = ({
                   {onPin && (
                     <DropdownMenuItem onClick={() => onPin(chat.id)}>
                       <Pin className="h-4 w-4 mr-2" />
-                      Закрепить
+                      {chat.is_pinned ? t.chats.unpin : t.chats.pin}
                     </DropdownMenuItem>
                   )}
                   

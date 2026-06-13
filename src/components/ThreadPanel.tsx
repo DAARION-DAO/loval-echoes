@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { type DifyMessage } from '@/utils/difyClient';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from '@/lib/i18n';
 
 interface ThreadPanelProps {
   parentMessage: DifyMessage;
@@ -16,6 +17,7 @@ interface ThreadPanelProps {
 }
 
 export const ThreadPanel = ({ parentMessage, currentUserId, onClose }: ThreadPanelProps) => {
+  const { t } = useTranslation();
   const { profile } = useUserProfile();
   const { toast } = useToast();
   const [replies, setReplies] = useState<DifyMessage[]>([]);
@@ -51,7 +53,7 @@ export const ThreadPanel = ({ parentMessage, currentUserId, onClose }: ThreadPan
         conversation_id: msg.conversation_id,
         query: msg.role === 'user' ? msg.content : '',
         answer: msg.role === 'assistant' ? msg.content : '',
-        sender_name: msg.sender_name || 'Пользователь',
+        sender_name: msg.sender_name || t.communityChat.senderFallbackUser,
         created_at: msg.created_at,
       }));
 
@@ -81,7 +83,7 @@ export const ThreadPanel = ({ parentMessage, currentUserId, onClose }: ThreadPan
             conversation_id: msg.conversation_id,
             query: msg.role === 'user' ? msg.content : '',
             answer: msg.role === 'assistant' ? msg.content : '',
-            sender_name: msg.sender_name || 'Пользователь',
+            sender_name: msg.sender_name || t.communityChat.senderFallbackUser,
             created_at: msg.created_at,
           };
 
@@ -101,7 +103,7 @@ export const ThreadPanel = ({ parentMessage, currentUserId, onClose }: ThreadPan
   const handleSendReply = async () => {
     if (!messageText.trim()) return;
 
-    const senderName = profile?.display_name || 'Пользователь';
+    const senderName = profile?.display_name || t.communityChat.senderFallbackUser;
 
     try {
       const { error } = await supabase
@@ -120,8 +122,8 @@ export const ThreadPanel = ({ parentMessage, currentUserId, onClose }: ThreadPan
     } catch (error) {
       console.error('Error sending reply:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось отправить ответ',
+        title: t.error,
+        description: t.threadPanel.sendError,
         variant: 'destructive',
       });
     }
@@ -148,8 +150,8 @@ export const ThreadPanel = ({ parentMessage, currentUserId, onClose }: ThreadPan
       {/* Header */}
       <div className="flex items-center justify-between p-3 border-b">
         <div>
-          <h3 className="font-semibold text-sm">Обсуждение сообщения</h3>
-          <p className="text-xs text-muted-foreground">Ветка обсуждения</p>
+          <h3 className="font-semibold text-sm">{t.threadPanel.title}</h3>
+          <p className="text-xs text-muted-foreground">{t.threadPanel.subtitle}</p>
         </div>
         <Button variant="ghost" size="sm" onClick={onClose} className="h-8 w-8 p-0">
           <X className="h-4 w-4" />
@@ -158,9 +160,9 @@ export const ThreadPanel = ({ parentMessage, currentUserId, onClose }: ThreadPan
 
       {/* Parent Message Preview */}
       <div className="p-3 bg-muted/20 border-b">
-        <div className="text-xs text-muted-foreground mb-1 font-medium">Исходное сообщение:</div>
+        <div className="text-xs text-muted-foreground mb-1 font-medium">{t.threadPanel.parentPreview}</div>
         <div className="text-xs text-foreground bg-background p-2 rounded border line-clamp-3">
-          <strong>{parentMessage.sender_name || 'Отправитель'}: </strong>
+          <strong>{parentMessage.sender_name || t.threadPanel.parentSender}: </strong>
           {parentMessage.query || parentMessage.answer || ''}
         </div>
       </div>
@@ -173,7 +175,7 @@ export const ThreadPanel = ({ parentMessage, currentUserId, onClose }: ThreadPan
           </div>
         ) : replies.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground text-xs">
-            Нет ответов в этой ветке. Начните обсуждение!
+            {t.threadPanel.emptyState}
           </div>
         ) : (
           <div className="space-y-3">
@@ -196,7 +198,7 @@ export const ThreadPanel = ({ parentMessage, currentUserId, onClose }: ThreadPan
             value={messageText}
             onChange={(e) => setMessageText(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ответить в ветку..."
+            placeholder={t.threadPanel.inputPlaceholder}
             className="min-h-[40px] max-h-20 resize-none text-xs"
           />
           <Button

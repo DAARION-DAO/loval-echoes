@@ -1,5 +1,7 @@
 import { cn } from "@/lib/utils";
 
+import { useTranslation } from "@/lib/i18n";
+ 
 interface AvatarProps {
   user: {
     id?: string;
@@ -12,7 +14,7 @@ interface AvatarProps {
   className?: string;
   title?: string;
 }
-
+ 
 const AVATAR_COLORS = [
   'bg-primary',
   'bg-secondary', 
@@ -25,15 +27,16 @@ const AVATAR_COLORS = [
   'bg-orange-600',
   'bg-blue-600'
 ];
-
+ 
 export const Avatar = ({ user, size = 'md', className, title }: AvatarProps) => {
+  const { t } = useTranslation();
   const sizeClasses = {
     sm: 'w-6 h-6 text-xs',
     md: 'w-8 h-8 text-sm', 
     lg: 'w-8 h-8 text-sm' // Делаем lg размер 32x32px как md
   };
-
-  const userName = user.display_name || user.name || 'У';
+ 
+  const userName = user.display_name || user.name || t.avatar.userFallbackChar;
   const avatarUrl = user.avatar_url || user.avatarUrl;
 
   // Если есть URL аватара

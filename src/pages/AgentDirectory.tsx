@@ -15,67 +15,67 @@ export default function AgentDirectory() {
   const agents = [
     {
       name: "Steward Agent",
-      badge: "Системний",
+      badge: t.agentDirectory.stewardBadge,
       icon: Shield,
       color: "text-amber-500",
       borderColor: "border-amber-500/20",
       bgGradient: "from-amber-500/5 to-transparent",
-      desc: "Автономний управитель правил простору. Модерує контент на основі принципів вашої спільноти та автоматизує рутинні адміністративні рішення.",
+      desc: t.agentDirectory.stewardDesc,
       capabilities: [
-        "Модерація чатів відповідно до принципів",
-        "Логування адміністративних рішень",
-        "Вирішення суперечок через Пауза/Вузол",
-        "Налаштування правил та гайдлайнів спільноти"
+        t.agentDirectory.stewardFunc1,
+        t.agentDirectory.stewardFunc2,
+        t.agentDirectory.stewardFunc3,
+        t.agentDirectory.stewardFunc4
       ],
-      systemPrompt: "Ти — нейтральний управитель простору MicroDAO. Твоя мета — підтримувати конструктивний діалог, фіксувати ключові позиції учасників та фасилітувати консенсус."
+      systemPrompt: t.agentDirectory.stewardPrompt
     },
     {
       name: "RAG Archivist",
-      badge: "Знання & RAG",
+      badge: t.agentDirectory.ragBadge,
       icon: Brain,
       color: "text-indigo-500",
       borderColor: "border-indigo-500/20",
       bgGradient: "from-indigo-500/5 to-transparent",
-      desc: "ШІ-архіватор спільної пам'яті спільноти. Семантично індексує завантажені файли, документи та переписки, надаючи швидкі точні відповіді.",
+      desc: t.agentDirectory.ragDesc,
       capabilities: [
-        "Індексування PDF, DOCX, TXT файлів",
-        "Контекстні відповіді на основі бази знань",
-        "Пошук у минулих рішеннях та чатах",
-        "Генерація звітів та аналітичних записок"
+        t.agentDirectory.ragFunc1,
+        t.agentDirectory.ragFunc2,
+        t.agentDirectory.ragFunc3,
+        t.agentDirectory.ragFunc4
       ],
-      systemPrompt: "Ти — архіватор знань MicroDAO. Відповідай на запитання виключно на основі завантаженого контексту бази знань спільноти. Посилайся на джерела."
+      systemPrompt: t.agentDirectory.ragPrompt
     },
     {
       name: "Task Organizer",
-      badge: "Координація",
+      badge: t.agentDirectory.taskBadge,
       icon: Workflow,
       color: "text-emerald-500",
       borderColor: "border-emerald-500/20",
       bgGradient: "from-emerald-500/5 to-transparent",
-      desc: "Агент управління завданнями. Синхронізує задачі на канбан-дошці, створює автоматичні нагадування про дедлайни та призначає виконавців.",
+      desc: t.agentDirectory.taskDesc,
       capabilities: [
-        "Створення та трекінг завдань із чатів",
-        "Оновлення статусів на канбан-дошці",
-        "Автоматичні нагадування про дедлайни",
-        "Аналіз навантаження команди"
+        t.agentDirectory.taskFunc1,
+        t.agentDirectory.taskFunc2,
+        t.agentDirectory.taskFunc3,
+        t.agentDirectory.taskFunc4
       ],
-      systemPrompt: "Ти — ШІ-координатор завдань. Допомагай команді структурувати роботу, створювати чіткі тикети, призначати відповідальних та контролювати терміни виконання."
+      systemPrompt: t.agentDirectory.taskPrompt
     },
     {
       name: "Meeting Agent",
-      badge: "Процеси",
+      badge: t.agentDirectory.procBadge,
       icon: Calendar,
       color: "text-cyan-500",
       borderColor: "border-cyan-500/20",
       bgGradient: "from-cyan-500/5 to-transparent",
-      desc: "ШІ-фасилітатор зустрічей та дзвінків. Автоматично генерує резюме обговорень, виділяє домовленості та формує список дій для команди.",
+      desc: t.agentDirectory.procDesc,
       capabilities: [
-        "Стенографування та резюмування зустрічей",
-        "Виділення ключових Action Items",
-        "Планування календарних подій",
-        "Створення детальних фоллоу-апів"
+        t.agentDirectory.procFunc1,
+        t.agentDirectory.procFunc2,
+        t.agentDirectory.procFunc3,
+        t.agentDirectory.procFunc4
       ],
-      systemPrompt: "Ти — фасилітатор зустрічей. Твоє завдання — аналізувати транскрипти розмов, виділяти прийняті рішення, завдання та терміни, формуючи структуровані підсумки."
+      systemPrompt: t.agentDirectory.procPrompt
     }
   ];
 
@@ -94,14 +94,14 @@ export default function AgentDirectory() {
 
           <div className="flex items-center gap-1.5 sm:gap-3">
             <Button variant="ghost" size="sm" onClick={() => navigate("/agents")} className="text-xs sm:text-sm font-semibold h-9 px-2 sm:px-3 text-primary">
-              Агенти
+              {t.agentDirectory.navbarAgents}
             </Button>
             <Button variant="ghost" size="sm" onClick={() => navigate("/pricing")} className="text-xs sm:text-sm font-medium h-9 px-2 sm:px-3">
-              Тарифи
+              {t.agentDirectory.navbarPricing}
             </Button>
             <Button variant="ghost" size="sm" onClick={() => navigate("/install")} className="text-xs sm:text-sm font-medium gap-1.5 h-9 px-2 sm:px-3">
               <Download className="h-4 w-4" />
-              <span className="hidden xxs:inline">Клієнт</span>
+              <span className="hidden xxs:inline">{t.agentDirectory.navbarClient}</span>
             </Button>
             
             <Select value={language} onValueChange={(value) => setLanguage(value as Language)}>
@@ -118,7 +118,7 @@ export default function AgentDirectory() {
 
             {user ? (
               <Button size="sm" onClick={() => navigate("/dashboard")} className="text-xs sm:text-sm font-semibold gap-1.5 shadow-md hover:shadow-lg transition-shadow px-3 sm:px-4 h-9">
-                <span>Панель керування</span>
+                <span>{t.agentDirectory.panelBtn}</span>
                 <ArrowRight className="h-4 w-4" />
               </Button>
             ) : (
@@ -129,7 +129,7 @@ export default function AgentDirectory() {
                 </Button>
                 <Button size="sm" onClick={() => navigate("/auth?signup=true")} className="text-xs sm:text-sm font-semibold gap-1 sm:gap-1.5 shadow-md hover:shadow-lg transition-shadow px-3 sm:px-4 h-9">
                   <Sparkles className="h-3.5 w-3.5" />
-                  <span>Почати</span>
+                  <span>{t.agentDirectory.startBtn}</span>
                 </Button>
               </>
             )}
@@ -144,13 +144,13 @@ export default function AgentDirectory() {
         
         <div className="container max-w-4xl mx-auto px-4 relative z-10 space-y-6">
           <Badge className="bg-primary/10 text-primary border-primary/20 text-xs px-3 py-1">
-            ШІ-Агенти Спільноти
+            {t.agentDirectory.pageTitle}
           </Badge>
           <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight leading-tight">
-            Директорія Community Agents
+            {t.agentDirectory.pageSubtitle}
           </h1>
           <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Спеціалізовані агенти з інтегрованою пам'яттю (RAG) та доступом до інструментів для автоматизації процесів вашої спільноти.
+            {t.agentDirectory.pageDesc}
           </p>
         </div>
       </section>
@@ -184,7 +184,7 @@ export default function AgentDirectory() {
 
                 <CardContent className="p-6 pt-0 flex-grow relative z-10 space-y-6">
                   <div className="space-y-3">
-                    <h4 className="font-semibold text-xs text-muted-foreground uppercase tracking-widest">Основні функції:</h4>
+                    <h4 className="font-semibold text-xs text-muted-foreground uppercase tracking-widest">{t.agentDirectory.labelFuncs}</h4>
                     <ul className="space-y-2">
                       {agent.capabilities.map((cap, cIdx) => (
                         <li key={cIdx} className="flex items-start gap-2 text-sm text-foreground/90">
@@ -196,7 +196,7 @@ export default function AgentDirectory() {
                   </div>
 
                   <div className="border-t border-border/10 pt-4 space-y-2">
-                    <h4 className="font-semibold text-xs text-muted-foreground uppercase tracking-widest">Системний промпт:</h4>
+                    <h4 className="font-semibold text-xs text-muted-foreground uppercase tracking-widest">{t.agentDirectory.labelPrompt}</h4>
                     <p className="text-xs text-muted-foreground leading-normal bg-muted/30 border p-3 rounded-lg font-mono">
                       "{agent.systemPrompt}"
                     </p>
@@ -211,14 +211,14 @@ export default function AgentDirectory() {
                       variant="outline"
                     >
                       <MessageSquare className="h-4 w-4" />
-                      Почати чат в просторі
+                      {t.agentDirectory.btnStartChat}
                     </Button>
                   ) : (
                     <Button 
                       onClick={() => navigate("/auth?signup=true")}
                       className="w-full h-10 font-semibold gap-1.5"
                     >
-                      Створити простір з цим агентом
+                      {t.agentDirectory.btnCreateSpace}
                       <ArrowRight className="h-4 w-4" />
                     </Button>
                   )}
@@ -259,7 +259,7 @@ export default function AgentDirectory() {
               <img src="/daarion-logo.jpg" alt="DAARION.city" className="h-4 w-4 rounded-sm object-cover" />
               <span>DAARION.city</span>
             </a>
-            <span>— Всі права захищено.</span>
+            <span>{t.agentDirectory.footerCopyright}</span>
           </div>
         </div>
       </footer>

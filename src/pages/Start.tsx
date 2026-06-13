@@ -139,8 +139,8 @@ export function Start() {
     e.preventDefault();
     if (!commName.trim()) {
       toast({
-        title: "Помилка",
-        description: "Будь ласка, введіть назву спільноти",
+        title: t.error,
+        description: t.onboarding.errorSelectCommunityName,
         variant: "destructive"
       });
       return;
@@ -154,7 +154,8 @@ export function Start() {
     
     localStorage.setItem('zhos-onboarding-draft', JSON.stringify(draft));
     toast({
-      description: "Дані збережено. Будь ласка, зареєструйтесь для створення спільноти"
+      title: t.onboarding.saveDraftSuccessTitle,
+      description: t.onboarding.saveDraftSuccessDesc
     });
     navigate('/auth?signup=true');
   };
@@ -164,16 +165,16 @@ export function Start() {
     e.preventDefault();
     if (!commName.trim()) {
       toast({
-        title: "Помилка",
-        description: "Будь ласка, введіть назву спільноти",
+        title: t.error,
+        description: t.onboarding.errorSelectCommunityName,
         variant: "destructive"
       });
       return;
     }
     if (isOverLimit) {
       toast({
-        title: "Доступ обмежено",
-        description: "Ви досягли ліміту створення просторів для вашого рівня доступу. Оновіть рівень доступу.",
+        title: t.onboarding.errorLimitTitle,
+        description: t.onboarding.errorLimitDesc,
         variant: "destructive"
       });
       return;
@@ -210,15 +211,15 @@ export function Start() {
       await refresh();
 
       toast({
-        title: "Спільноту створено!",
-        description: `Вітаємо у вашому новому просторі "${commName}"`,
+        title: t.onboarding.creationSuccessTitle,
+        description: t.onboarding.creationSuccessDesc.replace('{name}', commName).replace('{agentName}', 'Community Spirit'),
       });
       navigate('/dashboard', { replace: true });
     } catch (err: any) {
       console.error('Onboarding error:', err);
       toast({
-        title: 'Помилка створення спільноти',
-        description: err?.message || 'Спробуйте ще раз',
+        title: t.onboarding.errorCreationTitle,
+        description: err?.message || t.onboarding.errorCreationDesc,
         variant: 'destructive',
       });
     } finally {
@@ -251,48 +252,48 @@ export function Start() {
   const features = [
     {
       icon: MessageSquare,
-      title: "Community Agent Chat",
-      desc: "Групові й персональні чати, треди та голосові повідомлення за участі ШІ-агента спільноти.",
+      title: t.start.featureChatTitle,
+      desc: t.start.featureChatDesc,
       gradient: "from-blue-500/20 to-cyan-500/20",
     },
     {
       icon: CheckSquare,
-      title: "Autonomous Coordination",
-      desc: "Керування завданнями, проєктами та зустрічами за допомогою інтегрованих ШІ-агентів.",
+      title: t.start.featureCoordTitle,
+      desc: t.start.featureCoordDesc,
       gradient: "from-emerald-500/20 to-teal-500/20",
     },
     {
       icon: Brain,
-      title: "Living Memory (RAG)",
-      desc: "База знань спільноти, файли та рішення з швидким семантичним пошуком для контексту агентів.",
+      title: t.start.featureMemoryTitle,
+      desc: t.start.featureMemoryDesc,
       gradient: "from-violet-500/20 to-purple-500/20",
     },
     {
       icon: Bot,
-      title: "Action Engine & Agents",
-      desc: "ШІ-агенти, редактор промптів, персональні помічники (Second Me) та мережа агентів.",
+      title: t.start.featureAgentTitle,
+      desc: t.start.featureAgentDesc,
       gradient: "from-amber-500/20 to-orange-500/20",
     },
   ];
 
   const steps = [
-    { num: "01", title: "Створіть простір", desc: "Дайте назву вашій команді, DAO або спільноті." },
-    { num: "02", title: "Запросіть учасників", desc: "Додайте колег, друзів або відкрийте доступ." },
-    { num: "03", title: "Налаштуйте агента", desc: "Задайте інструкції, памʼять та поведінку AI-агента." },
-    { num: "04", title: "Дійте разом", desc: "Чати, задачі, знання, зустрічі — все в єдиному потоці." },
+    { num: t.start.step1Num, title: t.start.step1Title, desc: t.start.step1Desc },
+    { num: t.start.step2Num, title: t.start.step2Title, desc: t.start.step2Desc },
+    { num: t.start.step3Num, title: t.start.step3Title, desc: t.start.step3Desc },
+    { num: t.start.step4Num, title: t.start.step4Title, desc: t.start.step4Desc },
   ];
 
   const useCases = [
-    { icon: Rocket, title: "Проєктний MicroDAO", desc: "Команда створює простір для задач, рішень, файлів і координації." },
-    { icon: Palette, title: "Креативний MicroDAO", desc: "Митці або креатори обʼєднують ідеї, обговорення, знання й події." },
-    { icon: Globe, title: "Інфраструктурний MicroDAO", desc: "Група операторів підтримує вузол, сервіс або спільну систему." },
-    { icon: Building2, title: "Міський MicroDAO", desc: "Локальна спільнота координує ініціативи, зустрічі й взаємодію." },
+    { icon: Rocket, title: t.start.typeProjectTitle, desc: t.start.typeProjectDesc },
+    { icon: Palette, title: t.start.typeCreativeTitle, desc: t.start.typeCreativeDesc },
+    { icon: Globe, title: t.start.typeInfraTitle, desc: t.start.typeInfraDesc },
+    { icon: Building2, title: t.start.typeCityTitle, desc: t.start.typeCityDesc },
   ];
 
   const ecosystem = [
-    { name: "DAGI", desc: "Мережа агентів і протокол взаємодії." },
-    { name: "MicroDAO", desc: "Автономні простори спільнот, команд і DAO." },
-    { name: "DAARION.city", desc: "Місто, де MicroDAO обʼєднуються у екосистему." },
+    { name: "DAGI", desc: t.start.dagiDesc },
+    { name: "MicroDAO", desc: t.start.microDaoDesc },
+    { name: "DAARION.city", desc: t.start.cityDesc },
   ];
 
   return (
@@ -337,10 +338,10 @@ export function Start() {
             )}
 
             <Button variant="ghost" size="sm" onClick={() => navigate('/agents')} className="text-xs sm:text-sm font-medium h-9 px-2 sm:px-3">
-              Агенти
+              {t.agentDirectory.navbarAgents}
             </Button>
             <Button variant="ghost" size="sm" onClick={() => navigate('/pricing')} className="text-xs sm:text-sm font-medium h-9 px-2 sm:px-3">
-              Тарифи
+              {t.agentDirectory.navbarPricing}
             </Button>
             <Button variant="ghost" size="sm" onClick={() => navigate('/install')} className="text-xs sm:text-sm font-medium gap-1.5 h-9 px-2 sm:px-3">
               <Download className="h-4 w-4" />
@@ -379,7 +380,7 @@ export function Start() {
         <div className="container max-w-5xl mx-auto px-4 text-center relative z-10 landing-hero-enter">
           <Badge className="bg-primary/10 text-primary border-primary/20 text-xs px-3.5 py-1 mb-6 hover:bg-primary/15 transition-all cursor-default">
             <Zap className="h-3 w-3 mr-1" />
-            ЖОС · Жива операційна система
+            {t.start.heroTagline}
           </Badge>
 
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-extrabold tracking-tight leading-[1.1] max-w-4xl mx-auto landing-gradient-text bg-gradient-to-r from-foreground via-primary to-foreground pb-2">
@@ -402,10 +403,10 @@ export function Start() {
               </div>
               <h3 className="font-bold text-lg text-amber-500 flex items-center gap-2">
                 <Shield className="h-5 w-5" />
-                Digital Steward
+                {t.start.featureRuleTitle}
               </h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Автономне управління правилами простору, фільтрація та модерація на основі принципів спільноти.
+                {t.start.featureRuleDesc}
               </p>
             </div>
 
@@ -415,10 +416,10 @@ export function Start() {
               </div>
               <h3 className="font-bold text-lg text-indigo-500 flex items-center gap-2">
                 <Brain className="h-5 w-5" />
-                Living Memory
+                {t.start.featureMemoryTitle}
               </h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Довгострокова пам'ять та семантичне індексування (RAG) документів і переписок для миттєвого пошуку контексту.
+                {t.start.featureMemoryDesc}
               </p>
             </div>
 
@@ -428,10 +429,10 @@ export function Start() {
               </div>
               <h3 className="font-bold text-lg text-emerald-500 flex items-center gap-2">
                 <Workflow className="h-5 w-5" />
-                Coordination Layer
+                {t.start.featureCoordTitle}
               </h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Орієнтована на дії мережа ШІ-агентів для автоматизації завдань, ведення канбан-дошок та фасилітації зустрічей.
+                {t.start.featureCoordDesc}
               </p>
             </div>
           </div>
@@ -476,7 +477,7 @@ export function Start() {
             <div className="inline-flex items-center gap-3 bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 border border-primary/15 rounded-2xl px-6 py-4">
               <Sparkles className="h-5 w-5 text-primary flex-shrink-0" />
               <span className="text-sm sm:text-base font-semibold text-foreground/90">
-                Кожна спільнота — це живий організм. Кожен простір — це канал дії.
+                {t.start.heroIntro}
               </span>
             </div>
           </div>
@@ -489,7 +490,7 @@ export function Start() {
           <div className="text-center space-y-3 landing-reveal">
             <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">{t.landing.featuresTitle}</h2>
             <p className="text-sm sm:text-base text-muted-foreground max-w-md mx-auto">
-              Базові можливості робочого простору вашої спільноти
+              {t.start.spaceCapTitle}
             </p>
           </div>
 
@@ -514,26 +515,26 @@ export function Start() {
         </div>
       </section>
 
-      {/* ── ЖОС Principles ── */}
+      {/* ──   Principles ── */}
       <section className="py-20 md:py-28 border-t border-border/10">
         <div className="container max-w-4xl mx-auto px-4 space-y-10">
           <div className="text-center space-y-4 landing-reveal">
-            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">Дух Спільноти / ЖОС</h2>
+            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">{t.start.spiritZhosTitle}</h2>
             <p className="text-base text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              ЖОС — це Жива Операційна Система спільноти. Вона допомагає бачити контекст, памʼятати рішення, координувати дії та зберігати дух спільної роботи.
+              {t.start.spiritZhosDesc}
             </p>
           </div>
 
           <div className="landing-reveal max-w-xl mx-auto">
             <div className="bg-card/30 backdrop-blur-sm border border-border/30 rounded-2xl p-6 sm:p-8 space-y-5">
-              <h4 className="font-bold text-sm text-muted-foreground tracking-widest uppercase">Принципи роботи</h4>
+              <h4 className="font-bold text-sm text-muted-foreground tracking-widest uppercase">{t.start.spiritPrinciplesTitle}</h4>
               <ul className="space-y-4">
                 {[
-                  { icon: Eye, text: "Агент нейтральний і враховує контекст" },
-                  { icon: HeartHandshake, text: "Рішення залишаються за людьми" },
-                  { icon: Shield, text: "Памʼять простору прозора для учасників" },
-                  { icon: Workflow, text: "Координація без примусу" },
-                  { icon: Users, text: "Кожна дія має значення для спільноти" },
+                  { icon: Eye, text: t.start.principle1 },
+                  { icon: HeartHandshake, text: t.start.principle2 },
+                  { icon: Shield, text: t.start.principle3 },
+                  { icon: Workflow, text: t.start.principle4 },
+                  { icon: Users, text: t.start.principle5 },
                 ].map((principle, index) => (
                   <li key={index} className="flex items-center gap-3 text-sm group">
                     <div className="p-1.5 rounded-lg bg-primary/8 group-hover:bg-primary/15 transition-colors flex-shrink-0">
@@ -552,9 +553,9 @@ export function Start() {
       <section className="py-20 md:py-28 bg-gradient-to-b from-muted/5 to-muted/15 border-t border-border/10">
         <div className="container max-w-5xl mx-auto px-4 space-y-12">
           <div className="text-center space-y-3 landing-reveal">
-            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">Як це працює</h2>
+            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">{t.start.howItWorksTitle}</h2>
             <p className="text-sm sm:text-base text-muted-foreground max-w-md mx-auto">
-              Від ідеї до спільної дії — за чотири кроки
+              {t.start.howItWorksSubtitle}
             </p>
           </div>
 
@@ -576,18 +577,18 @@ export function Start() {
       <section className="py-20 md:py-28 border-t border-border/10">
         <div className="container max-w-5xl mx-auto px-4 space-y-12">
           <div className="text-center space-y-3 landing-reveal">
-            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">Архітектура</h2>
+            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">{t.start.archTitle}</h2>
             <p className="text-sm sm:text-base text-muted-foreground max-w-lg mx-auto">
-              Звʼязок агентів та протоколів координації в єдиній екосистемі
+              {t.start.archSubtitle}
             </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 landing-stagger">
             {[
-              { icon: Network, title: "DAGI Network", desc: "Мережа агентів і протокол звʼязку між людьми, командами та автономними системами." },
-              { icon: Layers, title: "MicroDAO простір", desc: "Канал взаємодії для команди або спільноти з власними чатами, задачами й агентами." },
-              { icon: Cpu, title: "Second Me", desc: "Персональний агент учасника, який поступово допомагає діяти в межах простору." },
-              { icon: Zap, title: "Правила та економіка", desc: "У майбутньому простір може мати власні правила, ролі, токени й DAO-логіку." },
+              { icon: Network, title: t.start.archDagiTitle, desc: t.start.archDagiDesc },
+              { icon: Layers, title: t.start.archSpaceTitle, desc: t.start.archSpaceDesc },
+              { icon: Cpu, title: t.start.archSecondMeTitle, desc: t.start.archSecondMeDesc },
+              { icon: Zap, title: t.start.archRuleTitle, desc: t.start.archRuleDesc },
             ].map((item, index) => (
               <div key={index} className="landing-reveal landing-card-hover bg-card/20 backdrop-blur-sm border border-border/30 rounded-2xl p-6 space-y-3">
                 <div className="p-2.5 bg-primary/10 w-fit rounded-xl">
@@ -605,7 +606,7 @@ export function Start() {
       <section className="py-20 md:py-28 bg-gradient-to-b from-muted/5 to-muted/15 border-t border-border/10">
         <div className="container max-w-5xl mx-auto px-4 space-y-12">
           <div className="text-center space-y-3 landing-reveal">
-            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">Приклади використання</h2>
+            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">{t.start.spaceTypesTitle}</h2>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 landing-stagger">
@@ -626,7 +627,7 @@ export function Start() {
       <section className="py-20 md:py-24 border-t border-border/10">
         <div className="container max-w-4xl mx-auto px-4 space-y-10">
           <div className="text-center space-y-3 landing-reveal">
-            <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">Позиція в екосистемі DAARION</h2>
+            <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">{t.start.ecosystemTitle}</h2>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 landing-stagger">
@@ -649,9 +650,9 @@ export function Start() {
                 <div className="mx-auto mb-3 h-12 w-12 rounded-2xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-lg landing-glow">
                   <Sparkles className="h-6 w-6 text-primary-foreground" />
                 </div>
-                <CardTitle className="text-xl font-bold">Створіть своє MicroDAO</CardTitle>
+                <CardTitle className="text-xl font-bold">{t.onboarding.createCommunity}</CardTitle>
                 <CardDescription className="text-xs">
-                  Запустіть інтерактивне створення простору під керівництвом вашого Духа Спільноти.
+                  {t.onboarding.createCommunityDesc}
                 </CardDescription>
               </CardHeader>
               <CardContent className="pt-2 pb-6">
@@ -659,7 +660,7 @@ export function Start() {
                   onClick={() => navigate(user ? '/onboarding' : '/auth?signup=true')} 
                   className="w-full flex items-center justify-center gap-1.5 font-semibold py-5 text-base shadow-md hover:shadow-lg transition-all hover:scale-[1.01] active:scale-[0.99] bg-gradient-to-r from-primary to-violet-600 hover:from-primary/95 hover:to-violet-500 text-white"
                 >
-                  Створити MicroDAO з Духом Спільноти
+                  {t.onboarding.startOnboardingBtn}
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               </CardContent>
@@ -698,9 +699,9 @@ export function Start() {
               <img src="/daarion-logo.jpg" alt="DAARION.city" className="h-4 w-4 rounded-sm object-cover" />
               <span>DAARION.city</span>
             </a>
-            <span>— Всі права захищено.</span>
+            <span>{t.agentDirectory.footerCopyright}</span>
           </div>
-          <div className="text-[10px] text-muted-foreground/60">Побудовано для гнучкої координації та живих спільнот.</div>
+          <div className="text-[10px] text-muted-foreground/60">{t.clientInstall.footerDesc}</div>
         </div>
       </footer>
     </div>

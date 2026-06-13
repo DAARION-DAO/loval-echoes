@@ -15,18 +15,18 @@ export default function Pricing() {
   const tiers = [
     {
       name: "Early Access",
-      badge: "Тестування",
-      price: "Безкоштовно",
-      period: "для перших спільнот",
-      desc: "Подайте заявку на безкоштовний доступ під час бета-тестування.",
+      badge: t.pricingExtra.testing,
+      price: t.pricingExtra.free,
+      period: t.pricingExtra.forFirstCommunities,
+      desc: t.pricingExtra.earlyAccessDesc,
       features: [
-        "1 простір після схвалення",
-        "Базовий ШІ-агент (Steward Agent)",
-        "Спільні чати та обговорення",
-        "Дошка завдань та координація",
-        "База знань (RAG до 50 МБ документів)"
+        t.pricingExtra.earlyAccessFeature1,
+        t.pricingExtra.earlyAccessFeature2,
+        t.pricingExtra.earlyAccessFeature3,
+        t.pricingExtra.earlyAccessFeature4,
+        t.pricingExtra.earlyAccessFeature5
       ],
-      cta: "Подати заявку",
+      cta: t.pricingExtra.applyBtn,
       action: () => navigate("/auth?signup=true"),
       variant: "outline" as const,
       gradient: "from-blue-500/10 to-cyan-500/10",
@@ -34,18 +34,18 @@ export default function Pricing() {
     },
     {
       name: "Community",
-      badge: "Масштабування",
-      price: "Очікує запуску",
-      period: "для невеликих команд",
-      desc: "Агентська операційна система для глибшої координації процесів.",
+      badge: t.pricingExtra.scaling,
+      price: t.pricingExtra.pendingLaunch,
+      period: t.pricingExtra.forSmallTeams,
+      desc: t.pricingExtra.communityDesc,
       features: [
-        "Кілька робочих просторів (до 3)",
-        "Розширена пам'ять RAG (до 1 ГБ)",
-        "До 3 ШІ-агентів одночасно",
-        "Кастомні промпти та версіонування",
-        "Пріоритетне оновлення бази знань"
+        t.pricingExtra.communityFeature1,
+        t.pricingExtra.communityFeature2,
+        t.pricingExtra.communityFeature3,
+        t.pricingExtra.communityFeature4,
+        t.pricingExtra.communityFeature5
       ],
-      cta: "Запросити доступ",
+      cta: t.pricingExtra.requestAccessBtn,
       action: () => navigate("/auth?signup=true"),
       variant: "outline" as const,
       gradient: "from-indigo-500/10 to-purple-500/10",
@@ -53,18 +53,18 @@ export default function Pricing() {
     },
     {
       name: "Founder Program",
-      badge: "Рекомендовано",
-      price: "За запрошенням",
-      period: "підтримка розвитку",
-      desc: "Для засновників спільнот, які хочуть отримати пріоритет та впливати на продукт.",
+      badge: t.pricingExtra.recommended,
+      price: t.pricingExtra.byInvitation,
+      period: t.pricingExtra.supportDevelopment,
+      desc: t.pricingExtra.founderDesc,
       features: [
-        "Пріоритетний обхід списку очікування",
-        "Ранній доступ до експериментальних функцій",
-        "Участь у формуванні рішень MicroDAO",
-        "Кастомна розробка додаткових агентів",
-        "Пріоритетна підтримка у Telegram"
+        t.pricingExtra.founderFeature1,
+        t.pricingExtra.founderFeature2,
+        t.pricingExtra.founderFeature3,
+        t.pricingExtra.founderFeature4,
+        t.pricingExtra.founderFeature5
       ],
-      cta: "Стати Founder",
+      cta: t.pricingExtra.becomeFounderBtn,
       action: () => navigate("/auth?signup=true"),
       variant: "default" as const,
       gradient: "from-amber-500/20 to-orange-500/20",
@@ -73,18 +73,18 @@ export default function Pricing() {
     },
     {
       name: "Network / Sovereign",
-      badge: "Self-Hosted",
-      price: "Автономно",
-      period: "для DAO-мереж",
-      desc: "Для автономних організацій та суверенних мереж.",
+      badge: t.pricingExtra.selfHosted,
+      price: t.pricingExtra.autonomous,
+      period: t.pricingExtra.forDaoNetworks,
+      desc: t.pricingExtra.sovereignDesc,
       features: [
-        "Повний суверенітет даних (On-premise)",
-        "Власні приватні ШІ-агенти",
-        "Запуск локальних L1/L2 моделей",
-        "microDAO token layer в roadmap",
-        "Розгортання через Edge Client"
+        t.pricingExtra.sovereignFeature1,
+        t.pricingExtra.sovereignFeature2,
+        t.pricingExtra.sovereignFeature3,
+        t.pricingExtra.sovereignFeature4,
+        t.pricingExtra.sovereignFeature5
       ],
-      cta: "Запросити доступ",
+      cta: t.pricingExtra.requestAccessBtn,
       action: () => navigate("/install"),
       variant: "outline" as const,
       gradient: "from-emerald-500/10 to-teal-500/10",
@@ -107,14 +107,14 @@ export default function Pricing() {
 
           <div className="flex items-center gap-1.5 sm:gap-3">
             <Button variant="ghost" size="sm" onClick={() => navigate("/agents")} className="text-xs sm:text-sm font-medium h-9 px-2 sm:px-3">
-              Агенти
+              {t.nav.agents}
             </Button>
             <Button variant="ghost" size="sm" onClick={() => navigate("/pricing")} className="text-xs sm:text-sm font-semibold h-9 px-2 sm:px-3 text-primary">
-              Рівні доступу
+              {t.pricingExtra.title}
             </Button>
             <Button variant="ghost" size="sm" onClick={() => navigate("/install")} className="text-xs sm:text-sm font-medium gap-1.5 h-9 px-2 sm:px-3">
               <Download className="h-4 w-4" />
-              <span className="hidden xxs:inline">Клієнт</span>
+              <span className="hidden xxs:inline">{t.landing.client}</span>
             </Button>
             
             <Select value={language} onValueChange={(value) => setLanguage(value as Language)}>
@@ -135,7 +135,7 @@ export default function Pricing() {
             </Button>
             <Button size="sm" onClick={() => navigate("/auth?signup=true")} className="text-xs sm:text-sm font-semibold gap-1 sm:gap-1.5 shadow-md hover:shadow-lg transition-shadow px-3 sm:px-4 h-9">
               <Sparkles className="h-3.5 w-3.5" />
-              <span>Почати</span>
+              <span>{t.pricingExtra.startBtn}</span>
             </Button>
           </div>
         </div>
@@ -148,13 +148,13 @@ export default function Pricing() {
         
         <div className="container max-w-4xl mx-auto px-4 relative z-10 space-y-6">
           <Badge className="bg-primary/10 text-primary border-primary/20 text-xs px-3 py-1">
-            План розвитку доступу
+            {t.pricingExtra.title}
           </Badge>
           <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight leading-tight">
-            Оберіть свій рівень доступу
+            {t.pricingExtra.subtitle}
           </h1>
           <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Всі можливості спільної пам'яті, чатів, завдань та ШІ-агентів екосистеми MicroDAO. Без прихованих платежів під час тестування.
+            {t.pricingExtra.desc}
           </p>
         </div>
       </section>
@@ -237,15 +237,15 @@ export default function Pricing() {
           </div>
           <div className="flex items-center justify-center flex-wrap gap-x-4 gap-y-2 text-xs text-muted-foreground">
             <button onClick={() => navigate("/agents")} className="hover:text-foreground transition-colors">
-              AI Agents Directory
+              {t.agentDirectory.pageTitle}
             </button>
             <span className="text-border">·</span>
             <button onClick={() => navigate("/pricing")} className="hover:text-foreground transition-colors text-foreground">
-              Access Levels
+              {t.pricingExtra.title}
             </button>
             <span className="text-border">·</span>
             <button onClick={() => navigate("/install")} className="hover:text-foreground transition-colors">
-              DAARION Edge Client
+              {t.clientInstall.installTitle}
             </button>
             <span className="text-border">·</span>
             <a href="https://github.com/DAARION-DAO/loval-echoes" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">
@@ -258,7 +258,7 @@ export default function Pricing() {
               <img src="/daarion-logo.jpg" alt="DAARION.city" className="h-4 w-4 rounded-sm object-cover" />
               <span>DAARION.city</span>
             </a>
-            <span>— Всі права захищено.</span>
+            <span>{t.clientInstall.footerCopyright}</span>
           </div>
         </div>
       </footer>

@@ -7,6 +7,7 @@ import { CheckCircle, XCircle, User, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from '@/lib/i18n';
 
 interface ApprovalRequest {
   id: string;
@@ -27,7 +28,8 @@ interface UserApprovalPanelProps {
   className?: string;
 }
 
-export const UserApprovalPanel = ({ className = '' }: UserApprovalPanelProps) => {
+export const UserApprovalPanel = ({ requests: propRequests, className = '' }: { requests?: ApprovalRequest[], className?: string }) => {
+  const { t, language } = useTranslation();
   const { user } = useAuth();
   const { toast } = useToast();
   const [requests, setRequests] = useState<ApprovalRequest[]>([]);
@@ -129,8 +131,8 @@ export const UserApprovalPanel = ({ className = '' }: UserApprovalPanelProps) =>
         if (!inconsError && inconsistencies && inconsistencies.length > 0) {
           console.warn('Data inconsistencies detected:', inconsistencies);
           toast({
-            title: 'Внимание',
-            description: `Обнаружены ${inconsistencies.length} несоответствий в данных. Попробуйте обновить страницу.`,
+            title: t.userApprovalPanel.attentionTitle,
+            description: t.userApprovalPanel.inconsistenciesDesc.replace('{count}', String(inconsistencies.length)),
             variant: 'destructive',
           });
         }
@@ -138,11 +140,11 @@ export const UserApprovalPanel = ({ className = '' }: UserApprovalPanelProps) =>
         console.warn('Could not check for inconsistencies:', inconsError);
       }
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading approval requests:', error);
       toast({
-        title: 'Ошибка',
-        description: `Не удалось загрузить запросы: ${error.message}`,
+        title: t.userApprovalPanel.loadErrorTitle,
+        description: t.userApprovalPanel.loadErrorDesc.replace('{error}', error.message || ''),
         variant: 'destructive',
       });
       setRequests([]);
@@ -249,8 +251,8 @@ export const UserApprovalPanel = ({ className = '' }: UserApprovalPanelProps) =>
         if (profileError) {
           console.error('Profile update error:', profileError);
           toast({
-            title: "Ошибка обновления профиля",
-            description: `Ошибка RLS: ${profileError.message}. Проверьте права доступа.`,
+            title: t.userApprovalPanel.updateProfileErrorTitle,
+            description: t.userApprovalPanel.updateProfileErrorDesc.replace('{error}', profileError.message),
             variant: "destructive",
           });
           throw profileError;
@@ -263,12 +265,12 @@ export const UserApprovalPanel = ({ className = '' }: UserApprovalPanelProps) =>
       await loadApprovalRequests();
 
       toast({
-        title: decision === 'approve' ? 'Голос засчитан' : 'Отклонение засчитано',
+        title: decision === 'approve' ? t.userApprovalPanel.voiceApprovedTitle : t.userApprovalPanel.voiceRejectedTitle,
         description: finalStatus === 'approved'
-          ? 'Пользователь одобрен сообществом!' 
+          ? t.userApprovalPanel.userApprovedDesc 
           : finalStatus === 'rejected'
-            ? 'Пользователь отклонен'
-            : `Ваш голос учтен. Нужно ${requiredApprovals - approvals} голосов для подтверждения.`,
+            ? t.userApprovalPanel.userRejectedDesc
+            : t.userApprovalPanel.voteRegisteredDesc.replace('{count}', String(requiredApprovals - approvals)),
       });
 
       // Clear notes
@@ -278,11 +280,11 @@ export const UserApprovalPanel = ({ className = '' }: UserApprovalPanelProps) =>
         return newNotes;
       });
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error processing approval:', error);
       toast({
-        title: 'Ошибка',
-        description: `Не удалось обработать решение: ${error.message}`,
+        title: t.userApprovalPanel.actionErrorTitle,
+        description: t.userApprovalPanel.actionErrorDesc.replace('{error}', error.message || ''),
         variant: 'destructive',
       });
     } finally {
@@ -313,10 +315,10 @@ export const UserApprovalPanel = ({ className = '' }: UserApprovalPanelProps) =>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <User className="h-5 w-5" />
-            Новые участники ожидают подтверждения
+            {t.userApprovalPanel.panelTitle}
           </CardTitle>
           <CardDescription>
-            Новые участники становятся модераторами после одобрения. Требуется: 1-й пользователь одобряется автоматически, 2-й требует 1 одобрение, 3-й требует 2 одобрения, далее требуется 3 одобрения для каждого нового участника.
+            {t.userApprovalPanel.panelDesc}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -340,24 +342,26 @@ export const UserApprovalPanel = ({ className = '' }: UserApprovalPanelProps) =>
                       )}
                     </div>
                     <div>
-                      <div className="font-medium">{request.profiles?.display_name || 'Неизвестный пользователь'}</div>
+                    <div>
+                      <div className="font-medium">{request.profiles?.display_name || t.userApprovalPanel.unknownUser}</div>
                       {request.profiles?.email && (
                         <div className="text-sm text-muted-foreground">{request.profiles.email}</div>
                       )}
                       <div className="text-sm text-muted-foreground flex items-center gap-1">
                         <Clock className="h-3 w-3" />
-                        {new Date(request.requested_at).toLocaleDateString('ru-RU')}
+                        {new Date(request.requested_at).toLocaleDateString(language === 'ru' ? 'ru-RU' : (language === 'uk' ? 'uk-UA' : (language === 'es' ? 'es-ES' : 'en-US')))}
                       </div>
+                    </div>
                     </div>
                   </div>
                   
                   <div className="flex items-center gap-2">
                     <Badge variant="outline">
-                      {request.approved_by.length}/{request.total_existing_users} одобрений
+                      {t.userApprovalPanel.approvalsCount.replace('{count}', String(request.approved_by.length)).replace('{total}', String(request.total_existing_users))}
                     </Badge>
                     {request.rejected_by.length > 0 && (
                       <Badge variant="destructive">
-                        {request.rejected_by.length} отклонений
+                        {t.userApprovalPanel.rejectionsCount.replace('{count}', String(request.rejected_by.length))}
                       </Badge>
                     )}
                   </div>
@@ -366,7 +370,7 @@ export const UserApprovalPanel = ({ className = '' }: UserApprovalPanelProps) =>
                 {!hasUserVoted && (
                   <div className="space-y-3">
                     <Textarea
-                      placeholder="Комментарий (необязательно)"
+                      placeholder={t.userApprovalPanel.commentPlaceholder}
                       value={notes[request.id] || ''}
                       onChange={(e) => setNotes(prev => ({ ...prev, [request.id]: e.target.value }))}
                       rows={2}
@@ -379,7 +383,7 @@ export const UserApprovalPanel = ({ className = '' }: UserApprovalPanelProps) =>
                         className="flex items-center gap-2"
                       >
                         <CheckCircle className="h-4 w-4" />
-                        Одобрить
+                        {t.userApprovalPanel.approveBtn}
                       </Button>
                       
                       <Button
@@ -389,7 +393,7 @@ export const UserApprovalPanel = ({ className = '' }: UserApprovalPanelProps) =>
                         className="flex items-center gap-2"
                       >
                         <XCircle className="h-4 w-4" />
-                        Отклонить
+                        {t.userApprovalPanel.rejectBtn}
                       </Button>
                     </div>
                   </div>
@@ -400,12 +404,12 @@ export const UserApprovalPanel = ({ className = '' }: UserApprovalPanelProps) =>
                     {request.approved_by.includes(user?.id || '') ? (
                       <>
                         <CheckCircle className="h-4 w-4 text-green-600" />
-                        Вы одобрили этого участника
+                        {t.userApprovalPanel.alreadyApproved}
                       </>
                     ) : (
                       <>
                         <XCircle className="h-4 w-4 text-red-600" />
-                        Вы отклонили этого участника
+                        {t.userApprovalPanel.alreadyRejected}
                       </>
                     )}
                   </div>

@@ -1,4 +1,13 @@
 import { supabase } from '@/integrations/supabase/client';
+import { translations, Language } from '@/lib/i18n';
+
+const getCurrentLang = (): Language => {
+  const saved = localStorage.getItem('language');
+  if (saved && ['uk', 'en', 'ru', 'es'].includes(saved)) {
+    return saved as Language;
+  }
+  return 'en';
+};
 
 export interface DifyMessage {
   id: string;
@@ -95,7 +104,7 @@ export class DifyClient {
       const { data: newChat, error } = await supabase
         .from('conversations')
         .insert({
-          name: name || 'Новый чат',
+          name: name || translations[getCurrentLang()].chats.newChat,
           user_id: user.id,
         })
         .select('id, name, created_at, updated_at')
@@ -249,7 +258,7 @@ export class DifyClient {
       const userDisplayName = profile?.display_name || 
                              user.user_metadata?.display_name || 
                              user.email?.split('@')[0] || 
-                             'Участник';
+                             translations[getCurrentLang()].participantsExtra.roleMember;
 
       const messageType = voiceMeta?.messageType || (voiceMeta?.fileUrl ? 'file' : 'text');
 

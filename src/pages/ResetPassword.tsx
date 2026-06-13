@@ -7,10 +7,12 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { useTranslation } from '@/lib/i18n';
 
 export const ResetPassword = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [ready, setReady] = useState(false);
   const [hasRecoverySession, setHasRecoverySession] = useState(false);
   const [newPassword, setNewPassword] = useState('');
@@ -41,11 +43,11 @@ export const ResetPassword = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newPassword.length < 6) {
-      toast({ title: 'Ошибка', description: 'Минимум 6 символов', variant: 'destructive' });
+      toast({ title: t.error, description: t.authForm.passwordMinLength, variant: 'destructive' });
       return;
     }
     if (newPassword !== confirmPassword) {
-      toast({ title: 'Ошибка', description: 'Пароли не совпадают', variant: 'destructive' });
+      toast({ title: t.error, description: t.authForm.passwordsDoNotMatch, variant: 'destructive' });
       return;
     }
 
@@ -54,11 +56,11 @@ export const ResetPassword = () => {
     setLoading(false);
 
     if (error) {
-      toast({ title: 'Ошибка', description: error.message, variant: 'destructive' });
+      toast({ title: t.error, description: error.message, variant: 'destructive' });
       return;
     }
 
-    toast({ title: 'Пароль обновлён', description: 'Теперь вы можете пользоваться приложением.' });
+    toast({ title: t.authForm.updatePasswordSuccessTitle, description: t.authForm.updatePasswordSuccessDesc });
     // Clean hash and go home — session is now valid with new password.
     window.history.replaceState({}, document.title, '/');
     navigate('/', { replace: true });
@@ -67,7 +69,7 @@ export const ResetPassword = () => {
   if (!ready) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <LoadingSpinner size="lg" text="Загрузка..." />
+        <LoadingSpinner size="lg" text={t.loading} />
       </div>
     );
   }
@@ -77,14 +79,14 @@ export const ResetPassword = () => {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted/20 p-4">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle>Ссылка недействительна</CardTitle>
+            <CardTitle>{t.authForm.recoveryLinkInvalidTitle}</CardTitle>
             <CardDescription>
-              Ссылка для восстановления пароля устарела или уже была использована. Запросите новое письмо.
+              {t.authForm.recoveryLinkInvalidDesc}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Button className="w-full" onClick={() => navigate('/auth', { replace: true })}>
-              Вернуться к входу
+              {t.authForm.btnBackToLogin}
             </Button>
           </CardContent>
         </Card>
@@ -96,17 +98,17 @@ export const ResetPassword = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted/20 p-4">
       <Card className="w-full max-w-md shadow-elegant">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">Новый пароль</CardTitle>
-          <CardDescription>Создайте новый пароль для вашего аккаунта</CardDescription>
+          <CardTitle className="text-2xl font-bold">{t.authForm.newPasswordTitle}</CardTitle>
+          <CardDescription>{t.authForm.newPasswordDesc}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="new-password">Новый пароль</Label>
+              <Label htmlFor="new-password">{t.authForm.labelNewPassword}</Label>
               <Input
                 id="new-password"
                 type="password"
-                placeholder="минимум 6 символов"
+                placeholder={t.authForm.placeholderNewPassword}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 minLength={6}
@@ -114,11 +116,11 @@ export const ResetPassword = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="confirm-password">Подтвердите пароль</Label>
+              <Label htmlFor="confirm-password">{t.authForm.labelConfirmPassword}</Label>
               <Input
                 id="confirm-password"
                 type="password"
-                placeholder="повторите пароль"
+                placeholder={t.authForm.placeholderConfirmPassword}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 minLength={6}
@@ -126,7 +128,7 @@ export const ResetPassword = () => {
               />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Обновление...' : 'Обновить пароль'}
+              {loading ? t.authForm.btnUpdatingPassword : t.authForm.btnUpdatePassword}
             </Button>
           </form>
         </CardContent>

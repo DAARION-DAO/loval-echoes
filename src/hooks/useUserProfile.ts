@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from '@/lib/i18n';
 
 export interface UserProfile {
   id: string;
@@ -16,6 +17,7 @@ export interface UserProfile {
 export const useUserProfile = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -61,16 +63,16 @@ export const useUserProfile = () => {
       setProfile(data);
       
       toast({
-        title: 'Профиль обновлён',
-        description: 'Изменения успешно сохранены'
+        title: t.userProfile.updatedTitle,
+        description: t.userProfile.updatedDesc
       });
 
       return data;
     } catch (error) {
       console.error('Error updating profile:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось обновить профиль',
+        title: t.userProfile.updateErrorTitle,
+        description: t.userProfile.updateErrorDesc,
         variant: 'destructive'
       });
       throw error;
@@ -86,11 +88,11 @@ export const useUserProfile = () => {
       const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
       
       if (file.size > MAX_SIZE) {
-        throw new Error('Файл слишком большой. Максимальный размер: 5MB');
+        throw new Error(t.userProfile.fileTooLarge);
       }
       
       if (!ALLOWED_TYPES.includes(file.type)) {
-        throw new Error('Неподдерживаемый тип файла. Используйте JPG, PNG, GIF или WebP');
+        throw new Error(t.userProfile.unsupportedFileType);
       }
 
       // Server-side validation via edge function
@@ -104,7 +106,7 @@ export const useUserProfile = () => {
       });
 
       if (validationError || !validationData?.success) {
-        throw new Error(validationData?.error || 'Файл не прошел проверку безопасности');
+        throw new Error(validationData?.error || t.userProfile.fileSecurityFailed);
       }
 
       const fileExt = file.name.split('.').pop();
@@ -145,8 +147,8 @@ export const useUserProfile = () => {
     } catch (error) {
       console.error('Error uploading avatar:', error);
       toast({
-        title: 'Ошибка',
-        description: error instanceof Error ? error.message : 'Не удалось загрузить фото',
+        title: t.userProfile.updateErrorTitle,
+        description: error instanceof Error ? error.message : t.userProfile.uploadFailed,
         variant: 'destructive'
       });
       throw error;

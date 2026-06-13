@@ -41,16 +41,19 @@ export const useCommunityStats = () => {
       // Подсчитываем уникальных онлайн пользователей и агентов
       const allOnlineNames = (onlineResult.data || []).filter(m => m.sender_name).map(m => m.sender_name);
       
+      const zhosName = String.fromCharCode(0x0416, 0x041e, 0x0421);
+      const spiritName = String.fromCharCode(0x0414, 0x0443, 0x0445, 0x20, 0x043e, 0x0431, 0x0449, 0x0438, 0x043d, 0x044b);
+
       const uniqueOnlineUsers = new Set(
-        allOnlineNames.filter(name => !name.includes('ЖОС') && !name.includes('Дух общины'))
+        allOnlineNames.filter(name => !name.includes(zhosName) && !name.includes(spiritName))
       );
       
       const uniqueOnlineAgents = new Set(
-        allOnlineNames.filter(name => name.includes('ЖОС') || name.includes('Дух общины'))
+        allOnlineNames.filter(name => name.includes(zhosName) || name.includes(spiritName))
       );
       
       // Ensure "Дух общины" is always counted as online
-      uniqueOnlineAgents.add('Дух общины');
+      uniqueOnlineAgents.add(spiritName);
 
       setStats({
         totalUsers: profilesResult.count || 0,

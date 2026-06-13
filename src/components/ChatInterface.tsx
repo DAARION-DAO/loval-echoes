@@ -93,8 +93,8 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
         setIsPlayingTTS(false);
         URL.revokeObjectURL(audioUrl);
         toast({
-          title: 'Ошибка воспроизведения',
-          description: 'Не удалось воспроизвести аудио',
+          title: t.chatInterface.errPlayTitle,
+          description: t.chatInterface.errPlayDesc,
           variant: 'destructive',
         });
       };
@@ -104,8 +104,8 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
       console.error('Error playing TTS audio:', error);
       setIsPlayingTTS(false);
       toast({
-        title: 'Ошибка озвучивания',
-        description: 'Не удалось озвучить ответ',
+        title: t.chatInterface.errTtsTitle,
+        description: t.chatInterface.errTtsDesc,
         variant: 'destructive',
       });
     }
@@ -155,7 +155,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
           event: 'typing',
           payload: {
             user_id: currentUser.id,
-            user_name: currentUser.user_metadata?.display_name || currentUser.email?.split('@')[0] || 'Пользователь',
+            user_name: currentUser.user_metadata?.display_name || currentUser.email?.split('@')[0] || t.chatInterface.userFallbackName,
             is_typing: false
           }
         });
@@ -186,7 +186,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
           event: 'typing',
           payload: {
             user_id: currentUser.id,
-            user_name: currentUser.user_metadata?.display_name || currentUser.email?.split('@')[0] || 'Пользователь',
+            user_name: currentUser.user_metadata?.display_name || currentUser.email?.split('@')[0] || t.chatInterface.userFallbackName,
             is_typing: true
           }
         });
@@ -204,7 +204,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
             event: 'typing',
             payload: {
               user_id: currentUser.id,
-              user_name: currentUser.user_metadata?.display_name || currentUser.email?.split('@')[0] || 'Пользователь',
+              user_name: currentUser.user_metadata?.display_name || currentUser.email?.split('@')[0] || t.chatInterface.userFallbackName,
               is_typing: false
             }
           });
@@ -221,7 +221,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
           event: 'typing',
           payload: {
             user_id: currentUser.id,
-            user_name: currentUser.user_metadata?.display_name || currentUser.email?.split('@')[0] || 'Пользователь',
+            user_name: currentUser.user_metadata?.display_name || currentUser.email?.split('@')[0] || t.chatInterface.userFallbackName,
             is_typing: false
           }
         });
@@ -261,7 +261,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
     // Якщо немає, використовуємо fallback через tts-api
     const speakResponse = async () => {
       try {
-        console.log('Озвучивание ответа агента через TTS API (fallback)...');
+        console.log('Synthesizing agent response via TTS API (fallback)...');
         
         const { data, error } = await supabase.functions.invoke('tts-api', {
           body: { 
@@ -435,7 +435,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
             console.error('Error uploading file:', error);
             toast({
               title: t.error,
-              description: `Ошибка загрузки файла ${file.name}`,
+              description: t.chatInterface.errUploadTitle.replace('{name}', file.name),
               variant: 'destructive',
             });
           }
@@ -562,8 +562,8 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
       // Pre-flight Check 1: Secure Context
       if (!window.isSecureContext) {
         toast({
-          title: 'Требуется безопасное соединение',
-          description: 'Для доступа к микрофону необходимо HTTPS соединение',
+          title: t.chatInterface.errHttpsTitle,
+          description: t.chatInterface.errHttpsDesc,
           variant: 'destructive',
         });
         return;
@@ -572,8 +572,8 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
       // Pre-flight Check 2: Browser Compatibility
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         toast({
-          title: 'Браузер не поддерживается',
-          description: 'Ваш браузер не поддерживает запись голоса. Обновите браузер или используйте Chrome/Firefox',
+          title: t.chatInterface.errMicrophoneNotSupportedTitle,
+          description: t.chatInterface.errMicrophoneNotSupportedDesc,
           variant: 'destructive',
         });
         return;
@@ -585,8 +585,8 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
       
       if (!hasAudioInput) {
         toast({
-          title: 'Микрофон не найден',
-          description: 'Подключите микрофон и попробуйте снова',
+          title: t.chatInterface.errMicrophoneNotFoundTitle,
+          description: t.chatInterface.errMicrophoneNotFoundDesc,
           variant: 'destructive',
         });
         return;
@@ -681,8 +681,8 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
         
         // Показываем индикатор обработки
         toast({
-          title: 'Обработка голоса',
-          description: 'Конвертируем аудио...',
+          title: t.chatInterface.toastProcessingVoiceTitle,
+          description: t.chatInterface.toastConvertingDesc,
         });
         
         try {
@@ -694,8 +694,8 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
           }
           
           toast({
-            title: 'Обработка голоса',
-            description: 'Сохраняем аудио сообщение...',
+            title: t.chatInterface.toastProcessingVoiceTitle,
+            description: t.chatInterface.toastSavingDesc,
           });
           
           // Upload to Supabase Storage
@@ -726,8 +726,8 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
           console.log('Voice message uploaded, public URL:', publicUrl);
           
           toast({
-            title: 'Аудио записано',
-            description: 'Отправляем сообщение...',
+            title: t.chatInterface.toastAudioRecordedTitle,
+            description: t.chatInterface.toastSendingDesc,
           });
           
           // Скидаємо ref
@@ -741,7 +741,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
           }, 300);
         } catch (error) {
           console.error('Error transcribing audio:', error);
-          const errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';
+          const errorMessage = error instanceof Error ? error.message : t.errors.unknownError;
           console.error('Full error details:', {
             error,
             message: errorMessage,
@@ -769,32 +769,32 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
           // Check if it's a format error
           if (errorMessage.includes('415') || errorMessage.includes('Unsupported') || (apiError && apiError.status === 415)) {
             toast({
-              title: 'Ошибка формата аудио',
-              description: 'Не удалось конвертировать аудио. Попробуйте другой браузер.',
+              title: t.chatInterface.toastAudioFormatErrorTitle,
+              description: t.chatInterface.toastAudioFormatErrorDesc,
               variant: 'destructive',
             });
           } else if (errorMessage.includes('Speech to text is not enabled') || (apiError && apiError.status === 403)) {
             toast({
-              title: 'Голосовой ввод недоступен',
-              description: 'В настоящий момент функция преобразования речи в текст отключена. Используйте текстовый ввод.',
+              title: t.chatInterface.toastVoiceDisabledTitle,
+              description: t.chatInterface.toastVoiceDisabledDesc,
               variant: 'destructive',
             });
           } else if (apiError && apiError.status === 401) {
             toast({
-              title: 'Ошибка авторизации',
-              description: 'Не удалось авторизоваться. Попробуйте перезайти.',
+              title: t.chatInterface.toastAuthErrorTitle,
+              description: t.chatInterface.toastAuthErrorDesc,
               variant: 'destructive',
             });
           } else if (apiError && apiError.status >= 500) {
             toast({
-              title: 'Ошибка сервера',
-              description: 'Сервер временно недоступен. Попробуйте позже.',
+              title: t.chatInterface.toastServerErrorTitle,
+              description: t.chatInterface.toastServerErrorDesc,
               variant: 'destructive',
             });
           } else {
             toast({
-              title: 'Ошибка голосового ввода',
-              description: apiError?.text || 'Не удалось распознать речь. Попробуйте еще раз.',
+              title: t.chatInterface.toastVoiceRecognitionErrorTitle,
+              description: apiError?.text || t.chatInterface.toastVoiceRecognitionErrorDesc,
               variant: 'destructive',
             });
           }
@@ -822,50 +822,50 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
         switch (error.name) {
           case 'NotAllowedError':
             toast({
-              title: 'Доступ запрещён',
-              description: 'Разрешите доступ к микрофону в настройках браузера и перезагрузите страницу',
+              title: t.chatInterface.toastMicPermissionDeniedTitle,
+              description: t.chatInterface.toastMicPermissionDeniedDesc,
               variant: 'destructive',
             });
             break;
           case 'NotFoundError':
             toast({
-              title: 'Микрофон не найден',
-              description: 'Подключите микрофон и попробуйте снова',
+              title: t.chatInterface.errMicrophoneNotFoundTitle,
+              description: t.chatInterface.errMicrophoneNotFoundDesc,
               variant: 'destructive',
             });
             break;
           case 'NotReadableError':
             toast({
-              title: 'Микрофон занят',
-              description: 'Микрофон используется другим приложением. Закройте другие приложения и попробуйте снова',
+              title: t.chatInterface.toastMicBusyTitle,
+              description: t.chatInterface.toastMicBusyDesc,
               variant: 'destructive',
             });
             break;
           case 'SecurityError':
             toast({
-              title: 'Ошибка безопасности',
-              description: 'Проверьте настройки безопасности браузера и разрешения сайта',
+              title: t.chatInterface.toastSecurityErrorTitle,
+              description: t.chatInterface.toastSecurityErrorDesc,
               variant: 'destructive',
             });
             break;
           case 'NotSupportedError':
             toast({
-              title: 'Не поддерживается',
-              description: 'Ваш браузер не поддерживает требуемые аудио настройки',
+              title: t.chatInterface.toastNotSupportedTitle,
+              description: t.chatInterface.toastNotSupportedDesc,
               variant: 'destructive',
             });
             break;
           default:
             toast({
-              title: 'Ошибка записи',
-              description: `Не удалось начать запись: ${error.message}`,
+              title: t.chatInterface.toastRecordErrorTitle,
+              description: t.chatInterface.toastRecordErrorDesc.replace('{error}', error.message),
               variant: 'destructive',
             });
         }
       } else {
         toast({
-          title: 'Ошибка',
-          description: 'Не удалось получить доступ к микрофону',
+          title: t.chatInterface.toastAccessErrorTitle,
+          description: t.chatInterface.toastAccessErrorDesc,
           variant: 'destructive',
         });
       }
@@ -901,7 +901,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
       {!isMainAgentAvailable && chatScope === 'personal' && (
         <div className="mb-3 sm:mb-4 p-3 bg-muted/50 border border-muted rounded-lg">
           <p className="text-sm text-muted-foreground">
-            💬 Головний агент (Dify) не доступний в приватних чатах. Використовуйте спільні або проєктні чати для роботи з агентом.
+            {t.chatInterface.toastDifyPrivateChatAlert}
           </p>
         </div>
       )}
@@ -918,7 +918,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
             </div>
           </div>
           <span className="text-xs text-muted-foreground whitespace-nowrap">
-            {autoStopEnabled ? 'Автостоп вкл.' : 'Говорите...'}
+            {autoStopEnabled ? t.chatInterface.btnAutoStopOn : t.chatInterface.btnSpeaking}
           </span>
         </div>
       )}
@@ -927,7 +927,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
       {uploadProgress > 0 && uploadProgress < 100 && (
         <div className="mb-3 sm:mb-4">
           <Progress value={uploadProgress} className="h-2" />
-          <p className="text-sm text-muted-foreground mt-1">Загрузка файлов...</p>
+          <p className="text-sm text-muted-foreground mt-1">{t.chatInterface.labelUploadingFiles}</p>
         </div>
       )}
 
@@ -945,7 +945,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
               <button
                 onClick={() => removeFile(index)}
                 className="ml-1 text-muted-foreground hover:text-foreground touch-target min-w-4 min-h-4 flex items-center justify-center"
-                aria-label="Удалить файл"
+                aria-label={t.chatInterface.ariaDeleteFile}
               >
                 ×
               </button>
@@ -979,7 +979,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={isRecording ? 'Записываю голос...' : 'Введите сообщение...'}
+              placeholder={isRecording ? t.chatInterface.placeholderRecording : t.chatInterface.placeholderTypeMessage}
               className="min-h-[40px] sm:min-h-[44px] max-h-24 sm:max-h-32 resize-none border-0 shadow-none focus-visible:ring-0 mobile-input text-base px-3 py-2"
               disabled={isRecording}
             />
@@ -994,7 +994,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
               onClick={() => fileInputRef.current?.click()}
               disabled={isStreaming}
               className="touch-target h-10 w-10 sm:h-11 sm:w-11 p-0 flex-shrink-0"
-              aria-label="Прикрепить файл"
+              aria-label={t.chatInterface.ariaAttachFile}
             >
               <Paperclip className="h-4 w-4 sm:h-5 sm:w-5" />
             </Button>
@@ -1007,19 +1007,19 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
                   size="sm"
                   disabled={isStreaming || isRecording}
                   className="touch-target h-10 w-10 sm:h-11 sm:w-11 p-0 flex-shrink-0"
-                  aria-label="Настройки голосового ввода"
+                  aria-label={t.chatInterface.ariaVoiceSettings}
                 >
                   <Activity className="h-4 w-4 sm:h-5 sm:w-5" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-64">
                 <div className="space-y-4">
-                  <h4 className="font-medium text-sm">Настройки голосового ввода</h4>
+                  <h4 className="font-medium text-sm">{t.chatInterface.voiceSettingsTitle}</h4>
                   
-                  {/* Голосовой режим */}
+                  {/* {t.chatInterface.voiceModeLabel} */}
                   <div className="flex items-center justify-between">
                     <Label htmlFor="voice-mode" className="text-sm">
-                      Голосовой режим
+                      {t.chatInterface.voiceModeLabel}
                     </Label>
                     <Switch
                       id="voice-mode"
@@ -1028,13 +1028,13 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Автоматическая запись и озвучивание ответов
+                    {t.chatInterface.voiceModeDesc}
                   </p>
                   
                   {/* Автостоп */}
                   <div className="flex items-center justify-between">
                     <Label htmlFor="auto-stop" className="text-sm">
-                      Автостоп при паузе
+                      {t.chatInterface.autoStopLabel}
                     </Label>
                     <Switch
                       id="auto-stop"
@@ -1043,7 +1043,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Автоматически останавливать запись после 2.5 секунд тишины
+                    {t.chatInterface.autoStopDesc}
                   </p>
                 </div>
               </PopoverContent>
@@ -1056,7 +1056,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
                 size="sm"
                 onClick={stopPlayingTTS}
                 className="touch-target h-10 w-10 sm:h-11 sm:w-11 p-0 flex-shrink-0 text-primary animate-pulse-soft"
-                aria-label="Остановить воспроизведение"
+                aria-label={t.chatInterface.ariaStopPlayback}
               >
                 <VolumeX className="h-4 w-4 sm:h-5 sm:w-5" />
               </Button>
@@ -1074,7 +1074,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
                 }}
                 disabled={isStreaming}
                 className={`touch-target h-10 w-10 sm:h-11 sm:w-11 p-0 flex-shrink-0 ${isRecording ? 'text-destructive animate-pulse-soft' : ''}`}
-                aria-label={isRecording ? "Остановить запись" : "Записать голосовое сообщение"}
+                aria-label={isRecording ? t.chatInterface.ariaStopRecording : t.chatInterface.ariaStartRecording}
               >
                 {isRecording ? <MicOff className="h-4 w-4 sm:h-5 sm:w-5" /> : <Mic className="h-4 w-4 sm:h-5 sm:w-5" />}
               </Button>
@@ -1087,7 +1087,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
                 size="sm"
                 onClick={() => stopStream()}
                 className="touch-target h-10 w-10 sm:h-11 sm:w-11 p-0 flex-shrink-0"
-                aria-label="Остановить генерацию"
+                aria-label={t.chatInterface.ariaStopGeneration}
               >
                 <Square className="h-4 w-4 sm:h-5 sm:w-5" />
               </Button>
@@ -1097,8 +1097,8 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
                 disabled={(!message.trim() && attachedFiles.length === 0) || !isMainAgentAvailable}
                 size="sm"
                 className="touch-target h-10 w-10 sm:h-11 sm:w-11 p-0 flex-shrink-0"
-                aria-label="Отправить сообщение"
-                title={!isMainAgentAvailable ? 'Головний агент не доступний в приватних чатах' : 'Отправить сообщение'}
+                aria-label={t.chatInterface.ariaSendMessage}
+                title={!isMainAgentAvailable ? t.chatInterface.titleMainAgentUnavailable : t.chatInterface.ariaSendMessage}
               >
                 <Send className="h-4 w-4 sm:h-5 sm:w-5" />
               </Button>
@@ -1125,14 +1125,14 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
             <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
             <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
           </div>
-          <span className="text-sm sm:text-base">ЖОС Агент печатает...</span>
+          <span className="text-sm sm:text-base">{t.chatInterface.indicatorAgentTyping}</span>
         </div>
       )}
       
       {isPlayingTTS && (
         <div className="mt-2 sm:mt-3 flex items-center gap-3 text-sm text-primary animate-pulse-soft px-1">
           <Volume2 className="h-4 w-4" />
-          <span className="text-sm sm:text-base">Озвучиваю ответ...</span>
+          <span className="text-sm sm:text-base">{t.chatInterface.indicatorSpeakingResponse}</span>
         </div>
       )}
     </div>

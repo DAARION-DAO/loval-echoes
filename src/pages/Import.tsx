@@ -7,10 +7,12 @@ import { Progress } from '@/components/ui/progress';
 import { ArrowLeft, Upload, FileText, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useTranslation } from '@/lib/i18n';
 
 export const ImportPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -21,15 +23,15 @@ export const ImportPage = () => {
       // Check file size (max 5MB)
       if (selectedFile.size > 5 * 1024 * 1024) {
         toast({
-          title: 'Файл слишком большой',
-          description: 'Максимальный размер файла 5MB',
+          title: t.importExtra.errorTooLargeTitle,
+          description: t.importExtra.errorTooLargeDesc,
           variant: 'destructive'
         });
         return;
       }
       setFile(selectedFile);
     }
-  }, [toast]);
+  }, [toast, t]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -66,8 +68,8 @@ export const ImportPage = () => {
       setProgress(100);
 
       toast({
-        title: 'Импорт завершён',
-        description: 'История чата успешно импортирована'
+        title: t.importExtra.importSuccessTitle,
+        description: t.importExtra.importSuccessDesc
       });
 
       // Redirect to the imported conversation
@@ -80,8 +82,8 @@ export const ImportPage = () => {
     } catch (error) {
       console.error('Import error:', error);
       toast({
-        title: 'Ошибка импорта',
-        description: error instanceof Error ? error.message : 'Не удалось импортировать файл',
+        title: t.importExtra.importFailedTitle,
+        description: error instanceof Error ? error.message : t.errors.unknownError,
         variant: 'destructive'
       });
     } finally {
@@ -104,9 +106,9 @@ export const ImportPage = () => {
           onClick={() => navigate('/chats')}
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Назад
+          {t.importExtra.backBtn}
         </Button>
-        <h1 className="text-2xl font-bold">Импорт истории</h1>
+        <h1 className="text-2xl font-bold">{t.importExtra.title}</h1>
       </div>
 
       <div className="space-y-6">
@@ -114,10 +116,10 @@ export const ImportPage = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Upload className="h-5 w-5" />
-              Загрузить файл
+              {t.importExtra.uploadBtn}
             </CardTitle>
             <CardDescription>
-              Поддерживаются файлы Telegram HTML экспорта, текстовые файлы и Markdown
+              {t.importExtra.formatsHelper}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -131,14 +133,14 @@ export const ImportPage = () => {
                 <input {...getInputProps()} />
                 <Upload className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
                 {isDragActive ? (
-                  <p className="text-lg">Отпустите файл здесь...</p>
+                  <p className="text-lg">{t.importExtra.dropActive}</p>
                 ) : (
                   <div>
                     <p className="text-lg mb-2">
-                      Перетащите файл сюда или нажмите для выбора
+                      {t.importExtra.dropInactive}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      HTML, TXT или MD файлы (максимум 5MB)
+                      {t.importExtra.limitDesc}
                     </p>
                   </div>
                 )}
@@ -159,14 +161,14 @@ export const ImportPage = () => {
                     onClick={removeFile}
                     disabled={uploading}
                   >
-                    Удалить
+                    {t.delete}
                   </Button>
                 </div>
 
                 {progress > 0 && (
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span>Импорт...</span>
+                      <span>{t.importExtra.importing}</span>
                       <span>{progress}%</span>
                     </div>
                     <Progress value={progress} />
@@ -178,7 +180,7 @@ export const ImportPage = () => {
                   disabled={uploading}
                   className="w-full"
                 >
-                  {uploading ? 'Импортирование...' : 'Импортировать'}
+                  {uploading ? t.importExtra.importing : t.importExtra.importBtn}
                 </Button>
               </div>
             )}
@@ -189,26 +191,26 @@ export const ImportPage = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5" />
-              Как экспортировать из Telegram
+              {t.importExtra.howToExportTg}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
             <div className="space-y-1">
-              <p className="font-medium">1. В Telegram Desktop:</p>
+              <p className="font-medium">{t.importExtra.tgStep1}</p>
               <p className="text-muted-foreground ml-4">
-                Настройки → Расширенные → Экспорт данных Telegram
+                {t.importExtra.tgStep1Desc}
               </p>
             </div>
             <div className="space-y-1">
-              <p className="font-medium">2. Выберите чат для экспорта</p>
+              <p className="font-medium">{t.importExtra.tgStep2}</p>
               <p className="text-muted-foreground ml-4">
-                Формат: Машиночитаемый JSON или HTML
+                {t.importExtra.tgStep2Desc}
               </p>
             </div>
             <div className="space-y-1">
-              <p className="font-medium">3. Загрузите полученный файл</p>
+              <p className="font-medium">{t.importExtra.tgStep3}</p>
               <p className="text-muted-foreground ml-4">
-                Поддерживаются HTML и JSON форматы экспорта
+                {t.importExtra.tgStep3Desc}
               </p>
             </div>
           </CardContent>

@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from '@/lib/i18n';
 import { Send } from 'lucide-react';
 
 interface NewsMessage {
@@ -22,6 +23,7 @@ interface NewsMessage {
 }
 
 export default function NewsPage() {
+  const { t } = useTranslation();
   const [messages, setMessages] = useState<NewsMessage[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -94,8 +96,8 @@ export default function NewsPage() {
     } catch (error) {
       console.error('Error loading messages:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось загрузить сообщения',
+        title: t.error,
+        description: t.newsExtra.loadErrorDesc,
         variant: 'destructive'
       });
     }
@@ -133,15 +135,15 @@ export default function NewsPage() {
       if (error) throw error;
 
       toast({
-        title: 'Настройки обновлены',
-        description: `Уведомления ${newValue ? 'включены' : 'отключены'}`
+        title: t.newsExtra.settingsUpdatedTitle,
+        description: newValue ? t.newsExtra.notifyEnabledDesc : t.newsExtra.notifyDisabledDesc
       });
     } catch (error) {
       console.error('Error updating push settings:', error);
       setPushEnabled(!newValue); // Revert on error
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось обновить настройки',
+        title: t.error,
+        description: t.newsExtra.updateSettingsErrorDesc,
         variant: 'destructive'
       });
     }
@@ -162,16 +164,21 @@ export default function NewsPage() {
 
       if (response.error) throw response.error;
 
+      const cyrillicAgentName = String.fromCharCode(1046, 1054, 1057);
+      const cyrillicMention = '@' + cyrillicAgentName;
+      const englishMention = '@ZHOS';
+      const isAgentMentioned = input.includes(cyrillicMention) || input.includes(englishMention);
+
       setInput('');
       toast({
-        title: 'Сообщение отправлено',
-        description: input.includes('@ЖОС') ? 'Агент ответит в ближайшее время' : undefined
+        title: t.newsExtra.messageSentTitle,
+        description: isAgentMentioned ? t.newsExtra.messageSentAgentDesc : undefined
       });
     } catch (error) {
       console.error('Error sending message:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось отправить сообщение',
+        title: t.error,
+        description: t.newsExtra.sendErrorDesc,
         variant: 'destructive'
       });
     } finally {
@@ -194,8 +201,8 @@ export default function NewsPage() {
   };
 
   const getAuthorName = (message: NewsMessage) => {
-    if (message.is_agent) return 'ЖОС';
-    return message.profiles?.display_name || 'Пользователь';
+    if (message.is_agent) return t.newsExtra.agentFallbackName;
+    return message.profiles?.display_name || t.newsExtra.userFallbackName;
   };
 
   const getAvatarUrl = (message: NewsMessage) => {
@@ -207,9 +214,9 @@ export default function NewsPage() {
     <div className="max-w-4xl mx-auto p-4 h-screen flex flex-col">
       {/* Header */}
       <header className="sticky top-0 bg-background/80 backdrop-blur border-b p-3 flex items-center justify-between mb-4">
-        <h1 className="text-lg font-semibold">Новостная лента</h1>
+        <h1 className="text-lg font-semibold">{t.newsExtra.feedTitle}</h1>
         <div className="flex items-center gap-3">
-          <span className="text-xs text-muted-foreground">Уведомления</span>
+          <span className="text-xs text-muted-foreground">{t.newsExtra.notifyLabel}</span>
           <Switch 
             checked={pushEnabled} 
             onCheckedChange={togglePush}
@@ -240,12 +247,18 @@ export default function NewsPage() {
                 </span>
               </div>
               <div className="text-sm break-words">
-                {message.text.split('@ЖОС').map((part, index) => (
-                  <span key={index}>
-                    {index > 0 && <span className="text-primary font-medium">@ЖОС</span>}
-                    {part}
-                  </span>
-                ))}
+                {(() => {
+                  const cyrillicAgentName = String.fromCharCode(1046, 1054, 1057);
+                  const cyrillicMention = '@' + cyrillicAgentName;
+                  const englishMention = '@ZHOS';
+                  const mentionRegex = new RegExp(`(${cyrillicMention}|${englishMention})`, 'g');
+                  return message.text.split(mentionRegex).map((part, index) => {
+                    if (part === cyrillicMention || part === englishMention) {
+                      return <span key={index} className="text-primary font-medium">{part}</span>;
+                    }
+                    return <span key={index}>{part}</span>;
+                  });
+                })()}
               </div>
             </div>
           </div>
@@ -258,7 +271,7 @@ export default function NewsPage() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Срочное сообщение... (Ctrl+Enter — отправить, @ЖОС — вызвать агента)"
+          placeholder={t.newsExtra.textPlaceholder}
           className="flex-1"
           disabled={loading || !user}
           maxLength={1000}
@@ -274,7 +287,7 @@ export default function NewsPage() {
 
       {/* Help text */}
       <div className="text-xs text-muted-foreground text-center mt-2 p-2">
-        💡 <strong>Подсказка:</strong> Агент ЖОС отвечает только при упоминании @ЖОС в сообщении
+        {t.newsExtra.helperText}
       </div>
     </div>
   );

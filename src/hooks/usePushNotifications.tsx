@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useToast } from './use-toast';
+import { useTranslation } from '@/lib/i18n';
 
 interface PushNotificationSettings {
   news_enabled: boolean;
@@ -11,6 +12,7 @@ interface PushNotificationSettings {
 export function usePushNotifications() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [pushEnabled, setPushEnabled] = useState(false);
   const [serviceWorkerReady, setServiceWorkerReady] = useState(false);
   const [permissionStatus, setPermissionStatus] = useState<NotificationPermission>('default');
@@ -31,28 +33,28 @@ export function usePushNotifications() {
     return outputArray;
   };
 
-  // Регистрация Service Worker
+  // Register Service Worker
   const registerServiceWorker = useCallback(async () => {
     if (!('serviceWorker' in navigator)) {
-      console.log('Service Workers не поддерживаются');
+      console.log('Service Workers not supported');
       return null;
     }
 
     try {
       const registration = await navigator.serviceWorker.register('/sw.js');
-      console.log('Service Worker зарегистрирован:', registration.scope);
+      console.log('Service Worker registered:', registration.scope);
       
       await navigator.serviceWorker.ready;
       setServiceWorkerReady(true);
       
       return registration;
     } catch (error) {
-      console.error('Ошибка регистрации Service Worker:', error);
+      console.error('Service Worker registration error:', error);
       return null;
     }
   }, []);
 
-  // Подписка на push-уведомления
+  // Subscribe to push notifications
   const subscribeToPush = useCallback(async (registration: ServiceWorkerRegistration) => {
     if (!user) return false;
 
@@ -84,7 +86,7 @@ export function usePushNotifications() {
       setPushEnabled(true);
       return true;
     } catch (error: unknown) {
-      console.error('Ошибка подписки на push:', error);
+      console.error('Push subscription error:', error);
       return false;
     }
   }, [user]);
@@ -124,15 +126,15 @@ export function usePushNotifications() {
         if (registration) {
           await subscribeToPush(registration);
           toast({
-            title: '✅ Push-уведомления включены',
-            description: 'Вы будете получать уведомления о новых сообщениях',
+            title: t.pushNotifications.enabledTitle,
+            description: t.pushNotifications.enabledTabDesc,
           });
           return true;
         }
       } else if (permission === 'denied') {
         toast({
-          title: 'Доступ запрещен',
-          description: 'Разрешите уведомления в настройках браузера',
+          title: t.pushNotifications.permissionDeniedTitle,
+          description: t.pushNotifications.permissionDeniedDesc,
           variant: 'destructive',
         });
       }
@@ -142,14 +144,14 @@ export function usePushNotifications() {
       console.error('Error requesting notification permission:', error);
       return false;
     }
-  }, [registerServiceWorker, subscribeToPush, toast]);
+  }, [registerServiceWorker, subscribeToPush, toast, t]);
 
   // Ручной запрос разрешения
   const requestPermission = useCallback(async () => {
     if (!('Notification' in window)) {
       toast({
-        title: 'Не поддерживается',
-        description: 'Ваш браузер не поддерживает уведомления',
+        title: t.pushNotifications.notSupportedTitle,
+        description: t.pushNotifications.notSupportedDesc,
         variant: 'destructive',
       });
       return false;
@@ -162,8 +164,8 @@ export function usePushNotifications() {
 
       if (permission !== 'granted') {
         toast({
-          title: 'Доступ запрещен',
-          description: 'Разрешите уведомления в настройках браузера',
+          title: t.pushNotifications.permissionDeniedTitle,
+          description: t.pushNotifications.permissionDeniedDesc,
           variant: 'destructive',
         });
         return false;
@@ -172,8 +174,8 @@ export function usePushNotifications() {
       const registration = await registerServiceWorker();
       if (!registration) {
         toast({
-          title: 'Ошибка',
-          description: 'Не удалось зарегистрировать Service Worker',
+          title: t.pushNotifications.swRegistrationFailedTitle,
+          description: t.pushNotifications.swRegistrationFailedDesc,
           variant: 'destructive',
         });
         return false;
@@ -182,21 +184,21 @@ export function usePushNotifications() {
       const success = await subscribeToPush(registration);
       if (success) {
         toast({
-          title: '✅ Push-уведомления включены',
-          description: 'Вы будете получать уведомления даже при закрытой вкладке',
+          title: t.pushNotifications.enabledTitle,
+          description: t.pushNotifications.enabledDesc,
         });
       }
       return success;
     } catch (error: unknown) {
       console.error('Error requesting notification permission:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось включить уведомления',
+        title: t.pushNotifications.disabledTitle,
+        description: t.pushNotifications.disabledDesc,
         variant: 'destructive',
       });
       return false;
     }
-  }, [registerServiceWorker, subscribeToPush, toast]);
+  }, [registerServiceWorker, subscribeToPush, toast, t]);
 
   // Загрузка настроек push-уведомлений (localStorage)
   const loadSettings = useCallback(async () => {
@@ -223,20 +225,20 @@ export function usePushNotifications() {
 
       setSettings(updatedSettings);
       toast({
-        title: 'Настройки сохранены',
-        description: 'Изменения применены',
+        title: t.pushNotifications.settingsSavedTitle,
+        description: t.pushNotifications.settingsSavedDesc,
       });
       return true;
     } catch (error) {
       console.error('Error saving push settings:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось сохранить настройки',
+        title: t.pushNotifications.settingsSaveFailedTitle,
+        description: t.pushNotifications.settingsSaveFailedDesc,
         variant: 'destructive',
       });
       return false;
     }
-  }, [user, settings, toast]);
+  }, [user, settings, toast, t]);
 
   // Инициализация при загрузке
   useEffect(() => {

@@ -1,8 +1,10 @@
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from '@/lib/i18n';
 
 export const useFileValidation = () => {
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const validateFile = async (file: File): Promise<{ valid: boolean; sanitizedName?: string }> => {
     try {
@@ -23,8 +25,8 @@ export const useFileValidation = () => {
 
       if (error) {
         toast({
-          title: 'Ошибка валидации файла',
-          description: error.message || 'Файл не прошел проверку безопасности',
+          title: t.fileValidation.validationErrorTitle,
+          description: error.message || t.fileValidation.rejectedDesc,
           variant: 'destructive'
         });
         return { valid: false };
@@ -32,8 +34,8 @@ export const useFileValidation = () => {
 
       if (!data.success) {
         toast({
-          title: 'Файл отклонен',
-          description: data.error || 'Файл не соответствует требованиям безопасности',
+          title: t.fileValidation.rejectedTitle,
+          description: data.error || t.fileValidation.rejectedDesc,
           variant: 'destructive'
         });
         return { valid: false };
@@ -47,8 +49,8 @@ export const useFileValidation = () => {
     } catch (error) {
       console.error('File validation error:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось проверить файл',
+        title: t.fileValidation.errorTitle,
+        description: t.fileValidation.errorDesc,
         variant: 'destructive'
       });
       return { valid: false };
