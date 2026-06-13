@@ -93,21 +93,25 @@ ALTER TABLE microdao_subscriptions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE crypto_payment_intents ENABLE ROW LEVEL SECURITY;
 
 -- Subscriptions: owner can read their own
+DROP POLICY IF EXISTS "Users can view own subscriptions" ON microdao_subscriptions;
 CREATE POLICY "Users can view own subscriptions"
   ON microdao_subscriptions FOR SELECT
   USING (owner_user_id = auth.uid());
 
 -- Subscriptions: guardians can read all
+DROP POLICY IF EXISTS "Guardians can view all subscriptions" ON microdao_subscriptions;
 CREATE POLICY "Guardians can view all subscriptions"
   ON microdao_subscriptions FOR SELECT
   USING (public.is_admin(auth.uid()));
 
 -- Payment intents: user can read their own
+DROP POLICY IF EXISTS "Users can view own payment intents" ON crypto_payment_intents;
 CREATE POLICY "Users can view own payment intents"
   ON crypto_payment_intents FOR SELECT
   USING (user_id = auth.uid());
 
 -- Payment intents: guardians can read all
+DROP POLICY IF EXISTS "Guardians can view all payment intents" ON crypto_payment_intents;
 CREATE POLICY "Guardians can view all payment intents"
   ON crypto_payment_intents FOR SELECT
   USING (public.is_admin(auth.uid()));
