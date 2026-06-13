@@ -12,7 +12,10 @@ export interface UserProfile {
   approval_status: string;
   created_at: string;
   updated_at: string;
+  role?: string;
+  access_tier?: string;
 }
+
 
 export const useUserProfile = () => {
   const { user } = useAuth();

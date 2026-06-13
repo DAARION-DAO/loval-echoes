@@ -19,7 +19,8 @@ import {
   Bot,
   Plug,
   TerminalSquare,
-  Download
+  Download,
+  Shield
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -37,6 +38,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Badge } from '@/components/ui/badge';
 import { usePendingApprovals } from '@/hooks/usePendingApprovals';
 import { OnlineUsersBar } from '@/components/OnlineUsersBar';
+import { useUserProfile } from '@/hooks/useUserProfile';
 
 interface Chat {
   id: string;
@@ -51,6 +53,7 @@ export const ChatSidebar = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
   const { pendingCount } = usePendingApprovals();
+  const { profile } = useUserProfile();
   
   const [chats, setChats] = useState<Chat[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -491,6 +494,18 @@ export const ChatSidebar = () => {
             <Settings className="h-4 w-4" />
             {t.nav.settings}
           </NavLink>
+          {profile?.role === 'guardian' && (
+            <NavLink
+              to="/admin"
+              className={({ isActive }) => cn(
+                "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors border border-indigo-500/25 bg-indigo-500/5 hover:bg-indigo-500/10 text-indigo-300 font-semibold shadow-[0_0_15px_-4px_rgba(99,102,241,0.15)]",
+                isActive ? "bg-indigo-500/15 border-indigo-500/45 text-white" : ""
+              )}
+            >
+              <Shield className="h-4 w-4 text-indigo-400" />
+              Guardian Console
+            </NavLink>
+          )}
         </div>
       </div>
 

@@ -36,12 +36,21 @@ const Install = lazy(() => import("./pages/Install"));
 const Pricing = lazy(() => import("./pages/Pricing"));
 const AgentDirectory = lazy(() => import("./pages/AgentDirectory"));
 const MicroDAOOnboarding = lazy(() => import("./pages/MicroDAOOnboarding"));
+const AdminOverview = lazy(() => import("./pages/admin/AdminOverview").then(m => ({ default: m.AdminOverview })));
+const AdminUsers = lazy(() => import("./pages/admin/AdminUsers").then(m => ({ default: m.AdminUsers })));
+const AdminMicroDAOs = lazy(() => import("./pages/admin/AdminMicroDAOs").then(m => ({ default: m.AdminMicroDAOs })));
+const AdminAccessRequests = lazy(() => import("./pages/admin/AdminAccessRequests").then(m => ({ default: m.AdminAccessRequests })));
+const AdminBilling = lazy(() => import("./pages/admin/AdminBilling").then(m => ({ default: m.AdminBilling })));
+const AdminAgentOps = lazy(() => import("./pages/admin/AdminAgentOps").then(m => ({ default: m.AdminAgentOps })));
+
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { Layout } from "./components/Layout";
 import { useSessionTimeout } from "./hooks/useSessionTimeout";
 import { useUserApprovalStatus } from "@/hooks/useUserApprovalStatus";
 import { PendingApprovalPage } from "@/components/PendingApprovalPage";
 import { RestrictedPage } from "@/components/RestrictedPage";
+import { GuardianRoute } from "./components/admin/GuardianRoute";
+import { AdminLayout } from "./components/admin/AdminLayout";
 
 const queryClient = new QueryClient();
 
@@ -196,6 +205,26 @@ const App = () => {
                   <Route path="/pricing" element={<Suspense fallback={<LoadingSpinner size="lg" text={t.loading} />}><Pricing /></Suspense>} />
                   <Route path="/agents" element={<Suspense fallback={<LoadingSpinner size="lg" text={t.loading} />}><AgentDirectory /></Suspense>} />
                   <Route path="/onboarding" element={<Suspense fallback={<LoadingSpinner size="lg" text={t.loading} />}><MicroDAOOnboarding /></Suspense>} />
+                  <Route 
+                    path="/admin/*" 
+                    element={
+                      <GuardianRoute>
+                        <AdminLayout>
+                          <Suspense fallback={<LoadingSpinner size="lg" text={t.loading} />}>
+                            <Routes>
+                              <Route path="/" element={<AdminOverview />} />
+                              <Route path="/users" element={<AdminUsers />} />
+                              <Route path="/microdaos" element={<AdminMicroDAOs />} />
+                              <Route path="/access-requests" element={<AdminAccessRequests />} />
+                              <Route path="/billing" element={<AdminBilling />} />
+                              <Route path="/agent-ops" element={<AdminAgentOps />} />
+                              <Route path="*" element={<Navigate to="/admin" replace />} />
+                            </Routes>
+                          </Suspense>
+                        </AdminLayout>
+                      </GuardianRoute>
+                    } 
+                  />
                   <Route path="/*" element={<ProtectedLayout />} />
                 </Routes>
               </ActiveCommunityProvider>
