@@ -24,8 +24,9 @@ export function useTaskNotifications() {
     loadNotifications();
 
     // Подписка на новые уведомления
+    const channelName = `task_notifications_${user.id}_${Math.random().toString(36).substring(7)}`;
     const channel = supabase
-      .channel('task_notifications')
+      .channel(channelName)
       .on(
         'postgres_changes',
         {

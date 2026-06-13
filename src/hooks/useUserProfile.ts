@@ -163,8 +163,9 @@ export const useUserProfile = () => {
     if (!user) return;
 
     // Subscribe to profile changes
+    const channelName = `user_profile_${user.id}_${Math.random().toString(36).substring(7)}`;
     const subscription = supabase
-      .channel('user_profile')
+      .channel(channelName)
       .on('postgres_changes',
         {
           event: '*',
@@ -181,7 +182,7 @@ export const useUserProfile = () => {
       .subscribe();
 
     return () => {
-      subscription.unsubscribe();
+      supabase.removeChannel(subscription);
     };
   }, [user]);
 

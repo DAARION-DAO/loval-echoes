@@ -70,9 +70,9 @@ export const useUserApprovalStatus = () => {
 
     checkApprovalStatus();
 
-    // Simple real-time subscription without complex retry logic
+    const channelName = `user_approval_${user.id}_${Math.random().toString(36).substring(7)}`;
     const subscription = supabase
-      .channel(`user_approval_${user.id}`)
+      .channel(channelName)
       .on('postgres_changes', 
         { 
           event: 'UPDATE', 
@@ -90,7 +90,7 @@ export const useUserApprovalStatus = () => {
       .subscribe();
 
     return () => {
-      subscription.unsubscribe();
+      supabase.removeChannel(subscription);
     };
   }, [user, authLoading, t]);
 

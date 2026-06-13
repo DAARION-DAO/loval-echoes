@@ -27,8 +27,9 @@ export function useProjectTaskStats(projectId: string) {
     loadStats();
 
     // Subscribe to changes
+    const channelName = `project-tasks-stats_${projectId}_${Math.random().toString(36).substring(7)}`;
     const channel = supabase
-      .channel('project-tasks-stats')
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
