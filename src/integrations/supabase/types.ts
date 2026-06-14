@@ -777,6 +777,65 @@ export type Database = {
           },
         ]
       }
+      crypto_payment_intents: {
+        Row: {
+          amount_crypto: number | null
+          amount_usd: number | null
+          chain: string | null
+          confirmed_at: string | null
+          created_at: string | null
+          crypto_asset: string
+          expires_at: string | null
+          id: string
+          status: string
+          subscription_id: string | null
+          tx_hash: string | null
+          user_id: string
+          wallet_from: string | null
+          wallet_to: string | null
+        }
+        Insert: {
+          amount_crypto?: number | null
+          amount_usd?: number | null
+          chain?: string | null
+          confirmed_at?: string | null
+          created_at?: string | null
+          crypto_asset: string
+          expires_at?: string | null
+          id?: string
+          status?: string
+          subscription_id?: string | null
+          tx_hash?: string | null
+          user_id: string
+          wallet_from?: string | null
+          wallet_to?: string | null
+        }
+        Update: {
+          amount_crypto?: number | null
+          amount_usd?: number | null
+          chain?: string | null
+          confirmed_at?: string | null
+          created_at?: string | null
+          crypto_asset?: string
+          expires_at?: string | null
+          id?: string
+          status?: string
+          subscription_id?: string | null
+          tx_hash?: string | null
+          user_id?: string
+          wallet_from?: string | null
+          wallet_to?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crypto_payment_intents_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "microdao_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_chunks: {
         Row: {
           content: string
@@ -1229,6 +1288,59 @@ export type Database = {
           },
         ]
       }
+      microdao_subscriptions: {
+        Row: {
+          accepted_assets: string[] | null
+          community_id: string | null
+          created_at: string | null
+          current_period_end: string | null
+          current_period_start: string | null
+          id: string
+          owner_user_id: string
+          plan: string
+          price_daar: number | null
+          price_usd: number | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          accepted_assets?: string[] | null
+          community_id?: string | null
+          created_at?: string | null
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          owner_user_id: string
+          plan?: string
+          price_daar?: number | null
+          price_usd?: number | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          accepted_assets?: string[] | null
+          community_id?: string | null
+          created_at?: string | null
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          owner_user_id?: string
+          plan?: string
+          price_daar?: number | null
+          price_usd?: number | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "microdao_subscriptions_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       news_feed: {
         Row: {
           author_id: string | null
@@ -1343,6 +1455,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          access_tier: string | null
           approval_status: string | null
           avatar_url: string | null
           created_at: string
@@ -1351,10 +1464,15 @@ export type Database = {
           id: string
           news_push_enabled: boolean | null
           role: string | null
+          telegram_user_id: string | null
+          telegram_username: string | null
           updated_at: string
           user_id: string
+          wallet_address: string | null
+          wallet_verified_at: string | null
         }
         Insert: {
+          access_tier?: string | null
           approval_status?: string | null
           avatar_url?: string | null
           created_at?: string
@@ -1363,10 +1481,15 @@ export type Database = {
           id?: string
           news_push_enabled?: boolean | null
           role?: string | null
+          telegram_user_id?: string | null
+          telegram_username?: string | null
           updated_at?: string
           user_id: string
+          wallet_address?: string | null
+          wallet_verified_at?: string | null
         }
         Update: {
+          access_tier?: string | null
           approval_status?: string | null
           avatar_url?: string | null
           created_at?: string
@@ -1375,8 +1498,12 @@ export type Database = {
           id?: string
           news_push_enabled?: boolean | null
           role?: string | null
+          telegram_user_id?: string | null
+          telegram_username?: string | null
           updated_at?: string
           user_id?: string
+          wallet_address?: string | null
+          wallet_verified_at?: string | null
         }
         Relationships: []
       }
@@ -1759,6 +1886,7 @@ export type Database = {
         Args: { p_version_id: string }
         Returns: undefined
       }
+      admin_get_subscription_stats: { Args: never; Returns: Json }
       admin_set_approval_status: {
         Args: { p_status: string; p_user_id: string }
         Returns: undefined
