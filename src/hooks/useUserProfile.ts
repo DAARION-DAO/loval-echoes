@@ -94,7 +94,7 @@ export const useUserProfile = () => {
         .update({
           telegram_username: telegramUsername,
           updated_at: new Date().toISOString(),
-        } as Record<string, unknown>)
+        })
         .eq('user_id', user.id);
 
       if (error) {
@@ -116,7 +116,7 @@ export const useUserProfile = () => {
           wallet_address: walletAddress,
           wallet_verified_at: walletAddress ? new Date().toISOString() : null,
           updated_at: new Date().toISOString(),
-        } as Record<string, unknown>)
+        })
         .eq('user_id', user.id);
 
       if (error) {

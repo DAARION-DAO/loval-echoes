@@ -70,7 +70,7 @@ export const TelegramLink = ({ currentUsername, onSaved }: TelegramLinkProps) =>
         .update({
           telegram_username: sanitized,
           updated_at: new Date().toISOString(),
-        } as Record<string, unknown>)
+        })
         .eq('user_id', user.id);
 
       if (updateError) {

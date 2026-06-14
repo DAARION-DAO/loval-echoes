@@ -95,7 +95,7 @@ export const useWalletConnection = () => {
           wallet_address: address,
           wallet_verified_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
-        } as Record<string, unknown>)
+        })
         .eq('user_id', user.id);
 
       if (error) {
@@ -117,7 +117,7 @@ export const useWalletConnection = () => {
           wallet_address: null,
           wallet_verified_at: null,
           updated_at: new Date().toISOString(),
-        } as Record<string, unknown>)
+        })
         .eq('user_id', user.id);
     } catch (err) {
       console.warn('[WalletConnection] Profile wallet clear failed:', err);
