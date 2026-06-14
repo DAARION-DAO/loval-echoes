@@ -21,6 +21,13 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTranslation } from '@/lib/i18n';
 import { Badge } from '@/components/ui/badge';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { ExternalLink, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { 
   LEADER_PLAN, 
   SUPPORTED_ASSETS, 
@@ -31,20 +38,119 @@ import {
 
 export const AdminBilling = () => {
   const { t, language } = useTranslation();
+  const { toast } = useToast();
 
   const lang = language as 'uk' | 'en' | 'ru' | 'es';
 
+  const [stats, setStats] = useState<Record<string, number>>({});
+  const [loadingStats, setLoadingStats] = useState(true);
+  
+  const [intents, setIntents] = useState<any[]>([]);
+  const [loadingIntents, setLoadingIntents] = useState(true);
+  const [activeFilter, setActiveFilter] = useState<string>('all');
+  const [processingId, setProcessingId] = useState<string | null>(null);
+
+  const fetchStats = async () => {
+    try {
+      const { data, error } = await (supabase as any).rpc('admin_get_subscription_stats');
+      if (!error && data) {
+        setStats(data as any);
+      }
+    } catch (err) {
+      console.warn('Failed to fetch subscription stats:', err);
+    } finally {
+      setLoadingStats(false);
+    }
+  };
+
+  const fetchIntents = async () => {
+    setLoadingIntents(true);
+    try {
+      let query = (supabase as any)
+        .from('crypto_payment_intents')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (activeFilter !== 'all') {
+        query = query.eq('status', activeFilter);
+      }
+
+      const { data, error } = await query;
+      if (!error && data) {
+        setIntents(data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch payment intents:', err);
+    } finally {
+      setLoadingIntents(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStats();
+    fetchIntents();
+  }, [activeFilter]);
+
+  const handleApprove = async (intentId: string) => {
+    setProcessingId(intentId);
+    try {
+      const { error } = await (supabase as any).rpc('admin_approve_crypto_payment_intent', { intent_id: intentId });
+      if (error) throw error;
+      toast({
+        title: 'Success',
+        description: 'Payment intent approved successfully.'
+      });
+      fetchStats();
+      fetchIntents();
+    } catch (err: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Approval Failed',
+        description: err.message || 'Make sure the admin RPC migration is applied.'
+      });
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const handleReject = async (intentId: string) => {
+    setProcessingId(intentId);
+    try {
+      const { error } = await (supabase as any).rpc('admin_reject_crypto_payment_intent', { intent_id: intentId, reason: 'Rejected by admin' });
+      if (error) throw error;
+      toast({
+        title: 'Success',
+        description: 'Payment intent rejected successfully.'
+      });
+      fetchStats();
+      fetchIntents();
+    } catch (err: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Rejection Failed',
+        description: err.message || 'Make sure the admin RPC migration is applied.'
+      });
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const truncateAddress = (addr: string): string => {
+    if (!addr) return '';
+    return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
+  };
+
   // Subscription status display data
   const statusItems: { status: SubscriptionStatus; count: number; color: string }[] = [
-    { status: 'none', count: 0, color: 'slate' },
-    { status: 'active', count: 0, color: 'emerald' },
-    { status: 'pending_payment', count: 0, color: 'amber' },
-    { status: 'past_due', count: 0, color: 'red' },
-    { status: 'expired', count: 0, color: 'slate' },
-    { status: 'cancelled', count: 0, color: 'slate' },
-    { status: 'manual_review', count: 0, color: 'amber' },
-    { status: 'founder_bypass', count: 0, color: 'indigo' },
-    { status: 'guardian_bypass', count: 0, color: 'purple' },
+    { status: 'none', count: stats.none || 0, color: 'slate' },
+    { status: 'active', count: stats.active || 0, color: 'emerald' },
+    { status: 'pending_payment', count: stats.pending_payment || 0, color: 'amber' },
+    { status: 'past_due', count: stats.past_due || 0, color: 'red' },
+    { status: 'expired', count: stats.expired || 0, color: 'slate' },
+    { status: 'cancelled', count: stats.cancelled || 0, color: 'slate' },
+    { status: 'manual_review', count: stats.manual_review || 0, color: 'amber' },
+    { status: 'founder_bypass', count: stats.founder_bypass || 0, color: 'indigo' },
+    { status: 'guardian_bypass', count: stats.guardian_bypass || 0, color: 'purple' },
   ];
 
   // Roadmap items
@@ -181,23 +287,136 @@ export const AdminBilling = () => {
       {/* Manual Verification Queue */}
       <Card className="border-amber-500/10 bg-amber-500/3 backdrop-blur-sm">
         <CardHeader className="pb-3">
-          <div className="flex items-center gap-2">
-            <Shield className="h-4 w-4 text-amber-400" />
-            <CardTitle className="text-sm font-bold text-amber-300">
-              {t.identity.adminManualQueue}
-            </CardTitle>
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <Shield className="h-4 w-4 text-amber-400" />
+                <CardTitle className="text-sm font-bold text-amber-300">
+                  {t.identity.adminManualQueue}
+                </CardTitle>
+              </div>
+              <CardDescription className="text-xs text-slate-400">
+                {t.identity.adminManualQueueDesc}
+              </CardDescription>
+            </div>
+            <Tabs value={activeFilter} onValueChange={setActiveFilter} className="w-auto">
+              <TabsList className="bg-slate-950 border border-slate-800 h-8">
+                <TabsTrigger value="all" className="text-[10px] h-7 px-2.5">All</TabsTrigger>
+                <TabsTrigger value="submitted" className="text-[10px] h-7 px-2.5">Pending Queue</TabsTrigger>
+                <TabsTrigger value="confirmed" className="text-[10px] h-7 px-2.5">Confirmed</TabsTrigger>
+                <TabsTrigger value="rejected" className="text-[10px] h-7 px-2.5">Rejected</TabsTrigger>
+                <TabsTrigger value="expired" className="text-[10px] h-7 px-2.5">Expired</TabsTrigger>
+              </TabsList>
+            </Tabs>
           </div>
-          <CardDescription className="text-xs text-slate-400">
-            {t.identity.adminManualQueueDesc}
-          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="rounded-lg border border-slate-800/40 bg-slate-950/30 p-6 text-center">
-            <Clock className="h-8 w-8 text-slate-600 mx-auto mb-2" />
-            <p className="text-xs text-slate-500">
-              {t.identity.adminNoSubscriptions}
-            </p>
-          </div>
+          {loadingIntents ? (
+            <div className="py-12 text-center">
+              <Loader2 className="h-8 w-8 animate-spin text-slate-500 mx-auto mb-2" />
+              <span className="text-xs text-slate-400">{t.loading}</span>
+            </div>
+          ) : intents.length === 0 ? (
+            <div className="rounded-lg border border-slate-800/40 bg-slate-950/30 p-8 text-center">
+              <Clock className="h-8 w-8 text-slate-600 mx-auto mb-2" />
+              <p className="text-xs text-slate-500">
+                {t.cryptoBilling.verifyQueueEmpty}
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto rounded-lg border border-slate-850 bg-slate-950/20">
+              <Table>
+                <TableHeader className="bg-slate-950/60 border-b border-slate-850">
+                  <TableRow className="hover:bg-transparent border-slate-850">
+                    <TableHead className="text-[10px] font-bold text-slate-400">{t.cryptoBilling.verifyTableUser}</TableHead>
+                    <TableHead className="text-[10px] font-bold text-slate-400">{t.cryptoBilling.verifyTableAsset}</TableHead>
+                    <TableHead className="text-[10px] font-bold text-slate-400">{t.cryptoBilling.verifyTableAmount}</TableHead>
+                    <TableHead className="text-[10px] font-bold text-slate-400">{t.cryptoBilling.verifyTableHash}</TableHead>
+                    <TableHead className="text-[10px] font-bold text-slate-400">{t.cryptoBilling.verifyTableStatus}</TableHead>
+                    <TableHead className="text-[10px] font-bold text-slate-400 text-right">{t.cryptoBilling.verifyTableActions}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {intents.map((intent) => {
+                    const isPendingAction = intent.status === 'submitted' || intent.status === 'manual_review' || intent.status === 'pending';
+                    return (
+                      <TableRow key={intent.id} className="hover:bg-slate-900/10 border-slate-850">
+                        <TableCell className="py-2.5 text-[11px] font-medium text-slate-200">
+                          <div className="font-mono text-[10px]">{truncateAddress(intent.user_id)}</div>
+                        </TableCell>
+                        <TableCell className="py-2.5 text-[11px] text-slate-300">
+                          <span className="font-bold">{intent.crypto_asset}</span>
+                        </TableCell>
+                        <TableCell className="py-2.5 text-[11px] font-mono text-slate-200 font-semibold">
+                          {intent.amount_crypto}
+                        </TableCell>
+                        <TableCell className="py-2.5 text-[11px]">
+                          {intent.tx_hash ? (
+                            <a
+                              href={`https://polygonscan.com/tx/${intent.tx_hash}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-indigo-400 hover:text-indigo-300 inline-flex items-center gap-0.5 font-mono text-[10px]"
+                            >
+                              {truncateAddress(intent.tx_hash)}
+                              <ExternalLink className="h-3 w-3" />
+                            </a>
+                          ) : (
+                            <span className="text-slate-600 italic text-[10px]">No hash submitted</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="py-2.5 text-[11px]">
+                          <Badge 
+                            variant="outline" 
+                            className={`text-[9px] uppercase font-bold px-1.5 py-0.5 ${
+                              intent.status === 'confirmed' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25'
+                              : intent.status === 'rejected' || intent.status === 'failed' ? 'bg-red-500/10 text-red-400 border-red-500/25'
+                              : intent.status === 'submitted' || intent.status === 'manual_review' ? 'bg-amber-500/10 text-amber-400 border-amber-500/25 animate-pulse'
+                              : 'bg-slate-800 text-slate-400 border-slate-700'
+                            }`}
+                          >
+                            {intent.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="py-2.5 text-right">
+                          {isPendingAction ? (
+                            <div className="flex justify-end gap-1.5">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                disabled={processingId !== null}
+                                onClick={() => handleApprove(intent.id)}
+                                className="h-7 text-[10px] bg-emerald-500/5 hover:bg-emerald-500/10 text-emerald-400 border-emerald-500/25 font-bold gap-1"
+                              >
+                                {processingId === intent.id ? (
+                                  <Loader2 className="h-3 w-3 animate-spin" />
+                                ) : (
+                                  <CheckCircle className="h-3 w-3" />
+                                )}
+                                {t.cryptoBilling.verifyActionApprove}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                disabled={processingId !== null}
+                                onClick={() => handleReject(intent.id)}
+                                className="h-7 text-[10px] text-red-400 hover:text-red-300 hover:bg-red-500/5 font-bold gap-1"
+                              >
+                                <XCircle className="h-3 w-3" />
+                                {t.cryptoBilling.verifyActionReject}
+                              </Button>
+                            </div>
+                          ) : (
+                            <span className="text-[10px] text-slate-500 italic">No actions</span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </CardContent>
       </Card>
       {/* Access Programs */}

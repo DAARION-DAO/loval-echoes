@@ -29,6 +29,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { IdentityChecklist } from '@/components/identity/IdentityChecklist';
 import { WalletConnect } from '@/components/identity/WalletConnect';
 import { TelegramLink } from '@/components/identity/TelegramLink';
+import { CryptoPaymentIntent } from '@/components/billing/CryptoPaymentIntent';
 
 export const Settings = () => {
   const { t, language, setLanguage } = useTranslation();
@@ -276,6 +277,9 @@ export const Settings = () => {
           />
         </CardContent>
       </Card>
+
+      {/* Crypto Billing & Subscriptions */}
+      <CryptoPaymentIntent />
 
       {/* Theme Settings */}
       <Card>

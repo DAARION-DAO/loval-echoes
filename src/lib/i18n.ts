@@ -1796,6 +1796,45 @@ export interface Translations {
     billingProgramsTitle: string;
     billingProgramsDesc: string;
   };
+  cryptoBilling: {
+    buyGetDaar: string;
+    openGateway: string;
+    daarRequirementDesc: string;
+    createIntent: string;
+    paymentInstructions: string;
+    polygonOnly: string;
+    treasuryAddress: string;
+    submitTxHash: string;
+    invalidTxHash: string;
+    waitingVerification: string;
+    paymentSubmitted: string;
+    paymentConfirmed: string;
+    paymentRejected: string;
+    manualReview: string;
+    activateLeaderPlan: string;
+    leaderActive: string;
+    leaderPendingPayment: string;
+    wrongNetworkWarning: string;
+    selectAsset: string;
+    paymentInstructionsDesc: string;
+    txHashPlaceholder: string;
+    txHashFormatWarning: string;
+    waitingVerificationDesc: string;
+    intentExpired: string;
+    intentCreated: string;
+    intentCreatedDesc: string;
+    intentFailed: string;
+    verifyActionApprove: string;
+    verifyActionReject: string;
+    verifyActionReview: string;
+    verifyQueueEmpty: string;
+    verifyTableUser: string;
+    verifyTableAsset: string;
+    verifyTableAmount: string;
+    verifyTableHash: string;
+    verifyTableStatus: string;
+    verifyTableActions: string;
+  };
 }
 
 export const translations: Record<Language, Translations> = {
@@ -3572,6 +3611,45 @@ export const translations: Record<Language, Translations> = {
       billingProgramsTitle: 'Програми доступу',
       billingProgramsDesc: 'Типи доступу окрім стандартної підписки Leader Plan',
     },
+    cryptoBilling: {
+      buyGetDaar: 'Купити / отримати DAAR',
+      openGateway: 'Відкрити DAARION Gateway',
+      daarRequirementDesc: 'DAAR потрібен для активації Leader Plan та агентних модулів.',
+      createIntent: 'Створити платіжний інтент',
+      paymentInstructions: 'Інструкція для оплати',
+      polygonOnly: 'Тільки мережа Polygon',
+      treasuryAddress: 'Адреса скарбниці',
+      submitTxHash: 'Надіслати хеш транзакції',
+      invalidTxHash: 'Невірний формат хешу транзакції',
+      waitingVerification: 'Очікує перевірки Guardian',
+      paymentSubmitted: 'Платіж надіслано',
+      paymentConfirmed: 'Платіж підтверджено',
+      paymentRejected: 'Платіж відхилено',
+      manualReview: 'Ручна перевірка',
+      activateLeaderPlan: 'Активувати Leader Plan',
+      leaderActive: 'Leader Plan Активний',
+      leaderPendingPayment: 'Leader Plan Очікує оплати',
+      wrongNetworkWarning: 'Оплата з інших мереж (Ethereum, Base тощо) не буде зарахована.',
+      selectAsset: 'Виберіть актив для оплати',
+      paymentInstructionsDesc: 'Будь ласка, надішліть вказану суму в мережі Polygon на адресу скарбниці, після чого вкажіть хеш транзакції нижче.',
+      txHashPlaceholder: 'Введіть хеш транзакції (0x...)',
+      txHashFormatWarning: 'Лише базовий формат перевірки. Guardian проведе ручну верифікацію.',
+      waitingVerificationDesc: 'Ваш платіж було надіслано на ручну перевірку. Зазвичай це займає до 24 годин.',
+      intentExpired: 'Термін дії платежу закінчився',
+      intentCreated: 'Платіжний інтент створено',
+      intentCreatedDesc: 'Очікується оплата на гаманець скарбниці.',
+      intentFailed: 'Помилка платежу',
+      verifyActionApprove: 'Схвалити',
+      verifyActionReject: 'Відхилити',
+      verifyActionReview: 'Ручна перевірка',
+      verifyQueueEmpty: 'Немає платіжних інтентів для ручного підтвердження.',
+      verifyTableUser: 'Користувач',
+      verifyTableAsset: 'Актив',
+      verifyTableAmount: 'Сума',
+      verifyTableHash: 'Хеш транзакції',
+      verifyTableStatus: 'Статус',
+      verifyTableActions: 'Дії',
+    },
   },
 
   en: {
@@ -5346,6 +5424,45 @@ export const translations: Record<Language, Translations> = {
       accessTierDesc: 'Your current access level in the DAARION ecosystem',
       billingProgramsTitle: 'Access Programs',
       billingProgramsDesc: 'Access types beyond standard Leader Plan subscription',
+    },
+    cryptoBilling: {
+      buyGetDaar: 'Buy / get DAAR',
+      openGateway: 'Open DAARION Gateway',
+      daarRequirementDesc: 'DAAR is used to activate Leader Plan and agent modules.',
+      createIntent: 'Create payment intent',
+      paymentInstructions: 'Payment Instructions',
+      polygonOnly: 'Polygon network only',
+      treasuryAddress: 'Treasury Address',
+      submitTxHash: 'Submit transaction hash',
+      invalidTxHash: 'Invalid transaction hash format',
+      waitingVerification: 'Waiting for Guardian verification',
+      paymentSubmitted: 'Payment submitted',
+      paymentConfirmed: 'Payment confirmed',
+      paymentRejected: 'Payment rejected',
+      manualReview: 'Manual review',
+      activateLeaderPlan: 'Activate Leader Plan',
+      leaderActive: 'Leader Plan Active',
+      leaderPendingPayment: 'Leader Plan Pending Payment',
+      wrongNetworkWarning: 'Payments from other networks (Ethereum, Base, etc.) will not be credited.',
+      selectAsset: 'Select payment asset',
+      paymentInstructionsDesc: 'Please send the specified amount on Polygon network to the treasury address, then enter your transaction hash below.',
+      txHashPlaceholder: 'Enter transaction hash (0x...)',
+      txHashFormatWarning: 'Basic format check only. Guardian will manually verify the transaction.',
+      waitingVerificationDesc: 'Your payment was submitted for manual verification. This usually takes up to 24 hours.',
+      intentExpired: 'Payment intent expired',
+      intentCreated: 'Payment intent created',
+      intentCreatedDesc: 'Awaiting payment to the treasury wallet.',
+      intentFailed: 'Payment failed',
+      verifyActionApprove: 'Approve',
+      verifyActionReject: 'Reject',
+      verifyActionReview: 'Mark Review',
+      verifyQueueEmpty: 'No payment intents requiring manual confirmation.',
+      verifyTableUser: 'User',
+      verifyTableAsset: 'Asset',
+      verifyTableAmount: 'Amount',
+      verifyTableHash: 'Tx Hash',
+      verifyTableStatus: 'Status',
+      verifyTableActions: 'Actions',
     },
   },
 
@@ -7122,6 +7239,45 @@ export const translations: Record<Language, Translations> = {
       billingProgramsTitle: 'Программы доступа',
       billingProgramsDesc: 'Типы доступа помимо стандартной подписки Leader Plan',
     },
+    cryptoBilling: {
+      buyGetDaar: 'Купить / получить DAAR',
+      openGateway: 'Открыть DAARION Gateway',
+      daarRequirementDesc: 'DAAR необходим для активации Leader Plan и агентных модулей.',
+      createIntent: 'Создать платежный интент',
+      paymentInstructions: 'Инструкция для оплаты',
+      polygonOnly: 'Только сеть Polygon',
+      treasuryAddress: 'Адрес казначейства',
+      submitTxHash: 'Отправить хеш транзакции',
+      invalidTxHash: 'Неверный формат хеша транзакции',
+      waitingVerification: 'Ожидает проверки Guardian',
+      paymentSubmitted: 'Платеж отправлен',
+      paymentConfirmed: 'Платеж подтвержден',
+      paymentRejected: 'Платеж отклонен',
+      manualReview: 'Ручная проверка',
+      activateLeaderPlan: 'Активировать Leader Plan',
+      leaderActive: 'Leader Plan Активен',
+      leaderPendingPayment: 'Leader Plan Ожидает оплаты',
+      wrongNetworkWarning: 'Оплата из других сетей (Ethereum, Base и др.) не будет зачислена.',
+      selectAsset: 'Выберите актив для оплаты',
+      paymentInstructionsDesc: 'Пожалуйста, отправьте указанную сумму в сети Polygon на адрес казначейства, после чего укажите хеш транзакции ниже.',
+      txHashPlaceholder: 'Введите хеш транзакции (0x...)',
+      txHashFormatWarning: 'Только базовый формат проверки. Guardian проведет ручную верификацию.',
+      waitingVerificationDesc: 'Ваш платеж был отправлен на ручную проверку. Обычно это занимает до 24 часов.',
+      intentExpired: 'Срок действия платежа истек',
+      intentCreated: 'Платежный интент создан',
+      intentCreatedDesc: 'Ожидается оплата на кошелек казначейства.',
+      intentFailed: 'Ошибка платежа',
+      verifyActionApprove: 'Одобрить',
+      verifyActionReject: 'Отклонить',
+      verifyActionReview: 'Ручная проверка',
+      verifyQueueEmpty: 'Нет платежных интентов для ручного подтверждения.',
+      verifyTableUser: 'Пользователь',
+      verifyTableAsset: 'Актив',
+      verifyTableAmount: 'Сумма',
+      verifyTableHash: 'Хеш транзакции',
+      verifyTableStatus: 'Статус',
+      verifyTableActions: 'Действия',
+    },
   },
 
   es: {
@@ -8896,6 +9052,45 @@ export const translations: Record<Language, Translations> = {
       accessTierDesc: 'Su nivel de acceso actual en el ecosistema DAARION',
       billingProgramsTitle: 'Programas de acceso',
       billingProgramsDesc: 'Tipos de acceso más allá de la suscripción estándar Leader Plan',
+    },
+    cryptoBilling: {
+      buyGetDaar: 'Comprar / obtener DAAR',
+      openGateway: 'Abrir DAARION Gateway',
+      daarRequirementDesc: 'Se requiere DAAR para activar el Leader Plan y los módulos de agente.',
+      createIntent: 'Crear intención de pago',
+      paymentInstructions: 'Instrucciones de pago',
+      polygonOnly: 'Solo red Polygon',
+      treasuryAddress: 'Dirección del tesoro',
+      submitTxHash: 'Enviar hash de transacción',
+      invalidTxHash: 'Formato de hash de transacción no válido',
+      waitingVerification: 'Esperando verificación del Guardian',
+      paymentSubmitted: 'Pago enviado',
+      paymentConfirmed: 'Pago confirmado',
+      paymentRejected: 'Pago rechazado',
+      manualReview: 'Revisión manual',
+      activateLeaderPlan: 'Activar Leader Plan',
+      leaderActive: 'Leader Plan Activo',
+      leaderPendingPayment: 'Leader Plan Pago Pendiente',
+      wrongNetworkWarning: 'Los pagos de otras redes (Ethereum, Base, etc.) no serán acreditados.',
+      selectAsset: 'Seleccione activo de pago',
+      paymentInstructionsDesc: 'Envíe el monto especificado en la red Polygon a la dirección del tesoro, luego ingrese el hash de su transacción a continuación.',
+      txHashPlaceholder: 'Ingrese hash de transacción (0x...)',
+      txHashFormatWarning: 'Solo verificación de formato básico. El Guardian verificará manualmente la transacción.',
+      waitingVerificationDesc: 'Su pago fue enviado para verificación manual. Esto suele tardar hasta 24 horas.',
+      intentExpired: 'Intención de pago expirada',
+      intentCreated: 'Intención de pago creada',
+      intentCreatedDesc: 'Esperando el pago a la billetera del tesoro.',
+      intentFailed: 'Pago fallido',
+      verifyActionApprove: 'Aprobar',
+      verifyActionReject: 'Rechazar',
+      verifyActionReview: 'Marcar Revisión',
+      verifyQueueEmpty: 'No hay intenciones de pago que requieran confirmación manual.',
+      verifyTableUser: 'Usuario',
+      verifyTableAsset: 'Activo',
+      verifyTableAmount: 'Monto',
+      verifyTableHash: 'Hash de Tx',
+      verifyTableStatus: 'Estado',
+      verifyTableActions: 'Acciones',
     },
   },
 };

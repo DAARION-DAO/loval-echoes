@@ -34,9 +34,14 @@ import {
   Gem,
   Building2,
   Shield,
-  Server
+  Server,
+  CheckCircle2,
+  Clock
 } from 'lucide-react';
 import { type AdvancedAccessProgram, ADVANCED_ACCESS_PROGRAMS } from '@/lib/subscriptionTypes';
+import { useUserProfile } from '@/hooks/useUserProfile';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { CryptoPaymentIntent } from '@/components/billing/CryptoPaymentIntent';
 
 interface AnswersState {
   name: string;
@@ -314,10 +319,40 @@ export default function MicroDAOOnboarding() {
 
   // Retrieve localized strings
   const wl = wizardLocals[language as keyof typeof wizardLocals] || wizardLocals.en;
-
+  
   // Onboarding modes: 'lobby' | 'wizard'
   const [mode, setMode] = useState<'lobby' | 'wizard'>('lobby');
   const [step, setStep] = useState(1);
+
+  const { profile } = useUserProfile();
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
+
+  const checkSubscription = async () => {
+    if (!user) return;
+    try {
+      const { data, error } = await (supabase as any)
+        .from('microdao_subscriptions')
+        .select('status')
+        .eq('owner_user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1);
+      
+      if (!error && data && data.length > 0) {
+        setSubscriptionStatus(data[0].status);
+      } else {
+        setSubscriptionStatus(null);
+      }
+    } catch (err) {
+      console.warn('Failed to fetch subscription status:', err);
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      checkSubscription();
+    }
+  }, [user, step]);
+
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [answers, setAnswers] = useState<AnswersState>(defaultAnswers);
 
@@ -774,14 +809,14 @@ export default function MicroDAOOnboarding() {
                         <div className="flex items-center gap-1.5 text-emerald-400">
                           <span>✅</span> Email
                         </div>
-                        <div className="flex items-center gap-1.5 text-slate-400">
-                          <span>⬜</span> Telegram
+                        <div className={`flex items-center gap-1.5 ${profile?.telegram_username ? 'text-emerald-400' : 'text-slate-400'}`}>
+                          <span>{profile?.telegram_username ? '✅' : '⬜'}</span> Telegram
                         </div>
-                        <div className="flex items-center gap-1.5 text-slate-400">
-                          <span>⬜</span> {t.identity.walletTitle}
+                        <div className={`flex items-center gap-1.5 ${profile?.wallet_address ? 'text-emerald-400' : 'text-slate-400'}`}>
+                          <span>{profile?.wallet_address ? '✅' : '⬜'}</span> {t.identity.walletTitle}
                         </div>
-                        <div className="flex items-center gap-1.5 text-slate-400">
-                          <span>⬜</span> {t.identity.subscriptionTitle} (Leader Plan)
+                        <div className={`flex items-center gap-1.5 ${(subscriptionStatus === 'active' || subscriptionStatus === 'founder_bypass' || subscriptionStatus === 'guardian_bypass') ? 'text-emerald-400' : 'text-slate-400'}`}>
+                          <span>{(subscriptionStatus === 'active' || subscriptionStatus === 'founder_bypass' || subscriptionStatus === 'guardian_bypass') ? '✅' : '⬜'}</span> {t.identity.subscriptionTitle} (Leader Plan)
                         </div>
                       </div>
                     </div>
@@ -1371,14 +1406,83 @@ export default function MicroDAOOnboarding() {
                         </div>
                       </div>
 
-                      <div className="p-3 bg-amber-500/5 border border-amber-500/20 text-amber-300 rounded-lg text-xs space-y-1 leading-normal">
-                        <span className="font-semibold flex items-center gap-1.5">
-                          <Zap className="h-3.5 w-3.5 text-amber-400" />
-                          <span>Leader Plan — $20/міс після запуску білінгу</span>
-                        </span>
-                        <p className="text-[10px] text-slate-400 leading-normal">
-                          Зараз створення та тестування MicroDAO з Духом Спільноти повністю безкоштовне.
-                        </p>
+                      {/* Leader Plan Crypto Activation */}
+                      <div className="rounded-xl border border-slate-800 bg-slate-900/10 p-4 space-y-3.5 text-left">
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-0.5">
+                            <h4 className="text-xs font-bold text-slate-200">Leader Plan Activation</h4>
+                            <p className="text-[10px] text-slate-400">
+                              {t.identity.onboardingPriceNote}
+                            </p>
+                          </div>
+                          <Badge className="bg-indigo-500/10 text-indigo-400 border-indigo-500/20 text-[9px] uppercase font-bold">
+                            $20/mo
+                          </Badge>
+                        </div>
+
+                        {user?.email && profile?.telegram_username && profile?.wallet_address ? (
+                          <div className="space-y-3">
+                            {subscriptionStatus === 'active' || subscriptionStatus === 'founder_bypass' || subscriptionStatus === 'guardian_bypass' ? (
+                              <div className="flex items-center gap-2 text-[11px] text-emerald-400 bg-emerald-500/5 border border-emerald-500/20 p-2.5 rounded-lg">
+                                <CheckCircle2 className="h-4 w-4" />
+                                <span>Leader Plan is Active! Thank you.</span>
+                              </div>
+                            ) : subscriptionStatus === 'manual_review' || subscriptionStatus === 'submitted' ? (
+                              <div className="flex items-center justify-between text-[11px] text-amber-400 bg-amber-500/5 border border-amber-500/20 p-2.5 rounded-lg">
+                                <div className="flex items-center gap-2">
+                                  <Clock className="h-4 w-4 animate-pulse" />
+                                  <span>Payment submitted. Waiting for Guardian verification.</span>
+                                </div>
+                                <Dialog>
+                                  <DialogTrigger asChild>
+                                    <Button size="sm" variant="outline" className="h-7 text-[10px] border-amber-500/20 text-amber-300 hover:bg-amber-500/10">
+                                      View Details
+                                    </Button>
+                                  </DialogTrigger>
+                                  <DialogContent className="bg-slate-950 border-slate-800 text-slate-100 max-w-md">
+                                    <DialogHeader>
+                                      <DialogTitle>Payment Intent Details</DialogTitle>
+                                      <DialogDescription className="text-xs text-slate-400">
+                                        Follow instructions and enter transaction hash to pay.
+                                      </DialogDescription>
+                                    </DialogHeader>
+                                    <CryptoPaymentIntent communityId={null} onSuccess={checkSubscription} />
+                                  </DialogContent>
+                                </Dialog>
+                              </div>
+                            ) : (
+                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-indigo-500/5 border border-indigo-500/20 p-3 rounded-lg">
+                                <span className="text-[10px] text-slate-400">
+                                  Activate your subscription to enable paid Agent modules on launch.
+                                </span>
+                                <Dialog>
+                                  <DialogTrigger asChild>
+                                    <Button size="sm" className="bg-indigo-600 hover:bg-indigo-550 text-white font-semibold text-[10px] h-8 flex-shrink-0">
+                                      Activate with Crypto
+                                    </Button>
+                                  </DialogTrigger>
+                                  <DialogContent className="bg-slate-950 border-slate-800 text-slate-100 max-w-md">
+                                    <DialogHeader>
+                                      <DialogTitle>Payment Intent Details</DialogTitle>
+                                      <DialogDescription className="text-xs text-slate-400">
+                                        Follow instructions and enter transaction hash to pay.
+                                      </DialogDescription>
+                                    </DialogHeader>
+                                    <CryptoPaymentIntent communityId={null} onSuccess={checkSubscription} />
+                                  </DialogContent>
+                                </Dialog>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="p-3 bg-amber-500/5 border border-amber-500/10 rounded-lg text-[10px] text-amber-300/80 leading-relaxed">
+                            ⚠️ To activate Leader Plan, please complete the profile checklist in Settings (connect Telegram & Wallet).
+                          </div>
+                        )}
+
+                        <div className="p-2.5 rounded bg-indigo-500/5 border border-indigo-500/10 text-[9px] text-indigo-300/80 leading-normal">
+                          🧪 <strong>Testing mode:</strong> MicroDAO creation remains available while crypto billing is being verified. You do not need an active subscription to test.
+                        </div>
                       </div>
 
                       <div className="space-y-2 pt-2 border-t border-slate-800">
