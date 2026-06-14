@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      access_requests: {
+        Row: {
+          created_at: string | null
+          display_name: string | null
+          email: string | null
+          id: string
+          requested_tier: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string | null
+          use_case: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          display_name?: string | null
+          email?: string | null
+          id?: string
+          requested_tier?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
+          use_case?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          display_name?: string | null
+          email?: string | null
+          id?: string
+          requested_tier?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
+          use_case?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       agent_action_logs: {
         Row: {
           action_payload: Json | null
@@ -1725,6 +1764,7 @@ export type Database = {
         Returns: undefined
       }
       calculate_required_approvals: { Args: never; Returns: number }
+      check_is_platform_admin: { Args: never; Returns: undefined }
       check_rate_limit: {
         Args: {
           p_action: string
@@ -1777,6 +1817,53 @@ export type Database = {
       get_conversation_participant_profiles: {
         Args: { p_requesting_user_id: string }
         Returns: {
+          user_id: string
+        }[]
+      }
+      get_platform_admin_access_requests: {
+        Args: never
+        Returns: {
+          created_at: string
+          display_name: string
+          email: string
+          id: string
+          requested_tier: string
+          reviewed_at: string
+          reviewed_by: string
+          status: string
+          use_case: string
+          user_id: string
+        }[]
+      }
+      get_platform_admin_agent_ops: { Args: never; Returns: Json }
+      get_platform_admin_microdaos: {
+        Args: never
+        Returns: {
+          agent_status: string
+          created_at: string
+          has_spirit_agent: boolean
+          id: string
+          member_count: number
+          name: string
+          owner_email: string
+          owner_id: string
+          owner_name: string
+          slug: string
+          type: string
+        }[]
+      }
+      get_platform_admin_overview: { Args: never; Returns: Json }
+      get_platform_admin_users: {
+        Args: never
+        Returns: {
+          access_tier: string
+          approval_status: string
+          created_at: string
+          display_name: string
+          email: string
+          id: string
+          microdao_count: number
+          role: string
           user_id: string
         }[]
       }
