@@ -197,6 +197,7 @@ const App = () => {
               <ActiveCommunityProvider>
                 <Routes>
                   <Route path="/" element={<PublicStartRoute />} />
+                  <Route path="/home" element={<Start />} />
                   <Route path="/install" element={<Suspense fallback={<LoadingSpinner size="lg" text={t.loading} />}><Install /></Suspense>} />
                   <Route path="/auth" element={<PublicRoutes />} />
                   <Route path="/reset-password" element={<ResetPassword />} />

@@ -342,14 +342,23 @@ export function Start() {
               <Download className="h-4 w-4" />
               <span className="hidden xxs:inline">{t.landing.client}</span>
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => navigate('/auth')} className="text-xs sm:text-sm font-medium gap-1 h-9 px-2">
-              <LogIn className="h-4 w-4" />
-              <span className="hidden xs:inline">{t.landing.login}</span>
-            </Button>
-            <Button size="sm" onClick={() => navigate('/auth?signup=true')} className="text-xs sm:text-sm font-semibold gap-1 sm:gap-1.5 shadow-md hover:shadow-lg transition-shadow px-3 sm:px-4 h-9">
-              <Sparkles className="h-3.5 w-3.5" />
-              <span>{t.create}</span>
-            </Button>
+            {user ? (
+              <Button size="sm" onClick={() => navigate('/dashboard')} className="text-xs sm:text-sm font-semibold gap-1 sm:gap-1.5 shadow-md hover:shadow-lg transition-shadow px-3 sm:px-4 h-9">
+                <Sparkles className="h-3.5 w-3.5" />
+                <span>{t.nav.goToDashboard}</span>
+              </Button>
+            ) : (
+              <>
+                <Button variant="ghost" size="sm" onClick={() => navigate('/auth')} className="text-xs sm:text-sm font-medium gap-1 h-9 px-2">
+                  <LogIn className="h-4 w-4" />
+                  <span className="hidden xs:inline">{t.landing.login}</span>
+                </Button>
+                <Button size="sm" onClick={() => navigate('/auth?signup=true')} className="text-xs sm:text-sm font-semibold gap-1 sm:gap-1.5 shadow-md hover:shadow-lg transition-shadow px-3 sm:px-4 h-9">
+                  <Sparkles className="h-3.5 w-3.5" />
+                  <span>{t.create}</span>
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -433,22 +442,35 @@ export function Start() {
           </div>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto sm:max-w-none">
-            <Button
-              size="lg"
-              onClick={handleScrollToForm}
-              className="w-full sm:w-auto h-13 px-10 font-semibold text-base gap-2 shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98]"
-            >
-              {t.landing.createSpace}
-              <ArrowRight className="h-5 w-5" />
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              onClick={() => navigate('/auth')}
-              className="w-full sm:w-auto h-13 px-10 font-semibold text-base gap-1.5 border-border/60 hover:bg-muted/30"
-            >
-              {t.landing.login}
-            </Button>
+            {user ? (
+              <Button
+                size="lg"
+                onClick={() => navigate('/dashboard')}
+                className="w-full sm:w-auto h-13 px-10 font-semibold text-base gap-2 shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98] bg-primary hover:bg-primary/90"
+              >
+                {t.nav.goToDashboard}
+                <ArrowRight className="h-5 w-5" />
+              </Button>
+            ) : (
+              <>
+                <Button
+                  size="lg"
+                  onClick={handleScrollToForm}
+                  className="w-full sm:w-auto h-13 px-10 font-semibold text-base gap-2 shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  {t.landing.createSpace}
+                  <ArrowRight className="h-5 w-5" />
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  onClick={() => navigate('/auth')}
+                  className="w-full sm:w-auto h-13 px-10 font-semibold text-base gap-1.5 border-border/60 hover:bg-muted/30"
+                >
+                  {t.landing.login}
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Scroll indicator */}

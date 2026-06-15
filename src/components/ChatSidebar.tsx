@@ -20,7 +20,8 @@ import {
   Plug,
   TerminalSquare,
   Download,
-  Shield
+  Shield,
+  Globe
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -356,6 +357,16 @@ export const ChatSidebar = () => {
       {/* Navigation sections */}
       <div className="border-t mt-auto">
         <div className="p-2 space-y-1">
+          <NavLink
+            to="/home"
+            className={({ isActive }) => cn(
+              "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
+              isActive ? "bg-muted" : "hover:bg-muted/50"
+            )}
+          >
+            <Globe className="h-4 w-4" />
+            {t.nav.backToLanding}
+          </NavLink>
           <NavLink
             to="/participants"
             className={({ isActive }) => cn(

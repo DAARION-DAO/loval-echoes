@@ -93,6 +93,8 @@ export interface Translations {
     settings: string;
     more: string;
     navigation: string;
+    backToLanding: string;
+    goToDashboard: string;
   };
 
   // Дашборд
@@ -1922,6 +1924,8 @@ export const translations: Record<Language, Translations> = {
       settings: 'Налаштування',
       more: 'Більше',
       navigation: 'Навігація',
+      backToLanding: 'На головну сайту',
+      goToDashboard: 'Перейти в кабінет',
     },
 
     dashboard: {
@@ -3736,6 +3740,8 @@ export const translations: Record<Language, Translations> = {
       settings: 'Settings',
       more: 'More',
       navigation: 'Navigation',
+      backToLanding: 'Back to public homepage',
+      goToDashboard: 'Go to dashboard',
     },
 
     dashboard: {
@@ -5550,6 +5556,8 @@ export const translations: Record<Language, Translations> = {
       settings: 'Настройки',
       more: 'Ещё',
       navigation: 'Навигация',
+      backToLanding: 'На главную сайта',
+      goToDashboard: 'Перейти в кабинет',
     },
 
     dashboard: {
@@ -7364,6 +7372,8 @@ export const translations: Record<Language, Translations> = {
       settings: 'Configuración',
       more: 'Más',
       navigation: 'Navegación',
+      backToLanding: 'Volver a la página de inicio',
+      goToDashboard: 'Ir al panel',
     },
 
     dashboard: {
