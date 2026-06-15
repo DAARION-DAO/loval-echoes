@@ -234,16 +234,11 @@ export function Start() {
     }
   };
 
-  /* ─── Loading state ─── */
-  if (communityLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-primary"></div>
-      </div>
-    );
-  }
-
-
+  /* Note: do NOT early-return a spinner here. The parent PublicStartRoute
+   * already gates loading. Returning early before the ref-bearing <div>
+   * mounts causes useScrollReveal's effect to run with a null ref, which
+   * leaves every .landing-reveal section permanently invisible until the
+   * user navigates away and back. */
 
   /* ═══════════════════════════════════════════════
    * PUBLIC LANDING PAGE — Premium redesign
