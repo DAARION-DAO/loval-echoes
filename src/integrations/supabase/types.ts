@@ -1886,7 +1886,15 @@ export type Database = {
         Args: { p_version_id: string }
         Returns: undefined
       }
+      admin_approve_crypto_payment_intent: {
+        Args: { intent_id: string }
+        Returns: undefined
+      }
       admin_get_subscription_stats: { Args: never; Returns: Json }
+      admin_reject_crypto_payment_intent: {
+        Args: { intent_id: string; reason: string }
+        Returns: undefined
+      }
       admin_set_approval_status: {
         Args: { p_status: string; p_user_id: string }
         Returns: undefined
