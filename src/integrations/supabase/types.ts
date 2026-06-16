@@ -517,6 +517,57 @@ export type Database = {
         }
         Relationships: []
       }
+      billing_plan_configs: {
+        Row: {
+          accepted_assets: string[]
+          created_at: string
+          daar_purchase_url: string | null
+          daar_usdt_rate: number
+          effective_from: string
+          id: string
+          is_active: boolean
+          payment_network: string
+          plan_key: string
+          price_daar: number
+          price_usd: number
+          treasury_address: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          accepted_assets?: string[]
+          created_at?: string
+          daar_purchase_url?: string | null
+          daar_usdt_rate: number
+          effective_from?: string
+          id?: string
+          is_active?: boolean
+          payment_network?: string
+          plan_key: string
+          price_daar: number
+          price_usd: number
+          treasury_address: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          accepted_assets?: string[]
+          created_at?: string
+          daar_purchase_url?: string | null
+          daar_usdt_rate?: number
+          effective_from?: string
+          id?: string
+          is_active?: boolean
+          payment_network?: string
+          plan_key?: string
+          price_daar?: number
+          price_usd?: number
+          treasury_address?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       chat_action_logs: {
         Row: {
           action: string
@@ -1959,6 +2010,19 @@ export type Database = {
         Args: { p_status: string; p_user_id: string }
         Returns: undefined
       }
+      admin_update_billing_plan_config: {
+        Args: {
+          p_accepted_assets: string[]
+          p_daar_purchase_url: string
+          p_daar_usdt_rate: number
+          p_payment_network: string
+          p_plan_key: string
+          p_price_daar: number
+          p_price_usd: number
+          p_treasury_address: string
+        }
+        Returns: string
+      }
       calculate_required_approvals: { Args: never; Returns: number }
       check_is_platform_admin: { Args: never; Returns: undefined }
       check_rate_limit: {
@@ -1997,6 +2061,22 @@ export type Database = {
         Returns: string
       }
       fix_approval_inconsistencies: { Args: never; Returns: undefined }
+      get_active_billing_plan_config: {
+        Args: { p_plan_key?: string }
+        Returns: {
+          accepted_assets: string[]
+          daar_purchase_url: string
+          daar_usdt_rate: number
+          effective_from: string
+          id: string
+          is_active: boolean
+          payment_network: string
+          plan_key: string
+          price_daar: number
+          price_usd: number
+          treasury_address: string
+        }[]
+      }
       get_ai_agent_permissions: {
         Args: {
           p_folder_id?: string
