@@ -273,6 +273,8 @@ export const AdminBilling = () => {
   };
 
   const handleVerifyOnchain = async (intent: any) => {
+    // TODO: True automatic on-chain verification must be implemented server-side via Supabase Edge Function or secure backend job.
+    // Frontend diagnostic results are not authoritative and are strictly for Guardian diagnostic review.
     setVerifyingIntent(intent);
     setVerificationLoading(true);
     setVerificationResult(null);
