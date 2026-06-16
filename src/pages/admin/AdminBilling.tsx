@@ -716,7 +716,12 @@ export const AdminBilling = () => {
                 <Coins className="h-4 w-4 text-indigo-400" />
                 <div>
                   <div className="text-xs font-bold text-slate-200">Leader Plan</div>
-                  <div className="text-[10px] text-slate-400">${LEADER_PLAN.priceUsd}/{lang === 'uk' ? 'міс' : lang === 'ru' ? 'мес' : lang === 'es' ? 'mes' : 'mo'} = {LEADER_PLAN.priceDaar} DAAR</div>
+                  <div className="text-[10px] text-slate-400">
+                    {configLoading 
+                      ? `$${LEADER_PLAN.priceUsd}/${lang === 'uk' ? 'міс' : lang === 'ru' ? 'мес' : lang === 'es' ? 'mes' : 'mo'} = ${LEADER_PLAN.priceDaar} DAAR`
+                      : `$${priceUsd}/${lang === 'uk' ? 'міс' : lang === 'ru' ? 'мес' : lang === 'es' ? 'mes' : 'mo'} = ${priceDaar} DAAR`
+                    }
+                  </div>
                 </div>
               </div>
               <Badge className="bg-indigo-500/10 text-indigo-300 border-indigo-500/20 text-[9px] uppercase font-bold">Paid Subscription</Badge>
