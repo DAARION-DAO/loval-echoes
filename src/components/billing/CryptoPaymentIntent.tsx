@@ -55,6 +55,8 @@ export const CryptoPaymentIntent = ({ communityId = null, onSuccess }: CryptoPay
   const [selectedAsset, setSelectedAsset] = useState<SupportedPaymentAsset>('DAAR');
   const [txHash, setTxHash] = useState('');
   const [submittingHash, setSubmittingHash] = useState(false);
+  const [verifyingBackend, setVerifyingBackend] = useState(false);
+  const [backendError, setBackendError] = useState<string | null>(null);
 
   // Sync selected asset if config updates and excludes the currently selected asset
   useEffect(() => {
@@ -242,6 +244,49 @@ export const CryptoPaymentIntent = ({ communityId = null, onSuccess }: CryptoPay
     }
   };
 
+  const handleBackendVerify = async () => {
+    if (!activeIntent) return;
+    setVerifyingBackend(true);
+    setBackendError(null);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('No active session. Please log in again.');
+      }
+
+      const { data, error } = await supabase.functions.invoke('verify-polygon-payment', {
+        body: { payment_intent_id: activeIntent.id }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+
+      toast({
+        title: 'Payment Verified',
+        description: data?.message || 'Transaction verified successfully on-chain! Your subscription is now active.',
+      });
+
+      await fetchData();
+      if (onSuccess) onSuccess();
+    } catch (err: any) {
+      console.error('[CryptoPaymentIntent] Backend verification error:', err);
+      setBackendError(err.message || 'Failed to verify transaction securely on-chain.');
+      toast({
+        variant: 'destructive',
+        title: 'Verification Failed',
+        description: err.message || 'Failed to verify transaction securely on-chain.',
+      });
+      await fetchData();
+    } finally {
+      setVerifyingBackend(false);
+    }
+  };
+
   const handleCancelIntent = async () => {
     if (!activeSub || !activeIntent) return;
     setLoading(true);
@@ -386,25 +431,89 @@ export const CryptoPaymentIntent = ({ communityId = null, onSuccess }: CryptoPay
 
           {isSubmitted ? (
             /* Pending verification status */
-            <div className="rounded-xl border border-amber-500/10 bg-amber-500/5 p-4 text-center space-y-2">
+            <div className="rounded-xl border border-amber-500/10 bg-amber-500/5 p-4 text-center space-y-3">
               <Clock className="h-8 w-8 text-amber-400 animate-pulse mx-auto" />
               <h4 className="text-xs font-bold text-slate-200">{t.cryptoBilling.waitingVerification}</h4>
               <p className="text-[10px] text-slate-400 leading-relaxed max-w-sm mx-auto">
                 {t.cryptoBilling.waitingVerificationDesc}
               </p>
               {activeIntent.tx_hash && (
-                <div className="pt-2 text-[10px]">
-                  <span className="text-slate-500">Hash: </span>
-                  <a 
-                    href={`https://polygonscan.com/tx/${activeIntent.tx_hash}`} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-indigo-400 hover:text-indigo-300 inline-flex items-center gap-0.5 font-mono"
-                  >
-                    {truncateAddress(activeIntent.tx_hash)}
-                    <ExternalLink className="h-2.5 w-2.5" />
-                  </a>
+                <div className="text-[10px] border-t border-slate-850 pt-2 flex flex-col items-center gap-1.5">
+                  <div>
+                    <span className="text-slate-500">Hash: </span>
+                    <a 
+                      href={`https://polygonscan.com/tx/${activeIntent.tx_hash}`} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-indigo-400 hover:text-indigo-300 inline-flex items-center gap-0.5 font-mono"
+                    >
+                      {truncateAddress(activeIntent.tx_hash)}
+                      <ExternalLink className="h-2.5 w-2.5" />
+                    </a>
+                  </div>
+
+                  {activeIntent.verification_status && (
+                    <div className="flex items-center gap-1">
+                      <span className="text-slate-500">Backend: </span>
+                      <Badge 
+                        className={`text-[9px] uppercase font-semibold border ${
+                          activeIntent.verification_status === 'verified'
+                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                            : activeIntent.verification_status === 'manual_review'
+                            ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                            : 'bg-red-500/10 text-red-400 border-red-500/20'
+                        }`}
+                      >
+                        {activeIntent.verification_status}
+                      </Badge>
+                    </div>
+                  )}
                 </div>
+              )}
+
+              {/* Secure Backend Verification Trigger */}
+              <div className="pt-1">
+                <Button
+                  onClick={handleBackendVerify}
+                  disabled={verifyingBackend}
+                  className="w-full bg-emerald-600 hover:bg-emerald-550 text-emerald-100 border border-emerald-500/30 h-9 font-semibold text-xs gap-1.5"
+                >
+                  {verifyingBackend ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Coins className="h-3.5 w-3.5" />
+                  )}
+                  {t.cryptoBilling.verifySecurely}
+                </Button>
+                <span className="text-[9px] text-slate-500 block leading-tight mt-1.5">
+                  {t.cryptoBilling.authoritativeVerification}
+                </span>
+              </div>
+
+              {/* Verification Error alert */}
+              {(backendError || activeIntent.verification_error) && (
+                <Alert className="border-red-500/20 bg-red-500/5 text-red-400 mt-2 text-left">
+                  <AlertTriangle className="h-3.5 w-3.5 text-red-400" />
+                  <AlertTitle className="text-xs font-bold text-red-300">
+                    {t.cryptoBilling.verificationFailed}
+                  </AlertTitle>
+                  <AlertDescription className="text-[9px] leading-normal mt-1 text-slate-300 font-mono break-all max-h-24 overflow-y-auto">
+                    {backendError || activeIntent.verification_error}
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {/* Manual review warning */}
+              {activeIntent.verification_status === 'manual_review' && (
+                <Alert className="border-amber-500/20 bg-amber-500/5 text-amber-400 mt-2 text-left">
+                  <ShieldAlert className="h-3.5 w-3.5 text-amber-400" />
+                  <AlertTitle className="text-xs font-bold text-amber-300">
+                    {t.cryptoBilling.manualReviewRequired}
+                  </AlertTitle>
+                  <AlertDescription className="text-[9px] leading-normal mt-1 text-slate-300">
+                    {activeIntent.verification_error || 'A transaction was found, but it requires manual Guardian approval.'}
+                  </AlertDescription>
+                </Alert>
               )}
             </div>
           ) : (

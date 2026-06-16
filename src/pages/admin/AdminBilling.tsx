@@ -68,6 +68,7 @@ export const AdminBilling = () => {
   const [verificationLoading, setVerificationLoading] = useState(false);
   const [verificationResult, setVerificationResult] = useState<any | null>(null);
   const [verificationError, setVerificationError] = useState<string | null>(null);
+  const [verifyingBackendId, setVerifyingBackendId] = useState<string | null>(null);
 
   // Billing Config Form State
   const [configLoading, setConfigLoading] = useState(true);
@@ -444,6 +445,40 @@ export const AdminBilling = () => {
       setVerificationError(err.message || 'Failed to verify transaction on-chain.');
     } finally {
       setVerificationLoading(false);
+    }
+  };
+
+  const handleBackendVerifyAdmin = async (intentId: string) => {
+    setVerifyingBackendId(intentId);
+    try {
+      const { data, error } = await supabase.functions.invoke('verify-polygon-payment', {
+        body: { payment_intent_id: intentId }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+
+      toast({
+        title: 'Transaction Verified',
+        description: data?.message || 'Transaction successfully verified and subscription activated.',
+      });
+
+      await Promise.all([fetchStats(), fetchIntents()]);
+      setVerifyingIntent(null);
+    } catch (err: any) {
+      console.error('Backend verify admin error:', err);
+      toast({
+        variant: 'destructive',
+        title: 'Verification Failed',
+        description: err.message || 'Server verification failed.',
+      });
+    } finally {
+      setVerifyingBackendId(null);
     }
   };
 
@@ -1123,6 +1158,47 @@ export const AdminBilling = () => {
                 </div>
               </div>
 
+              {/* Backend Verification Details Card */}
+              <div className="rounded-xl border border-slate-800 bg-slate-950/40 p-3 text-left space-y-2 text-xs">
+                <h4 className="text-[11px] font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-850 pb-1.5">
+                  <Shield className="h-3.5 w-3.5 text-indigo-400" />
+                  {t.cryptoBilling.backendVerification}
+                </h4>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-450">Backend Status:</span>
+                  <Badge 
+                    className={`text-[9px] uppercase font-bold border ${
+                      verifyingIntent?.verification_status === 'verified'
+                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25'
+                        : verifyingIntent?.verification_status === 'manual_review'
+                        ? 'bg-amber-500/10 text-amber-400 border-amber-500/25'
+                        : 'bg-red-500/10 text-red-400 border-red-500/25'
+                    }`}
+                  >
+                    {verifyingIntent?.verification_status || 'unchecked'}
+                  </Badge>
+                </div>
+                {verifyingIntent?.verified_by && (
+                  <div className="flex justify-between">
+                    <span className="text-slate-450">Verified By:</span>
+                    <span className="text-slate-300 font-mono text-[10px]">{verifyingIntent.verified_by}</span>
+                  </div>
+                )}
+                {verifyingIntent?.verification_checked_at && (
+                  <div className="flex justify-between">
+                    <span className="text-slate-450">Checked At:</span>
+                    <span className="text-slate-300 text-[10px]">
+                      {new Date(verifyingIntent.verification_checked_at).toLocaleString()}
+                    </span>
+                  </div>
+                )}
+                {verifyingIntent?.verification_error && (
+                  <div className="text-red-400 border border-red-500/10 bg-red-500/5 p-2 rounded text-[10px] break-all font-mono max-h-24 overflow-y-auto">
+                    {verifyingIntent.verification_error}
+                  </div>
+                )}
+              </div>
+
               {/* Client-side Diagnostic Warning */}
               <Alert className="border-indigo-500/20 bg-indigo-500/5 text-indigo-300 py-2">
                 <Shield className="h-4 w-4 text-indigo-400" />
@@ -1159,7 +1235,7 @@ export const AdminBilling = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  disabled={processingId !== null}
+                  disabled={processingId !== null || verifyingBackendId !== null}
                   onClick={() => {
                     handleReject(verifyingIntent.id);
                     setVerifyingIntent(null);
@@ -1171,7 +1247,7 @@ export const AdminBilling = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  disabled={processingId !== null}
+                  disabled={processingId !== null || verifyingBackendId !== null}
                   onClick={() => {
                     handleApprove(verifyingIntent.id);
                     setVerifyingIntent(null);
@@ -1179,6 +1255,19 @@ export const AdminBilling = () => {
                   className="text-xs bg-emerald-500/5 hover:bg-emerald-500/10 text-emerald-400 border-emerald-500/25 h-8 font-bold"
                 >
                   {t.cryptoBilling.verifyActionApprove}
+                </Button>
+                <Button
+                  size="sm"
+                  disabled={processingId !== null || verifyingBackendId !== null}
+                  onClick={() => handleBackendVerifyAdmin(verifyingIntent.id)}
+                  className="text-xs bg-indigo-600 hover:bg-indigo-550 text-indigo-100 border border-indigo-500/30 h-8 font-bold gap-1"
+                >
+                  {verifyingBackendId === verifyingIntent.id ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <Shield className="h-3 w-3" />
+                  )}
+                  {t.cryptoBilling.verifySecurely || 'Verify securely on Polygon'}
                 </Button>
               </div>
             )}

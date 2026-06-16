@@ -1930,6 +1930,10 @@ export interface Translations {
     senderWalletMismatch: string;
     viewOnPolygonScan: string;
     diagnosticWarning: string;
+    verifySecurely: string;
+    backendVerification: string;
+    verifiedByBackend: string;
+    authoritativeVerification: string;
   };
   adminAgent: {
     title: string;
@@ -3859,6 +3863,10 @@ export const translations: Record<Language, Translations> = {
       senderWalletMismatch: 'Невідповідність гаманця відправника',
       viewOnPolygonScan: 'Дивитись у PolygonScan',
       diagnosticWarning: 'Це клієнтська діагностична перевірка виключно для ознайомлення Guardian. Остаточне підтвердження все ще вимагає дій адміністратора через захищений RPC.',
+      verifySecurely: 'Перевірити безпечно на Polygon',
+      backendVerification: 'Серверна верифікація',
+      verifiedByBackend: 'Підтверджено сервером',
+      authoritativeVerification: 'Авторитетна верифікація',
     },
     adminAgent: {
       title: 'Адмін-агент',
@@ -5787,6 +5795,10 @@ export const translations: Record<Language, Translations> = {
       senderWalletMismatch: 'Sender wallet mismatch',
       viewOnPolygonScan: 'View on PolygonScan',
       diagnosticWarning: 'This is a client-side diagnostic check for Guardian review only. Final approval still requires Guardian confirmation through the secure admin approval RPC.',
+      verifySecurely: 'Verify securely on Polygon',
+      backendVerification: 'Backend verification',
+      verifiedByBackend: 'Verified by backend',
+      authoritativeVerification: 'Authoritative verification',
     },
     adminAgent: {
       title: 'Admin Agent',
@@ -7715,6 +7727,10 @@ export const translations: Record<Language, Translations> = {
       senderWalletMismatch: 'Несоответствие кошелька отправителя',
       viewOnPolygonScan: 'Смотреть в PolygonScan',
       diagnosticWarning: 'Это клиентская диагностическая проверка исключительно для ознакомления Guardian. Окончательное подтверждение все еще требует действий администратора через защищенный RPC.',
+      verifySecurely: 'Проверить безопасно на Polygon',
+      backendVerification: 'Серверная верификация',
+      verifiedByBackend: 'Подтверждено сервером',
+      authoritativeVerification: 'Авторитетная верификация',
     },
     adminAgent: {
       title: 'Админ-агент',
@@ -9643,6 +9659,10 @@ export const translations: Record<Language, Translations> = {
       senderWalletMismatch: 'Falta de coincidencia de billetera del remitente',
       viewOnPolygonScan: 'Ver en PolygonScan',
       diagnosticWarning: 'Esta es una verificación de diagnóstico del lado del cliente solo para revisión del Guardian. La aprobación final aún requiere confirmación del administrador a través del RPC seguro.',
+      verifySecurely: 'Verificar de forma segura en Polygon',
+      backendVerification: 'Verificación en el servidor',
+      verifiedByBackend: 'Verificado por el servidor',
+      authoritativeVerification: 'Verificación autoritativa',
     },
     adminAgent: {
       title: 'Agente Administrador',
