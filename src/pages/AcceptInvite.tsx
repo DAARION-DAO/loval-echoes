@@ -122,10 +122,15 @@ export default function AcceptInvite() {
               {errorMsg}
             </div>
           ) : !success && (
-            <div className="text-xs text-slate-300 leading-relaxed">
-              <p className="font-semibold text-slate-200">Signed in as: {user.email}</p>
-              <p className="mt-2 text-slate-400">
+            <div className="text-xs text-slate-350 space-y-3">
+              <p className="font-semibold text-slate-200">
+                Signed in as: <span className="text-indigo-400">{user.email}</span>
+              </p>
+              <p className="text-slate-400">
                 Accepting this invitation will grant your account access to platform management tools.
+              </p>
+              <p className="text-amber-500/90 font-medium text-[10px] bg-amber-500/5 border border-amber-500/10 p-2 rounded-lg leading-relaxed">
+                ⚠️ Make sure you are logged in with the exact email address that received the invitation.
               </p>
             </div>
           )}
