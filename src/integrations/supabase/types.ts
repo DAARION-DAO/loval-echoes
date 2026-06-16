@@ -1453,6 +1453,51 @@ export type Database = {
           },
         ]
       }
+      platform_admin_invites: {
+        Row: {
+          accepted_at: string | null
+          accepted_by: string | null
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          invite_token: string
+          invited_by: string | null
+          invited_role: string
+          revoked_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          created_at?: string
+          email: string
+          expires_at: string
+          id?: string
+          invite_token: string
+          invited_by?: string | null
+          invited_role?: string
+          revoked_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          invite_token?: string
+          invited_by?: string | null
+          invited_role?: string
+          revoked_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           access_tier: string | null
@@ -1882,6 +1927,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_platform_admin_invite: {
+        Args: { p_invite_token: string }
+        Returns: undefined
+      }
       activate_prompt_version: {
         Args: { p_version_id: string }
         Returns: undefined
@@ -1890,9 +1939,20 @@ export type Database = {
         Args: { intent_id: string }
         Returns: undefined
       }
+      admin_create_platform_admin_invite: {
+        Args: { invited_email: string; invited_role: string }
+        Returns: {
+          invite_id: string
+          invite_token: string
+        }[]
+      }
       admin_get_subscription_stats: { Args: never; Returns: Json }
       admin_reject_crypto_payment_intent: {
         Args: { intent_id: string; reason: string }
+        Returns: undefined
+      }
+      admin_revoke_platform_admin_invite: {
+        Args: { invite_id: string }
         Returns: undefined
       }
       admin_set_approval_status: {
