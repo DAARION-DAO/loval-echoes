@@ -21,7 +21,8 @@ import {
   TerminalSquare,
   Download,
   Shield,
-  Globe
+  Globe,
+  CreditCard
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -494,6 +495,16 @@ export const ChatSidebar = () => {
           >
             <Download className="h-4 w-4" />
             {t.nav.installClient}
+          </NavLink>
+          <NavLink
+            to="/billing"
+            className={({ isActive }) => cn(
+              "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
+              isActive ? "bg-muted" : "hover:bg-muted/50"
+            )}
+          >
+            <CreditCard className="h-4 w-4" />
+            {t.nav.billing}
           </NavLink>
           <NavLink
             to="/settings"

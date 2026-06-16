@@ -13,7 +13,8 @@ import {
   Globe, 
   Shield, 
   Upload,
-  Fingerprint
+  Fingerprint,
+  CreditCard
 } from 'lucide-react';
 import { useTranslation, Language } from '@/lib/i18n';
 import { useState, useRef, useEffect } from 'react';
@@ -29,9 +30,10 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { IdentityChecklist } from '@/components/identity/IdentityChecklist';
 import { WalletConnect } from '@/components/identity/WalletConnect';
 import { TelegramLink } from '@/components/identity/TelegramLink';
-import { CryptoPaymentIntent } from '@/components/billing/CryptoPaymentIntent';
+import { useNavigate } from 'react-router-dom';
 
 export const Settings = () => {
+  const navigate = useNavigate();
   const { t, language, setLanguage } = useTranslation();
   const { user } = useAuth();
   const { profile, updateProfile, updateTelegram, uploadAvatar, loading } = useUserProfile();
@@ -279,7 +281,26 @@ export const Settings = () => {
       </Card>
 
       {/* Crypto Billing & Subscriptions */}
-      <CryptoPaymentIntent />
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CreditCard className="h-5 w-5" />
+            {t.pricingExtra.billingTitle}
+          </CardTitle>
+          <CardDescription>
+            {t.pricingExtra.billingDesc}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button 
+            onClick={() => navigate('/billing')} 
+            className="bg-indigo-600 hover:bg-indigo-550 text-indigo-100 border border-indigo-500/30 text-xs font-semibold gap-1.5"
+          >
+            <CreditCard className="h-4 w-4" />
+            {t.pricingExtra.manageSubscription}
+          </Button>
+        </CardContent>
+      </Card>
 
       {/* Theme Settings */}
       <Card>

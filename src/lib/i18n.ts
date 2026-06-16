@@ -95,6 +95,7 @@ export interface Translations {
     navigation: string;
     backToLanding: string;
     goToDashboard: string;
+    billing: string;
   };
 
   // Дашборд
@@ -685,6 +686,10 @@ export interface Translations {
 
     distinctionTitle: string;
     distinctionDesc: string;
+    manageSubscription: string;
+    goToVerificationQueue: string;
+    billingTitle: string;
+    billingDesc: string;
   };
   start: {
     heroTagline: string;
@@ -1974,6 +1979,7 @@ export const translations: Record<Language, Translations> = {
       navigation: 'Навігація',
       backToLanding: 'На головну сайту',
       goToDashboard: 'Перейти в кабінет',
+      billing: 'Підписка / Оплата',
     },
 
     dashboard: {
@@ -2553,7 +2559,11 @@ export const translations: Record<Language, Translations> = {
       workerNodeCta: 'Подати заявку оператора',
 
       distinctionTitle: 'Зверніть увагу на різницю програм доступу',
-      distinctionDesc: 'Leader Plan — це підписка для створення активної MicroDAO. Founder / Partner / Sovereign / Worker Node — це програми розширеного доступу з ручним погодженням.'
+      distinctionDesc: 'Leader Plan — це підписка для створення активної MicroDAO. Founder / Partner / Sovereign / Worker Node — це програми розширеного доступу з ручним погодженням.',
+      manageSubscription: 'Керувати підпискою',
+      goToVerificationQueue: 'Перейти до черги перевірки',
+      billingTitle: 'Підписка / Оплата',
+      billingDesc: 'Активуйте Leader Plan через DAAR або підтримувану криптовалюту.'
     },
     start: {
       heroTagline: 'ЖОС · Жива операційна система',
@@ -3838,6 +3848,7 @@ export const translations: Record<Language, Translations> = {
       navigation: 'Navigation',
       backToLanding: 'Back to public homepage',
       goToDashboard: 'Go to dashboard',
+      billing: 'Subscription / Billing',
     },
 
     dashboard: {
@@ -4417,7 +4428,11 @@ export const translations: Record<Language, Translations> = {
       workerNodeCta: 'Submit Operator Application',
 
       distinctionTitle: 'Please Note the Distinction of Access Programs',
-      distinctionDesc: 'Leader Plan is a subscription to create an active MicroDAO. Founder / Partner / Sovereign / Worker Node are advanced access programs with manual approval.'
+      distinctionDesc: 'Leader Plan is a subscription to create an active MicroDAO. Founder / Partner / Sovereign / Worker Node are advanced access programs with manual approval.',
+      manageSubscription: 'Manage Subscription',
+      goToVerificationQueue: 'Go to Verification Queue',
+      billingTitle: 'Subscription / Billing',
+      billingDesc: 'Activate Leader Plan with DAAR or supported crypto.'
     },
     start: {
       heroTagline: 'ZHOS · Living Operating System',
@@ -5702,6 +5717,7 @@ export const translations: Record<Language, Translations> = {
       navigation: 'Навигация',
       backToLanding: 'На главную сайта',
       goToDashboard: 'Перейти в кабинет',
+      billing: 'Подписка / Оплата',
     },
 
     dashboard: {
@@ -6281,7 +6297,11 @@ export const translations: Record<Language, Translations> = {
       workerNodeCta: 'Подать заявку оператора',
 
       distinctionTitle: 'Обратите внимание на разницу программ доступа',
-      distinctionDesc: 'Leader Plan — это подписка для создания active MicroDAO. Founder / Partner / Sovereign / Worker Node — это программы расширенного доступа с ручным согласованием.'
+      distinctionDesc: 'Leader Plan — это подписка для создания active MicroDAO. Founder / Partner / Sovereign / Worker Node — это программы расширенного доступа с ручным согласованием.',
+      manageSubscription: 'Управлять подпиской',
+      goToVerificationQueue: 'Перейти к очереди проверки',
+      billingTitle: 'Подписка / Оплата',
+      billingDesc: 'Активируйте Leader Plan через DAAR или поддерживаемую криптовалюту.'
     },
     start: {
       heroTagline: 'ЖОС · Живая операционная система',
@@ -7566,6 +7586,7 @@ export const translations: Record<Language, Translations> = {
       navigation: 'Navegación',
       backToLanding: 'Volver a la página de inicio',
       goToDashboard: 'Ir al panel',
+      billing: 'Suscripción / Facturación',
     },
 
     dashboard: {
@@ -8145,7 +8166,11 @@ export const translations: Record<Language, Translations> = {
       workerNodeCta: 'Presentar Solicitud de Operador',
 
       distinctionTitle: 'Tenga en cuenta la distinción de programas de acceso',
-      distinctionDesc: 'Leader Plan es una suscripción para crear una MicroDAO activa. Founder / Partner / Sovereign / Worker Node son programas de acceso avanzado con aprobación manual.'
+      distinctionDesc: 'Leader Plan es una suscripción para crear una MicroDAO activa. Founder / Partner / Sovereign / Worker Node son programas de acceso avanzado con aprobación manual.',
+      manageSubscription: 'Gestionar suscripción',
+      goToVerificationQueue: 'Ir a la cola de verificación',
+      billingTitle: 'Suscripción / Facturación',
+      billingDesc: 'Active Leader Plan con DAAR o criptomonedas compatibles.'
     },
     start: {
       heroTagline: 'ZHOS · Sistema Operativo Vivo',

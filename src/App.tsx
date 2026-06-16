@@ -23,6 +23,7 @@ const ChatPage = lazy(() => import("./pages/Chat").then(m => ({ default: m.ChatP
 const NotFound = lazy(() => import("./pages/NotFound"));
 const ImportPage = lazy(() => import("./pages/Import").then(m => ({ default: m.ImportPage })));
 const Settings = lazy(() => import("./pages/Settings").then(m => ({ default: m.Settings })));
+const Billing = lazy(() => import("./pages/Billing"));
 const Participants = lazy(() => import("./pages/Participants").then(m => ({ default: m.Participants })));
 const NewsPage = lazy(() => import("./pages/News"));
 const Projects = lazy(() => import("./pages/Projects"));
@@ -124,6 +125,7 @@ const ProtectedLayout = () => {
             <Route path="/import" element={<ImportPage />} />
             <Route path="/news" element={<NewsPage />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/billing" element={<Billing />} />
             <Route path="/projects" element={<Projects />} />
             <Route path="/projects/:id" element={<ProjectDetail />} />
             <Route path="/knowledge-base" element={<KnowledgeBase />} />

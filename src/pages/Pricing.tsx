@@ -48,7 +48,7 @@ export default function Pricing() {
         t.pricingExtra.leaderPlanFeature6
       ],
       cta: t.pricingExtra.activateCryptoBtn,
-      action: () => navigate(user ? "/settings" : "/auth?signup=true"),
+      action: () => navigate(user ? "/billing" : "/auth?signup=true"),
       variant: "default" as const,
       gradient: "from-indigo-500/20 to-purple-500/20",
       featured: true,
