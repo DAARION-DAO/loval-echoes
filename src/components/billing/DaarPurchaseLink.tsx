@@ -1,5 +1,5 @@
 import { ExternalLink, HelpCircle } from 'lucide-react';
-import { DAAR_PURCHASE_URL } from '@/lib/cryptoBilling';
+import { useBillingPlanConfig } from '@/lib/cryptoBilling';
 import { useTranslation } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -10,6 +10,9 @@ interface DaarPurchaseLinkProps {
 
 export const DaarPurchaseLink = ({ className = '' }: DaarPurchaseLinkProps) => {
   const { t } = useTranslation();
+  const { config, loading } = useBillingPlanConfig();
+
+  const purchaseUrl = loading ? 'https://app.daarion.city/' : config.daarPurchaseUrl;
 
   return (
     <Card className={`border-indigo-500/20 bg-indigo-500/5 backdrop-blur-md hover:border-indigo-500/30 transition-all ${className}`}>
@@ -31,7 +34,7 @@ export const DaarPurchaseLink = ({ className = '' }: DaarPurchaseLinkProps) => {
           asChild
           className="flex-shrink-0 bg-indigo-600 hover:bg-indigo-550 text-indigo-100 border border-indigo-500/30 h-9 font-semibold text-xs gap-1.5"
         >
-          <a href={DAAR_PURCHASE_URL} target="_blank" rel="noopener noreferrer">
+          <a href={purchaseUrl} target="_blank" rel="noopener noreferrer">
             {t.cryptoBilling.openGateway}
             <ExternalLink className="h-3.5 w-3.5" />
           </a>

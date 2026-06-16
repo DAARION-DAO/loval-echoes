@@ -1902,6 +1902,20 @@ export interface Translations {
     verifyTableHash: string;
     verifyTableStatus: string;
     verifyTableActions: string;
+    billingConfigTitle: string;
+    leaderPlanUsdPrice: string;
+    daarMonthlyAmount: string;
+    daarUsdtRateLabel: string;
+    acceptedAssetsLabel: string;
+    paymentNetworkLabel: string;
+    treasuryAddressLabel: string;
+    daarPurchaseUrlLabel: string;
+    planActiveLabel: string;
+    savePricingConfigBtn: string;
+    changesApplyWarning: string;
+    pricingConfigUpdatedSuccess: string;
+    invalidTreasuryAddressError: string;
+    invalidDaarPurchaseUrlError: string;
   };
 }
 
@@ -3785,6 +3799,20 @@ export const translations: Record<Language, Translations> = {
       verifyTableHash: 'Хеш транзакції',
       verifyTableStatus: 'Статус',
       verifyTableActions: 'Дії',
+      billingConfigTitle: 'Налаштування платіжного плану',
+      leaderPlanUsdPrice: 'Ціна Leader Plan в USD',
+      daarMonthlyAmount: 'Місячна сума в DAAR',
+      daarUsdtRateLabel: 'Курс DAAR / USDT',
+      acceptedAssetsLabel: 'Дозволені активи',
+      paymentNetworkLabel: 'Платіжна мережа',
+      treasuryAddressLabel: 'Адреса скарбниці (EVM)',
+      daarPurchaseUrlLabel: 'Посилання на купівлю DAAR',
+      planActiveLabel: 'План активний',
+      savePricingConfigBtn: 'Зберегти налаштування цін',
+      changesApplyWarning: 'Зміни застосовуються лише до нових платіжних інтентів. Наявні підписки та створені інтенти не будуть перераховані.',
+      pricingConfigUpdatedSuccess: 'Конфігурацію цін оновлено',
+      invalidTreasuryAddressError: 'Невірна EVM адреса скарбниці',
+      invalidDaarPurchaseUrlError: 'Невірне посилання на купівлю DAAR',
     },
   },
 
@@ -5667,6 +5695,20 @@ export const translations: Record<Language, Translations> = {
       verifyTableHash: 'Tx Hash',
       verifyTableStatus: 'Status',
       verifyTableActions: 'Actions',
+      billingConfigTitle: 'Billing Plan Configuration',
+      leaderPlanUsdPrice: 'Leader Plan USD price',
+      daarMonthlyAmount: 'DAAR monthly amount',
+      daarUsdtRateLabel: 'DAAR / USDT rate',
+      acceptedAssetsLabel: 'Accepted assets',
+      paymentNetworkLabel: 'Payment network',
+      treasuryAddressLabel: 'Treasury address (EVM)',
+      daarPurchaseUrlLabel: 'DAAR purchase URL',
+      planActiveLabel: 'Plan active',
+      savePricingConfigBtn: 'Save pricing config',
+      changesApplyWarning: 'Changes apply only to new payment intents. Existing subscriptions and already-created payment intents are not recalculated.',
+      pricingConfigUpdatedSuccess: 'Pricing config updated',
+      invalidTreasuryAddressError: 'Invalid treasury address',
+      invalidDaarPurchaseUrlError: 'Invalid DAAR purchase URL',
     },
   },
 
@@ -7549,6 +7591,20 @@ export const translations: Record<Language, Translations> = {
       verifyTableHash: 'Хеш транзакции',
       verifyTableStatus: 'Статус',
       verifyTableActions: 'Действия',
+      billingConfigTitle: 'Настройка платежного плана',
+      leaderPlanUsdPrice: 'Цена Leader Plan в USD',
+      daarMonthlyAmount: 'Месячная сумма в DAAR',
+      daarUsdtRateLabel: 'Курс DAAR / USDT',
+      acceptedAssetsLabel: 'Разрешенные активы',
+      paymentNetworkLabel: 'Платежная сеть',
+      treasuryAddressLabel: 'Адрес казначейства (EVM)',
+      daarPurchaseUrlLabel: 'Ссылка на покупку DAAR',
+      planActiveLabel: 'План active',
+      savePricingConfigBtn: 'Сохранить настройки цен',
+      changesApplyWarning: 'Изменения применяются только к новым платежным интентам. Существующие подписки и созданные интенты не будут пересчитаны.',
+      pricingConfigUpdatedSuccess: 'Конфигурация цен обновлена',
+      invalidTreasuryAddressError: 'Неверный EVM адрес казначейства',
+      invalidDaarPurchaseUrlError: 'Неверная ссылка на покупку DAAR',
     },
   },
 
@@ -9431,6 +9487,20 @@ export const translations: Record<Language, Translations> = {
       verifyTableHash: 'Hash de Tx',
       verifyTableStatus: 'Estado',
       verifyTableActions: 'Acciones',
+      billingConfigTitle: 'Configuración del plan de facturación',
+      leaderPlanUsdPrice: 'Precio del Leader Plan en USD',
+      daarMonthlyAmount: 'Cantidad mensual de DAAR',
+      daarUsdtRateLabel: 'Tarifa DAAR / USDT',
+      acceptedAssetsLabel: 'Activos aceptados',
+      paymentNetworkLabel: 'Red de pago',
+      treasuryAddressLabel: 'Dirección del tesoro (EVM)',
+      daarPurchaseUrlLabel: 'URL de compra de DAAR',
+      planActiveLabel: 'Plan activo',
+      savePricingConfigBtn: 'Guardar configuración de precios',
+      changesApplyWarning: 'Los cambios se aplican solo a las nuevas intenciones de pago. Las suscripciones existentes y las intenciones de pago ya creadas no se recalculan.',
+      pricingConfigUpdatedSuccess: 'Configuración de precios actualizada',
+      invalidTreasuryAddressError: 'Dirección del tesoro no válida',
+      invalidDaarPurchaseUrlError: 'URL de compra de DAAR no válida',
     },
   },
 };

@@ -7,12 +7,14 @@ import { useTranslation, Language } from "@/lib/i18n";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePwaInstall } from "@/hooks/usePwaInstall";
 import { useAuth } from "@/hooks/useAuth";
+import { useBillingPlanConfig } from "@/lib/cryptoBilling";
 
 export default function Pricing() {
   const navigate = useNavigate();
   const { t, language, setLanguage } = useTranslation();
   const { isInstallable, install } = usePwaInstall();
   const { user } = useAuth();
+  const { config, loading } = useBillingPlanConfig();
 
   const tiers = [
     {
@@ -35,9 +37,9 @@ export default function Pricing() {
     },
     {
       name: t.pricingExtra.leaderPlanName,
-      badge: "Polygon only",
-      price: t.pricingExtra.leaderPlanPrice,
-      period: t.pricingExtra.leaderPlanPeriod,
+      badge: loading ? "Polygon only" : `${config.paymentNetwork.charAt(0).toUpperCase() + config.paymentNetwork.slice(1)} only`,
+      price: loading ? t.pricingExtra.leaderPlanPrice : `${config.priceDaar} DAAR / ${language === 'uk' ? 'міс' : language === 'ru' ? 'мес' : language === 'es' ? 'mes' : 'mo'}`,
+      period: loading ? t.pricingExtra.leaderPlanPeriod : `$${config.priceUsd} ${language === 'uk' ? 'еквівалент' : language === 'ru' ? 'эквивалент' : language === 'es' ? 'equivalente' : 'equivalent'} | ${config.paymentNetwork} only`,
       desc: t.pricingExtra.leaderPlanDesc,
       features: [
         t.pricingExtra.leaderPlanFeature1,
@@ -55,7 +57,7 @@ export default function Pricing() {
       icon: Sparkles,
       secondaryCta: {
         text: t.pricingExtra.buyDaarBtn,
-        link: "https://app.daarion.city/"
+        link: loading ? "https://app.daarion.city/" : config.daarPurchaseUrl
       }
     },
     {

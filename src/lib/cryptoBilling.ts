@@ -1,3 +1,6 @@
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+
 /**
  * Sprint F3B — Crypto Billing Config & Helper Functions
  * 
@@ -28,6 +31,76 @@ export const SUPPORTED_PAYMENT_ASSETS = [
 ] as const;
 
 export type SupportedPaymentAsset = typeof SUPPORTED_PAYMENT_ASSETS[number];
+
+export interface BillingPlanConfig {
+  priceUsd: number;
+  priceDaar: number;
+  daarUsdtRate: number;
+  acceptedAssets: SupportedPaymentAsset[];
+  paymentNetwork: string;
+  treasuryAddress: string;
+  daarPurchaseUrl: string;
+  isActive: boolean;
+}
+
+export const useBillingPlanConfig = (planKey = 'leader') => {
+  const [config, setConfig] = useState<BillingPlanConfig>({
+    priceUsd: LEADER_PLAN_USD,
+    priceDaar: LEADER_PLAN_DAAR,
+    daarUsdtRate: DAAR_USDT_RATE,
+    acceptedAssets: [...SUPPORTED_PAYMENT_ASSETS],
+    paymentNetwork: DAARION_PAYMENT_NETWORK,
+    treasuryAddress: DAARION_TREASURY_EVM_ADDRESS,
+    daarPurchaseUrl: DAAR_PURCHASE_URL,
+    isActive: true,
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<any>(null);
+
+  useEffect(() => {
+    let active = true;
+    const fetchConfig = async () => {
+      try {
+        const { data, error: fetchError } = await (supabase as any).rpc(
+          'get_active_billing_plan_config',
+          { p_plan_key: planKey }
+        );
+
+        if (fetchError) throw fetchError;
+
+        if (data && data.length > 0 && active) {
+          const item = data[0];
+          setConfig({
+            priceUsd: Number(item.price_usd),
+            priceDaar: Number(item.price_daar),
+            daarUsdtRate: Number(item.daar_usdt_rate),
+            acceptedAssets: item.accepted_assets as SupportedPaymentAsset[],
+            paymentNetwork: item.payment_network,
+            treasuryAddress: item.treasury_address,
+            daarPurchaseUrl: item.daar_purchase_url,
+            isActive: item.is_active,
+          });
+        }
+      } catch (err: any) {
+        console.warn('[useBillingPlanConfig] Failed to load config from database, using local constants fallback:', err);
+        if (active) {
+          setError(err);
+        }
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchConfig();
+    return () => {
+      active = false;
+    };
+  }, [planKey]);
+
+  return { config, loading, error };
+};
 
 /**
  * Validates EVM address (simple regex check)
@@ -62,35 +135,45 @@ export const isTreasuryConfigured = (): boolean => {
 /**
  * Calculate amount and format display label for Leader Plan
  */
-export const getLeaderPlanAmount = (asset: SupportedPaymentAsset): {
+export const getLeaderPlanAmount = (
+  asset: SupportedPaymentAsset,
+  customConfig?: {
+    priceUsd: number;
+    priceDaar: number;
+    daarUsdtRate: number;
+  }
+): {
   amount: number;
   amountUsd: number;
   label: string;
 } => {
+  const usdPrice = customConfig?.priceUsd ?? LEADER_PLAN_USD;
+  const daarPrice = customConfig?.priceDaar ?? LEADER_PLAN_DAAR;
+
   switch (asset) {
     case 'DAAR':
       return {
-        amount: LEADER_PLAN_DAAR,
-        amountUsd: LEADER_PLAN_USD,
-        label: `${LEADER_PLAN_DAAR} DAAR`,
+        amount: daarPrice,
+        amountUsd: usdPrice,
+        label: `${daarPrice} DAAR`,
       };
     case 'USDT':
       return {
-        amount: LEADER_PLAN_USD,
-        amountUsd: LEADER_PLAN_USD,
-        label: `${LEADER_PLAN_USD} USDT`,
+        amount: usdPrice,
+        amountUsd: usdPrice,
+        label: `${usdPrice} USDT`,
       };
     case 'USDC':
       return {
-        amount: LEADER_PLAN_USD,
-        amountUsd: LEADER_PLAN_USD,
-        label: `${LEADER_PLAN_USD} USDC`,
+        amount: usdPrice,
+        amountUsd: usdPrice,
+        label: `${usdPrice} USDC`,
       };
     case 'POL': {
-      const amountPol = LEADER_PLAN_USD / POL_USD_RATE;
+      const amountPol = usdPrice / POL_USD_RATE;
       return {
         amount: amountPol,
-        amountUsd: LEADER_PLAN_USD,
+        amountUsd: usdPrice,
         label: `${amountPol} POL`,
       };
     }

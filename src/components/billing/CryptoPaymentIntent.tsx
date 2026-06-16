@@ -18,6 +18,7 @@ import {
   shortenAddress, 
   DAARION_TREASURY_EVM_ADDRESS, 
   DAARION_PAYMENT_NETWORK,
+  useBillingPlanConfig,
   type SupportedPaymentAsset 
 } from '@/lib/cryptoBilling';
 import { 
@@ -45,6 +46,7 @@ export const CryptoPaymentIntent = ({ communityId = null, onSuccess }: CryptoPay
   const { isConnected, connectWallet, address: connectedAddress, truncateAddress } = useWalletConnection();
   const { t } = useTranslation();
   const { toast } = useToast();
+  const { config, loading: configLoading } = useBillingPlanConfig();
 
   const [loading, setLoading] = useState(false);
   const [activeSub, setActiveSub] = useState<any | null>(null);
@@ -53,6 +55,15 @@ export const CryptoPaymentIntent = ({ communityId = null, onSuccess }: CryptoPay
   const [selectedAsset, setSelectedAsset] = useState<SupportedPaymentAsset>('DAAR');
   const [txHash, setTxHash] = useState('');
   const [submittingHash, setSubmittingHash] = useState(false);
+
+  // Sync selected asset if config updates and excludes the currently selected asset
+  useEffect(() => {
+    if (config.acceptedAssets && config.acceptedAssets.length > 0) {
+      if (!config.acceptedAssets.includes(selectedAsset)) {
+        setSelectedAsset(config.acceptedAssets[0]);
+      }
+    }
+  }, [config.acceptedAssets]);
 
   // Fetch current subscription and latest payment intent
   const fetchData = async () => {
@@ -112,7 +123,11 @@ export const CryptoPaymentIntent = ({ communityId = null, onSuccess }: CryptoPay
     if (!user) return;
     setLoading(true);
     try {
-      const planDetails = getLeaderPlanAmount(selectedAsset);
+      const planDetails = getLeaderPlanAmount(selectedAsset, {
+        priceUsd: config.priceUsd,
+        priceDaar: config.priceDaar,
+        daarUsdtRate: config.daarUsdtRate,
+      });
 
       // 1. Insert subscription
       const { data: newSub, error: subError } = await (supabase as any)
@@ -122,9 +137,9 @@ export const CryptoPaymentIntent = ({ communityId = null, onSuccess }: CryptoPay
           owner_user_id: user.id,
           plan: 'leader',
           status: 'pending_payment',
-          price_usd: 20.00,
-          price_daar: 2.0,
-          accepted_assets: ['DAAR', 'USDT', 'USDC', 'POL']
+          price_usd: config.priceUsd,
+          price_daar: config.priceDaar,
+          accepted_assets: config.acceptedAssets
         })
         .select()
         .single();
@@ -140,12 +155,12 @@ export const CryptoPaymentIntent = ({ communityId = null, onSuccess }: CryptoPay
         .insert({
           subscription_id: newSub.id,
           user_id: user.id,
-          amount_usd: 20.00,
+          amount_usd: config.priceUsd,
           amount_crypto: planDetails.amount,
           crypto_asset: selectedAsset,
-          chain: DAARION_PAYMENT_NETWORK,
+          chain: config.paymentNetwork,
           wallet_from: profile?.wallet_address || connectedAddress,
-          wallet_to: DAARION_TREASURY_EVM_ADDRESS,
+          wallet_to: config.treasuryAddress,
           status: 'pending',
           expires_at: expirationDate.toISOString()
         })
@@ -311,7 +326,9 @@ export const CryptoPaymentIntent = ({ communityId = null, onSuccess }: CryptoPay
   // Pending intent / waiting for verification
   if (activeIntent && (activeIntent.status === 'pending' || activeIntent.status === 'submitted' || activeIntent.status === 'manual_review')) {
     const isSubmitted = activeIntent.status === 'submitted' || activeIntent.status === 'manual_review';
-    const planDetails = getLeaderPlanAmount(activeIntent.crypto_asset as SupportedPaymentAsset);
+    const amountLabel = `${activeIntent.amount_crypto} ${activeIntent.crypto_asset}`;
+    const paymentChain = activeIntent.chain || 'polygon';
+    const treasuryWallet = activeIntent.wallet_to || DAARION_TREASURY_EVM_ADDRESS;
 
     return (
       <Card className="border-amber-500/20 bg-amber-500/3 backdrop-blur-md">
@@ -329,14 +346,14 @@ export const CryptoPaymentIntent = ({ communityId = null, onSuccess }: CryptoPay
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Warning about Polygon network */}
+          {/* Warning about Network */}
           <Alert className="border-red-500/20 bg-red-500/5 text-red-400">
             <AlertTriangle className="h-4 w-4 text-red-400" />
             <AlertTitle className="text-xs font-bold text-red-300">
-              {t.cryptoBilling.polygonOnly}
+              {paymentChain.charAt(0).toUpperCase() + paymentChain.slice(1)} Only
             </AlertTitle>
             <AlertDescription className="text-[10px] leading-relaxed mt-1 text-slate-300">
-              {t.cryptoBilling.wrongNetworkWarning}
+              Make sure you send funds on the <strong>{paymentChain === 'polygon' ? 'Polygon' : paymentChain}</strong> network. Transfers on other networks cannot be recovered.
             </AlertDescription>
           </Alert>
 
@@ -345,21 +362,21 @@ export const CryptoPaymentIntent = ({ communityId = null, onSuccess }: CryptoPay
             <div className="flex justify-between items-center pb-2 border-b border-slate-850/60">
               <span className="text-slate-400">Send exactly:</span>
               <span className="text-slate-100 font-extrabold text-sm font-mono">
-                {planDetails.label}
+                {amountLabel}
               </span>
             </div>
 
             <div className="space-y-1.5">
-              <span className="text-slate-400 block">Treasury Wallet (Polygon):</span>
+              <span className="text-slate-400 block">Treasury Wallet ({paymentChain === 'polygon' ? 'Polygon' : paymentChain}):</span>
               <div className="flex items-center gap-1.5 bg-slate-950/60 rounded-md border border-slate-850 p-2">
                 <span className="text-slate-300 font-mono text-[11px] select-all break-all flex-1">
-                  {DAARION_TREASURY_EVM_ADDRESS}
+                  {treasuryWallet}
                 </span>
                 <Button 
                   size="icon" 
                   variant="ghost" 
                   className="h-7 w-7 text-slate-400 hover:text-slate-200"
-                  onClick={() => copyToClipboard(DAARION_TREASURY_EVM_ADDRESS, 'Treasury address')}
+                  onClick={() => copyToClipboard(treasuryWallet, 'Treasury address')}
                 >
                   <Copy className="h-3.5 w-3.5" />
                 </Button>
@@ -487,7 +504,7 @@ export const CryptoPaymentIntent = ({ communityId = null, onSuccess }: CryptoPay
             Leader Plan
           </CardTitle>
           <Badge className="bg-indigo-500/10 text-indigo-400 border-indigo-500/20 text-[9px] uppercase font-bold font-mono">
-            $20/mo
+            {configLoading ? '$20/mo' : `$${config.priceUsd}/mo`}
           </Badge>
         </div>
         <CardDescription className="text-slate-400 text-xs">
@@ -506,34 +523,17 @@ export const CryptoPaymentIntent = ({ communityId = null, onSuccess }: CryptoPay
             onValueChange={(val) => setSelectedAsset(val as SupportedPaymentAsset)}
             className="grid grid-cols-2 gap-3"
           >
-            <div className="flex items-center space-x-2 rounded-lg border border-slate-800 bg-slate-950/20 p-3 hover:bg-slate-900/30 transition-colors">
-              <RadioGroupItem value="DAAR" id="asset-daar" />
-              <Label htmlFor="asset-daar" className="flex justify-between items-center w-full text-xs text-slate-300 font-semibold cursor-pointer">
-                <span>DAAR</span>
-                <span className="font-mono text-[10px] text-slate-500">2 DAAR</span>
-              </Label>
-            </div>
-            <div className="flex items-center space-x-2 rounded-lg border border-slate-800 bg-slate-950/20 p-3 hover:bg-slate-900/30 transition-colors">
-              <RadioGroupItem value="USDT" id="asset-usdt" />
-              <Label htmlFor="asset-usdt" className="flex justify-between items-center w-full text-xs text-slate-300 font-semibold cursor-pointer">
-                <span>USDT</span>
-                <span className="font-mono text-[10px] text-slate-500">20 USDT</span>
-              </Label>
-            </div>
-            <div className="flex items-center space-x-2 rounded-lg border border-slate-800 bg-slate-950/20 p-3 hover:bg-slate-900/30 transition-colors">
-              <RadioGroupItem value="USDC" id="asset-usdc" />
-              <Label htmlFor="asset-usdc" className="flex justify-between items-center w-full text-xs text-slate-300 font-semibold cursor-pointer">
-                <span>USDC</span>
-                <span className="font-mono text-[10px] text-slate-500">20 USDC</span>
-              </Label>
-            </div>
-            <div className="flex items-center space-x-2 rounded-lg border border-slate-800 bg-slate-950/20 p-3 hover:bg-slate-900/30 transition-colors">
-              <RadioGroupItem value="POL" id="asset-pol" />
-              <Label htmlFor="asset-pol" className="flex justify-between items-center w-full text-xs text-slate-300 font-semibold cursor-pointer">
-                <span>POL</span>
-                <span className="font-mono text-[10px] text-slate-500">40 POL</span>
-              </Label>
-            </div>
+            {config.acceptedAssets.map((asset) => (
+              <div key={asset} className="flex items-center space-x-2 rounded-lg border border-slate-800 bg-slate-950/20 p-3 hover:bg-slate-900/30 transition-colors">
+                <RadioGroupItem value={asset} id={`asset-${asset.toLowerCase()}`} />
+                <Label htmlFor={`asset-${asset.toLowerCase()}`} className="flex justify-between items-center w-full text-xs text-slate-300 font-semibold cursor-pointer">
+                  <span>{asset}</span>
+                  <span className="font-mono text-[10px] text-slate-500">
+                    {getLeaderPlanAmount(asset, config).label}
+                  </span>
+                </Label>
+              </div>
+            ))}
           </RadioGroup>
         </div>
 
@@ -541,7 +541,7 @@ export const CryptoPaymentIntent = ({ communityId = null, onSuccess }: CryptoPay
         <div className="rounded-lg border border-indigo-500/10 bg-indigo-500/2 p-3 text-[10px] text-slate-400 flex gap-2">
           <AlertTriangle className="h-4 w-4 text-indigo-400 flex-shrink-0 mt-0.5" />
           <span>
-            Treasury address is located on the <strong>Polygon Network</strong>. Please ensure you select Polygon when transferring funds.
+            Treasury address is located on the <strong>{config.paymentNetwork === 'polygon' ? 'Polygon Network' : config.paymentNetwork}</strong>. Please ensure you select {config.paymentNetwork === 'polygon' ? 'Polygon' : config.paymentNetwork} when transferring funds.
           </span>
         </div>
       </CardContent>

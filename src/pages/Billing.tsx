@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CreditCard, Shield, CheckCircle2, AlertCircle, ArrowRight } from "lucide-react";
+import { useBillingPlanConfig } from "@/lib/cryptoBilling";
 
 export default function Billing() {
   const { t, language } = useTranslation();
@@ -16,6 +17,7 @@ export default function Billing() {
   const { user } = useAuth();
   const { memberships } = useActiveCommunity();
   const navigate = useNavigate();
+  const { config, loading } = useBillingPlanConfig();
 
   const isProfileComplete = user?.email && profile?.telegram_username && profile?.wallet_address;
 
@@ -65,8 +67,12 @@ export default function Billing() {
             </CardHeader>
             <CardContent className="space-y-4 text-xs">
               <div className="border-t border-b border-slate-800 py-3 flex flex-col justify-center">
-                <span className="text-xl font-extrabold text-slate-100">{t.pricingExtra.leaderPlanPrice}</span>
-                <span className="text-[10px] text-slate-400 mt-0.5">{t.pricingExtra.leaderPlanPeriod}</span>
+                <span className="text-xl font-extrabold text-slate-100">
+                  {loading ? t.pricingExtra.leaderPlanPrice : `${config.priceDaar} DAAR / ${language === 'uk' ? 'міс' : language === 'ru' ? 'мес' : language === 'es' ? 'mes' : 'mo'}`}
+                </span>
+                <span className="text-[10px] text-slate-400 mt-0.5">
+                  {loading ? t.pricingExtra.leaderPlanPeriod : `$${config.priceUsd} ${language === 'uk' ? 'еквівалент' : language === 'ru' ? 'эквивалент' : language === 'es' ? 'equivalente' : 'equivalent'} | ${config.paymentNetwork} only`}
+                </span>
               </div>
               <p className="text-slate-400 leading-relaxed text-[11px]">
                 {t.pricingExtra.leaderPlanDesc}

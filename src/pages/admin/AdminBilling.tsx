@@ -27,6 +27,11 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ExternalLink, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { 
   LEADER_PLAN, 
@@ -49,6 +54,19 @@ export const AdminBilling = () => {
   const [loadingIntents, setLoadingIntents] = useState(true);
   const [activeFilter, setActiveFilter] = useState<string>('all');
   const [processingId, setProcessingId] = useState<string | null>(null);
+
+  // Billing Config Form State
+  const [configLoading, setConfigLoading] = useState(true);
+  const [configSaving, setConfigSaving] = useState(false);
+  
+  const [priceUsd, setPriceUsd] = useState<number>(20);
+  const [priceDaar, setPriceDaar] = useState<number>(2);
+  const [daarUsdtRate, setDaarUsdtRate] = useState<number>(10);
+  const [acceptedAssets, setAcceptedAssets] = useState<string[]>(['DAAR', 'USDT', 'USDC', 'POL']);
+  const [paymentNetwork, setPaymentNetwork] = useState<string>('polygon');
+  const [treasuryAddress, setTreasuryAddress] = useState<string>('');
+  const [daarPurchaseUrl, setDaarPurchaseUrl] = useState<string>('');
+  const [isActive, setIsActive] = useState<boolean>(true);
 
   const fetchStats = async () => {
     try {
@@ -86,10 +104,115 @@ export const AdminBilling = () => {
     }
   };
 
+  const fetchConfig = async () => {
+    try {
+      const { data, error } = await (supabase as any).rpc('get_active_billing_plan_config', { p_plan_key: 'leader' });
+      if (!error && data && data.length > 0) {
+        const item = data[0];
+        setPriceUsd(Number(item.price_usd));
+        setPriceDaar(Number(item.price_daar));
+        setDaarUsdtRate(Number(item.daar_usdt_rate));
+        setAcceptedAssets(item.accepted_assets || []);
+        setPaymentNetwork(item.payment_network || 'polygon');
+        setTreasuryAddress(item.treasury_address || '');
+        setDaarPurchaseUrl(item.daar_purchase_url || '');
+        setIsActive(item.is_active !== false);
+      }
+    } catch (err) {
+      console.warn('Failed to fetch billing plan config:', err);
+    } finally {
+      setConfigLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchStats();
     fetchIntents();
+    fetchConfig();
   }, [activeFilter]);
+
+  const handleAssetToggle = (asset: string) => {
+    setAcceptedAssets(prev => 
+      prev.includes(asset) 
+        ? prev.filter(a => a !== asset)
+        : [...prev, asset]
+    );
+  };
+
+  const handleSaveConfig = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validations
+    if (priceUsd <= 0 || priceDaar <= 0 || daarUsdtRate <= 0) {
+      toast({
+        variant: 'destructive',
+        title: 'Validation Error',
+        description: 'All rates and prices must be greater than zero.'
+      });
+      return;
+    }
+
+    if (!/^0x[a-fA-F0-9]{40}$/.test(treasuryAddress.trim())) {
+      toast({
+        variant: 'destructive',
+        title: 'Validation Error',
+        description: t.cryptoBilling.invalidTreasuryAddressError || 'Invalid treasury EVM address.'
+      });
+      return;
+    }
+
+    const urlTrimmed = daarPurchaseUrl.trim();
+    if (urlTrimmed && !/^https?:\/\/.+/.test(urlTrimmed)) {
+      toast({
+        variant: 'destructive',
+        title: 'Validation Error',
+        description: t.cryptoBilling.invalidDaarPurchaseUrlError || 'Invalid purchase URL format.'
+      });
+      return;
+    }
+
+    if (acceptedAssets.length === 0) {
+      toast({
+        variant: 'destructive',
+        title: 'Validation Error',
+        description: 'You must accept at least one crypto asset.'
+      });
+      return;
+    }
+
+    setConfigSaving(true);
+    try {
+      const { error } = await (supabase as any).rpc('admin_update_billing_plan_config', {
+        p_plan_key: 'leader',
+        p_price_usd: Number(priceUsd),
+        p_price_daar: Number(priceDaar),
+        p_daar_usdt_rate: Number(daarUsdtRate),
+        p_accepted_assets: acceptedAssets,
+        p_payment_network: paymentNetwork,
+        p_treasury_address: treasuryAddress.trim(),
+        p_daar_purchase_url: urlTrimmed,
+        p_is_active: isActive
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: t.cryptoBilling.pricingConfigUpdatedSuccess || 'Config Updated',
+        description: 'Billing plan config saved and audit logged successfully.'
+      });
+      
+      // Refresh configurations
+      fetchConfig();
+    } catch (err: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Save Failed',
+        description: err.message || 'Failed to update billing config.'
+      });
+    } finally {
+      setConfigSaving(false);
+    }
+  };
 
   const handleApprove = async (intentId: string) => {
     setProcessingId(intentId);
@@ -196,11 +319,11 @@ export const AdminBilling = () => {
             <CardDescription className="text-slate-400 text-xs leading-relaxed space-y-1">
               <div className="flex items-center gap-2 mt-1">
                 <span className="font-mono text-indigo-300 bg-indigo-500/10 px-1.5 py-0.5 rounded text-[11px]">
-                  {LEADER_PLAN.priceDaar} DAAR/{lang === 'uk' ? 'міс' : lang === 'ru' ? 'мес' : lang === 'es' ? 'mes' : 'mo'}
+                  {configLoading ? LEADER_PLAN.priceDaar : priceDaar} DAAR/{lang === 'uk' ? 'міс' : lang === 'ru' ? 'мес' : lang === 'es' ? 'mes' : 'mo'}
                 </span>
                 <span className="text-slate-500">|</span>
                 <span className="text-[10px] text-slate-500">
-                  {t.identity.daarRate}
+                  {configLoading ? `$${LEADER_PLAN.priceUsd} USD equivalent` : `$${priceUsd} USD equivalent`}
                 </span>
               </div>
             </CardDescription>
@@ -238,14 +361,169 @@ export const AdminBilling = () => {
                     <span className="text-[9px] text-slate-500 ml-1.5">{asset.name}</span>
                   </div>
                 </div>
-                <Badge variant="outline" className="text-[8px] text-slate-500 border-slate-700/50">
-                  {asset.chain}
-                </Badge>
+                <div className="flex items-center gap-1.5">
+                  <Badge variant="outline" className={`text-[8px] ${acceptedAssets.includes(asset.symbol) ? 'text-emerald-450 border-emerald-550/30 bg-emerald-500/5' : 'text-slate-500 border-slate-700/50'}`}>
+                    {acceptedAssets.includes(asset.symbol) ? 'Active' : 'Disabled'}
+                  </Badge>
+                  <Badge variant="outline" className="text-[8px] text-slate-500 border-slate-700/50">
+                    {asset.chain}
+                  </Badge>
+                </div>
               </div>
             ))}
           </CardContent>
         </Card>
       </div>
+
+      {/* Dynamic Billing Config Editor Form */}
+      <Card className="border-indigo-500/20 bg-slate-900/10 backdrop-blur-sm">
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-2">
+            <Shield className="h-4 w-4 text-indigo-400" />
+            <CardTitle className="text-sm font-bold text-slate-100">
+              {t.cryptoBilling.billingConfigTitle}
+            </CardTitle>
+          </div>
+          <CardDescription className="text-xs text-slate-400">
+            Configure price points, payment targets, and accepted tokens.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {configLoading ? (
+            <div className="py-6 text-center">
+              <Loader2 className="h-6 w-6 animate-spin text-slate-500 mx-auto mb-2" />
+              <span className="text-xs text-slate-400">{t.loading}</span>
+            </div>
+          ) : (
+            <form onSubmit={handleSaveConfig} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="price-usd" className="text-xs text-slate-300">
+                    {t.cryptoBilling.leaderPlanUsdPrice}
+                  </Label>
+                  <Input
+                    id="price-usd"
+                    type="number"
+                    step="0.01"
+                    value={priceUsd}
+                    onChange={(e) => setPriceUsd(Number(e.target.value))}
+                    className="bg-slate-950/40 border-slate-800 text-xs text-slate-200 h-9"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="price-daar" className="text-xs text-slate-300">
+                    {t.cryptoBilling.daarMonthlyAmount}
+                  </Label>
+                  <Input
+                    id="price-daar"
+                    type="number"
+                    step="0.1"
+                    value={priceDaar}
+                    onChange={(e) => setPriceDaar(Number(e.target.value))}
+                    className="bg-slate-950/40 border-slate-800 text-xs text-slate-200 h-9"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="daar-usdt-rate" className="text-xs text-slate-300">
+                    {t.cryptoBilling.daarUsdtRateLabel}
+                  </Label>
+                  <Input
+                    id="daar-usdt-rate"
+                    type="number"
+                    step="0.1"
+                    value={daarUsdtRate}
+                    onChange={(e) => setDaarUsdtRate(Number(e.target.value))}
+                    className="bg-slate-950/40 border-slate-800 text-xs text-slate-200 h-9"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="treasury-address" className="text-xs text-slate-300">
+                    {t.cryptoBilling.treasuryAddressLabel}
+                  </Label>
+                  <Input
+                    id="treasury-address"
+                    value={treasuryAddress}
+                    onChange={(e) => setTreasuryAddress(e.target.value)}
+                    placeholder="0x..."
+                    className="bg-slate-950/40 border-slate-800 text-xs text-slate-200 h-9 font-mono"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="daar-purchase-url" className="text-xs text-slate-300">
+                    {t.cryptoBilling.daarPurchaseUrlLabel}
+                  </Label>
+                  <Input
+                    id="daar-purchase-url"
+                    value={daarPurchaseUrl}
+                    onChange={(e) => setDaarPurchaseUrl(e.target.value)}
+                    placeholder="https://..."
+                    className="bg-slate-950/40 border-slate-800 text-xs text-slate-200 h-9"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-xs text-slate-300">
+                  {t.cryptoBilling.acceptedAssetsLabel}
+                </Label>
+                <div className="flex flex-wrap gap-4 pt-1">
+                  {['DAAR', 'USDT', 'USDC', 'POL'].map((asset) => (
+                    <div key={asset} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`check-${asset}`}
+                        checked={acceptedAssets.includes(asset)}
+                        onCheckedChange={() => handleAssetToggle(asset)}
+                      />
+                      <Label htmlFor={`check-${asset}`} className="text-xs text-slate-300 font-semibold cursor-pointer">
+                        {asset}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2 pt-2">
+                <Switch
+                  id="plan-active"
+                  checked={isActive}
+                  onCheckedChange={setIsActive}
+                />
+                <Label htmlFor="plan-active" className="text-xs text-slate-300 cursor-pointer font-semibold">
+                  {t.cryptoBilling.planActiveLabel}
+                </Label>
+              </div>
+
+              <Alert className="border-indigo-500/20 bg-indigo-500/5 text-indigo-300 py-2.5">
+                <AlertCircle className="h-4 w-4 text-indigo-400" />
+                <AlertDescription className="text-[10px] leading-relaxed text-indigo-200">
+                  {t.cryptoBilling.changesApplyWarning}
+                </AlertDescription>
+              </Alert>
+
+              <div className="flex justify-end pt-2">
+                <Button
+                  type="submit"
+                  disabled={configSaving}
+                  className="bg-indigo-600 hover:bg-indigo-550 text-indigo-100 text-xs font-semibold h-9 px-4 gap-1.5"
+                >
+                  {configSaving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                  {t.cryptoBilling.savePricingConfigBtn}
+                </Button>
+              </div>
+            </form>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Subscription States Overview */}
       <Card className="border-slate-800/60 bg-slate-900/15 backdrop-blur-sm">
