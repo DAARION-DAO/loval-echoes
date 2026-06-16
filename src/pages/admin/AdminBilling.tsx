@@ -1121,6 +1121,14 @@ export const AdminBilling = () => {
                 </div>
               </div>
 
+              {/* Client-side Diagnostic Warning */}
+              <Alert className="border-indigo-500/20 bg-indigo-500/5 text-indigo-300 py-2">
+                <Shield className="h-4 w-4 text-indigo-400" />
+                <AlertDescription className="text-[10px] leading-relaxed">
+                  {t.cryptoBilling.diagnosticWarning}
+                </AlertDescription>
+              </Alert>
+
               <div className="text-center pt-1">
                 <a
                   href={`https://polygonscan.com/tx/${verifyingIntent?.tx_hash}`}

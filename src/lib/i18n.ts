@@ -1929,6 +1929,7 @@ export interface Translations {
     networkMismatch: string;
     senderWalletMismatch: string;
     viewOnPolygonScan: string;
+    diagnosticWarning: string;
   };
   adminAgent: {
     title: string;
@@ -3844,11 +3845,11 @@ export const translations: Record<Language, Translations> = {
       pricingConfigUpdatedSuccess: 'Конфігурацію цін оновлено',
       invalidTreasuryAddressError: 'Невірна EVM адреса скарбниці',
       invalidDaarPurchaseUrlError: 'Невірне посилання на купівлю DAAR',
-      verifyOnPolygon: 'Перевірити в Polygon',
-      onchainVerification: 'Ончейн верифікація',
+      verifyOnPolygon: 'Запустити діагностику',
+      onchainVerification: 'Діагностичне вікно транзакції',
       verificationPending: 'Перевірка триває',
       verificationFailed: 'Помилка верифікації',
-      verifiedOnchain: 'Підтверджено ончейн',
+      verifiedOnchain: 'Діагностична перевірка пройдена',
       manualReviewRequired: 'Потрібна ручна перевірка',
       txAlreadyUsed: 'Транзакція вже використана',
       recipientMismatch: 'Невідповідність отримувача',
@@ -3857,6 +3858,7 @@ export const translations: Record<Language, Translations> = {
       networkMismatch: 'Невідповідність мережі',
       senderWalletMismatch: 'Невідповідність гаманця відправника',
       viewOnPolygonScan: 'Дивитись у PolygonScan',
+      diagnosticWarning: 'Це клієнтська діагностична перевірка виключно для ознайомлення Guardian. Остаточне підтвердження все ще вимагає дій адміністратора через захищений RPC.',
     },
     adminAgent: {
       title: 'Адмін-агент',
@@ -5771,11 +5773,11 @@ export const translations: Record<Language, Translations> = {
       pricingConfigUpdatedSuccess: 'Pricing config updated',
       invalidTreasuryAddressError: 'Invalid treasury address',
       invalidDaarPurchaseUrlError: 'Invalid DAAR purchase URL',
-      verifyOnPolygon: 'Verify on Polygon',
-      onchainVerification: 'On-chain verification',
+      verifyOnPolygon: 'Run diagnostic check',
+      onchainVerification: 'Guardian On-chain Diagnostic Modal',
       verificationPending: 'Verification pending',
       verificationFailed: 'Verification failed',
-      verifiedOnchain: 'Verified on-chain',
+      verifiedOnchain: 'Diagnostic check passed',
       manualReviewRequired: 'Manual review required',
       txAlreadyUsed: 'Transaction already used',
       recipientMismatch: 'Recipient mismatch',
@@ -5784,6 +5786,7 @@ export const translations: Record<Language, Translations> = {
       networkMismatch: 'Network mismatch',
       senderWalletMismatch: 'Sender wallet mismatch',
       viewOnPolygonScan: 'View on PolygonScan',
+      diagnosticWarning: 'This is a client-side diagnostic check for Guardian review only. Final approval still requires Guardian confirmation through the secure admin approval RPC.',
     },
     adminAgent: {
       title: 'Admin Agent',
@@ -7698,11 +7701,11 @@ export const translations: Record<Language, Translations> = {
       pricingConfigUpdatedSuccess: 'Конфигурация цен обновлена',
       invalidTreasuryAddressError: 'Неверный EVM адрес казначейства',
       invalidDaarPurchaseUrlError: 'Неверная ссылка на покупку DAAR',
-      verifyOnPolygon: 'Проверить в Polygon',
-      onchainVerification: 'Ончейн верификация',
+      verifyOnPolygon: 'Запустить диагностику',
+      onchainVerification: 'Диагностическое окно транзакции',
       verificationPending: 'Проверка выполняется',
       verificationFailed: 'Ошибка верификации',
-      verifiedOnchain: 'Подтверждено ончейн',
+      verifiedOnchain: 'Диагностическая проверка пройдена',
       manualReviewRequired: 'Требуется ручная проверка',
       txAlreadyUsed: 'Транзакция уже использована',
       recipientMismatch: 'Несоответствие получателя',
@@ -7711,6 +7714,7 @@ export const translations: Record<Language, Translations> = {
       networkMismatch: 'Несоответствие сети',
       senderWalletMismatch: 'Несоответствие кошелька отправителя',
       viewOnPolygonScan: 'Смотреть в PolygonScan',
+      diagnosticWarning: 'Это клиентская диагностическая проверка исключительно для ознакомления Guardian. Окончательное подтверждение все еще требует действий администратора через защищенный RPC.',
     },
     adminAgent: {
       title: 'Админ-агент',
@@ -9625,11 +9629,11 @@ export const translations: Record<Language, Translations> = {
       pricingConfigUpdatedSuccess: 'Configuración de precios actualizada',
       invalidTreasuryAddressError: 'Dirección del tesoro no válida',
       invalidDaarPurchaseUrlError: 'URL de compra de DAAR no válida',
-      verifyOnPolygon: 'Verificar en Polygon',
-      onchainVerification: 'Verificación en cadena',
+      verifyOnPolygon: 'Ejecutar diagnóstico',
+      onchainVerification: 'Ventana de diagnóstico de transacción',
       verificationPending: 'Verificación pendiente',
       verificationFailed: 'Verificación fallida',
-      verifiedOnchain: 'Verificado en cadena',
+      verifiedOnchain: 'Diagnóstico de transacción aprobado',
       manualReviewRequired: 'Revisión manual requerida',
       txAlreadyUsed: 'Transacción ya utilizada',
       recipientMismatch: 'Falta de coincidencia del destinatario',
@@ -9638,6 +9642,7 @@ export const translations: Record<Language, Translations> = {
       networkMismatch: 'Falta de coincidencia de red',
       senderWalletMismatch: 'Falta de coincidencia de billetera del remitente',
       viewOnPolygonScan: 'Ver en PolygonScan',
+      diagnosticWarning: 'Esta es una verificación de diagnóstico del lado del cliente solo para revisión del Guardian. La aprobación final aún requiere confirmación del administrador a través del RPC seguro.',
     },
     adminAgent: {
       title: 'Agente Administrador',
