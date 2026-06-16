@@ -1917,6 +1917,24 @@ export interface Translations {
     invalidTreasuryAddressError: string;
     invalidDaarPurchaseUrlError: string;
   };
+  adminAgent: {
+    title: string;
+    guardianAssistant: string;
+    readonlyMode: string;
+    cannotPerformActions: string;
+    platformContext: string;
+    billingContext: string;
+    accessRequestsContext: string;
+    platformTeamContext: string;
+    microdaoOpsContext: string;
+    agentOpsContext: string;
+    sqlChecks: string;
+    nextStep: string;
+    privateDataProtected: string;
+    askAgent: string;
+    generateDraftAnswer: string;
+    placeholder: string;
+  };
 }
 
 export const translations: Record<Language, Translations> = {
@@ -3814,6 +3832,24 @@ export const translations: Record<Language, Translations> = {
       invalidTreasuryAddressError: 'Невірна EVM адреса скарбниці',
       invalidDaarPurchaseUrlError: 'Невірне посилання на купівлю DAAR',
     },
+    adminAgent: {
+      title: 'Адмін-агент',
+      guardianAssistant: 'Асистент Guardian',
+      readonlyMode: 'Режим тільки для читання',
+      cannotPerformActions: 'Адмін-агент працює в режимі тільки для читання. Він не може схвалювати платежі, змінювати ролі, запрошувати адміністраторів або отримувати доступ до приватної пам\'яті/повідомлень/документів MicroDAO.',
+      platformContext: 'Контекст платформи',
+      billingContext: 'Контекст білінгу',
+      accessRequestsContext: 'Запити на доступ',
+      platformTeamContext: 'Команда платформи',
+      microdaoOpsContext: 'Операції MicroDAO',
+      agentOpsContext: 'Операції агентів',
+      sqlChecks: 'SQL перевірки',
+      nextStep: 'Наступний крок',
+      privateDataProtected: 'Приватні дані MicroDAO захищені',
+      askAgent: 'Запитати адмін-агента',
+      generateDraftAnswer: 'Згенерувати проект відповіді',
+      placeholder: 'Введіть запит до адмін-агента...',
+    },
   },
 
   en: {
@@ -5709,6 +5745,24 @@ export const translations: Record<Language, Translations> = {
       pricingConfigUpdatedSuccess: 'Pricing config updated',
       invalidTreasuryAddressError: 'Invalid treasury address',
       invalidDaarPurchaseUrlError: 'Invalid DAAR purchase URL',
+    },
+    adminAgent: {
+      title: 'Admin Agent',
+      guardianAssistant: 'Guardian Admin Agent',
+      readonlyMode: 'Read-only mode',
+      cannotPerformActions: 'Admin Agent is read-only. It cannot approve payments, change roles, invite guardians, or access private MicroDAO memory/messages/documents.',
+      platformContext: 'Platform Context',
+      billingContext: 'Billing Context',
+      accessRequestsContext: 'Access Requests Context',
+      platformTeamContext: 'Platform Team Context',
+      microdaoOpsContext: 'MicroDAO Ops Context',
+      agentOpsContext: 'Agent Ops Context',
+      sqlChecks: 'SQL Checks',
+      nextStep: 'Next Step',
+      privateDataProtected: 'Private MicroDAO data is not exposed',
+      askAgent: 'Ask the admin agent',
+      generateDraftAnswer: 'Generate draft answer',
+      placeholder: 'Ask the admin agent a question...',
     },
   },
 
@@ -7606,6 +7660,24 @@ export const translations: Record<Language, Translations> = {
       invalidTreasuryAddressError: 'Неверный EVM адрес казначейства',
       invalidDaarPurchaseUrlError: 'Неверная ссылка на покупку DAAR',
     },
+    adminAgent: {
+      title: 'Админ-агент',
+      guardianAssistant: 'Ассистент Guardian',
+      readonlyMode: 'Режим только для чтения',
+      cannotPerformActions: 'Админ-агент работает в режиме только для чтения. Он не может одобрять платежи, менять роли, приглашать администраторов или получать доступ к приватной памяти/сообщениям/документам MicroDAO.',
+      platformContext: 'Контекст платформы',
+      billingContext: 'Контекст биллинга',
+      accessRequestsContext: 'Запросы доступа',
+      platformTeamContext: 'Команда платформы',
+      microdaoOpsContext: 'Операции MicroDAO',
+      agentOpsContext: 'Операции агентов',
+      sqlChecks: 'SQL проверки',
+      nextStep: 'Следующий шаг',
+      privateDataProtected: 'Приватные данные MicroDAO защищены',
+      askAgent: 'Спросить админ-агента',
+      generateDraftAnswer: 'Сгенерировать проект ответа',
+      placeholder: 'Введите запрос к админ-агенту...',
+    },
   },
 
   es: {
@@ -9501,6 +9573,24 @@ export const translations: Record<Language, Translations> = {
       pricingConfigUpdatedSuccess: 'Configuración de precios actualizada',
       invalidTreasuryAddressError: 'Dirección del tesoro no válida',
       invalidDaarPurchaseUrlError: 'URL de compra de DAAR no válida',
+    },
+    adminAgent: {
+      title: 'Agente Administrador',
+      guardianAssistant: 'Agente Asistente del Guardian',
+      readonlyMode: 'Modo de solo lectura',
+      cannotPerformActions: 'El Agente Administrador es de solo lectura. No puede aprobar pagos, cambiar roles, invitar guardianes ni acceder a la memoria/mensajes/documentos privados de MicroDAO.',
+      platformContext: 'Contexto de la Plataforma',
+      billingContext: 'Contexto de Facturación',
+      accessRequestsContext: 'Contexto de Solicitudes de Acceso',
+      platformTeamContext: 'Contexto del Equipo de la Plataforma',
+      microdaoOpsContext: 'Contexto de Operaciones de MicroDAO',
+      agentOpsContext: 'Contexto de Operaciones del Agente',
+      sqlChecks: 'Verificaciones SQL',
+      nextStep: 'Siguiente paso',
+      privateDataProtected: 'Los datos privados de MicroDAO están protegidos',
+      askAgent: 'Preguntar al agente',
+      generateDraftAnswer: 'Generar borrador de respuesta',
+      placeholder: 'Haga una pregunta al agente administrador...',
     },
   },
 };
