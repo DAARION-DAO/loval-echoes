@@ -6,54 +6,61 @@ import { Badge } from "@/components/ui/badge";
 import { useTranslation, Language } from "@/lib/i18n";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePwaInstall } from "@/hooks/usePwaInstall";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Pricing() {
   const navigate = useNavigate();
   const { t, language, setLanguage } = useTranslation();
   const { isInstallable, install } = usePwaInstall();
+  const { user } = useAuth();
 
   const tiers = [
     {
-      name: "Early Access",
-      badge: t.pricingExtra.testing,
+      name: t.pricingExtra.participantName,
+      badge: t.pricingExtra.free,
       price: t.pricingExtra.free,
-      period: t.pricingExtra.forFirstCommunities,
-      desc: t.pricingExtra.earlyAccessDesc,
+      period: "uk" === language ? "для запрошених учасників" : "for invited members",
+      desc: t.pricingExtra.participantDesc,
       features: [
-        t.pricingExtra.earlyAccessFeature1,
-        t.pricingExtra.earlyAccessFeature2,
-        t.pricingExtra.earlyAccessFeature3,
-        t.pricingExtra.earlyAccessFeature4,
-        t.pricingExtra.earlyAccessFeature5
+        t.pricingExtra.participantFeature1,
+        t.pricingExtra.participantFeature2,
+        t.pricingExtra.participantFeature3,
+        t.pricingExtra.participantFeature4
       ],
-      cta: t.pricingExtra.applyBtn,
-      action: () => navigate("/auth?signup=true"),
+      cta: t.pricingExtra.joinInviteBtn,
+      action: () => navigate(user ? "/onboarding" : "/auth?signup=true"),
       variant: "outline" as const,
       gradient: "from-blue-500/10 to-cyan-500/10",
-      icon: Sparkles
-    },
-    {
-      name: "Community",
-      badge: t.pricingExtra.scaling,
-      price: t.pricingExtra.pendingLaunch,
-      period: t.pricingExtra.forSmallTeams,
-      desc: t.pricingExtra.communityDesc,
-      features: [
-        t.pricingExtra.communityFeature1,
-        t.pricingExtra.communityFeature2,
-        t.pricingExtra.communityFeature3,
-        t.pricingExtra.communityFeature4,
-        t.pricingExtra.communityFeature5
-      ],
-      cta: t.pricingExtra.requestAccessBtn,
-      action: () => navigate("/auth?signup=true"),
-      variant: "outline" as const,
-      gradient: "from-indigo-500/10 to-purple-500/10",
       icon: Users
     },
     {
+      name: t.pricingExtra.leaderPlanName,
+      badge: "Polygon only",
+      price: t.pricingExtra.leaderPlanPrice,
+      period: t.pricingExtra.leaderPlanPeriod,
+      desc: t.pricingExtra.leaderPlanDesc,
+      features: [
+        t.pricingExtra.leaderPlanFeature1,
+        t.pricingExtra.leaderPlanFeature2,
+        t.pricingExtra.leaderPlanFeature3,
+        t.pricingExtra.leaderPlanFeature4,
+        t.pricingExtra.leaderPlanFeature5,
+        t.pricingExtra.leaderPlanFeature6
+      ],
+      cta: t.pricingExtra.activateCryptoBtn,
+      action: () => navigate(user ? "/settings" : "/auth?signup=true"),
+      variant: "default" as const,
+      gradient: "from-indigo-500/20 to-purple-500/20",
+      featured: true,
+      icon: Sparkles,
+      secondaryCta: {
+        text: t.pricingExtra.buyDaarBtn,
+        link: "https://app.daarion.city/"
+      }
+    },
+    {
       name: "Founder Program",
-      badge: t.pricingExtra.recommended,
+      badge: t.pricingExtra.byInvitation,
       price: t.pricingExtra.byInvitation,
       period: t.pricingExtra.supportDevelopment,
       desc: t.pricingExtra.founderDesc,
@@ -65,30 +72,64 @@ export default function Pricing() {
         t.pricingExtra.founderFeature5
       ],
       cta: t.pricingExtra.becomeFounderBtn,
-      action: () => navigate("/auth?signup=true"),
-      variant: "default" as const,
-      gradient: "from-amber-500/20 to-orange-500/20",
-      featured: true,
+      action: () => navigate(user ? "/waitlist" : "/auth?signup=true"),
+      variant: "outline" as const,
+      gradient: "from-amber-500/15 to-orange-500/15",
       icon: Zap
     },
     {
-      name: "Network / Sovereign",
-      badge: t.pricingExtra.selfHosted,
+      name: t.pricingExtra.partnerName,
+      badge: "Manual Review",
+      price: t.pricingExtra.byInvitation,
+      period: "uk" === language ? "для операторів" : "for operators",
+      desc: t.pricingExtra.partnerDesc,
+      features: [
+        t.pricingExtra.partnerFeature1,
+        t.pricingExtra.partnerFeature2,
+        t.pricingExtra.partnerFeature3,
+        t.pricingExtra.partnerFeature4
+      ],
+      cta: t.pricingExtra.partnerCta,
+      action: () => navigate(user ? "/waitlist" : "/auth?signup=true"),
+      variant: "outline" as const,
+      gradient: "from-purple-500/10 to-pink-500/10",
+      icon: Shield
+    },
+    {
+      name: t.pricingExtra.sovereignName,
+      badge: t.pricingExtra.autonomous,
       price: t.pricingExtra.autonomous,
       period: t.pricingExtra.forDaoNetworks,
-      desc: t.pricingExtra.sovereignDesc,
+      desc: t.pricingExtra.sovereignDescNew,
       features: [
-        t.pricingExtra.sovereignFeature1,
-        t.pricingExtra.sovereignFeature2,
-        t.pricingExtra.sovereignFeature3,
-        t.pricingExtra.sovereignFeature4,
-        t.pricingExtra.sovereignFeature5
+        t.pricingExtra.sovereignFeatureNew1,
+        t.pricingExtra.sovereignFeatureNew2,
+        t.pricingExtra.sovereignFeatureNew3,
+        t.pricingExtra.sovereignFeatureNew4
       ],
-      cta: t.pricingExtra.requestAccessBtn,
+      cta: t.pricingExtra.sovereignCta,
       action: () => navigate("/install"),
       variant: "outline" as const,
       gradient: "from-emerald-500/10 to-teal-500/10",
       icon: Network
+    },
+    {
+      name: t.pricingExtra.workerNodeName,
+      badge: "Manual Verification",
+      price: "uk" === language ? "Технічний" : "Technical",
+      period: "uk" === language ? "ручна перевірка" : "manual verification",
+      desc: t.pricingExtra.workerNodeDesc,
+      features: [
+        t.pricingExtra.workerNodeFeature1,
+        t.pricingExtra.workerNodeFeature2,
+        t.pricingExtra.workerNodeFeature3,
+        t.pricingExtra.workerNodeFeature4
+      ],
+      cta: t.pricingExtra.workerNodeCta,
+      action: () => navigate(user ? "/waitlist" : "/auth?signup=true"),
+      variant: "outline" as const,
+      gradient: "from-slate-500/10 to-slate-700/10",
+      icon: Shield
     }
   ];
 
@@ -134,13 +175,20 @@ export default function Pricing() {
               </SelectContent>
             </Select>
 
-            <Button variant="ghost" size="sm" onClick={() => navigate("/auth")} className="text-xs sm:text-sm font-medium gap-1 h-9 px-2">
-              <LogIn className="h-4 w-4" />
-              <span className="hidden sm:inline">{t.landing.login}</span>
-            </Button>
-            <Button size="sm" onClick={() => navigate("/auth?signup=true")} className="text-xs sm:text-sm font-semibold gap-1 sm:gap-1.5 shadow-md hover:shadow-lg transition-shadow px-3 sm:px-4 h-9">
+            {user ? (
+              <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")} className="text-xs sm:text-sm font-medium h-9 px-2">
+                <span>{t.nav.goToDashboard}</span>
+              </Button>
+            ) : (
+              <Button variant="ghost" size="sm" onClick={() => navigate("/auth")} className="text-xs sm:text-sm font-medium gap-1 h-9 px-2">
+                <LogIn className="h-4 w-4" />
+                <span className="hidden sm:inline">{t.landing.login}</span>
+              </Button>
+            )}
+            
+            <Button size="sm" onClick={() => navigate(user ? "/dashboard" : "/auth?signup=true")} className="text-xs sm:text-sm font-semibold gap-1 sm:gap-1.5 shadow-md hover:shadow-lg transition-shadow px-3 sm:px-4 h-9">
               <Sparkles className="h-3.5 w-3.5" />
-              <span className="hidden xs:inline">{t.pricingExtra.startBtn}</span>
+              <span className="hidden xs:inline">{user ? t.nav.goToDashboard : t.pricingExtra.startBtn}</span>
             </Button>
           </div>
         </div>
@@ -167,20 +215,32 @@ export default function Pricing() {
       {/* ── Pricing Matrix ── */}
       <section className="py-20 bg-gradient-to-b from-muted/5 to-muted/15 flex-grow">
         <div className="container max-w-7xl mx-auto px-4 space-y-12">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
+          
+          {/* Explanatory distinction block */}
+          <div className="bg-indigo-500/5 border border-indigo-500/20 rounded-2xl p-5 max-w-4xl mx-auto space-y-2 text-center shadow-[0_0_20px_-5px_rgba(99,102,241,0.15)]">
+            <h3 className="font-bold text-sm text-indigo-400 flex items-center justify-center gap-2">
+              <Shield className="h-4 w-4 text-indigo-450" />
+              {t.pricingExtra.distinctionTitle}
+            </h3>
+            <p className="text-xs text-slate-300 leading-relaxed max-w-2xl mx-auto">
+              {t.pricingExtra.distinctionDesc}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
             {tiers.map((tier, index) => (
               <Card 
                 key={index} 
                 className={`relative flex flex-col overflow-hidden bg-card/40 backdrop-blur-sm border ${
-                  tier.featured ? 'border-amber-500/50 shadow-elegant-amber scale-[1.02] lg:-translate-y-2' : 'border-border/40'
+                  tier.featured ? 'border-indigo-500/55 shadow-[0_0_25px_-5px_rgba(99,102,241,0.25)] scale-[1.02] lg:-translate-y-2' : 'border-border/40'
                 } rounded-2xl transition-all duration-300`}
               >
                 {/* Gradient background on card */}
                 <div className={`absolute inset-0 bg-gradient-to-br ${tier.gradient} opacity-[0.03] pointer-events-none`} />
                 
                 {tier.featured && (
-                  <div className="absolute top-0 right-0 bg-amber-500 text-black text-[9px] uppercase font-bold tracking-widest px-3 py-1 rounded-bl-xl shadow-sm">
-                    Founder
+                  <div className="absolute top-0 right-0 bg-indigo-600 text-white text-[9px] uppercase font-bold tracking-widest px-3 py-1 rounded-bl-xl shadow-sm">
+                    Popular
                   </div>
                 )}
 
@@ -213,19 +273,32 @@ export default function Pricing() {
                   </ul>
                 </CardContent>
 
-                <CardFooter className="p-5 pt-0 mt-auto relative z-10">
+                <CardFooter className="p-5 pt-0 mt-auto relative z-10 flex flex-col gap-2">
                   <Button 
                     variant={tier.variant}
                     onClick={tier.action}
                     className={`w-full h-10 text-xs font-semibold transition-all ${
                       tier.featured 
-                        ? 'bg-amber-500 hover:bg-amber-600 text-black shadow-md hover:shadow-lg' 
+                        ? 'bg-indigo-600 hover:bg-indigo-550 text-indigo-100 shadow-md hover:shadow-lg border border-indigo-500/30' 
                         : 'border-border/60 hover:bg-muted/30'
                     }`}
                   >
                     {tier.cta}
                     <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
                   </Button>
+
+                  {tier.secondaryCta && (
+                    <Button 
+                      variant="outline"
+                      asChild
+                      className="w-full h-10 text-xs font-semibold border-indigo-500/20 bg-indigo-500/5 hover:bg-indigo-500/10 text-indigo-300 gap-1.5"
+                    >
+                      <a href={tier.secondaryCta.link} target="_blank" rel="noopener noreferrer">
+                        {tier.secondaryCta.text}
+                        <ArrowRight className="h-3.5 w-3.5" />
+                      </a>
+                    </Button>
+                  )}
                 </CardFooter>
               </Card>
             ))}

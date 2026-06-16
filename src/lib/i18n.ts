@@ -637,6 +637,54 @@ export interface Translations {
     requestAccessBtn: string;
     becomeFounderBtn: string;
     startBtn: string;
+    
+    leaderPlanName: string;
+    leaderPlanPrice: string;
+    leaderPlanPeriod: string;
+    leaderPlanDesc: string;
+    leaderPlanFeature1: string;
+    leaderPlanFeature2: string;
+    leaderPlanFeature3: string;
+    leaderPlanFeature4: string;
+    leaderPlanFeature5: string;
+    leaderPlanFeature6: string;
+    activateCryptoBtn: string;
+    buyDaarBtn: string;
+    
+    participantName: string;
+    participantDesc: string;
+    participantFeature1: string;
+    participantFeature2: string;
+    participantFeature3: string;
+    participantFeature4: string;
+    joinInviteBtn: string;
+
+    partnerName: string;
+    partnerDesc: string;
+    partnerFeature1: string;
+    partnerFeature2: string;
+    partnerFeature3: string;
+    partnerFeature4: string;
+    partnerCta: string;
+
+    sovereignName: string;
+    sovereignDescNew: string;
+    sovereignFeatureNew1: string;
+    sovereignFeatureNew2: string;
+    sovereignFeatureNew3: string;
+    sovereignFeatureNew4: string;
+    sovereignCta: string;
+
+    workerNodeName: string;
+    workerNodeDesc: string;
+    workerNodeFeature1: string;
+    workerNodeFeature2: string;
+    workerNodeFeature3: string;
+    workerNodeFeature4: string;
+    workerNodeCta: string;
+
+    distinctionTitle: string;
+    distinctionDesc: string;
   };
   start: {
     heroTagline: string;
@@ -2457,7 +2505,55 @@ export const translations: Record<Language, Translations> = {
       applyBtn: 'Подати заявку',
       requestAccessBtn: 'Запросити доступ',
       becomeFounderBtn: 'Стати Founder',
-      startBtn: 'Почати'
+      startBtn: 'Почати',
+      
+      leaderPlanName: 'Leader Plan',
+      leaderPlanPrice: '2 DAAR / міс',
+      leaderPlanPeriod: 'еквівалент $20 | Polygon only',
+      leaderPlanDesc: 'Для лідера, який створює активну MicroDAO з Духом Спільноти.',
+      leaderPlanFeature1: '1 active MicroDAO',
+      leaderPlanFeature2: 'Дух Спільноти (ШІ-асистент)',
+      leaderPlanFeature3: 'Базова памʼять / RAG для знань',
+      leaderPlanFeature4: 'Запрошення учасників без обмежень',
+      leaderPlanFeature5: 'Задачі, бази знань та групові чати',
+      leaderPlanFeature6: 'Крипто-білінг: DAAR, USDT, USDC, POL',
+      activateCryptoBtn: 'Активувати через крипту',
+      buyDaarBtn: 'Купити / отримати DAAR',
+      
+      participantName: 'Учасник',
+      participantDesc: 'Для людей, яких запросив лідер MicroDAO.',
+      participantFeature1: 'Авторизація через email + Telegram',
+      participantFeature2: 'Участь у запрошеній MicroDAO безкоштовно',
+      participantFeature3: 'Доступ до чатів, знань і задач за роллю',
+      participantFeature4: 'Гаманець опціональний, доки немає DAO-дій',
+      joinInviteBtn: 'Приєднатися за запрошенням',
+
+      partnerName: 'Partner Access',
+      partnerDesc: 'Для людей або організацій, які ведуть клієнтські простори.',
+      partnerFeature1: 'Керування багатьма MicroDAO одночасно',
+      partnerFeature2: 'Ізольовані клієнтські простори',
+      partnerFeature3: 'Панель оператора (Operator Dashboard)',
+      partnerFeature4: 'Кастомні шаблони та White-label (в розробці)',
+      partnerCta: 'Запросити Partner Access',
+
+      sovereignName: 'Sovereign / Network',
+      sovereignDescNew: 'Для організацій і мереж із власною інфраструктурою.',
+      sovereignFeatureNew1: 'Повний суверенітет (розгортання на своїх серверах)',
+      sovereignFeatureNew2: 'Модулі Edge Client, Network та Governance',
+      sovereignFeatureNew3: 'Розширені модулі казначейства та токенів',
+      sovereignFeatureNew4: 'Індивідуальна ручна угода (SLA)',
+      sovereignCta: 'Запросити Sovereign Access',
+
+      workerNodeName: 'Worker Node / Sensitive Operator',
+      workerNodeDesc: 'Для технічних операторів, вузлів і чутливих дозволів.',
+      workerNodeFeature1: 'Node/operator рівень доступу',
+      workerNodeFeature2: 'Спеціальні технічні дозволи для оператора',
+      workerNodeFeature3: 'Детальні системні логи та аудит (Audit Logs)',
+      workerNodeFeature4: 'Обов\'язкова ручна верифікація оператора',
+      workerNodeCta: 'Подати заявку оператора',
+
+      distinctionTitle: 'Зверніть увагу на різницю програм доступу',
+      distinctionDesc: 'Leader Plan — це підписка для створення активної MicroDAO. Founder / Partner / Sovereign / Worker Node — це програми розширеного доступу з ручним погодженням.'
     },
     start: {
       heroTagline: 'ЖОС · Жива операційна система',
@@ -4273,7 +4369,55 @@ export const translations: Record<Language, Translations> = {
       applyBtn: 'Apply',
       requestAccessBtn: 'Request Access',
       becomeFounderBtn: 'Become Founder',
-      startBtn: 'Get Started'
+      startBtn: 'Get Started',
+      
+      leaderPlanName: 'Leader Plan',
+      leaderPlanPrice: '2 DAAR / mo',
+      leaderPlanPeriod: '$20 equivalent | Polygon only',
+      leaderPlanDesc: 'For a leader who creates an active MicroDAO with the Community Spirit.',
+      leaderPlanFeature1: '1 active MicroDAO',
+      leaderPlanFeature2: 'Community Spirit (AI Assistant)',
+      leaderPlanFeature3: 'Basic memory / RAG for knowledge',
+      leaderPlanFeature4: 'Unlimited participant invitations',
+      leaderPlanFeature5: 'Tasks, knowledge base, and group chats',
+      leaderPlanFeature6: 'Crypto billing: DAAR, USDT, USDC, POL',
+      activateCryptoBtn: 'Activate via Crypto',
+      buyDaarBtn: 'Buy / Get DAAR',
+      
+      participantName: 'Participant',
+      participantDesc: 'For people invited by a MicroDAO leader.',
+      participantFeature1: 'Auth via email + Telegram',
+      participantFeature2: 'Free participation in the invited MicroDAO',
+      participantFeature3: 'Access to chats, knowledge, and tasks by role',
+      participantFeature4: 'Wallet is optional until DAO actions occur',
+      joinInviteBtn: 'Join by Invitation',
+
+      partnerName: 'Partner Access',
+      partnerDesc: 'For operators managing multiple MicroDAOs.',
+      partnerFeature1: 'Manage multiple MicroDAOs simultaneously',
+      partnerFeature2: 'Isolated client spaces',
+      partnerFeature3: 'Operator Dashboard',
+      partnerFeature4: 'Custom templates & White-label (in dev)',
+      partnerCta: 'Request Partner Access',
+
+      sovereignName: 'Sovereign / Network',
+      sovereignDescNew: 'For organizations and networks with their own infrastructure.',
+      sovereignFeatureNew1: 'Full sovereignty (on-premise deployment)',
+      sovereignFeatureNew2: 'Edge Client, Network, and Governance modules',
+      sovereignFeatureNew3: 'Advanced treasury & token modules',
+      sovereignFeatureNew4: 'Individual Service Level Agreement (SLA)',
+      sovereignCta: 'Request Sovereign Access',
+
+      workerNodeName: 'Worker Node / Sensitive Operator',
+      workerNodeDesc: 'For technical operators, nodes, and sensitive permissions.',
+      workerNodeFeature1: 'Node/operator access level',
+      workerNodeFeature2: 'Special technical permissions for the operator',
+      workerNodeFeature3: 'Detailed audit logs and system auditing',
+      workerNodeFeature4: 'Mandatory manual operator verification',
+      workerNodeCta: 'Submit Operator Application',
+
+      distinctionTitle: 'Please Note the Distinction of Access Programs',
+      distinctionDesc: 'Leader Plan is a subscription to create an active MicroDAO. Founder / Partner / Sovereign / Worker Node are advanced access programs with manual approval.'
     },
     start: {
       heroTagline: 'ZHOS · Living Operating System',
@@ -6089,7 +6233,55 @@ export const translations: Record<Language, Translations> = {
       applyBtn: 'Подать заявку',
       requestAccessBtn: 'Запросить доступ',
       becomeFounderBtn: 'Стать Founder',
-      startBtn: 'Начать'
+      startBtn: 'Начать',
+      
+      leaderPlanName: 'Leader Plan',
+      leaderPlanPrice: '2 DAAR / мес',
+      leaderPlanPeriod: 'эквивалент $20 | Polygon only',
+      leaderPlanDesc: 'Для лидера, создающего активную MicroDAO с Духом Сообщества.',
+      leaderPlanFeature1: '1 активная MicroDAO',
+      leaderPlanFeature2: 'Дух Сообщества (ИИ-ассистент)',
+      leaderPlanFeature3: 'Базовая память / RAG для знаний',
+      leaderPlanFeature4: 'Приглашение участников без ограничений',
+      leaderPlanFeature5: 'Задачи, базы знаний и групповые чаты',
+      leaderPlanFeature6: 'Крипто-биллинг: DAAR, USDT, USDC, POL',
+      activateCryptoBtn: 'Активировать через крипту',
+      buyDaarBtn: 'Купить / получить DAAR',
+      
+      participantName: 'Участник',
+      participantDesc: 'Для людей, которых пригласил лидер MicroDAO.',
+      participantFeature1: 'Авторизация через email + Telegram',
+      participantFeature2: 'Участие в приглашенной MicroDAO бесплатно',
+      participantFeature3: 'Доступ к чатам, знаниям и задачам по роли',
+      participantFeature4: 'Кошелек опционален, пока нет действий DAO',
+      joinInviteBtn: 'Присоединиться по приглашению',
+
+      partnerName: 'Partner Access',
+      partnerDesc: 'Для людей или организаций, ведущих клиентские пространства.',
+      partnerFeature1: 'Управление многими MicroDAO одновременно',
+      partnerFeature2: 'Изолированные клиентские пространства',
+      partnerFeature3: 'Панель оператора (Operator Dashboard)',
+      partnerFeature4: 'Кастомные шаблоны и White-label (в разработке)',
+      partnerCta: 'Запросить Partner Access',
+
+      sovereignName: 'Sovereign / Network',
+      sovereignDescNew: 'Для организаций и сетей с собственной инфраструктурой.',
+      sovereignFeatureNew1: 'Полный суверенитет (развертывание на своих серверах)',
+      sovereignFeatureNew2: 'Модули Edge Client, Network и Governance',
+      sovereignFeatureNew3: 'Расширенные модули казначейства и токенов',
+      sovereignFeatureNew4: 'Индивидуальное ручное соглашение (SLA)',
+      sovereignCta: 'Запросить Sovereign Access',
+
+      workerNodeName: 'Worker Node / Sensitive Operator',
+      workerNodeDesc: 'Для технических операторов, узлов и чувствительных разрешений.',
+      workerNodeFeature1: 'Node/operator уровень доступа',
+      workerNodeFeature2: 'Специальные технические разрешения для оператора',
+      workerNodeFeature3: 'Детальные системные логи и аудит (Audit Logs)',
+      workerNodeFeature4: 'Обязательная ручная верификация оператора',
+      workerNodeCta: 'Подать заявку оператора',
+
+      distinctionTitle: 'Обратите внимание на разницу программ доступа',
+      distinctionDesc: 'Leader Plan — это подписка для создания active MicroDAO. Founder / Partner / Sovereign / Worker Node — это программы расширенного доступа с ручным согласованием.'
     },
     start: {
       heroTagline: 'ЖОС · Живая операционная система',
@@ -7905,7 +8097,55 @@ export const translations: Record<Language, Translations> = {
       applyBtn: 'Solicitar',
       requestAccessBtn: 'Solicitar Acceso',
       becomeFounderBtn: 'Convertirse en Founder',
-      startBtn: 'Comenzar'
+      startBtn: 'Comenzar',
+      
+      leaderPlanName: 'Leader Plan',
+      leaderPlanPrice: '2 DAAR / mes',
+      leaderPlanPeriod: 'equivalente a $20 | Polygon only',
+      leaderPlanDesc: 'Para un líder que crea una MicroDAO activa con el Espíritu Comunitario.',
+      leaderPlanFeature1: '1 MicroDAO activa',
+      leaderPlanFeature2: 'Espíritu Comunitario (Asistente de IA)',
+      leaderPlanFeature3: 'Memoria básica / RAG para conocimiento',
+      leaderPlanFeature4: 'Invitaciones ilimitadas para participantes',
+      leaderPlanFeature5: 'Tareas, base de conocimiento y chats grupales',
+      leaderPlanFeature6: 'Facturación cripto: DAAR, USDT, USDC, POL',
+      activateCryptoBtn: 'Activar mediante Cripto',
+      buyDaarBtn: 'Comprar / Obtener DAAR',
+      
+      participantName: 'Participante',
+      participantDesc: 'Para personas invitadas por un líder de MicroDAO.',
+      participantFeature1: 'Autenticación mediante email + Telegram',
+      participantFeature2: 'Participación gratuita en la MicroDAO invitada',
+      participantFeature3: 'Acceso a chats, conocimiento y tareas por rol',
+      participantFeature4: 'La billetera es opcional hasta que ocurran acciones de la DAO',
+      joinInviteBtn: 'Unirse por Invitación',
+
+      partnerName: 'Partner Access',
+      partnerDesc: 'Para operadores que gestionan múltiples MicroDAOs.',
+      partnerFeature1: 'Gestionar múltiples MicroDAOs simultáneamente',
+      partnerFeature2: 'Espacios de clientes aislados',
+      partnerFeature3: 'Panel del operador (Operator Dashboard)',
+      partnerFeature4: 'Plantillas personalizadas y Marca blanca (en desarrollo)',
+      partnerCta: 'Solicitar Partner Access',
+
+      sovereignName: 'Sovereign / Network',
+      sovereignDescNew: 'Para organizaciones y redes con su propia infraestructura.',
+      sovereignFeatureNew1: 'Soberanía total (despliegue en servidores propios)',
+      sovereignFeatureNew2: 'Módulos Edge Client, Network y Governance',
+      sovereignFeatureNew3: 'Módulos avanzados de tesorería y tokens',
+      sovereignFeatureNew4: 'Acuerdo de nivel de servicio individual (SLA)',
+      sovereignCta: 'Solicitar Sovereign Access',
+
+      workerNodeName: 'Worker Node / Sensitive Operator',
+      workerNodeDesc: 'Para operadores técnicos, nodos y permisos sensibles.',
+      workerNodeFeature1: 'Nivel de acceso de nodo/operador',
+      workerNodeFeature2: 'Permisos técnicos especiales para el operador',
+      workerNodeFeature3: 'Registros de auditoría detallados y auditoría del sistema',
+      workerNodeFeature4: 'Verificación manual obligatoria del operador',
+      workerNodeCta: 'Presentar Solicitud de Operador',
+
+      distinctionTitle: 'Tenga en cuenta la distinción de programas de acceso',
+      distinctionDesc: 'Leader Plan es una suscripción para crear una MicroDAO activa. Founder / Partner / Sovereign / Worker Node son programas de acceso avanzado con aprobación manual.'
     },
     start: {
       heroTagline: 'ZHOS · Sistema Operativo Vivo',
