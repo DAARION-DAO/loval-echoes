@@ -23,3 +23,13 @@
 - `[x]` Implement dynamic multi-language agent responses (en, uk, ru, es) based on live telemetry in `src/pages/admin/AdminAgent.tsx`
 - `[x]` Add right column "Platform Context Panel" with live aggregated telemetry inside AdminAgent
 - `[x]` Verify production build and TypeScript compilation
+
+# Sprint: Polygon On-chain Payment Verifier & Watcher Foundation (F3C)
+
+- `[x]` Add i18n translation keys in `src/lib/i18n.ts`
+- `[ ]` Create local migration `supabase/migrations/20260616140000_verify_polygon_payment_schema.sql` (if database watcher required later)
+- `[ ]` Create Edge Function `supabase/functions/verify-polygon-payment/index.ts` (if auto-watcher required later)
+- `[ ]` Update `src/components/billing/CryptoPaymentIntent.tsx` with "Verify on Polygon" action (for user UI)
+- `[x]` Update `src/pages/admin/AdminBilling.tsx` with "Verify on Polygon" client-side admin verifier modal
+- `[x]` Update `src/hooks/useAdminAgentContext.ts` and `src/pages/admin/AdminAgent.tsx` for verification telemetry
+- `[x]` Verify typescript compilation and build locally

@@ -33,6 +33,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ExternalLink, CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { 
   LEADER_PLAN, 
   SUPPORTED_ASSETS, 
@@ -54,6 +62,12 @@ export const AdminBilling = () => {
   const [loadingIntents, setLoadingIntents] = useState(true);
   const [activeFilter, setActiveFilter] = useState<string>('all');
   const [processingId, setProcessingId] = useState<string | null>(null);
+
+  // On-chain Verification State
+  const [verifyingIntent, setVerifyingIntent] = useState<any | null>(null);
+  const [verificationLoading, setVerificationLoading] = useState(false);
+  const [verificationResult, setVerificationResult] = useState<any | null>(null);
+  const [verificationError, setVerificationError] = useState<string | null>(null);
 
   // Billing Config Form State
   const [configLoading, setConfigLoading] = useState(true);
@@ -255,6 +269,179 @@ export const AdminBilling = () => {
       });
     } finally {
       setProcessingId(null);
+    }
+  };
+
+  const handleVerifyOnchain = async (intent: any) => {
+    setVerifyingIntent(intent);
+    setVerificationLoading(true);
+    setVerificationResult(null);
+    setVerificationError(null);
+
+    if (!intent.tx_hash) {
+      setVerificationError('No transaction hash submitted.');
+      setVerificationLoading(false);
+      return;
+    }
+
+    const cleanHash = intent.tx_hash.trim();
+    if (!/^0x[a-fA-F0-9]{64}$/.test(cleanHash)) {
+      setVerificationError('Invalid transaction hash format.');
+      setVerificationLoading(false);
+      return;
+    }
+
+    try {
+      const rpcUrls = [
+        'https://polygon-rpc.com/',
+        'https://rpc.ankr.com/polygon',
+        'https://polygon.llamarpc.com'
+      ];
+      
+      let fetchedData = null;
+      let rpcError = null;
+
+      for (const url of rpcUrls) {
+        try {
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify([
+              {
+                jsonrpc: '2.0',
+                id: 1,
+                method: 'eth_getTransactionByHash',
+                params: [cleanHash],
+              },
+              {
+                jsonrpc: '2.0',
+                id: 2,
+                method: 'eth_getTransactionReceipt',
+                params: [cleanHash],
+              }
+            ]),
+          });
+          
+          if (!response.ok) continue;
+          const data = await response.json();
+          if (Array.isArray(data) && data[0]?.result) {
+            fetchedData = {
+              tx: data[0].result,
+              receipt: data[1]?.result || null
+            };
+            break;
+          }
+        } catch (err) {
+          rpcError = err;
+        }
+      }
+
+      if (!fetchedData) {
+        // Try individual fallback requests in case batching failed
+        for (const url of rpcUrls) {
+          try {
+            const txRes = await fetch(url, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                jsonrpc: '2.0',
+                id: 1,
+                method: 'eth_getTransactionByHash',
+                params: [cleanHash],
+              }),
+            });
+            const txData = await txRes.json();
+            if (txData.result) {
+              const receiptRes = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  jsonrpc: '2.0',
+                  id: 2,
+                  method: 'eth_getTransactionReceipt',
+                  params: [cleanHash],
+                }),
+              });
+              const receiptData = await receiptRes.json();
+              fetchedData = {
+                tx: txData.result,
+                receipt: receiptData.result || null
+              };
+              break;
+            }
+          } catch (err) {
+            rpcError = err;
+          }
+        }
+      }
+
+      if (!fetchedData || !fetchedData.tx) {
+        throw new Error('Transaction not found on Polygon mainnet. Please wait for a few blocks or confirm the hash.');
+      }
+
+      const tx = fetchedData.tx;
+      const receipt = fetchedData.receipt;
+
+      let decodedAsset = 'POL';
+      let decodedAmount = 0;
+      let decodedRecipient = '';
+
+      if (tx.input && tx.input.startsWith('0xa9059cbb')) {
+        // ERC20 transfer
+        const contractAddress = tx.to.toLowerCase();
+        
+        decodedRecipient = '0x' + tx.input.slice(34, 74).toLowerCase();
+        
+        const rawAmountHex = '0x' + tx.input.slice(74, 138);
+        const rawAmount = BigInt(rawAmountHex);
+        
+        const isUsdt = contractAddress === '0xc2132d05d31c914a87c6611c10748aeb04b58e8f';
+        const isUsdc = contractAddress === '0x3c499c542cef5e3811e1192ce70d8cc03d5c3359' || contractAddress === '0x2791bca1f2de4661ed88a30c99a7a9449aa84174';
+        
+        if (isUsdt) {
+          decodedAsset = 'USDT';
+          decodedAmount = Number(rawAmount) / 1e6;
+        } else if (isUsdc) {
+          decodedAsset = 'USDC';
+          decodedAmount = Number(rawAmount) / 1e6;
+        } else {
+          decodedAsset = 'DAAR';
+          decodedAmount = Number(rawAmount) / 1e18;
+        }
+      } else {
+        decodedAsset = 'POL';
+        decodedAmount = Number(BigInt(tx.value)) / 1e18;
+        decodedRecipient = tx.to ? tx.to.toLowerCase() : '';
+      }
+
+      const successOnchain = receipt ? receipt.status === '0x1' : true;
+      const targetRecipientMatched = decodedRecipient.toLowerCase() === treasuryAddress.toLowerCase();
+      const amountMatched = decodedAmount >= Number(intent.amount_crypto);
+      const assetMatched = decodedAsset.toUpperCase() === intent.crypto_asset.toUpperCase();
+      const doubleSpend = intents.some(
+        (other: any) => other.id !== intent.id && other.tx_hash === intent.tx_hash && other.status === 'confirmed'
+      );
+
+      setVerificationResult({
+        blockNumber: receipt ? parseInt(receipt.blockNumber, 16) : null,
+        sender: tx.from,
+        recipient: decodedRecipient,
+        amount: decodedAmount,
+        asset: decodedAsset,
+        status: successOnchain ? 'success' : 'failed',
+        checks: {
+          successOnchain,
+          targetRecipientMatched,
+          amountMatched,
+          assetMatched,
+          doubleSpend
+        }
+      });
+    } catch (err: any) {
+      console.error('On-chain verification error:', err);
+      setVerificationError(err.message || 'Failed to verify transaction on-chain.');
+    } finally {
+      setVerificationLoading(false);
     }
   };
 
@@ -658,7 +845,19 @@ export const AdminBilling = () => {
                         </TableCell>
                         <TableCell className="py-2.5 text-right">
                           {isPendingAction ? (
-                            <div className="flex justify-end gap-1.5">
+                             <div className="flex justify-end gap-1.5">
+                              {intent.tx_hash && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  disabled={processingId !== null}
+                                  onClick={() => handleVerifyOnchain(intent)}
+                                  className="h-7 text-[10px] bg-indigo-500/5 hover:bg-indigo-500/10 text-indigo-400 border-indigo-500/25 font-bold gap-1"
+                                >
+                                  <Shield className="h-3 w-3" />
+                                  {t.cryptoBilling.verifyOnPolygon || 'Verify on Polygon'}
+                                </Button>
+                              )}
                               <Button
                                 size="sm"
                                 variant="outline"
@@ -769,6 +968,213 @@ export const AdminBilling = () => {
           ))}
         </CardContent>
       </Card>
+
+      {/* On-chain Verification Dialog */}
+      <Dialog open={verifyingIntent !== null} onOpenChange={(open) => { if (!open) setVerifyingIntent(null); }}>
+        <DialogContent className="border-slate-800 bg-slate-900 text-slate-100 max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-sm font-bold flex items-center gap-2 text-indigo-400">
+              <Shield className="h-4 w-4" />
+              {t.cryptoBilling.onchainVerification || 'On-chain Verification'}
+            </DialogTitle>
+            <DialogDescription className="text-xs text-slate-400">
+              Checking transaction details directly from the Polygon network.
+            </DialogDescription>
+          </DialogHeader>
+
+          {verificationLoading ? (
+            <div className="py-8 text-center space-y-2">
+              <Loader2 className="h-8 w-8 animate-spin text-indigo-400 mx-auto" />
+              <p className="text-xs text-slate-400">
+                {t.cryptoBilling.verificationPending || 'Verification pending...'}
+              </p>
+            </div>
+          ) : verificationError ? (
+            <div className="py-4 space-y-4">
+              <Alert variant="destructive" className="border-red-500/20 bg-red-500/5 text-red-400">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription className="text-xs">{verificationError}</AlertDescription>
+              </Alert>
+              <div className="text-center">
+                <a
+                  href={`https://polygonscan.com/tx/${verifyingIntent?.tx_hash}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-indigo-400 hover:text-indigo-300 inline-flex items-center gap-1 font-semibold"
+                >
+                  {t.cryptoBilling.viewOnPolygonScan || 'View on PolygonScan'}
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              </div>
+            </div>
+          ) : verificationResult ? (
+            <div className="space-y-4 pt-2">
+              {/* Overall Status Badge */}
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <span className="text-xs text-slate-400">Verification Status:</span>
+                <Badge
+                  variant="outline"
+                  className={`text-[10px] uppercase font-bold px-2 py-0.5 ${
+                    verificationResult.status === 'success' &&
+                    verificationResult.checks.targetRecipientMatched &&
+                    verificationResult.checks.amountMatched &&
+                    verificationResult.checks.assetMatched &&
+                    !verificationResult.checks.doubleSpend
+                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25'
+                      : 'bg-red-500/10 text-red-400 border-red-500/25'
+                  }`}
+                >
+                  {verificationResult.status === 'success' &&
+                  verificationResult.checks.targetRecipientMatched &&
+                  verificationResult.checks.amountMatched &&
+                  verificationResult.checks.assetMatched &&
+                  !verificationResult.checks.doubleSpend
+                    ? (t.cryptoBilling.verifiedOnchain || 'Verified Onchain')
+                    : (t.cryptoBilling.manualReviewRequired || 'Manual Review Required')}
+                </Badge>
+              </div>
+
+              {/* Warnings List */}
+              {verificationResult.checks.doubleSpend && (
+                <Alert variant="destructive" className="border-red-500/20 bg-red-500/5 text-red-400 py-2">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription className="text-[10px]">
+                    {t.cryptoBilling.txAlreadyUsed || 'Warning: This transaction hash has already been used for another confirmed intent.'}
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {!verificationResult.checks.targetRecipientMatched && (
+                <Alert variant="destructive" className="border-red-500/20 bg-red-500/5 text-red-400 py-2">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription className="text-[10px]">
+                    {t.cryptoBilling.recipientMismatch || 'Warning: The transaction recipient does not match the configured treasury address.'}
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {!verificationResult.checks.assetMatched && (
+                <Alert variant="destructive" className="border-red-500/20 bg-red-500/5 text-red-400 py-2">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription className="text-[10px]">
+                    {t.cryptoBilling.assetMismatch || 'Warning: The transaction token does not match the expected intent asset.'}
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {!verificationResult.checks.amountMatched && (
+                <Alert variant="destructive" className="border-red-500/20 bg-red-500/5 text-red-400 py-2">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription className="text-[10px]">
+                    {t.cryptoBilling.amountTooLow || 'Warning: The transaction amount is lower than the expected amount.'}
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {/* Data Table */}
+              <div className="space-y-2 rounded-lg bg-slate-950/40 border border-slate-800 p-3 text-xs">
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-400">Token Asset:</span>
+                  <span className="font-semibold font-mono flex items-center gap-1.5">
+                    {verificationResult.checks.assetMatched ? (
+                      <CheckCircle className="h-3 w-3 text-emerald-450" />
+                    ) : (
+                      <XCircle className="h-3 w-3 text-red-400" />
+                    )}
+                    Decoded: {verificationResult.asset} (Expected: {verifyingIntent?.crypto_asset})
+                  </span>
+                </div>
+
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-400">Amount Sent:</span>
+                  <span className="font-semibold font-mono flex items-center gap-1.5">
+                    {verificationResult.checks.amountMatched ? (
+                      <CheckCircle className="h-3 w-3 text-emerald-450" />
+                    ) : (
+                      <XCircle className="h-3 w-3 text-red-400" />
+                    )}
+                    Decoded: {verificationResult.amount} (Expected: {verifyingIntent?.amount_crypto})
+                  </span>
+                </div>
+
+                <div className="flex justify-between items-start gap-2">
+                  <span className="text-slate-400 whitespace-nowrap">Recipient:</span>
+                  <span className="font-semibold font-mono flex items-center gap-1.5 text-right break-all">
+                    {verificationResult.checks.targetRecipientMatched ? (
+                      <CheckCircle className="h-3 w-3 text-emerald-450 flex-shrink-0" />
+                    ) : (
+                      <XCircle className="h-3 w-3 text-red-400 flex-shrink-0" />
+                    )}
+                    Decoded: {truncateAddress(verificationResult.recipient)} (Expected: {truncateAddress(treasuryAddress)})
+                  </span>
+                </div>
+
+                <div className="border-t border-slate-800/60 my-2 pt-2 space-y-1">
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Sender Wallet:</span>
+                    <span className="font-mono text-slate-350">{truncateAddress(verificationResult.sender)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Block Height:</span>
+                    <span className="font-mono text-slate-350">{verificationResult.blockNumber || 'Pending'}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="text-center pt-1">
+                <a
+                  href={`https://polygonscan.com/tx/${verifyingIntent?.tx_hash}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-indigo-400 hover:text-indigo-300 inline-flex items-center gap-1 font-semibold"
+                >
+                  {t.cryptoBilling.viewOnPolygonScan || 'View on PolygonScan'}
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              </div>
+            </div>
+          ) : null}
+
+          <DialogFooter className="flex gap-2 sm:gap-0 mt-4 border-t border-slate-800 pt-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setVerifyingIntent(null)}
+              className="text-xs border-slate-800 hover:bg-slate-850 h-8"
+            >
+              Cancel
+            </Button>
+            {verifyingIntent && !verificationLoading && (
+              <div className="flex gap-1.5 ml-auto">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={processingId !== null}
+                  onClick={() => {
+                    handleReject(verifyingIntent.id);
+                    setVerifyingIntent(null);
+                  }}
+                  className="text-xs text-red-400 hover:text-red-350 hover:bg-red-500/5 h-8 font-bold"
+                >
+                  {t.cryptoBilling.verifyActionReject}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={processingId !== null}
+                  onClick={() => {
+                    handleApprove(verifyingIntent.id);
+                    setVerifyingIntent(null);
+                  }}
+                  className="text-xs bg-emerald-500/5 hover:bg-emerald-500/10 text-emerald-400 border-emerald-500/25 h-8 font-bold"
+                >
+                  {t.cryptoBilling.verifyActionApprove}
+                </Button>
+              </div>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

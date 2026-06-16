@@ -1916,6 +1916,19 @@ export interface Translations {
     pricingConfigUpdatedSuccess: string;
     invalidTreasuryAddressError: string;
     invalidDaarPurchaseUrlError: string;
+    verifyOnPolygon: string;
+    onchainVerification: string;
+    verificationPending: string;
+    verificationFailed: string;
+    verifiedOnchain: string;
+    manualReviewRequired: string;
+    txAlreadyUsed: string;
+    recipientMismatch: string;
+    amountTooLow: string;
+    assetMismatch: string;
+    networkMismatch: string;
+    senderWalletMismatch: string;
+    viewOnPolygonScan: string;
   };
   adminAgent: {
     title: string;
@@ -3831,6 +3844,19 @@ export const translations: Record<Language, Translations> = {
       pricingConfigUpdatedSuccess: 'Конфігурацію цін оновлено',
       invalidTreasuryAddressError: 'Невірна EVM адреса скарбниці',
       invalidDaarPurchaseUrlError: 'Невірне посилання на купівлю DAAR',
+      verifyOnPolygon: 'Перевірити в Polygon',
+      onchainVerification: 'Ончейн верифікація',
+      verificationPending: 'Перевірка триває',
+      verificationFailed: 'Помилка верифікації',
+      verifiedOnchain: 'Підтверджено ончейн',
+      manualReviewRequired: 'Потрібна ручна перевірка',
+      txAlreadyUsed: 'Транзакція вже використана',
+      recipientMismatch: 'Невідповідність отримувача',
+      amountTooLow: 'Сума занадто мала',
+      assetMismatch: 'Невідповідність активу',
+      networkMismatch: 'Невідповідність мережі',
+      senderWalletMismatch: 'Невідповідність гаманця відправника',
+      viewOnPolygonScan: 'Дивитись у PolygonScan',
     },
     adminAgent: {
       title: 'Адмін-агент',
@@ -5745,6 +5771,19 @@ export const translations: Record<Language, Translations> = {
       pricingConfigUpdatedSuccess: 'Pricing config updated',
       invalidTreasuryAddressError: 'Invalid treasury address',
       invalidDaarPurchaseUrlError: 'Invalid DAAR purchase URL',
+      verifyOnPolygon: 'Verify on Polygon',
+      onchainVerification: 'On-chain verification',
+      verificationPending: 'Verification pending',
+      verificationFailed: 'Verification failed',
+      verifiedOnchain: 'Verified on-chain',
+      manualReviewRequired: 'Manual review required',
+      txAlreadyUsed: 'Transaction already used',
+      recipientMismatch: 'Recipient mismatch',
+      amountTooLow: 'Amount too low',
+      assetMismatch: 'Asset mismatch',
+      networkMismatch: 'Network mismatch',
+      senderWalletMismatch: 'Sender wallet mismatch',
+      viewOnPolygonScan: 'View on PolygonScan',
     },
     adminAgent: {
       title: 'Admin Agent',
@@ -7659,6 +7698,19 @@ export const translations: Record<Language, Translations> = {
       pricingConfigUpdatedSuccess: 'Конфигурация цен обновлена',
       invalidTreasuryAddressError: 'Неверный EVM адрес казначейства',
       invalidDaarPurchaseUrlError: 'Неверная ссылка на покупку DAAR',
+      verifyOnPolygon: 'Проверить в Polygon',
+      onchainVerification: 'Ончейн верификация',
+      verificationPending: 'Проверка выполняется',
+      verificationFailed: 'Ошибка верификации',
+      verifiedOnchain: 'Подтверждено ончейн',
+      manualReviewRequired: 'Требуется ручная проверка',
+      txAlreadyUsed: 'Транзакция уже использована',
+      recipientMismatch: 'Несоответствие получателя',
+      amountTooLow: 'Сумма слишком мала',
+      assetMismatch: 'Несоответствие актива',
+      networkMismatch: 'Несоответствие сети',
+      senderWalletMismatch: 'Несоответствие кошелька отправителя',
+      viewOnPolygonScan: 'Смотреть в PolygonScan',
     },
     adminAgent: {
       title: 'Админ-агент',
@@ -9573,6 +9625,19 @@ export const translations: Record<Language, Translations> = {
       pricingConfigUpdatedSuccess: 'Configuración de precios actualizada',
       invalidTreasuryAddressError: 'Dirección del tesoro no válida',
       invalidDaarPurchaseUrlError: 'URL de compra de DAAR no válida',
+      verifyOnPolygon: 'Verificar en Polygon',
+      onchainVerification: 'Verificación en cadena',
+      verificationPending: 'Verificación pendiente',
+      verificationFailed: 'Verificación fallida',
+      verifiedOnchain: 'Verificado en cadena',
+      manualReviewRequired: 'Revisión manual requerida',
+      txAlreadyUsed: 'Transacción ya utilizada',
+      recipientMismatch: 'Falta de coincidencia del destinatario',
+      amountTooLow: 'Cantidad demasiado baja',
+      assetMismatch: 'Falta de coincidencia de activo',
+      networkMismatch: 'Falta de coincidencia de red',
+      senderWalletMismatch: 'Falta de coincidencia de billetera del remitente',
+      viewOnPolygonScan: 'Ver en PolygonScan',
     },
     adminAgent: {
       title: 'Agente Administrador',
