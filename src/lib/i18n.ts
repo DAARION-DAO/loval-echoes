@@ -96,6 +96,8 @@ export interface Translations {
     backToLanding: string;
     goToDashboard: string;
     billing: string;
+    platformTeam: string;
+    adminAgent: string;
   };
 
   // Дашборд
@@ -690,6 +692,17 @@ export interface Translations {
     goToVerificationQueue: string;
     billingTitle: string;
     billingDesc: string;
+    inviteGuardian: string;
+    guardianEmail: string;
+    createInvite: string;
+    copyInviteLink: string;
+    pendingInvites: string;
+    acceptedInvites: string;
+    revokeInvite: string;
+    askAdminAgent: string;
+    draftMode: string;
+    noAutonomousActions: string;
+    privateDataProtected: string;
   };
   start: {
     heroTagline: string;
@@ -1980,6 +1993,8 @@ export const translations: Record<Language, Translations> = {
       backToLanding: 'На головну сайту',
       goToDashboard: 'Перейти в кабінет',
       billing: 'Підписка / Оплата',
+      platformTeam: 'Команда платформи',
+      adminAgent: 'Адмін Агент',
     },
 
     dashboard: {
@@ -2563,7 +2578,18 @@ export const translations: Record<Language, Translations> = {
       manageSubscription: 'Керувати підпискою',
       goToVerificationQueue: 'Перейти до черги перевірки',
       billingTitle: 'Підписка / Оплата',
-      billingDesc: 'Активуйте Leader Plan через DAAR або підтримувану криптовалюту.'
+      billingDesc: 'Активуйте Leader Plan через DAAR або підтримувану криптовалюту.',
+      inviteGuardian: 'Запросити адміністратора платформи',
+      guardianEmail: 'Email адміністратора',
+      createInvite: 'Створити запрошення',
+      copyInviteLink: 'Копіювати посилання',
+      pendingInvites: 'Очікують прийняття',
+      acceptedInvites: 'Прийняті запрошення',
+      revokeInvite: 'Відкликати запрошення',
+      askAdminAgent: 'Запитати адмін-агента',
+      draftMode: 'Режим чернетки',
+      noAutonomousActions: 'Без автономних дій',
+      privateDataProtected: 'Приватні дані MicroDAO не розкриваються'
     },
     start: {
       heroTagline: 'ЖОС · Жива операційна система',
@@ -3849,6 +3875,8 @@ export const translations: Record<Language, Translations> = {
       backToLanding: 'Back to public homepage',
       goToDashboard: 'Go to dashboard',
       billing: 'Subscription / Billing',
+      platformTeam: 'Platform Team',
+      adminAgent: 'Admin Agent',
     },
 
     dashboard: {
@@ -4432,7 +4460,18 @@ export const translations: Record<Language, Translations> = {
       manageSubscription: 'Manage Subscription',
       goToVerificationQueue: 'Go to Verification Queue',
       billingTitle: 'Subscription / Billing',
-      billingDesc: 'Activate Leader Plan with DAAR or supported crypto.'
+      billingDesc: 'Activate Leader Plan with DAAR or supported crypto.',
+      inviteGuardian: 'Invite platform guardian',
+      guardianEmail: 'Guardian email',
+      createInvite: 'Create invite',
+      copyInviteLink: 'Copy invite link',
+      pendingInvites: 'Pending invites',
+      acceptedInvites: 'Accepted invites',
+      revokeInvite: 'Revoke invite',
+      askAdminAgent: 'Ask the platform admin agent',
+      draftMode: 'Draft mode',
+      noAutonomousActions: 'No autonomous actions',
+      privateDataProtected: 'Private MicroDAO data is not exposed'
     },
     start: {
       heroTagline: 'ZHOS · Living Operating System',
@@ -5718,6 +5757,8 @@ export const translations: Record<Language, Translations> = {
       backToLanding: 'На главную сайта',
       goToDashboard: 'Перейти в кабинет',
       billing: 'Подписка / Оплата',
+      platformTeam: 'Команда платформы',
+      adminAgent: 'Админ Агент',
     },
 
     dashboard: {
@@ -6301,7 +6342,18 @@ export const translations: Record<Language, Translations> = {
       manageSubscription: 'Управлять подпиской',
       goToVerificationQueue: 'Перейти к очереди проверки',
       billingTitle: 'Подписка / Оплата',
-      billingDesc: 'Активируйте Leader Plan через DAAR или поддерживаемую криптовалюту.'
+      billingDesc: 'Активируйте Leader Plan через DAAR или поддерживаемую криптовалюту.',
+      inviteGuardian: 'Пригласить администратора платформы',
+      guardianEmail: 'Email администратора',
+      createInvite: 'Создать приглашение',
+      copyInviteLink: 'Копировать ссылку',
+      pendingInvites: 'Ожидают принятия',
+      acceptedInvites: 'Принятые приглашения',
+      revokeInvite: 'Отозвать приглашение',
+      askAdminAgent: 'Спросить админ-агента',
+      draftMode: 'Режим черновика',
+      noAutonomousActions: 'Без автономных действий',
+      privateDataProtected: 'Приватные данные MicroDAO не раскрываются'
     },
     start: {
       heroTagline: 'ЖОС · Живая операционная система',
@@ -7587,6 +7639,8 @@ export const translations: Record<Language, Translations> = {
       backToLanding: 'Volver a la página de inicio',
       goToDashboard: 'Ir al panel',
       billing: 'Suscripción / Facturación',
+      platformTeam: 'Equipo de la plataforma',
+      adminAgent: 'Agente Administrador',
     },
 
     dashboard: {
@@ -8170,7 +8224,18 @@ export const translations: Record<Language, Translations> = {
       manageSubscription: 'Gestionar suscripción',
       goToVerificationQueue: 'Ir a la cola de verificación',
       billingTitle: 'Suscripción / Facturación',
-      billingDesc: 'Active Leader Plan con DAAR o criptomonedas compatibles.'
+      billingDesc: 'Active Leader Plan con DAAR o criptomonedas compatibles.',
+      inviteGuardian: 'Invitar al guardián de la plataforma',
+      guardianEmail: 'Email del guardián',
+      createInvite: 'Crear invitación',
+      copyInviteLink: 'Copiar enlace',
+      pendingInvites: 'Invitaciones pendientes',
+      acceptedInvites: 'Invitaciones aceptadas',
+      revokeInvite: 'Revocar invitación',
+      askAdminAgent: 'Preguntar al agente administrador',
+      draftMode: 'Modo borrador',
+      noAutonomousActions: 'Sin acciones autónomas',
+      privateDataProtected: 'Los datos privados de MicroDAO no están expuestos'
     },
     start: {
       heroTagline: 'ZHOS · Sistema Operativo Vivo',

@@ -43,6 +43,9 @@ const AdminMicroDAOs = lazy(() => import("./pages/admin/AdminMicroDAOs").then(m 
 const AdminAccessRequests = lazy(() => import("./pages/admin/AdminAccessRequests").then(m => ({ default: m.AdminAccessRequests })));
 const AdminBilling = lazy(() => import("./pages/admin/AdminBilling").then(m => ({ default: m.AdminBilling })));
 const AdminAgentOps = lazy(() => import("./pages/admin/AdminAgentOps").then(m => ({ default: m.AdminAgentOps })));
+const AdminTeam = lazy(() => import("./pages/admin/AdminTeam"));
+const AdminAgent = lazy(() => import("./pages/admin/AdminAgent"));
+const AcceptInvite = lazy(() => import("./pages/AcceptInvite"));
 
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { Layout } from "./components/Layout";
@@ -208,6 +211,7 @@ const App = () => {
                   <Route path="/pricing" element={<Suspense fallback={<LoadingSpinner size="lg" text={t.loading} />}><Pricing /></Suspense>} />
                   <Route path="/agents" element={<Suspense fallback={<LoadingSpinner size="lg" text={t.loading} />}><AgentDirectory /></Suspense>} />
                   <Route path="/onboarding" element={<Suspense fallback={<LoadingSpinner size="lg" text={t.loading} />}><MicroDAOOnboarding /></Suspense>} />
+                  <Route path="/accept-invite" element={<Suspense fallback={<LoadingSpinner size="lg" text={t.loading} />}><AcceptInvite /></Suspense>} />
                   <Route 
                     path="/admin/*" 
                     element={
@@ -221,6 +225,8 @@ const App = () => {
                               <Route path="/access-requests" element={<AdminAccessRequests />} />
                               <Route path="/billing" element={<AdminBilling />} />
                               <Route path="/agent-ops" element={<AdminAgentOps />} />
+                              <Route path="/team" element={<AdminTeam />} />
+                              <Route path="/agent" element={<AdminAgent />} />
                               <Route path="*" element={<Navigate to="/admin" replace />} />
                             </Routes>
                           </Suspense>

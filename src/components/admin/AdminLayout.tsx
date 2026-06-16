@@ -12,7 +12,9 @@ import {
   ArrowLeft,
   Shield,
   Menu,
-  X
+  X,
+  UserPlus,
+  Bot
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
@@ -64,6 +66,16 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
       to: '/admin/agent-ops',
       label: isUk ? 'Агентні операції' : 'Agent Ops',
       icon: Cpu
+    },
+    {
+      to: '/admin/team',
+      label: isUk ? 'Команда' : 'Team',
+      icon: UserPlus
+    },
+    {
+      to: '/admin/agent',
+      label: isUk ? 'Адмін Агент' : 'Admin Agent',
+      icon: Bot
     }
   ];
 
