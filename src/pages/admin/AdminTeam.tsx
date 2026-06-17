@@ -131,7 +131,7 @@ export default function AdminTeam() {
   };
 
   const handleCopyLink = (invite: AdminInvite) => {
-    const inviteUrl = `${window.location.origin}/accept-invite?token=${invite.invite_token}`;
+    const inviteUrl = `${getPublicSiteUrl()}/accept-invite?token=${invite.invite_token}`;
     navigator.clipboard.writeText(inviteUrl);
     setCopiedId(invite.id);
     toast({
