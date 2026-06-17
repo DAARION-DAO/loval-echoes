@@ -1,7 +1,7 @@
 // MicroDAO — PWA Service Worker
 // Handles: app shell caching, offline fallback, push notifications
 
-const CACHE_VERSION = 'microdao-v2';
+const CACHE_VERSION = 'microdao-v3';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
@@ -9,6 +9,7 @@ const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 const APP_SHELL = [
   '/',
   '/manifest.json',
+  '/offline.html',
   '/icon-192x192.png',
   '/icon-512x512.png',
 ];
@@ -69,7 +70,7 @@ self.addEventListener('fetch', (event) => {
         })
         .catch(() => {
           return caches.match(request)
-            .then((cached) => cached || caches.match('/'));
+            .then((cached) => cached || caches.match('/') || caches.match('/offline.html'));
         })
     );
     return;

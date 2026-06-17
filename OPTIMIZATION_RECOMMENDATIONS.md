@@ -34,8 +34,6 @@
 # В Supabase Dashboard → Settings → Edge Functions
 # Перевірте наявність:
 - DIFY_API_KEY
-- AGORA_APP_ID
-- AGORA_APP_CERTIFICATE
 - SUPABASE_URL
 - SUPABASE_SERVICE_ROLE_KEY
 ```
@@ -48,7 +46,6 @@ supabase functions serve
 # Деплой
 supabase functions deploy auth-security
 supabase functions deploy dify-client
-supabase functions deploy agora-token
 ```
 
 ### 2. Налаштування Dify Agent
@@ -65,20 +62,7 @@ supabase functions deploy agora-token
 - Додайте rate limiting на стороні Dify
 - Моніторьте використання токенів та витрати
 
-### 3. Голосовий чат (Agora RTC)
-
-#### Налаштування:
-1. Отримайте `AGORA_APP_ID` та `AGORA_APP_CERTIFICATE` з Agora Dashboard
-2. Додайте їх у змінні середовища Supabase Edge Function
-3. Перевірте, що Edge Function `agora-token` працює
-
-#### Покращення:
-- Додайте індикатор якості зв'язку
-- Реалізуйте noise cancellation
-- Додайте можливість запису розмови
-- Оптимізуйте для мобільних пристроїв (низька затримка)
-
-### 4. Мобільна оптимізація
+### 3. Мобільна оптимізація
 
 #### Додаткові покращення:
 - [ ] Додати Service Worker для offline режиму
@@ -223,5 +207,4 @@ supabase functions deploy agora-token
 ---
 
 **Примітка**: Цей документ є живим і повинен оновлюватися по мірі розвитку проекту.
-
 

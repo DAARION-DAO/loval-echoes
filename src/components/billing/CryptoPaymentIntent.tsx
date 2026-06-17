@@ -116,8 +116,8 @@ export const CryptoPaymentIntent = ({ communityId = null, onSuccess }: CryptoPay
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
     toast({
-      title: 'Copied!',
-      description: `${label} copied to clipboard.`
+      title: t.identity.addressCopied,
+      description: label
     });
   };
 
@@ -183,8 +183,8 @@ export const CryptoPaymentIntent = ({ communityId = null, onSuccess }: CryptoPay
       console.error('[CryptoPaymentIntent] Create error:', err);
       toast({
         variant: 'destructive',
-        title: 'Error',
-        description: err.message || 'Failed to initialize payment.'
+        title: t.error,
+        description: err.message || t.cryptoBilling.intentFailed
       });
     } finally {
       setLoading(false);
@@ -236,8 +236,8 @@ export const CryptoPaymentIntent = ({ communityId = null, onSuccess }: CryptoPay
       console.error('[CryptoPaymentIntent] Submit hash error:', err);
       toast({
         variant: 'destructive',
-        title: 'Error',
-        description: err.message || 'Failed to submit transaction.'
+        title: t.error,
+        description: err.message || t.cryptoBilling.intentFailed
       });
     } finally {
       setSubmittingHash(false);
@@ -267,8 +267,8 @@ export const CryptoPaymentIntent = ({ communityId = null, onSuccess }: CryptoPay
       }
 
       toast({
-        title: 'Payment Verified',
-        description: data?.message || 'Transaction verified successfully on-chain! Your subscription is now active.',
+        title: t.cryptoBilling.paymentConfirmed,
+        description: data?.message || t.cryptoBilling.verifiedByBackend,
       });
 
       await fetchData();
@@ -278,7 +278,7 @@ export const CryptoPaymentIntent = ({ communityId = null, onSuccess }: CryptoPay
       setBackendError(err.message || 'Failed to verify transaction securely on-chain.');
       toast({
         variant: 'destructive',
-        title: 'Verification Failed',
+        title: t.cryptoBilling.verificationFailed,
         description: err.message || 'Failed to verify transaction securely on-chain.',
       });
       await fetchData();
@@ -555,7 +555,7 @@ export const CryptoPaymentIntent = ({ communityId = null, onSuccess }: CryptoPay
               onClick={handleCancelIntent}
               className="text-red-400 hover:text-red-300 font-semibold transition-colors"
             >
-              Cancel Payment
+              {t.cancel}
             </button>
           )}
         </CardFooter>
@@ -572,30 +572,30 @@ export const CryptoPaymentIntent = ({ communityId = null, onSuccess }: CryptoPay
             <ShieldAlert className="h-6 w-6 text-amber-400" />
           </div>
           <CardTitle className="text-sm font-bold text-slate-100">
-            Complete Identity Checklist First
+            {t.identity.onboardingIdentityTitle}
           </CardTitle>
           <CardDescription className="text-slate-400 text-[11px] leading-relaxed max-w-sm mx-auto">
-            To activate a production MicroDAO, verify your email, connect your Telegram, and connect a crypto wallet in settings.
+            {t.identity.onboardingLeaderRequires}
           </CardDescription>
         </CardHeader>
         <CardContent className="pt-3">
           <div className="rounded-xl border border-slate-800 bg-slate-950/40 p-4 space-y-2 text-xs">
             <div className="flex justify-between items-center">
-              <span className="text-slate-400">Email:</span>
+              <span className="text-slate-400">Email</span>
               <span className={user?.email ? "text-emerald-400" : "text-amber-400"}>
-                {user?.email ? "✓ Verified" : "✗ Required"}
+                {user?.email ? `✓ ${t.identity.walletVerified}` : `✗ ${t.identity.required}`}
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-slate-400">Telegram:</span>
+              <span className="text-slate-400">{t.identity.telegramTitle}</span>
               <span className={profile?.telegram_username ? "text-emerald-400" : "text-amber-400"}>
-                {profile?.telegram_username ? `✓ @${profile.telegram_username}` : "✗ Required"}
+                {profile?.telegram_username ? `✓ @${profile.telegram_username}` : `✗ ${t.identity.required}`}
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-slate-400">Crypto Wallet:</span>
+              <span className="text-slate-400">{t.identity.walletTitle}</span>
               <span className={profile?.wallet_address ? "text-emerald-400" : "text-amber-400"}>
-                {profile?.wallet_address ? `✓ ${truncateAddress(profile.wallet_address)}` : "✗ Required"}
+                {profile?.wallet_address ? `✓ ${truncateAddress(profile.wallet_address)}` : `✗ ${t.identity.required}`}
               </span>
             </div>
           </div>

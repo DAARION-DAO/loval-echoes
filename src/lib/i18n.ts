@@ -889,8 +889,6 @@ export interface Translations {
     searchChatsPlaceholder: string;
     filterNoChatsFoundDesc: string;
     filterNoChatsYetDesc: string;
-    voiceMeetingBtn: string;
-    voiceMeetingDialogTitle: string;
     forkedFrom: string;
     active: string;
     loadErrorTitle: string;
@@ -1152,25 +1150,6 @@ export interface Translations {
     meetingsWipDesc: string;
     settingsWipTitle: string;
     settingsWipDesc: string;
-  };
-  agoraVoiceCall: {
-    loadErrorAuth: string;
-    loadErrorInit: string;
-    connectingTitle: string;
-    connectingDesc: string;
-    connectErrorToken: string;
-    connectedTitle: string;
-    connectedDesc: string;
-    connectErrorChannel: string;
-    disconnectedTitle: string;
-    disconnectedDesc: string;
-    channelHeader: string;
-    participantsCount: string;
-    btnStartMeeting: string;
-    tooltipMute: string;
-    tooltipUnmute: string;
-    labelParticipants: string;
-    participantFallback: string;
   };
   chatInterface: {
     errPlayTitle: string;
@@ -2826,8 +2805,6 @@ export const translations: Record<Language, Translations> = {
       searchChatsPlaceholder: 'Пошук чатів...',
       filterNoChatsFoundDesc: 'Спробуйте змінити пошуковий запит',
       filterNoChatsYetDesc: 'Створіть перший чат спільноти',
-      voiceMeetingBtn: 'Начати зустріч',
-      voiceMeetingDialogTitle: 'Голосова зустріч',
       forkedFrom: 'Гілка з {id}...',
       active: 'Активний',
       loadErrorTitle: 'Помилка завантаження',
@@ -3089,25 +3066,6 @@ export const translations: Record<Language, Translations> = {
       meetingsWipDesc: 'Функціонал зустрічей в розробці',
       settingsWipTitle: 'Налаштування проєкту',
       settingsWipDesc: 'Функціонал налаштувань в розробці'
-    },
-    agoraVoiceCall: {
-      loadErrorAuth: 'Користувач не авторизований',
-      loadErrorInit: 'Не вдалося ініціалізувати голосовий дзвінок',
-      connectingTitle: 'Підключення...',
-      connectingDesc: 'Отримання токена доступу',
-      connectErrorToken: 'Не вдалося отримати токен',
-      connectedTitle: 'Підключено',
-      connectedDesc: 'Ви приєдналися до голосового каналу',
-      connectErrorChannel: 'Не вдалося приєднатися до каналу',
-      disconnectedTitle: 'Відключено',
-      disconnectedDesc: 'Ви покинули голосовий канал',
-      channelHeader: 'Голосовий канал',
-      participantsCount: '{count} учасників',
-      btnStartMeeting: 'Розпочати зустріч',
-      tooltipMute: 'Вимкнути мікрофон',
-      tooltipUnmute: 'Увімкнути мікрофон',
-      labelParticipants: 'Учасники:',
-      participantFallback: 'Учасник {id}'
     },
     chatInterface: {
       errPlayTitle: 'Помилка відтворення',
@@ -4758,8 +4716,6 @@ export const translations: Record<Language, Translations> = {
       searchChatsPlaceholder: 'Search chats...',
       filterNoChatsFoundDesc: 'Try changing the search query',
       filterNoChatsYetDesc: 'Create the first community chat',
-      voiceMeetingBtn: 'Start meeting',
-      voiceMeetingDialogTitle: 'Voice meeting',
       forkedFrom: 'Branch from {id}...',
       active: 'Active',
       loadErrorTitle: 'Error Loading',
@@ -5021,25 +4977,6 @@ export const translations: Record<Language, Translations> = {
       meetingsWipDesc: 'Meetings feature is under development',
       settingsWipTitle: 'Project Settings',
       settingsWipDesc: 'Settings feature is under development'
-    },
-    agoraVoiceCall: {
-      loadErrorAuth: 'User not authorized',
-      loadErrorInit: 'Failed to initialize voice call',
-      connectingTitle: 'Connecting...',
-      connectingDesc: 'Retrieving access token',
-      connectErrorToken: 'Failed to retrieve token',
-      connectedTitle: 'Connected',
-      connectedDesc: 'You joined the voice channel',
-      connectErrorChannel: 'Failed to join the channel',
-      disconnectedTitle: 'Disconnected',
-      disconnectedDesc: 'You left the voice channel',
-      channelHeader: 'Voice Channel',
-      participantsCount: '{count} participants',
-      btnStartMeeting: 'Start meeting',
-      tooltipMute: 'Mute microphone',
-      tooltipUnmute: 'Unmute microphone',
-      labelParticipants: 'Participants:',
-      participantFallback: 'Participant {id}'
     },
     chatInterface: {
       errPlayTitle: 'Playback Error',
@@ -6690,8 +6627,6 @@ export const translations: Record<Language, Translations> = {
       searchChatsPlaceholder: 'Поиск чатов...',
       filterNoChatsFoundDesc: 'Попробуйте изменить поисковый запрос',
       filterNoChatsYetDesc: 'Создайте первый чат общины',
-      voiceMeetingBtn: 'Начать встречу',
-      voiceMeetingDialogTitle: 'Голосовая встреча',
       forkedFrom: 'Ветка из {id}...',
       active: 'Активный',
       loadErrorTitle: 'Ошибка загрузки',
@@ -6953,25 +6888,6 @@ export const translations: Record<Language, Translations> = {
       meetingsWipDesc: 'Функционал встреч в разработке',
       settingsWipTitle: 'Настройки проекта',
       settingsWipDesc: 'Функционал настроек в разработке'
-    },
-    agoraVoiceCall: {
-      loadErrorAuth: 'Пользователь не авторизован',
-      loadErrorInit: 'Не удалось инициализировать голосовой звонок',
-      connectingTitle: 'Подключение...',
-      connectingDesc: 'Получение токена доступа',
-      connectErrorToken: 'Не удалось получить токен',
-      connectedTitle: 'Подключено',
-      connectedDesc: 'Вы присоединились к голосовому каналу',
-      connectErrorChannel: 'Не удалось присоединиться к каналу',
-      disconnectedTitle: 'Отключено',
-      disconnectedDesc: 'Вы покинули голосовой канал',
-      channelHeader: 'Голосовой канал',
-      participantsCount: '{count} участников',
-      btnStartMeeting: 'Начать встречу',
-      tooltipMute: 'Выключить микрофон',
-      tooltipUnmute: 'Включить микрофон',
-      labelParticipants: 'Участники:',
-      participantFallback: 'Участник {id}'
     },
     chatInterface: {
       errPlayTitle: 'Ошибка воспроизведения',
@@ -8622,8 +8538,6 @@ export const translations: Record<Language, Translations> = {
       searchChatsPlaceholder: 'Buscar chats...',
       filterNoChatsFoundDesc: 'Intente cambiar la consulta de búsqueda',
       filterNoChatsYetDesc: 'Cree el primer chat de la comunidad',
-      voiceMeetingBtn: 'Iniciar reunión',
-      voiceMeetingDialogTitle: 'Reunión de voz',
       forkedFrom: 'Rama de {id}...',
       active: 'Activo',
       loadErrorTitle: 'Error de carga',
@@ -8885,25 +8799,6 @@ export const translations: Record<Language, Translations> = {
       meetingsWipDesc: 'El soporte de reuniones está en desarrollo',
       settingsWipTitle: 'Configuración del proyecto',
       settingsWipDesc: 'La configuración del proyecto está en desarrollo'
-    },
-    agoraVoiceCall: {
-      loadErrorAuth: 'Usuario no autorizado',
-      loadErrorInit: 'Error al inicializar la llamada de voz',
-      connectingTitle: 'Conectando...',
-      connectingDesc: 'Recuperando token de acceso',
-      connectErrorToken: 'Error al recuperar el token',
-      connectedTitle: 'Conectado',
-      connectedDesc: 'Se ha unido al canal de voz',
-      connectErrorChannel: 'Error al unirse al canal',
-      disconnectedTitle: 'Desconectado',
-      disconnectedDesc: 'Ha salido del canal de voz',
-      channelHeader: 'Canal de Voz',
-      participantsCount: '{count} participantes',
-      btnStartMeeting: 'Iniciar reunión',
-      tooltipMute: 'Silenciar micrófono',
-      tooltipUnmute: 'Activar micrófono',
-      labelParticipants: 'Participantes:',
-      participantFallback: 'Participante {id}'
     },
     chatInterface: {
       errPlayTitle: 'Error de Reproducción',

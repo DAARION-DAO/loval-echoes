@@ -3,11 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useTranslation, Language } from '@/lib/i18n';
-import { usePwaInstall } from '@/hooks/usePwaInstall';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
+import { PublicHeader } from '@/components/PublicHeader';
 import {
-  ArrowLeft,
   Download,
   Monitor,
   Smartphone,
@@ -581,8 +579,7 @@ function getArchitectureLayers(t: any) {
 export function Install() {
   const navigate = useNavigate();
   const scrollRef = useScrollReveal();
-  const { t, language, setLanguage } = useTranslation();
-  const { isInstallable, install } = usePwaInstall();
+  const { t, language } = useTranslation();
 
   const texts = localTexts[language as Language] || localTexts.en;
   const platforms = getPlatforms(t, texts);
@@ -655,64 +652,19 @@ export function Install() {
         }
       `}</style>
 
-      {/* ── Navbar ── */}
-      <header className="sticky top-0 z-50 w-full border-b border-border/30 bg-background/70 backdrop-blur-xl">
-        <div className="container max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <Button variant="ghost" size="sm" onClick={() => navigate('/')} className="gap-1.5 mr-1">
-              <ArrowLeft className="h-4 w-4" />
-              <span className="hidden sm:inline">{t.importExtra.backBtn}</span>
-            </Button>
-            <div className="h-5 w-px bg-border/50 hidden sm:block" />
-            <img src="/daarion-logo.jpg" alt="DAARION" className="h-8 w-8 rounded-lg object-cover shadow-md" />
-            <span className="font-bold text-base tracking-tight hidden md:inline">{texts.heroTitle}</span>
-            <span className="font-bold text-base tracking-tight md:hidden">{texts.headerTitleMobile}</span>
-          </div>
-
-          <div className="flex items-center gap-1.5 sm:gap-3">
-            <Button variant="ghost" size="sm" onClick={() => navigate('/agents')} className="hidden md:inline-flex text-xs sm:text-sm font-medium h-9 px-2 sm:px-3">
-              {t.agentDirectory.navbarAgents}
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => navigate('/pricing')} className="hidden md:inline-flex text-xs sm:text-sm font-medium h-9 px-2 sm:px-3">
-              {t.agentDirectory.navbarPricing}
-            </Button>
-            {/* Language Selector */}
-            <Select value={language} onValueChange={(value) => setLanguage(value as Language)}>
-              <SelectTrigger className="h-9 w-[60px] sm:w-[70px] bg-background/50 border-border/30 px-2">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="uk">UA</SelectItem>
-                <SelectItem value="en">EN</SelectItem>
-                <SelectItem value="ru">RU</SelectItem>
-                <SelectItem value="es">ES</SelectItem>
-              </SelectContent>
-            </Select>
-
-            {isInstallable && (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={install} 
-                className="text-xs sm:text-sm font-semibold gap-1.5 h-9 px-2 sm:px-3 border-primary/30 hover:bg-primary/5 text-primary"
-              >
-                <Download className="h-4 w-4" />
-                <span className="hidden xs:inline">{t.landing.installPwa}</span>
-                <span className="xs:hidden">PWA</span>
-              </Button>
-            )}
-
-            <Button 
-              size="sm" 
-              onClick={scrollToPlatforms}
-              className="hidden md:flex text-xs sm:text-sm font-semibold gap-1.5 shadow-md hover:shadow-lg transition-shadow px-3 sm:px-4 h-9 bg-emerald-600 hover:bg-emerald-500 text-white"
-            >
-              <Download className="h-3.5 w-3.5" />
-              <span>{getHeroPrimaryCtaLabel()}</span>
-            </Button>
-          </div>
-        </div>
-      </header>
+      <PublicHeader
+        active="install"
+        backToHome
+        logoSrc="/daarion-logo.jpg"
+        logoAlt="DAARION"
+        title={texts.heroTitle}
+        mobileTitle={texts.headerTitleMobile}
+        primaryLabel={getHeroPrimaryCtaLabel()}
+        primaryIcon={<Download className="h-3.5 w-3.5" />}
+        onPrimaryClick={handleHeroPrimaryClick}
+        primaryClassName="bg-emerald-600 text-white hover:bg-emerald-500"
+        showInstallPrompt
+      />
 
       {/* ── Hero ── */}
       <section className="relative py-20 md:py-28 overflow-hidden">

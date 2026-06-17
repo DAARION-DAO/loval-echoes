@@ -22,7 +22,6 @@ export default defineConfig(({ mode }) => ({
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
           'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-tabs'],
           'supabase': ['@supabase/supabase-js'],
-          'agora': ['agora-rtc-sdk-ng'],
           'query': ['@tanstack/react-query'],
         },
       },

@@ -4,9 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useTranslation, Language } from '@/lib/i18n';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/hooks/useAuth';
 import { useActiveCommunity } from '@/hooks/useActiveCommunity';
+import { PublicHeader } from '@/components/PublicHeader';
 import {
   Bot,
   Shield,
@@ -16,10 +16,8 @@ import {
   Check,
   ArrowRight,
   Download,
-  LogIn,
   Sparkles,
   MessageSquare,
-  ArrowLeft,
   Key,
   Users,
   CheckSquare,
@@ -358,7 +356,7 @@ export default function AgentDirectory() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { activeCommunity } = useActiveCommunity();
-  const { t, language, setLanguage } = useTranslation();
+  const { t, language } = useTranslation();
   const [activeCategory, setActiveCategory] = useState<'all' | 'core' | 'ops' | 'knowledge' | 'dao' | 'dev' | 'personal'>('all');
   const [expandedPromptIdx, setExpandedPromptIdx] = useState<number | null>(null);
 
@@ -1041,66 +1039,13 @@ export default function AgentDirectory() {
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col overflow-x-hidden">
-      {/* ── Navbar ── */}
-      <header className="sticky top-0 z-50 w-full border-b border-border/30 bg-background/70 backdrop-blur-xl">
-        <div className="container max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <Button variant="ghost" size="sm" onClick={() => navigate("/")} className="gap-1.5 mr-1">
-              <ArrowLeft className="h-4 w-4" />
-              <span className="hidden sm:inline">{t.importExtra.backBtn}</span>
-            </Button>
-            <div className="h-5 w-px bg-border/50 hidden sm:block" />
-            <img src="/logo.jpg" alt="MicroDAO" className="h-8 w-8 rounded-lg object-cover shadow-md" />
-            <span className="font-bold text-base tracking-tight">MicroDAO</span>
-            <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4 font-medium hidden sm:inline-flex">
-              beta
-            </Badge>
-          </div>
-
-          <div className="flex items-center gap-1.5 sm:gap-3">
-            <Button variant="ghost" size="sm" onClick={() => navigate("/agents")} className="hidden md:inline-flex text-xs sm:text-sm font-semibold h-9 px-2 sm:px-3 text-primary">
-              {texts.catAll}
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => navigate("/pricing")} className="hidden md:inline-flex text-xs sm:text-sm font-medium h-9 px-2 sm:px-3">
-              {t.pricingExtra.title}
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => navigate("/install")} className="hidden md:inline-flex text-xs sm:text-sm font-medium gap-1.5 h-9 px-2 sm:px-3">
-              <Download className="h-4 w-4" />
-              <span>{t.landing.client}</span>
-            </Button>
-            
-            <Select value={language} onValueChange={(value) => setLanguage(value as Language)}>
-              <SelectTrigger className="h-9 w-[60px] sm:w-[70px] bg-background/50 border-border/30 px-2">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="uk">UA</SelectItem>
-                <SelectItem value="en">EN</SelectItem>
-                <SelectItem value="ru">RU</SelectItem>
-                <SelectItem value="es">ES</SelectItem>
-              </SelectContent>
-            </Select>
-
-            {user ? (
-              <Button size="sm" onClick={() => navigate("/dashboard")} className="text-xs sm:text-sm font-semibold gap-1.5 shadow-md hover:shadow-lg transition-shadow px-3 sm:px-4 h-9">
-                <span>{t.agentDirectory.panelBtn}</span>
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            ) : (
-              <>
-                <Button variant="ghost" size="sm" onClick={() => navigate("/auth")} className="text-xs sm:text-sm font-medium gap-1 h-9 px-2">
-                  <LogIn className="h-4 w-4" />
-                  <span className="hidden sm:inline">{t.landing.login}</span>
-                </Button>
-                <Button size="sm" onClick={handleCtaClick} className="text-xs sm:text-sm font-semibold gap-1 sm:gap-1.5 shadow-md hover:shadow-lg transition-shadow px-3 sm:px-4 h-9">
-                  <Sparkles className="h-3.5 w-3.5" />
-                  <span className="hidden xs:inline">{t.pricingExtra.startBtn}</span>
-                </Button>
-              </>
-            )}
-          </div>
-        </div>
-      </header>
+      <PublicHeader
+        active="agents"
+        backToHome
+        primaryLabel={user && activeCommunity ? t.agentDirectory.panelBtn : t.pricingExtra.startBtn}
+        primaryIcon={<Sparkles className="h-3.5 w-3.5" />}
+        onPrimaryClick={handleCtaClick}
+      />
 
       {/* ── Directory Hero ── */}
       <section 

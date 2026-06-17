@@ -3,12 +3,44 @@ import App from "./App.tsx";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import "./index.css";
 
-// Register Service Worker for PWA
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then(reg => console.log('Service Worker registered successfully:', reg.scope))
-      .catch(err => console.error('Service Worker registration failed:', err));
+// Register Service Worker for PWA updates and offline shell.
+if ("serviceWorker" in navigator) {
+  const notifyUpdateReady = (registration: ServiceWorkerRegistration) => {
+    window.dispatchEvent(
+      new CustomEvent("microdao:pwa-update-ready", {
+        detail: { registration },
+      }),
+    );
+  };
+
+  window.addEventListener("load", () => {
+    navigator.serviceWorker
+      .register("/sw.js")
+      .then((registration) => {
+        if (import.meta.env.DEV) {
+          console.info("Service Worker registered:", registration.scope);
+        }
+
+        if (registration.waiting) {
+          notifyUpdateReady(registration);
+        }
+
+        registration.addEventListener("updatefound", () => {
+          const installingWorker = registration.installing;
+          if (!installingWorker) return;
+
+          installingWorker.addEventListener("statechange", () => {
+            if (installingWorker.state === "installed" && navigator.serviceWorker.controller) {
+              notifyUpdateReady(registration);
+            }
+          });
+        });
+      })
+      .catch((error) => {
+        if (import.meta.env.DEV) {
+          console.warn("Service Worker registration failed:", error);
+        }
+      });
   });
 }
 

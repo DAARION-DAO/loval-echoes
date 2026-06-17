@@ -91,61 +91,6 @@ export function usePushNotifications() {
     }
   }, [user]);
 
-  // Автоматический запрос разрешения при первом загрузке
-  const requestPermissionAutomatically = useCallback(async () => {
-    if (!('Notification' in window)) {
-      return false;
-    }
-
-    // Проверяем, запрашивали ли мы уже разрешение
-    const hasRequestedBefore = localStorage.getItem('push-permission-requested') === 'true';
-    
-    // Если разрешение уже запрошено или отклонено, не запрашиваем снова
-    if (hasRequestedBefore || Notification.permission !== 'default') {
-      setPermissionStatus(Notification.permission);
-      return Notification.permission === 'granted';
-    }
-
-    try {
-      // Показываем дружелюбное сообщение перед запросом
-      const shouldRequest = await new Promise<boolean>((resolve) => {
-        // Можно показать toast или модальное окно
-        // Для автоматического запроса просто разрешаем
-        setTimeout(() => resolve(true), 1000); // Небольшая задержка для UX
-      });
-
-      if (!shouldRequest) return false;
-
-      // Запрашиваем разрешение
-      const permission = await Notification.requestPermission();
-      localStorage.setItem('push-permission-requested', 'true');
-      setPermissionStatus(permission);
-
-      if (permission === 'granted') {
-        const registration = await registerServiceWorker();
-        if (registration) {
-          await subscribeToPush(registration);
-          toast({
-            title: t.pushNotifications.enabledTitle,
-            description: t.pushNotifications.enabledTabDesc,
-          });
-          return true;
-        }
-      } else if (permission === 'denied') {
-        toast({
-          title: t.pushNotifications.permissionDeniedTitle,
-          description: t.pushNotifications.permissionDeniedDesc,
-          variant: 'destructive',
-        });
-      }
-
-      return false;
-    } catch (error: unknown) {
-      console.error('Error requesting notification permission:', error);
-      return false;
-    }
-  }, [registerServiceWorker, subscribeToPush, toast, t]);
-
   // Ручной запрос разрешения
   const requestPermission = useCallback(async () => {
     if (!('Notification' in window)) {
@@ -256,9 +201,6 @@ export function usePushNotifications() {
           const registration = await navigator.serviceWorker.ready;
           const subscription = await registration.pushManager.getSubscription();
           setPushEnabled(!!subscription);
-        } else if (Notification.permission === 'default') {
-          // Автоматически запрашиваем разрешение при первом загрузке
-          await requestPermissionAutomatically();
         }
       }
 
@@ -267,7 +209,7 @@ export function usePushNotifications() {
     };
 
     init();
-  }, [user, registerServiceWorker, requestPermissionAutomatically, loadSettings]);
+  }, [user, registerServiceWorker, loadSettings]);
 
   return {
     pushEnabled,
@@ -279,5 +221,4 @@ export function usePushNotifications() {
     loadSettings,
   };
 }
-
 

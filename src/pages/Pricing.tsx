@@ -1,27 +1,96 @@
-import { Check, Shield, Zap, Sparkles, Download, LogIn, ArrowRight, Network, Users, ArrowLeft } from "lucide-react";
+import { Check, Shield, Zap, Sparkles, ArrowRight, Network, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useTranslation, Language } from "@/lib/i18n";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { usePwaInstall } from "@/hooks/usePwaInstall";
 import { useAuth } from "@/hooks/useAuth";
 import { useBillingPlanConfig } from "@/lib/cryptoBilling";
+import { PublicHeader } from "@/components/PublicHeader";
+
+const pricingUiCopy: Record<
+  Language,
+  {
+    invitedMembers: string;
+    polygonOnly: string;
+    month: string;
+    equivalent: string;
+    founderProgram: string;
+    manualReview: string;
+    operators: string;
+    manualVerification: string;
+    technical: string;
+    manualVerificationLower: string;
+    popular: string;
+  }
+> = {
+  uk: {
+    invitedMembers: "для запрошених учасників",
+    polygonOnly: "тільки Polygon",
+    month: "міс",
+    equivalent: "еквівалент",
+    founderProgram: "Founder Program",
+    manualReview: "Ручна перевірка",
+    operators: "для операторів",
+    manualVerification: "Ручне підтвердження",
+    technical: "Технічний",
+    manualVerificationLower: "ручна перевірка",
+    popular: "Популярний",
+  },
+  en: {
+    invitedMembers: "for invited members",
+    polygonOnly: "Polygon only",
+    month: "mo",
+    equivalent: "equivalent",
+    founderProgram: "Founder Program",
+    manualReview: "Manual Review",
+    operators: "for operators",
+    manualVerification: "Manual Verification",
+    technical: "Technical",
+    manualVerificationLower: "manual verification",
+    popular: "Popular",
+  },
+  ru: {
+    invitedMembers: "для приглашенных участников",
+    polygonOnly: "только Polygon",
+    month: "мес",
+    equivalent: "эквивалент",
+    founderProgram: "Founder Program",
+    manualReview: "Ручная проверка",
+    operators: "для операторов",
+    manualVerification: "Ручное подтверждение",
+    technical: "Технический",
+    manualVerificationLower: "ручная проверка",
+    popular: "Популярный",
+  },
+  es: {
+    invitedMembers: "para miembros invitados",
+    polygonOnly: "solo Polygon",
+    month: "mes",
+    equivalent: "equivalente",
+    founderProgram: "Founder Program",
+    manualReview: "Revisión manual",
+    operators: "para operadores",
+    manualVerification: "Verificación manual",
+    technical: "Técnico",
+    manualVerificationLower: "verificación manual",
+    popular: "Popular",
+  },
+};
 
 export default function Pricing() {
   const navigate = useNavigate();
-  const { t, language, setLanguage } = useTranslation();
-  const { isInstallable, install } = usePwaInstall();
+  const { t, language } = useTranslation();
   const { user } = useAuth();
   const { config, loading } = useBillingPlanConfig();
+  const pricingCopy = pricingUiCopy[language] ?? pricingUiCopy.en;
 
   const tiers = [
     {
       name: t.pricingExtra.participantName,
       badge: t.pricingExtra.free,
       price: t.pricingExtra.free,
-      period: "uk" === language ? "для запрошених учасників" : "for invited members",
+      period: pricingCopy.invitedMembers,
       desc: t.pricingExtra.participantDesc,
       features: [
         t.pricingExtra.participantFeature1,
@@ -37,9 +106,9 @@ export default function Pricing() {
     },
     {
       name: t.pricingExtra.leaderPlanName,
-      badge: loading ? "Polygon only" : `${config.paymentNetwork.charAt(0).toUpperCase() + config.paymentNetwork.slice(1)} only`,
-      price: loading ? t.pricingExtra.leaderPlanPrice : `${config.priceDaar} DAAR / ${language === 'uk' ? 'міс' : language === 'ru' ? 'мес' : language === 'es' ? 'mes' : 'mo'}`,
-      period: loading ? t.pricingExtra.leaderPlanPeriod : `$${config.priceUsd} ${language === 'uk' ? 'еквівалент' : language === 'ru' ? 'эквивалент' : language === 'es' ? 'equivalente' : 'equivalent'} | ${config.paymentNetwork} only`,
+      badge: loading ? pricingCopy.polygonOnly : `${config.paymentNetwork.charAt(0).toUpperCase() + config.paymentNetwork.slice(1)} only`,
+      price: loading ? t.pricingExtra.leaderPlanPrice : `${config.priceDaar} DAAR / ${pricingCopy.month}`,
+      period: loading ? t.pricingExtra.leaderPlanPeriod : `$${config.priceUsd} ${pricingCopy.equivalent} | ${config.paymentNetwork} only`,
       desc: t.pricingExtra.leaderPlanDesc,
       features: [
         t.pricingExtra.leaderPlanFeature1,
@@ -61,7 +130,7 @@ export default function Pricing() {
       }
     },
     {
-      name: "Founder Program",
+      name: pricingCopy.founderProgram,
       badge: t.pricingExtra.byInvitation,
       price: t.pricingExtra.byInvitation,
       period: t.pricingExtra.supportDevelopment,
@@ -81,9 +150,9 @@ export default function Pricing() {
     },
     {
       name: t.pricingExtra.partnerName,
-      badge: "Manual Review",
+      badge: pricingCopy.manualReview,
       price: t.pricingExtra.byInvitation,
-      period: "uk" === language ? "для операторів" : "for operators",
+      period: pricingCopy.operators,
       desc: t.pricingExtra.partnerDesc,
       features: [
         t.pricingExtra.partnerFeature1,
@@ -117,9 +186,9 @@ export default function Pricing() {
     },
     {
       name: t.pricingExtra.workerNodeName,
-      badge: "Manual Verification",
-      price: "uk" === language ? "Технічний" : "Technical",
-      period: "uk" === language ? "ручна перевірка" : "manual verification",
+      badge: pricingCopy.manualVerification,
+      price: pricingCopy.technical,
+      period: pricingCopy.manualVerificationLower,
       desc: t.pricingExtra.workerNodeDesc,
       features: [
         t.pricingExtra.workerNodeFeature1,
@@ -137,64 +206,13 @@ export default function Pricing() {
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col overflow-x-hidden">
-      {/* ── Navbar ── */}
-      <header className="sticky top-0 z-50 w-full border-b border-border/30 bg-background/70 backdrop-blur-xl">
-        <div className="container max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <Button variant="ghost" size="sm" onClick={() => navigate("/")} className="gap-1.5 mr-1">
-              <ArrowLeft className="h-4 w-4" />
-              <span className="hidden sm:inline">{t.importExtra.backBtn}</span>
-            </Button>
-            <div className="h-5 w-px bg-border/50 hidden sm:block" />
-            <img src="/logo.jpg" alt="MicroDAO" className="h-8 w-8 rounded-lg object-cover shadow-md" />
-            <span className="font-bold text-base tracking-tight hidden xs:inline">MicroDAO</span>
-            <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4 font-medium hidden sm:inline-flex">
-              beta
-            </Badge>
-          </div>
-
-          <div className="flex items-center gap-1.5 sm:gap-3">
-            <Button variant="ghost" size="sm" onClick={() => navigate("/agents")} className="hidden md:inline-flex text-xs sm:text-sm font-medium h-9 px-2 sm:px-3">
-              {t.nav.agents}
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => navigate("/pricing")} className="hidden md:inline-flex text-xs sm:text-sm font-semibold h-9 px-2 sm:px-3 text-primary">
-              {t.pricingExtra.title}
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => navigate("/install")} className="hidden md:inline-flex text-xs sm:text-sm font-medium gap-1.5 h-9 px-2 sm:px-3">
-              <Download className="h-4 w-4" />
-              <span>{t.landing.client}</span>
-            </Button>
-            
-            <Select value={language} onValueChange={(value) => setLanguage(value as Language)}>
-              <SelectTrigger className="h-9 w-[60px] sm:w-[70px] bg-background/50 border-border/30 px-2">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="uk">UA</SelectItem>
-                <SelectItem value="en">EN</SelectItem>
-                <SelectItem value="ru">RU</SelectItem>
-                <SelectItem value="es">ES</SelectItem>
-              </SelectContent>
-            </Select>
-
-            {user ? (
-              <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")} className="text-xs sm:text-sm font-medium h-9 px-2">
-                <span>{t.nav.goToDashboard}</span>
-              </Button>
-            ) : (
-              <Button variant="ghost" size="sm" onClick={() => navigate("/auth")} className="text-xs sm:text-sm font-medium gap-1 h-9 px-2">
-                <LogIn className="h-4 w-4" />
-                <span className="hidden sm:inline">{t.landing.login}</span>
-              </Button>
-            )}
-            
-            <Button size="sm" onClick={() => navigate(user ? "/dashboard" : "/auth?signup=true")} className="text-xs sm:text-sm font-semibold gap-1 sm:gap-1.5 shadow-md hover:shadow-lg transition-shadow px-3 sm:px-4 h-9">
-              <Sparkles className="h-3.5 w-3.5" />
-              <span className="hidden xs:inline">{user ? t.nav.goToDashboard : t.pricingExtra.startBtn}</span>
-            </Button>
-          </div>
-        </div>
-      </header>
+      <PublicHeader
+        active="pricing"
+        backToHome
+        primaryLabel={user ? t.nav.goToDashboard : t.pricingExtra.startBtn}
+        primaryIcon={<Sparkles className="h-3.5 w-3.5" />}
+        onPrimaryClick={() => navigate(user ? "/dashboard" : "/auth?signup=true")}
+      />
 
       {/* ── Pricing Hero ── */}
       <section className="relative py-16 sm:py-24 text-center overflow-hidden border-b border-border/10">
@@ -242,7 +260,7 @@ export default function Pricing() {
                 
                 {tier.featured && (
                   <div className="absolute top-0 right-0 bg-indigo-600 text-white text-[9px] uppercase font-bold tracking-widest px-3 py-1 rounded-bl-xl shadow-sm">
-                    Popular
+                    {pricingCopy.popular}
                   </div>
                 )}
 

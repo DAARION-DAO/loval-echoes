@@ -61,6 +61,21 @@
       "icons": [{ "src": "/icon-192x192.png", "sizes": "192x192" }]
     }
   ],
-  "screenshots": [],
+  "screenshots": [
+    {
+      "src": "/hero-bg.jpg",
+      "sizes": "1024x512",
+      "type": "image/jpeg",
+      "form_factor": "wide",
+      "label": "MicroDAO landing overview"
+    },
+    {
+      "src": "/agents-hero-bg.jpg",
+      "sizes": "1024x576",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "MicroDAO agent directory"
+    }
+  ],
   "prefer_related_applications": false
 }

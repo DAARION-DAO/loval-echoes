@@ -38,7 +38,6 @@
   - projects-api
   - kanban-api
   - push-subscribe
-  - agora-token
 
 ### 4. **Shared Utilities Created**
 - ✅ Created `_shared/cors.ts` - CORS utility with allowed origins
@@ -63,8 +62,6 @@ These functions still need to be updated to use `ANON_KEY` with proper JWT verif
 11. **projects-api** - Projects management (MEDIUM PRIORITY)
 12. **kanban-api** - Kanban boards (MEDIUM PRIORITY)
 13. **push-subscribe** - Push notifications (MEDIUM PRIORITY)
-14. **agora-token** - Voice chat tokens (MEDIUM PRIORITY)
-
 ### Migration Pattern
 
 For each function, follow this pattern:
@@ -172,5 +169,4 @@ const { text, author_id } = validationResult.data;
 - [Supabase RLS Guide](https://supabase.com/docs/guides/auth/row-level-security)
 - [Zod Validation](https://zod.dev/)
 - [Supabase Edge Functions Security](https://supabase.com/docs/guides/functions/security)
-
 

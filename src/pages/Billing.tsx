@@ -47,7 +47,7 @@ export default function Billing() {
               onClick={() => navigate('/admin/billing')}
               className="bg-indigo-600 hover:bg-indigo-550 text-indigo-100 text-[10px] h-8 font-semibold"
             >
-              Open Admin Billing Queue
+              {t.pricingExtra.goToVerificationQueue}
               <ArrowRight className="h-3 w-3 ml-1.5" />
             </Button>
           </CardContent>
@@ -61,9 +61,9 @@ export default function Billing() {
           <Card className="border-slate-800 bg-slate-900/10">
             <CardHeader className="pb-3">
               <Badge className="w-fit bg-indigo-500/10 text-indigo-300 border-indigo-500/20 text-[9px] uppercase font-bold tracking-wider">
-                Leader Plan
+                {t.identity.leaderPlan}
               </Badge>
-              <CardTitle className="text-base font-bold mt-2">MicroDAO Activation</CardTitle>
+              <CardTitle className="text-base font-bold mt-2">{t.cryptoBilling.activateLeaderPlan}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 text-xs">
               <div className="border-t border-b border-slate-800 py-3 flex flex-col justify-center">
@@ -98,29 +98,29 @@ export default function Billing() {
           <Card className={`border-slate-800 bg-slate-900/10 ${!isProfileComplete ? 'border-amber-500/20' : ''}`}>
             <CardHeader className="pb-2">
               <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                Identity Checklist
+                {t.identity.checklistTitle}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 pt-2 text-xs">
               <div className="flex items-center justify-between gap-2 border-b border-slate-850 pb-2 last:border-0">
                 <div className="space-y-0.5">
-                  <span className="font-semibold block text-slate-200">Email:</span>
-                  <span className="text-[10px] text-slate-400">{user?.email || "Missing"}</span>
+                  <span className="font-semibold block text-slate-200">Email</span>
+                  <span className="text-[10px] text-slate-400">{user?.email || t.identity.emailRequired}</span>
                 </div>
                 <Badge variant={user?.email ? "default" : "destructive"} className="text-[9px] px-1.5 py-0 h-4">
-                  {user?.email ? "Verified" : "Required"}
+                  {user?.email ? t.identity.walletVerified : t.identity.required}
                 </Badge>
               </div>
 
               <div className="flex items-center justify-between gap-2 border-b border-slate-850 pb-2 last:border-0">
                 <div className="space-y-0.5">
-                  <span className="font-semibold block text-slate-200">Telegram:</span>
+                  <span className="font-semibold block text-slate-200">{t.identity.telegramTitle}</span>
                   <span className="text-[10px] text-slate-400">
-                    {profile?.telegram_username ? `@${profile.telegram_username}` : "Not connected"}
+                    {profile?.telegram_username ? `@${profile.telegram_username}` : t.identity.telegramNotLinked}
                   </span>
                 </div>
                 {profile?.telegram_username ? (
-                  <Badge variant="default" className="text-[9px] px-1.5 py-0 h-4">Connected</Badge>
+                  <Badge variant="default" className="text-[9px] px-1.5 py-0 h-4">{t.identity.telegramConnected}</Badge>
                 ) : (
                   <Button 
                     size="sm" 
@@ -128,20 +128,20 @@ export default function Billing() {
                     onClick={() => navigate('/settings')}
                     className="h-6 text-[9px] border-amber-500/30 text-amber-400 hover:bg-amber-500/10 font-bold px-2 py-0"
                   >
-                    Connect
+                    {t.nav.settings}
                   </Button>
                 )}
               </div>
 
               <div className="flex items-center justify-between gap-2 border-b border-slate-850 pb-2 last:border-0">
                 <div className="space-y-0.5">
-                  <span className="font-semibold block text-slate-200">Crypto Wallet:</span>
+                  <span className="font-semibold block text-slate-200">{t.identity.walletTitle}</span>
                   <span className="text-[10px] text-slate-400 truncate max-w-[120px]">
-                    {profile?.wallet_address ? `${profile.wallet_address.slice(0, 6)}…${profile.wallet_address.slice(-4)}` : "Not connected"}
+                    {profile?.wallet_address ? `${profile.wallet_address.slice(0, 6)}…${profile.wallet_address.slice(-4)}` : t.identity.walletNotConnected}
                   </span>
                 </div>
                 {profile?.wallet_address ? (
-                  <Badge variant="default" className="text-[9px] px-1.5 py-0 h-4">Connected</Badge>
+                  <Badge variant="default" className="text-[9px] px-1.5 py-0 h-4">{t.identity.walletConnected}</Badge>
                 ) : (
                   <Button 
                     size="sm" 
@@ -149,7 +149,7 @@ export default function Billing() {
                     onClick={() => navigate('/settings')}
                     className="h-6 text-[9px] border-amber-500/30 text-amber-400 hover:bg-amber-500/10 font-bold px-2 py-0"
                   >
-                    Connect
+                    {t.nav.settings}
                   </Button>
                 )}
               </div>

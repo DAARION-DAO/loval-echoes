@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, MessageSquare, GitBranch, Users, Phone } from 'lucide-react';
+import { Plus, Search, MessageSquare, GitBranch, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -10,8 +10,6 @@ import { useTranslation } from '@/lib/i18n';
 import { fetchChats, createChat, ChatLite } from '@/services/chats';
 import { useToast } from '@/hooks/use-toast';
 import { getErrorMessage } from '@/utils/errorHelper';
-import { AgoraVoiceCall } from '@/components/AgoraVoiceCall';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 export const ChatsPage = () => {
   const navigate = useNavigate();
@@ -23,7 +21,6 @@ export const ChatsPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [onlineCount] = useState(3); // Mock data
-  const [showVoiceCall, setShowVoiceCall] = useState(false);
 
   useEffect(() => {
     loadChats();
@@ -115,28 +112,6 @@ export const ChatsPage = () => {
         </div>
         
         <div className="flex gap-2 w-full sm:w-auto">
-          <Dialog open={showVoiceCall} onOpenChange={setShowVoiceCall}>
-            <DialogTrigger asChild>
-              <Button 
-                variant="secondary"
-                className="hover-lift h-11 px-6 flex-1 sm:flex-initial"
-                size="lg"
-              >
-                <Phone className="h-4 w-4 mr-2" />
-                {t.chatsExtra.voiceMeetingBtn}
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle>{t.chatsExtra.voiceMeetingDialogTitle}</DialogTitle>
-              </DialogHeader>
-              <AgoraVoiceCall 
-                channelName="community-voice" 
-                onLeave={() => setShowVoiceCall(false)}
-              />
-            </DialogContent>
-          </Dialog>
-          
           <Button 
             onClick={handleCreateChat} 
             className="hover-lift h-11 px-6 flex-1 sm:flex-initial"

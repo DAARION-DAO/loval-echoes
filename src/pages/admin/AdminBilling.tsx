@@ -464,8 +464,8 @@ export const AdminBilling = () => {
       }
 
       toast({
-        title: 'Transaction Verified',
-        description: data?.message || 'Transaction successfully verified and subscription activated.',
+        title: t.cryptoBilling.paymentConfirmed,
+        description: data?.message || t.cryptoBilling.verifiedByBackend,
       });
 
       await Promise.all([fetchStats(), fetchIntents()]);
@@ -474,8 +474,8 @@ export const AdminBilling = () => {
       console.error('Backend verify admin error:', err);
       toast({
         variant: 'destructive',
-        title: 'Verification Failed',
-        description: err.message || 'Server verification failed.',
+        title: t.cryptoBilling.verificationFailed,
+        description: err.message || t.cryptoBilling.manualReviewRequired,
       });
     } finally {
       setVerifyingBackendId(null);
@@ -978,7 +978,7 @@ export const AdminBilling = () => {
                       <div className="text-[10px] text-slate-500">{t.advancedAccess[descKey]}</div>
                     </div>
                   </div>
-                  <Badge className="bg-slate-800 text-slate-400 border-slate-700 text-[9px] uppercase font-bold">Manual Review</Badge>
+                  <Badge className="bg-slate-800 text-slate-400 border-slate-700 text-[9px] uppercase font-bold">{t.cryptoBilling.manualReview}</Badge>
                 </div>
               );
             })}

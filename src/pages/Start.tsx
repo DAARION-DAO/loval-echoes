@@ -5,15 +5,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { useTranslation, Language } from '@/lib/i18n';
-import { usePwaInstall } from '@/hooks/usePwaInstall';
+import { useTranslation } from '@/lib/i18n';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useActiveCommunity } from '@/hooks/useActiveCommunity';
 import { useUserApprovalStatus } from '@/hooks/useUserApprovalStatus';
+import { PublicHeader } from '@/components/PublicHeader';
 
 import {
   Users,
@@ -22,7 +21,6 @@ import {
   Files,
   Bot,
   ArrowRight,
-  LogIn,
   Sparkles,
   Shield,
   Zap,
@@ -38,7 +36,6 @@ import {
   HeartHandshake,
   Eye,
   ArrowDown,
-  Download,
 } from 'lucide-react';
 
 /* ──────────────────────────────────────────────
@@ -92,12 +89,10 @@ export function Start() {
   const { accessTier } = useUserApprovalStatus();
   const [submitting, setSubmitting] = useState(false);
   const scrollRef = useScrollReveal();
-  const { t, language, setLanguage } = useTranslation();
+  const { t } = useTranslation();
   
   const isOverLimit = (accessTier === 'early_access' && memberships.length >= 1) || 
                       (accessTier === 'community' && memberships.length >= 3);
-
-  const { isInstallable, install } = usePwaInstall();
 
   // Onboarding form state
   const [commName, setCommName] = useState('');
@@ -294,74 +289,13 @@ export function Start() {
   return (
     <div ref={scrollRef} className="min-h-screen bg-background text-foreground flex flex-col overflow-x-hidden">
 
-      {/* ── Navbar ── */}
-      <header className="sticky top-0 z-50 w-full border-b border-border/30 bg-background/70 backdrop-blur-xl">
-        <div className="container max-w-7xl mx-auto px-3 sm:px-4 h-14 sm:h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <img src="/logo.jpg" alt="MicroDAO" className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl object-cover shadow-md landing-glow" />
-            <span className="font-bold text-base sm:text-lg tracking-tight">MicroDAO</span>
-            <Badge variant="secondary" className="hidden sm:inline-flex text-[10px] px-1.5 py-0 h-5 font-medium">
-              beta
-            </Badge>
-          </div>
-
-          <div className="flex items-center gap-1.5 sm:gap-3">
-            {/* Language Selector */}
-            <Select value={language} onValueChange={(value) => setLanguage(value as Language)}>
-              <SelectTrigger className="h-9 w-[70px] sm:w-[90px] bg-background/50 border-border/30 px-2">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="uk">UA</SelectItem>
-                <SelectItem value="en">EN</SelectItem>
-                <SelectItem value="ru">RU</SelectItem>
-                <SelectItem value="es">ES</SelectItem>
-              </SelectContent>
-            </Select>
-
-            {isInstallable && (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={install} 
-                className="text-xs sm:text-sm font-semibold gap-1.5 h-9 px-2 sm:px-3 border-primary/30 hover:bg-primary/5 text-primary"
-              >
-                <Download className="h-4 w-4" />
-                <span className="hidden xs:inline">{t.landing.installPwa}</span>
-                <span className="xs:hidden">PWA</span>
-              </Button>
-            )}
-
-            <Button variant="ghost" size="sm" onClick={() => navigate('/agents')} className="text-xs sm:text-sm font-medium h-9 px-2 sm:px-3">
-              {t.agentDirectory.navbarAgents}
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => navigate('/pricing')} className="text-xs sm:text-sm font-medium h-9 px-2 sm:px-3">
-              {t.agentDirectory.navbarPricing}
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => navigate('/install')} className="text-xs sm:text-sm font-medium gap-1.5 h-9 px-2 sm:px-3">
-              <Download className="h-4 w-4" />
-              <span className="hidden xxs:inline">{t.landing.client}</span>
-            </Button>
-            {user ? (
-              <Button size="sm" onClick={() => navigate('/dashboard')} className="text-xs sm:text-sm font-semibold gap-1 sm:gap-1.5 shadow-md hover:shadow-lg transition-shadow px-3 sm:px-4 h-9">
-                <Sparkles className="h-3.5 w-3.5" />
-                <span>{t.nav.goToDashboard}</span>
-              </Button>
-            ) : (
-              <>
-                <Button variant="ghost" size="sm" onClick={() => navigate('/auth')} className="text-xs sm:text-sm font-medium gap-1 h-9 px-2">
-                  <LogIn className="h-4 w-4" />
-                  <span className="hidden xs:inline">{t.landing.login}</span>
-                </Button>
-                <Button size="sm" onClick={() => navigate('/auth?signup=true')} className="text-xs sm:text-sm font-semibold gap-1 sm:gap-1.5 shadow-md hover:shadow-lg transition-shadow px-3 sm:px-4 h-9">
-                  <Sparkles className="h-3.5 w-3.5" />
-                  <span>{t.create}</span>
-                </Button>
-              </>
-            )}
-          </div>
-        </div>
-      </header>
+      <PublicHeader
+        active="home"
+        primaryLabel={user ? t.nav.goToDashboard : t.create}
+        primaryIcon={<Sparkles className="h-3.5 w-3.5" />}
+        onPrimaryClick={() => navigate(user ? '/dashboard' : '/auth?signup=true')}
+        showInstallPrompt
+      />
 
       {/* ── Hero Section ── */}
       <section className="relative py-12 sm:py-20 md:py-32 overflow-hidden">

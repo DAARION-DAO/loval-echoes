@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { ActiveCommunityProvider, useActiveCommunity } from "@/hooks/useActiveCommunity";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { PwaUpdatePrompt } from "@/components/PwaUpdatePrompt";
 
 import { lazy, Suspense } from "react";
 import { useTranslation } from "@/lib/i18n";
@@ -197,6 +198,7 @@ const App = () => {
         <TooltipProvider>
           <Toaster />
           <Sonner />
+          <PwaUpdatePrompt />
           <BrowserRouter>
             <AuthProvider>
               <ActiveCommunityProvider>
