@@ -344,6 +344,9 @@ serve(async (req) => {
             tx_to: tx.to || decodedRecipient,
             onchain_amount: Number(decodedAmountRaw) / Math.pow(10, decimals),
             block_number: txBlock,
+            chain_id: POLYGON_CHAIN_ID,
+            token_contract: tx.input && tx.input.startsWith("0xa9059cbb") ? tx.to.toLowerCase() : null,
+            confirmations: confirmations,
           })
           .eq("id", payment_intent_id);
 
@@ -388,6 +391,9 @@ serve(async (req) => {
           tx_from: tx.from,
           tx_to: tx.to || decodedRecipient,
           onchain_amount: onchainAmountNumber,
+          chain_id: POLYGON_CHAIN_ID,
+          token_contract: tx.input && tx.input.startsWith("0xa9059cbb") ? tx.to.toLowerCase() : null,
+          confirmations: confirmations,
         })
         .eq("id", payment_intent_id);
 

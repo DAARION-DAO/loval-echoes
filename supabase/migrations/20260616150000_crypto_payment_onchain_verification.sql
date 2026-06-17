@@ -7,10 +7,13 @@ ALTER TABLE public.crypto_payment_intents
   ADD COLUMN IF NOT EXISTS verification_error text,
   ADD COLUMN IF NOT EXISTS verified_at timestamptz,
   ADD COLUMN IF NOT EXISTS verified_by text,
+  ADD COLUMN IF NOT EXISTS chain_id integer,
   ADD COLUMN IF NOT EXISTS block_number bigint,
   ADD COLUMN IF NOT EXISTS tx_from text,
   ADD COLUMN IF NOT EXISTS tx_to text,
-  ADD COLUMN IF NOT EXISTS onchain_amount numeric;
+  ADD COLUMN IF NOT EXISTS token_contract text,
+  ADD COLUMN IF NOT EXISTS onchain_amount numeric,
+  ADD COLUMN IF NOT EXISTS confirmations integer;
 
 -- Unique constraint on tx_hash for confirmed intents to block double spending
 CREATE UNIQUE INDEX IF NOT EXISTS crypto_payment_intents_confirmed_tx_hash_unique
