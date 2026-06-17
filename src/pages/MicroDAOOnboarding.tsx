@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -70,7 +70,6 @@ interface AnswersState {
   language: 'uk' | 'en' | 'ru' | 'es';
   communication_style: string;
   enabled_modules: string[];
-  invite_emails: string;
   suggested_roles: string;
 }
 
@@ -100,7 +99,6 @@ const defaultAnswers: AnswersState = {
   language: 'uk',
   communication_style: 'friendly',
   enabled_modules: ['memory', 'tasks', 'steward'],
-  invite_emails: '',
   suggested_roles: 'Coordinator, Moderator'
 };
 
@@ -143,8 +141,7 @@ const wizardLocals = {
     } as Record<string, string>,
     suggestedRolesLabel: "Пропоновані ролі для перших учасників",
     suggestedRolesPlaceholder: "Наприклад: Координатор, Розробник, Модератор...",
-    inviteEmailsLabel: "Емейли для запрошення (через кому)",
-    inviteEmailsPlaceholder: "example1@dao.com, example2@dao.com...",
+    codeOnlyInviteNote: "У V1 запрошення працюють через коди. Після створення MicroDAO ви зможете копіювати коди та посилання на сторінці учасників.",
     agentMsgs: {
       1: "Привіт! Я — ваш майбутній Дух Спільноти. Давайте разом створимо нову MicroDAO. Спочатку вкажіть назву, тип та опис нашого майбутнього простору.",
       2: "Чудово! Тепер давайте сформулюємо нашу місію, ціль на перші 30 днів та бажаний результат, щоб я міг допомагати вам рухатись у правильному напрямку.",
@@ -152,7 +149,7 @@ const wizardLocals = {
       4: "А тепер налаштуємо мене. Як мене зватимуть? Який тон, стиль та мову спілкування мені обрати для роботи з вашою спільнотою?",
       5: "Визначте мій рівень автономії. Що я можу робити самостійно, а де мені обовʼязково знадобиться підтвердження власника або адміністратора?",
       6: "Які стартові модулі ви хочете активувати прямо зараз? Деякі з них працюватимуть у локальному клієнті, інші перебувають у нашому плані розвитку.",
-      7: "Давайте підготуємо перші запрошення. Ви можете створити індивідуальні інвайт-коди або одразу надіслати запрошення на емейли.",
+      7: "Давайте підготуємо перші запрошення. У V1 учасники приєднуються через member/admin коди або посилання, які можна скопіювати після запуску MicroDAO.",
       8: "Все готово! Перевірте конфігурацію. Коли ви натиснете «Запустити», народиться ваша MicroDAO, а разом з нею — я, ваш Дух Спільноти.",
     } as Record<number, string>
   },
@@ -194,8 +191,7 @@ const wizardLocals = {
     } as Record<string, string>,
     suggestedRolesLabel: "Suggested roles for initial members",
     suggestedRolesPlaceholder: "e.g., Coordinator, Developer, Moderator...",
-    inviteEmailsLabel: "Invite emails (comma separated)",
-    inviteEmailsPlaceholder: "example1@dao.com, example2@dao.com...",
+    codeOnlyInviteNote: "In V1 invites work through codes. After creating the MicroDAO, you can copy codes and links from the members page.",
     agentMsgs: {
       1: "Hello! I am your future Community Spirit Agent. Let's create a new MicroDAO together. First, enter the name, type, and description of our space.",
       2: "Great! Now let's define our mission, first 30-day goal, and desired outcome so that I can help guide your community in the right direction.",
@@ -203,7 +199,7 @@ const wizardLocals = {
       4: "Now let's configure my personality. What is my name? What tone, style, and language should I adopt to interact with your community?",
       5: "Define my autonomy level. What can I do on my own, and where will I strictly need approval from the owner or admin?",
       6: "Which starter modules would you like to activate now? Some will run in the local client, while others are on our roadmap.",
-      7: "Let's prepare the first invites. You can set up invite codes or draft email invites right away.",
+      7: "Let's prepare the first invites. In V1 people join through member/admin codes or links that you can copy after launching the MicroDAO.",
       8: "Everything is ready! Review the configuration. Once you click 'Launch', your MicroDAO will be born, and I, your Community Spirit, will come to life.",
     } as Record<number, string>
   },
@@ -245,8 +241,7 @@ const wizardLocals = {
     } as Record<string, string>,
     suggestedRolesLabel: "Предлагаемые роли для первых участников",
     suggestedRolesPlaceholder: "Например: Координатор, Разработчик, Модератор...",
-    inviteEmailsLabel: "Email-адреса для приглашения (через запятую)",
-    inviteEmailsPlaceholder: "example1@dao.com, example2@dao.com...",
+    codeOnlyInviteNote: "В V1 приглашения работают через коды. После создания MicroDAO вы сможете копировать коды и ссылки на странице участников.",
     agentMsgs: {
       1: "Привет! Я — ваш будущий Дух Сообщества. Давайте вместе создадим новую MicroDAO. Сначала укажите имя, тип и описание нашего пространства.",
       2: "Отлично! Теперь давайте сформулируем нашу миссию, цель на первые 30 дней и желаемый результат, чтобы я мог помогать вам двигаться в нужном направлении.",
@@ -254,7 +249,7 @@ const wizardLocals = {
       4: "А теперь настроим меня. Как меня будут звать? Какой тон, стиль и язык общения мне выбрать для работы с вашим сообществом?",
       5: "Определите мой уровень автономии. Что я могу делать самостоятельно, а где мне обязательно потребуется подтверждение владельца или администратора?",
       6: "Какие стартовые модули вы хотите активировать прямо сейчас? Некоторые будут работать в локальном клиенте, другие — в планах развития.",
-      7: "Давайте подготовим первые приглашения. Вы можете настроить инвайт-коды или сразу вписать email-адреса для отправки приглашений.",
+      7: "Давайте подготовим первые приглашения. В V1 участники присоединяются через member/admin коды или ссылки, которые можно скопировать после запуска MicroDAO.",
       8: "Все готово! Проверьте конфигурацию. Когда вы нажмете «Запустить», родится ваша MicroDAO, а вместе с ней — я, ваш Дух Сообщества.",
     } as Record<number, string>
   },
@@ -296,8 +291,7 @@ const wizardLocals = {
     } as Record<string, string>,
     suggestedRolesLabel: "Roles sugeridos para miembros iniciales",
     suggestedRolesPlaceholder: "Por ejemplo: Coordinador, Desarrollador, Moderador...",
-    inviteEmailsLabel: "Correos electrónicos para invitar (separados por comas)",
-    inviteEmailsPlaceholder: "example1@dao.com, example2@dao.com...",
+    codeOnlyInviteNote: "En V1 las invitaciones funcionan con códigos. Después de crear la MicroDAO, podrás copiar códigos y enlaces desde la página de miembros.",
     agentMsgs: {
       1: "¡Hola! Soy tu futuro Agente del Espíritu de la Comunidad. Creemos una nueva MicroDAO juntos. Primero, ingresa el nombre, tipo y descripción.",
       2: "¡Excelente! Ahora definamos nuestra misión, objetivo para los primeros 30 días y resultado esperado para poder guiar a tu comunidad.",
@@ -305,7 +299,7 @@ const wizardLocals = {
       4: "Ahora configuremos mi personalidad. ¿Cuál es mi nombre? ¿Qué tono, estilo e idioma debo adoptar para interactuar con tu comunidad?",
       5: "Define mi nivel de autonomía. ¿Qué puedo hacer por mi cuenta y dónde necesitaré estrictamente la aprobación del propietario o administrador?",
       6: "¿Qué módulos iniciales te gustaría activar ahora? Algunos se ejecutarán en el cliente local, otros están en nuestra hoja de ruta.",
-      7: "Preparemos las primeras invitaciones. Puedes configurar códigos de invitación o redactar correos de invitación de inmediato.",
+      7: "Preparemos las primeras invitaciones. En V1 las personas se unen con códigos o enlaces de member/admin que podrás copiar después de lanzar la MicroDAO.",
       8: "¡Todo está listo! Revisa la configuración. Al hacer clic en 'Iniciar', nacerá tu MicroDAO y yo, tu Espíritu de la Comunidad, cobraré vida.",
     } as Record<number, string>
   }
@@ -315,7 +309,9 @@ export default function MicroDAOOnboarding() {
   const { user, signOut } = useAuth();
   const { memberships, refresh, setActiveCommunityId } = useActiveCommunity();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { t, language } = useTranslation();
+  const inviteCodeParam = searchParams.get('inviteCode') || '';
 
   // Retrieve localized strings
   const wl = wizardLocals[language as keyof typeof wizardLocals] || wizardLocals.en;
@@ -387,7 +383,7 @@ export default function MicroDAOOnboarding() {
     }));
   }, [t]);
   const [loading, setLoading] = useState(false);
-  const [inviteCode, setInviteCode] = useState('');
+  const [inviteCode, setInviteCode] = useState(inviteCodeParam.toUpperCase());
   const [partnerMessage, setPartnerMessage] = useState('');
   const [partnerSubmitted, setPartnerSubmitted] = useState(false);
   const [selectedProgram, setSelectedProgram] = useState<AdvancedAccessProgram | null>(null);
@@ -405,11 +401,18 @@ export default function MicroDAOOnboarding() {
   // Redirect unauthenticated users or users who already have communities
   useEffect(() => {
     if (!user) {
-      navigate('/auth', { replace: true });
-    } else if (memberships.length > 0) {
+      const redirect = `${window.location.pathname}${window.location.search}`;
+      navigate(`/auth?redirect=${encodeURIComponent(redirect)}`, { replace: true });
+    } else if (memberships.length > 0 && !inviteCodeParam) {
       navigate('/dashboard', { replace: true });
     }
-  }, [user, memberships, navigate]);
+  }, [user, memberships, navigate, inviteCodeParam]);
+
+  useEffect(() => {
+    if (inviteCodeParam) {
+      setInviteCode(inviteCodeParam.toUpperCase());
+    }
+  }, [inviteCodeParam]);
 
   // Load existing draft setup session on mount
   useEffect(() => {
@@ -1330,15 +1333,8 @@ export default function MicroDAOOnboarding() {
                   {/* STEP 7: FIRST INVITES */}
                   {step === 7 && (
                     <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2">
-                      <div className="space-y-2">
-                        <Label htmlFor="invite-emails" className="text-xs font-bold text-slate-300">{wl.inviteEmailsLabel}</Label>
-                        <Textarea 
-                          id="invite-emails"
-                          placeholder={wl.inviteEmailsPlaceholder}
-                          value={answers.invite_emails}
-                          onChange={(e) => setAnswers(prev => ({ ...prev, invite_emails: e.target.value }))}
-                          className="bg-slate-950/80 border-slate-800 text-xs min-h-[60px]"
-                        />
+                      <div className="rounded-lg border border-indigo-500/20 bg-indigo-500/5 p-3 text-xs leading-relaxed text-indigo-200">
+                        {wl.codeOnlyInviteNote}
                       </div>
 
                       <div className="space-y-2">
@@ -1495,7 +1491,6 @@ export default function MicroDAOOnboarding() {
                           <div><span className="font-semibold text-slate-200">Мова агента / Language:</span> {answers.language.toUpperCase()}</div>
                           <div><span className="font-semibold text-slate-200">Стиль / Style:</span> {answers.communication_style}</div>
                           <div className="col-span-2"><span className="font-semibold text-slate-200">Активні модулі / Modules:</span> {answers.enabled_modules.map(m => wl.moduleNames[m] || m).join(', ')}</div>
-                          {answers.invite_emails && <div className="col-span-2 truncate"><span className="font-semibold text-slate-200">Email запрошення:</span> {answers.invite_emails}</div>}
                         </div>
                       </div>
                     </div>

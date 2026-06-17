@@ -20,7 +20,8 @@ import {
   ShieldAlert,
   CheckCircle,
   Loader2,
-  Plus
+  Plus,
+  Users
 } from 'lucide-react';
 import { PrinciplesBanner } from '@/components/PrinciplesBanner';
 import { CreateModal, CreateFormData } from '@/components/CreateModal';
@@ -81,12 +82,10 @@ const dashboardLocals = {
     planApplyBtn: "Затвердити план",
     toastPlanApproved: "План тижня затверджений та надісланий усім учасникам!",
     inviteDialogTitle: "Запросити учасників до MicroDAO",
-    inviteDialogDesc: "Надішліть код запрошення або запросіть емейлом.",
+    inviteDialogDesc: "Копіюйте коди або відкрийте сторінку учасників для посилань і share.",
     inviteMemberCode: "Код для учасника (Member):",
     inviteAdminCode: "Код для адміністратора (Admin):",
-    inviteEmailLabel: "Запросити через Email:",
-    inviteEmailBtn: "Надіслати інвайт",
-    toastEmailSent: "Запрошення надіслано на вказаний Email!",
+    manageParticipantsBtn: "Керувати учасниками",
     actionApprovedToast: "Дію успішно схвалено та виконано!",
     actionRejectedToast: "Дію відхилено.",
   },
@@ -127,12 +126,10 @@ const dashboardLocals = {
     planApplyBtn: "Approve Plan",
     toastPlanApproved: "Weekly plan approved and broadcast to all members!",
     inviteDialogTitle: "Invite Members to MicroDAO",
-    inviteDialogDesc: "Send invite code or invite via email.",
+    inviteDialogDesc: "Copy codes or open the members page for links and sharing.",
     inviteMemberCode: "Member Invite Code:",
     inviteAdminCode: "Admin Invite Code:",
-    inviteEmailLabel: "Invite via Email:",
-    inviteEmailBtn: "Send Invite",
-    toastEmailSent: "Invitation sent to email!",
+    manageParticipantsBtn: "Manage members",
     actionApprovedToast: "Action approved and executed!",
     actionRejectedToast: "Action rejected.",
   },
@@ -173,12 +170,10 @@ const dashboardLocals = {
     planApplyBtn: "Утвердить план",
     toastPlanApproved: "План недели утвержден и отправлен всем участникам!",
     inviteDialogTitle: "Пригласить участников в MicroDAO",
-    inviteDialogDesc: "Отправьте код приглашения или пригласите по email.",
+    inviteDialogDesc: "Копируйте коды или откройте страницу участников для ссылок и share.",
     inviteMemberCode: "Код для участника (Member):",
     inviteAdminCode: "Код для администратора (Admin):",
-    inviteEmailLabel: "Пригласить по Email:",
-    inviteEmailBtn: "Отправить инвайт",
-    toastEmailSent: "Приглашение отправлено на указанный Email!",
+    manageParticipantsBtn: "Управлять участниками",
     actionApprovedToast: "Действие успешно одобрено и выполнено!",
     actionRejectedToast: "Действие отклонено.",
   },
@@ -219,12 +214,10 @@ const dashboardLocals = {
     planApplyBtn: "Aprobar Plan",
     toastPlanApproved: "¡Plan semanal aprobado y transmitido a todos!",
     inviteDialogTitle: "Invitar miembros a MicroDAO",
-    inviteDialogDesc: "Envíe un código de invitación o invite por correo electrónico.",
+    inviteDialogDesc: "Copia códigos o abre la página de miembros para enlaces y compartir.",
     inviteMemberCode: "Código de miembro:",
     inviteAdminCode: "Código de administrador:",
-    inviteEmailLabel: "Invitar por correo electrónico:",
-    inviteEmailBtn: "Enviar Invitación",
-    toastEmailSent: "¡Invitación enviada al correo electrónico!",
+    manageParticipantsBtn: "Gestionar miembros",
     actionApprovedToast: "¡Acción aprobada y ejecutada!",
     actionRejectedToast: "Acción rechazada.",
   }
@@ -256,8 +249,6 @@ export const NewIndex = () => {
   // Data states
   const [pendingActions, setPendingActions] = useState<any[]>([]);
   const [inviteCodes, setInviteCodes] = useState<{ member: string; admin: string } | null>(null);
-  const [inviteEmail, setInviteEmail] = useState('');
-  const [inviteEmailLoading, setInviteEmailLoading] = useState(false);
   const [newTask, setNewTask] = useState({ title: '', desc: '' });
   const [newTaskLoading, setNewTaskLoading] = useState(false);
 
@@ -304,7 +295,8 @@ export const NewIndex = () => {
         const { data: codesData } = await supabase
           .from('invitation_codes')
           .select('*')
-          .eq('community_id', activeCommunityId);
+          .eq('community_id', activeCommunityId)
+          .eq('is_active', true);
         if (codesData) {
           const member = codesData.find(c => c.role_to_grant === 'member')?.code || '';
           const admin = codesData.find(c => c.role_to_grant === 'admin')?.code || '';
@@ -405,37 +397,6 @@ export const NewIndex = () => {
       });
     } finally {
       setNewTaskLoading(false);
-    }
-  };
-
-  const handleInviteEmail = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!inviteEmail.trim()) return;
-    setInviteEmailLoading(true);
-    try {
-      await supabase.from('agent_action_logs').insert({
-        agent_id: spiritAgent?.id,
-        community_id: activeCommunityId,
-        action_type: 'member_invitation',
-        action_payload: { email: inviteEmail.trim(), role: 'member' },
-        status: 'executed',
-        requested_by: user?.id,
-        executed_at: new Date().toISOString()
-      });
-
-      toast({
-        title: t.success,
-        description: dl.toastEmailSent,
-      });
-      setInviteEmail('');
-    } catch (err: any) {
-      toast({
-        variant: 'destructive',
-        title: t.error,
-        description: err.message,
-      });
-    } finally {
-      setInviteEmailLoading(false);
     }
   };
 
@@ -1061,22 +1022,19 @@ export const NewIndex = () => {
               </div>
             </div>
 
-            <form onSubmit={handleInviteEmail} className="space-y-2 border-t border-slate-800/80 pt-3">
-              <Label htmlFor="inviteEmail" className="text-slate-300 font-semibold">{dl.inviteEmailLabel}</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="inviteEmail"
-                  type="email"
-                  placeholder="partner@microdao.com"
-                  value={inviteEmail}
-                  onChange={(e) => setInviteEmail(e.target.value)}
-                  className="bg-slate-950 border-slate-800 text-slate-100 text-xs"
-                />
-                <Button type="submit" size="sm" disabled={inviteEmailLoading} className="bg-indigo-600 hover:bg-indigo-700 text-white shrink-0">
-                  {inviteEmailLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : dl.inviteEmailBtn}
-                </Button>
-              </div>
-            </form>
+            <div className="border-t border-slate-800/80 pt-3">
+              <Button
+                size="sm"
+                onClick={() => {
+                  setInviteDialogOpen(false);
+                  navigate('/participants');
+                }}
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
+              >
+                <Users className="mr-2 h-4 w-4" />
+                {dl.manageParticipantsBtn}
+              </Button>
+            </div>
           </div>
           <div className="flex justify-end">
             <Button size="sm" onClick={() => setInviteDialogOpen(false)} className="bg-slate-800 hover:bg-slate-700 text-slate-100">

@@ -1,483 +1,813 @@
-import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
+import { useActiveCommunity } from '@/hooks/useActiveCommunity';
+import { useTranslation } from '@/lib/i18n';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { LoadingSpinner } from '@/components/LoadingSpinner';
-import { useTranslation } from '@/lib/i18n';
-import { Users, Clock, CheckCircle, XCircle, UserCheck } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  buildInviteUrl,
+  CommunityMemberView,
+  InviteCodeView,
+  InviteRole,
+  loadCommunityMembers,
+  loadInviteCodes,
+  regenerateInviteCode,
+  removeCommunityMember,
+  updateCommunityMemberRole,
+} from '@/services/communityMembers';
+import {
+  AlertTriangle,
+  Copy,
+  Crown,
+  Loader2,
+  MoreHorizontal,
+  RefreshCw,
+  Search,
+  Share2,
+  Shield,
+  UserMinus,
+  UserPlus,
+  Users,
+} from 'lucide-react';
 
-interface ApprovalRequest {
-  id: string;
-  user_id: string;
-  status: string;
-  created_at: string;
-  approved_by: string[];
-  rejected_by: string[];
-  total_existing_users: number;
-  display_name: string;
-  avatar_url?: string;
-  email?: string;
-}
+const memberLocals = {
+  uk: {
+    title: 'Учасники MicroDAO',
+    subtitle: 'Керуйте ролями, адміністраторами та запрошеннями активної MicroDAO.',
+    noCommunityTitle: 'MicroDAO не вибрано',
+    noCommunityDesc: 'Оберіть або створіть MicroDAO, щоб керувати її учасниками.',
+    inviteTitle: 'Запрошення',
+    inviteDesc: 'Надсилайте код або посилання. Email-доставка поки не підключена.',
+    memberInvite: 'Код учасника',
+    adminInvite: 'Код адміністратора',
+    noActiveCode: 'Активного коду немає',
+    generate: 'Згенерувати',
+    regenerate: 'Оновити код',
+    copyCode: 'Код',
+    copyLink: 'Посилання',
+    share: 'Поділитися',
+    copied: 'Скопійовано',
+    sharedTitle: 'Запрошення в MicroDAO',
+    memberList: 'Список учасників',
+    search: 'Пошук учасників...',
+    emptyTitle: 'Учасників не знайдено',
+    emptyDesc: 'Спробуйте змінити пошук або створіть запрошення.',
+    joined: 'Приєднався',
+    you: 'Ви',
+    owner: 'Власник',
+    admin: 'Адмін',
+    member: 'Учасник',
+    otherRole: 'Інша роль',
+    approved: 'Схвалено',
+    pending: 'Очікує',
+    rejected: 'Відхилено',
+    makeAdmin: 'Зробити адміном',
+    makeMember: 'Зробити учасником',
+    remove: 'Видалити',
+    removeTitle: 'Видалити учасника?',
+    removeDesc: 'Учасник втратить доступ до цієї MicroDAO. Дія не змінює його платформний акаунт.',
+    readOnly: 'У вас режим перегляду. Ролі змінюють owner або admin.',
+    adminLimit: 'Admin може видаляти тільки звичайних учасників. Призначати admin може тільки owner.',
+    inviteRestricted: 'Запрошення доступні owner/admin цієї MicroDAO.',
+    adminInviteRestricted: 'Admin-код бачить і оновлює тільки owner.',
+    refresh: 'Оновити',
+    loadError: 'Не вдалося завантажити учасників',
+    roleUpdated: 'Роль оновлено',
+    memberRemoved: 'Учасника видалено',
+    inviteUpdated: 'Код запрошення оновлено',
+    cancel: 'Скасувати',
+    memberFallback: 'Учасник',
+  },
+  en: {
+    title: 'MicroDAO Members',
+    subtitle: 'Manage roles, admins, and invites for the active MicroDAO.',
+    noCommunityTitle: 'No MicroDAO selected',
+    noCommunityDesc: 'Select or create a MicroDAO to manage its members.',
+    inviteTitle: 'Invites',
+    inviteDesc: 'Share a code or link. Email delivery is not connected yet.',
+    memberInvite: 'Member code',
+    adminInvite: 'Admin code',
+    noActiveCode: 'No active code',
+    generate: 'Generate',
+    regenerate: 'Regenerate',
+    copyCode: 'Code',
+    copyLink: 'Link',
+    share: 'Share',
+    copied: 'Copied',
+    sharedTitle: 'MicroDAO invitation',
+    memberList: 'Member list',
+    search: 'Search members...',
+    emptyTitle: 'No members found',
+    emptyDesc: 'Try another search or create an invite.',
+    joined: 'Joined',
+    you: 'You',
+    owner: 'Owner',
+    admin: 'Admin',
+    member: 'Member',
+    otherRole: 'Other role',
+    approved: 'Approved',
+    pending: 'Pending',
+    rejected: 'Rejected',
+    makeAdmin: 'Make admin',
+    makeMember: 'Make member',
+    remove: 'Remove',
+    removeTitle: 'Remove member?',
+    removeDesc: 'This member will lose access to this MicroDAO. Their platform account is not changed.',
+    readOnly: 'You are in read-only mode. Roles are managed by an owner or admin.',
+    adminLimit: 'Admins can only remove regular members. Only the owner can assign admins.',
+    inviteRestricted: 'Invites are available to this MicroDAO owner/admin.',
+    adminInviteRestricted: 'Only the owner can view and regenerate the admin code.',
+    refresh: 'Refresh',
+    loadError: 'Failed to load members',
+    roleUpdated: 'Role updated',
+    memberRemoved: 'Member removed',
+    inviteUpdated: 'Invite code updated',
+    cancel: 'Cancel',
+    memberFallback: 'Member',
+  },
+  ru: {
+    title: 'Участники MicroDAO',
+    subtitle: 'Управляйте ролями, администраторами и приглашениями активной MicroDAO.',
+    noCommunityTitle: 'MicroDAO не выбрана',
+    noCommunityDesc: 'Выберите или создайте MicroDAO, чтобы управлять участниками.',
+    inviteTitle: 'Приглашения',
+    inviteDesc: 'Отправляйте код или ссылку. Email-доставка пока не подключена.',
+    memberInvite: 'Код участника',
+    adminInvite: 'Код администратора',
+    noActiveCode: 'Активного кода нет',
+    generate: 'Создать',
+    regenerate: 'Обновить код',
+    copyCode: 'Код',
+    copyLink: 'Ссылка',
+    share: 'Поделиться',
+    copied: 'Скопировано',
+    sharedTitle: 'Приглашение в MicroDAO',
+    memberList: 'Список участников',
+    search: 'Поиск участников...',
+    emptyTitle: 'Участники не найдены',
+    emptyDesc: 'Измените поиск или создайте приглашение.',
+    joined: 'Присоединился',
+    you: 'Вы',
+    owner: 'Владелец',
+    admin: 'Админ',
+    member: 'Участник',
+    otherRole: 'Другая роль',
+    approved: 'Одобрен',
+    pending: 'Ожидает',
+    rejected: 'Отклонен',
+    makeAdmin: 'Сделать админом',
+    makeMember: 'Сделать участником',
+    remove: 'Удалить',
+    removeTitle: 'Удалить участника?',
+    removeDesc: 'Участник потеряет доступ к этой MicroDAO. Его платформенный аккаунт не изменится.',
+    readOnly: 'У вас режим просмотра. Роли меняет owner или admin.',
+    adminLimit: 'Admin может удалять только обычных участников. Назначать admin может только owner.',
+    inviteRestricted: 'Приглашения доступны owner/admin этой MicroDAO.',
+    adminInviteRestricted: 'Admin-код видит и обновляет только owner.',
+    refresh: 'Обновить',
+    loadError: 'Не удалось загрузить участников',
+    roleUpdated: 'Роль обновлена',
+    memberRemoved: 'Участник удален',
+    inviteUpdated: 'Код приглашения обновлен',
+    cancel: 'Отмена',
+    memberFallback: 'Участник',
+  },
+  es: {
+    title: 'Miembros de MicroDAO',
+    subtitle: 'Gestiona roles, administradores e invitaciones de la MicroDAO activa.',
+    noCommunityTitle: 'No hay MicroDAO seleccionada',
+    noCommunityDesc: 'Selecciona o crea una MicroDAO para gestionar sus miembros.',
+    inviteTitle: 'Invitaciones',
+    inviteDesc: 'Comparte un código o enlace. El envío por email aún no está conectado.',
+    memberInvite: 'Código de miembro',
+    adminInvite: 'Código de administrador',
+    noActiveCode: 'Sin código activo',
+    generate: 'Generar',
+    regenerate: 'Regenerar',
+    copyCode: 'Código',
+    copyLink: 'Enlace',
+    share: 'Compartir',
+    copied: 'Copiado',
+    sharedTitle: 'Invitación a MicroDAO',
+    memberList: 'Lista de miembros',
+    search: 'Buscar miembros...',
+    emptyTitle: 'No se encontraron miembros',
+    emptyDesc: 'Prueba otra búsqueda o crea una invitación.',
+    joined: 'Se unió',
+    you: 'Tú',
+    owner: 'Propietario',
+    admin: 'Admin',
+    member: 'Miembro',
+    otherRole: 'Otro rol',
+    approved: 'Aprobado',
+    pending: 'Pendiente',
+    rejected: 'Rechazado',
+    makeAdmin: 'Hacer admin',
+    makeMember: 'Hacer miembro',
+    remove: 'Eliminar',
+    removeTitle: '¿Eliminar miembro?',
+    removeDesc: 'Este miembro perderá acceso a esta MicroDAO. Su cuenta de plataforma no cambia.',
+    readOnly: 'Estás en modo lectura. Los roles los gestiona owner o admin.',
+    adminLimit: 'Los admins solo pueden eliminar miembros normales. Solo el owner puede asignar admins.',
+    inviteRestricted: 'Las invitaciones están disponibles para owner/admin de esta MicroDAO.',
+    adminInviteRestricted: 'Solo el owner puede ver y regenerar el código admin.',
+    refresh: 'Actualizar',
+    loadError: 'No se pudieron cargar los miembros',
+    roleUpdated: 'Rol actualizado',
+    memberRemoved: 'Miembro eliminado',
+    inviteUpdated: 'Código de invitación actualizado',
+    cancel: 'Cancelar',
+    memberFallback: 'Miembro',
+  },
+};
 
-interface UserProfile {
-  id: string;
-  user_id: string;
-  display_name: string;
-  avatar_url?: string;
-  email?: string;
-  approval_status: string;
-  created_at: string;
-}
+const supportedInviteRoles: InviteRole[] = ['member', 'admin'];
 
 export const Participants = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { t } = useTranslation();
-  
-  const [pendingRequests, setPendingRequests] = useState<ApprovalRequest[]>([]);
-  const [approvedUsers, setApprovedUsers] = useState<UserProfile[]>([]);
-  const [rejectedUsers, setRejectedUsers] = useState<UserProfile[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState<string | null>(null);
-  const [userNotes, setUserNotes] = useState<{ [key: string]: string }>({});
+  const { t, language } = useTranslation();
+  const {
+    activeCommunity,
+    activeCommunityId,
+    userCommunityRole,
+    isCommunityAdmin,
+    refresh,
+  } = useActiveCommunity();
+  const l = memberLocals[language as keyof typeof memberLocals] || memberLocals.en;
 
-  useEffect(() => {
-    loadData();
-  }, [user]);
+  const [members, setMembers] = useState<CommunityMemberView[]>([]);
+  const [inviteCodes, setInviteCodes] = useState<InviteCodeView[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [actionKey, setActionKey] = useState<string | null>(null);
+
+  const isOwner = userCommunityRole === 'owner';
+  const canManageInvites = userCommunityRole === 'owner' || userCommunityRole === 'admin';
 
   const loadData = async () => {
-    if (!user) return;
+    if (!activeCommunityId) {
+      setMembers([]);
+      setInviteCodes([]);
+      setLoading(false);
+      return;
+    }
 
+    setLoading(true);
     try {
-      setLoading(true);
-      
-      // Load pending requests with profile data
-      const { data: rawPending, error: pendingError } = await supabase
-        .from('user_approval_requests')
-        .select(`
-          id,
-          user_id,
-          status,
-          created_at,
-          approved_by,
-          rejected_by,
-          total_existing_users
-        `)
-        .eq('status', 'pending')
-        .order('created_at', { ascending: false });
-
-      if (pendingError) throw pendingError;
-
-      // Get profile data for pending requests
-      const pendingWithProfiles: ApprovalRequest[] = [];
-      if (rawPending && rawPending.length > 0) {
-        const userIds = rawPending.map(r => r.user_id);
-        const { data: profiles, error: profilesError } = await supabase
-          .from('profiles')
-          .select('user_id, display_name, avatar_url, email')
-          .in('user_id', userIds);
-
-        if (profilesError) throw profilesError;
-
-        for (const request of rawPending) {
-          const profile = profiles?.find(p => p.user_id === request.user_id);
-          pendingWithProfiles.push({
-            ...request,
-            display_name: profile?.display_name || t.participantsExtra.userFallbackName,
-            avatar_url: profile?.avatar_url ?? undefined,
-            email: profile?.email ?? undefined,
-          });
-        }
-      }
-
-      // Load all users by status
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (profilesError) throw profilesError;
-
-      console.log('All profiles loaded:', profiles);
-      console.log('Approved profiles:', profiles?.filter(p => p.approval_status === 'approved'));
-
-      setPendingRequests(pendingWithProfiles);
-      setApprovedUsers(profiles?.filter(p => p.approval_status === 'approved') || []);
-      setRejectedUsers(profiles?.filter(p => p.approval_status === 'rejected') || []);
-      
-    } catch (error) {
-      console.error('Error loading data:', error);
+      const [loadedMembers, loadedCodes] = await Promise.all([
+        loadCommunityMembers(activeCommunityId),
+        loadInviteCodes(activeCommunityId),
+      ]);
+      setMembers(loadedMembers);
+      setInviteCodes(loadedCodes);
+    } catch (error: any) {
+      console.error('Error loading community members:', error);
       toast({
         title: t.error,
-        description: t.participantsExtra.loadErrorDesc,
-        variant: 'destructive'
+        description: error?.message || l.loadError,
+        variant: 'destructive',
       });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleApproval = async (requestId: string, decision: 'approve' | 'reject') => {
-    if (!user) return;
-    
-    setSubmitting(requestId);
-    
+  useEffect(() => {
+    loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeCommunityId]);
+
+  const inviteByRole = useMemo(() => {
+    const map = new Map<InviteRole, InviteCodeView>();
+    for (const role of supportedInviteRoles) {
+      const code = inviteCodes.find((invite) => invite.role_to_grant === role && invite.is_active);
+      if (code) map.set(role, code);
+    }
+    return map;
+  }, [inviteCodes]);
+
+  const visibleMembers = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    if (!query) return members;
+    return members.filter((member) => {
+      const displayName = getDisplayName(member, l.memberFallback).toLowerCase();
+      return (
+        displayName.includes(query) ||
+        member.user_id.toLowerCase().includes(query) ||
+        member.role.toLowerCase().includes(query) ||
+        member.status.toLowerCase().includes(query)
+      );
+    });
+  }, [l.memberFallback, members, search]);
+
+  const activeCount = members.filter((member) => member.status === 'approved').length;
+  const adminCount = members.filter((member) => member.status === 'approved' && member.role === 'admin').length;
+
+  const copyText = async (value: string) => {
     try {
-      const request = pendingRequests.find(r => r.id === requestId);
-      if (!request) {
-        throw new Error('Request not found');
-      }
-
-      // Insert user's vote
-      const { error: voteError } = await supabase
-        .from('user_approvals')
-        .insert({
-          request_id: requestId,
-          approver_id: user.id,
-          decision,
-          notes: userNotes[requestId] || null
-        });
-
-      if (voteError) {
-        console.error('Vote error:', voteError);
-        throw voteError;
-      }
-
-      // Get updated vote counts
-      const { data: votes, error: votesError } = await supabase
-        .from('user_approvals')
-        .select('decision')
-        .eq('request_id', requestId);
-
-      if (votesError) {
-        console.error('Votes error:', votesError);
-        throw votesError;
-      }
-
-      const approveCount = votes?.filter(v => v.decision === 'approve').length || 0;
-      const rejectCount = votes?.filter(v => v.decision === 'reject').length || 0;
-
-      // Update request with vote counts
-      const { error: updateError } = await supabase
-        .from('user_approval_requests')
-        .update({
-          approved_by: Array(approveCount).fill('approved'),
-          rejected_by: Array(rejectCount).fill('rejected')
-        })
-        .eq('id', requestId);
-
-      if (updateError) {
-        console.error('Update error:', updateError);
-        throw updateError;
-      }
-
-      // Get required approvals using new function
-      const { data: requiredData, error: requiredError } = await supabase
-        .rpc('calculate_required_approvals');
-
-      if (requiredError) {
-        console.error('Required approvals error:', requiredError);
-        throw requiredError;
-      }
-
-      const requiredApprovals = requiredData || 1;
-
-      // Determine final status
-      let finalStatus = 'pending';
-      let profileStatus: string | null = null;
-
-      if (rejectCount > 0) {
-        finalStatus = 'rejected';
-        profileStatus = 'rejected';
-      } else if (approveCount >= requiredApprovals) {
-        finalStatus = 'approved';
-        profileStatus = 'approved';
-      }
-
-      // Update request status if needed
-      if (finalStatus !== 'pending' && profileStatus) {
-        const { error: statusError } = await supabase
-          .from('user_approval_requests')
-          .update({ status: finalStatus })
-          .eq('id', requestId);
-
-        if (statusError) {
-          console.error('Status error:', statusError);
-          throw statusError;
-        }
-
-        // Update user's profile status via admin RPC (column-level RLS forbids direct update)
-        const { error: profileError } = await supabase.rpc('admin_set_approval_status', {
-          p_user_id: request.user_id,
-          p_status: profileStatus,
-        });
-
-        if (profileError) {
-          console.error('Profile update error:', profileError);
-          toast({
-            title: t.participantsExtra.updateProfileErrorTitle,
-            description: t.participantsExtra.updateProfileErrorDesc.replace('{message}', profileError.message),
-            variant: "destructive",
-          });
-          throw profileError;
-        }
-
-        console.log(`Successfully updated user ${request.user_id} to status: ${profileStatus}`);
-      }
-
-      // Clear note for this user
-      setUserNotes(prev => {
-        const newNotes = { ...prev };
-        delete newNotes[requestId];
-        return newNotes;
-      });
-
-      // Reload data
-      await loadData();
-      
-      toast({
-        title: decision === 'approve' ? t.participantsExtra.requestApprovedTitle : t.participantsExtra.requestRejectedTitle,
-        description: finalStatus !== 'pending' 
-          ? (finalStatus === 'approved' ? t.participantsExtra.userApprovedDesc : t.participantsExtra.userRejectedDesc)
-          : t.participantsExtra.voteRegisteredDesc.replace('{count}', String(requiredApprovals - approveCount))
-      });
-
+      await navigator.clipboard.writeText(value);
+      toast({ title: l.copied });
     } catch (error: any) {
-      console.error('Error processing approval:', error);
       toast({
         title: t.error,
-        description: t.participantsExtra.requestErrorDesc.replace('{message}', error.message || ''),
-        variant: 'destructive'
+        description: error?.message || l.loadError,
+        variant: 'destructive',
       });
-    } finally {
-      setSubmitting(null);
     }
   };
 
-  const hasUserVoted = (request: ApprovalRequest): boolean => {
-    // This would need to be implemented by checking user_approvals table
-    // For now, we'll return false to allow voting
+  const handleShareInvite = async (code: string) => {
+    const url = buildInviteUrl(code);
+    if ('share' in navigator) {
+      try {
+        await navigator.share({
+          title: l.sharedTitle,
+          text: code,
+          url,
+        });
+        return;
+      } catch (error: any) {
+        if (error?.name === 'AbortError') return;
+      }
+    }
+    await copyText(url);
+  };
+
+  const handleRegenerateInvite = async (role: InviteRole) => {
+    if (!activeCommunityId || !activeCommunity || !user) return;
+    if (role === 'admin' && !isOwner) return;
+    if (role === 'member' && !canManageInvites) return;
+
+    const key = `invite-${role}`;
+    setActionKey(key);
+    try {
+      const existing = inviteByRole.get(role);
+      await regenerateInviteCode({
+        communityId: activeCommunityId,
+        communityName: activeCommunity.name,
+        role,
+        createdBy: user.id,
+        maxUses: existing?.max_uses ?? 50,
+      });
+      await loadData();
+      toast({
+        title: t.success,
+        description: l.inviteUpdated,
+      });
+    } catch (error: any) {
+      toast({
+        title: t.error,
+        description: error?.message || l.loadError,
+        variant: 'destructive',
+      });
+    } finally {
+      setActionKey(null);
+    }
+  };
+
+  const handleRoleChange = async (member: CommunityMemberView, role: 'admin' | 'member') => {
+    if (!isOwner || member.role === 'owner') return;
+    setActionKey(`role-${member.id}`);
+    try {
+      await updateCommunityMemberRole(member.id, role);
+      await loadData();
+      await refresh();
+      toast({
+        title: t.success,
+        description: l.roleUpdated,
+      });
+    } catch (error: any) {
+      toast({
+        title: t.error,
+        description: error?.message || l.loadError,
+        variant: 'destructive',
+      });
+    } finally {
+      setActionKey(null);
+    }
+  };
+
+  const handleRemoveMember = async (member: CommunityMemberView) => {
+    if (!canRemoveMember(member)) return;
+    setActionKey(`remove-${member.id}`);
+    try {
+      await removeCommunityMember(member.id);
+      await loadData();
+      await refresh();
+      toast({
+        title: t.success,
+        description: l.memberRemoved,
+      });
+    } catch (error: any) {
+      toast({
+        title: t.error,
+        description: error?.message || l.loadError,
+        variant: 'destructive',
+      });
+    } finally {
+      setActionKey(null);
+    }
+  };
+
+  const canRemoveMember = (member: CommunityMemberView) => {
+    if (member.role === 'owner' || member.user_id === user?.id) return false;
+    if (userCommunityRole === 'owner') return member.role === 'admin' || member.role === 'member';
+    if (userCommunityRole === 'admin') return member.role === 'member';
     return false;
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('ru-RU', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+  const roleLabel = (role: string) => {
+    if (role === 'owner') return l.owner;
+    if (role === 'admin') return l.admin;
+    if (role === 'member') return l.member;
+    return l.otherRole;
   };
 
-  if (loading) {
+  const statusLabel = (status: string) => {
+    if (status === 'approved') return l.approved;
+    if (status === 'pending') return l.pending;
+    if (status === 'rejected') return l.rejected;
+    return status;
+  };
+
+  const renderInviteCard = (role: InviteRole) => {
+    const invite = inviteByRole.get(role);
+    const canGenerate = role === 'member' ? canManageInvites : isOwner;
+    const url = invite ? buildInviteUrl(invite.code) : '';
+    const busy = actionKey === `invite-${role}`;
+
     return (
-      <div className="flex items-center justify-center h-full">
-        <LoadingSpinner size="lg" text={t.participantsExtra.loadingText} />
+      <Card key={role} className="border-border/80 bg-card/70">
+        <CardHeader className="space-y-1 p-4">
+          <CardTitle className="text-sm flex items-center gap-2">
+            {role === 'admin' ? <Shield className="h-4 w-4 text-amber-400" /> : <UserPlus className="h-4 w-4 text-primary" />}
+            {role === 'admin' ? l.adminInvite : l.memberInvite}
+          </CardTitle>
+          {role === 'admin' && !isOwner && (
+            <CardDescription className="text-xs">{l.adminInviteRestricted}</CardDescription>
+          )}
+        </CardHeader>
+        <CardContent className="p-4 pt-0 space-y-3">
+          <div className="rounded-lg border bg-background/60 px-3 py-2 font-mono text-sm text-foreground select-all break-all">
+            {invite?.code || l.noActiveCode}
+          </div>
+          {invite && (
+            <div className="flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
+              <span>{l.copyLink}: {url.replace(/^https?:\/\//, '')}</span>
+              <span>{invite.used_count ?? 0}/{invite.max_uses ?? '∞'}</span>
+            </div>
+          )}
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-10"
+              disabled={!invite}
+              onClick={() => invite && copyText(invite.code)}
+            >
+              <Copy className="mr-2 h-4 w-4" />
+              {l.copyCode}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-10"
+              disabled={!invite}
+              onClick={() => invite && copyText(url)}
+            >
+              <Copy className="mr-2 h-4 w-4" />
+              {l.copyLink}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-10"
+              disabled={!invite}
+              onClick={() => invite && handleShareInvite(invite.code)}
+            >
+              <Share2 className="mr-2 h-4 w-4" />
+              {l.share}
+            </Button>
+            {canGenerate && (
+              <Button
+                size="sm"
+                className="h-10"
+                disabled={busy}
+                onClick={() => handleRegenerateInvite(role)}
+              >
+                {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
+                {invite ? l.regenerate : l.generate}
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
+  if (!activeCommunityId || !activeCommunity) {
+    return (
+      <div className="p-4 sm:p-6">
+        <Card>
+          <CardContent className="p-8 text-center">
+            <Users className="mx-auto mb-4 h-10 w-10 text-muted-foreground" />
+            <h1 className="text-xl font-semibold">{l.noCommunityTitle}</h1>
+            <p className="mt-2 text-sm text-muted-foreground">{l.noCommunityDesc}</p>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="h-full p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-2">{t.participantsExtra.pageTitle}</h1>
-        <p className="text-muted-foreground">
-          {t.participantsExtra.pageSubtitle}
-        </p>
+    <div className="min-h-[calc(100vh-7.5rem)] space-y-5 p-4 pb-24 sm:p-6 lg:min-h-[calc(100vh-3.5rem)] lg:pb-6">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{l.title}</h1>
+            <Badge variant="outline" className="max-w-full truncate">
+              {activeCommunity.name}
+            </Badge>
+          </div>
+          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{l.subtitle}</p>
+        </div>
+        <Button variant="outline" className="h-10 self-start lg:self-auto" onClick={loadData} disabled={loading}>
+          <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+          {l.refresh}
+        </Button>
       </div>
 
-      <Tabs defaultValue="pending" className="h-full">
-        <TabsList className="mb-4">
-          <TabsTrigger value="pending" className="flex items-center gap-2">
-            <Clock className="h-4 w-4" />
-            {t.participantsExtra.tabPending.replace('{count}', String(pendingRequests.length))}
-          </TabsTrigger>
-          <TabsTrigger value="approved" className="flex items-center gap-2">
-            <CheckCircle className="h-4 w-4" />
-            {t.participantsExtra.tabApproved.replace('{count}', String(approvedUsers.length))}
-          </TabsTrigger>
-          <TabsTrigger value="rejected" className="flex items-center gap-2">
-            <XCircle className="h-4 w-4" />
-            {t.participantsExtra.tabRejected.replace('{count}', String(rejectedUsers.length))}
-          </TabsTrigger>
-        </TabsList>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-2xl font-bold">{activeCount}</div>
+            <div className="text-xs text-muted-foreground">{l.approved}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-2xl font-bold">{adminCount}</div>
+            <div className="text-xs text-muted-foreground">{l.admin}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-2xl font-bold capitalize">{roleLabel(userCommunityRole || 'member')}</div>
+            <div className="text-xs text-muted-foreground">{l.you}</div>
+          </CardContent>
+        </Card>
+      </div>
 
-        <TabsContent value="pending" className="h-[calc(100%-4rem)]">
-          <ScrollArea className="h-full">
-            {pendingRequests.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full text-center">
-                <Users className="h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium mb-2">{t.participantsExtra.noPendingTitle}</h3>
-                <p className="text-muted-foreground">
-                  {t.participantsExtra.noPendingDesc}
-                </p>
-              </div>
+      <Card>
+        <CardHeader className="p-4 sm:p-5">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <UserPlus className="h-5 w-5 text-primary" />
+            {l.inviteTitle}
+          </CardTitle>
+          <CardDescription>{canManageInvites ? l.inviteDesc : l.inviteRestricted}</CardDescription>
+        </CardHeader>
+        {canManageInvites && (
+          <CardContent className="grid grid-cols-1 gap-3 p-4 pt-0 lg:grid-cols-2 sm:p-5 sm:pt-0">
+            {renderInviteCard('member')}
+            {isOwner ? (
+              renderInviteCard('admin')
             ) : (
-              <div className="space-y-4">
-                {pendingRequests.map((request) => (
-                  <Card key={request.id}>
-                    <CardHeader>
-                      <div className="flex items-center gap-4">
-                        <Avatar className="h-12 w-12">
-                          <AvatarImage src={request.avatar_url} />
-                          <AvatarFallback>
-                            {request.display_name?.charAt(0).toUpperCase() || 'U'}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <CardTitle className="text-lg">
-                            {request.display_name}
-                          </CardTitle>
-                          {request.email && (
-                            <p className="text-sm text-muted-foreground font-mono">{request.email}</p>
-                          )}
-                          <p className="text-sm text-muted-foreground">
-                            {t.participantsExtra.requestedDate.replace('{date}', formatDate(request.created_at))}
-                          </p>
-                          <div className="flex gap-4 mt-2 text-sm">
-                            <span className="flex items-center gap-1">
-                              <CheckCircle className="h-4 w-4 text-green-500" />
-                              {t.participantsExtra.approvedVotes.replace('{count}', String(request.approved_by?.length || 0))}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <XCircle className="h-4 w-4 text-red-500" />
-                              {t.participantsExtra.rejectedVotes.replace('{count}', String(request.rejected_by?.length || 0))}
-                            </span>
-                            <span className="text-muted-foreground">
-                              {t.participantsExtra.requiredVotes.replace('{count}', String(request.total_existing_users))}
-                            </span>
-                          </div>
-                        </div>
-                        <Badge variant="outline">
-                          <Clock className="h-3 w-3 mr-1" />
-                          {t.participantsExtra.statusPending}
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                    
-                    {!hasUserVoted(request) ? (
-                      <CardContent>
-                        <div className="space-y-4">
-                          <Textarea
-                            placeholder={t.participantsExtra.commentPlaceholder}
-                            value={userNotes[request.id] || ''}
-                            onChange={(e) => setUserNotes(prev => ({
-                              ...prev,
-                              [request.id]: e.target.value
-                            }))}
-                            rows={3}
-                          />
-                          <div className="flex gap-2">
-                            <Button
-                              onClick={() => handleApproval(request.id, 'approve')}
-                              disabled={submitting === request.id}
-                              className="bg-green-600 hover:bg-green-700"
-                            >
-                              <CheckCircle className="mr-2 h-4 w-4" />
-                              {t.participantsExtra.btnApprove}
-                            </Button>
-                            <Button
-                              variant="destructive"
-                              onClick={() => handleApproval(request.id, 'reject')}
-                              disabled={submitting === request.id}
-                            >
-                              <XCircle className="mr-2 h-4 w-4" />
-                              {t.participantsExtra.btnReject}
-                            </Button>
-                          </div>
-                        </div>
-                      </CardContent>
-                    ) : (
-                      <CardContent>
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <UserCheck className="h-4 w-4" />
-                          {t.participantsExtra.alreadyVoted}
-                        </div>
-                      </CardContent>
-                    )}
-                  </Card>
-                ))}
-              </div>
+              <Card className="border-dashed bg-muted/20">
+                <CardContent className="flex min-h-[180px] items-center gap-3 p-4 text-sm text-muted-foreground">
+                  <AlertTriangle className="h-5 w-5 shrink-0 text-amber-500" />
+                  {l.adminInviteRestricted}
+                </CardContent>
+              </Card>
             )}
-          </ScrollArea>
-        </TabsContent>
+          </CardContent>
+        )}
+      </Card>
 
-        <TabsContent value="approved" className="h-[calc(100%-4rem)]">
-          <ScrollArea className="h-full">
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {approvedUsers.map((user) => (
-                <Card key={user.id}>
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-3">
-                      <Avatar>
-                        <AvatarImage src={user.avatar_url} />
-                        <AvatarFallback>
-                          {user.display_name?.charAt(0).toUpperCase() || 'U'}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1">
-                        <h3 className="font-medium">{user.display_name}</h3>
-                        {user.email && (
-                          <p className="text-xs text-muted-foreground font-mono">{user.email}</p>
-                        )}
-                        <p className="text-sm text-muted-foreground">
-                          {t.participantsExtra.joinedDate.replace('{date}', formatDate(user.created_at))}
-                        </p>
-                      </div>
-                      <Badge variant="secondary" className="text-green-700 bg-green-100">
-                        <CheckCircle className="h-3 w-3 mr-1" />
-                        {t.participantsExtra.roleMember}
-                      </Badge>
-                    </div>
-                  </CardContent>
-                </Card>
+      <Card>
+        <CardHeader className="p-4 sm:p-5">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Users className="h-5 w-5 text-primary" />
+                {l.memberList}
+              </CardTitle>
+              {!isCommunityAdmin && <CardDescription className="mt-1">{l.readOnly}</CardDescription>}
+              {userCommunityRole === 'admin' && <CardDescription className="mt-1">{l.adminLimit}</CardDescription>}
+            </div>
+            <div className="relative w-full lg:w-80">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder={l.search}
+                className="h-10 pl-9"
+              />
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="p-4 pt-0 sm:p-5 sm:pt-0">
+          {loading ? (
+            <div className="flex min-h-[220px] items-center justify-center">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : visibleMembers.length === 0 ? (
+            <div className="flex min-h-[220px] flex-col items-center justify-center text-center">
+              <Users className="mb-4 h-10 w-10 text-muted-foreground" />
+              <h3 className="font-semibold">{l.emptyTitle}</h3>
+              <p className="mt-1 text-sm text-muted-foreground">{l.emptyDesc}</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-3">
+              {visibleMembers.map((member) => (
+                <MemberCard
+                  key={member.id}
+                  member={member}
+                  currentUserId={user?.id}
+                  actionKey={actionKey}
+                  labels={l}
+                  roleLabel={roleLabel}
+                  statusLabel={statusLabel}
+                  getDisplayName={(row) => getDisplayName(row, l.memberFallback)}
+                  canPromote={isOwner && member.role === 'member'}
+                  canDemote={isOwner && member.role === 'admin'}
+                  canRemove={canRemoveMember(member)}
+                  onPromote={() => handleRoleChange(member, 'admin')}
+                  onDemote={() => handleRoleChange(member, 'member')}
+                  onRemove={() => handleRemoveMember(member)}
+                />
               ))}
             </div>
-          </ScrollArea>
-        </TabsContent>
-
-        <TabsContent value="rejected" className="h-[calc(100%-4rem)]">
-          <ScrollArea className="h-full">
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {rejectedUsers.map((user) => (
-                <Card key={user.id}>
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-3">
-                      <Avatar>
-                        <AvatarImage src={user.avatar_url} />
-                        <AvatarFallback>
-                          {user.display_name?.charAt(0).toUpperCase() || 'U'}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1">
-                        <h3 className="font-medium">{user.display_name}</h3>
-                        {user.email && (
-                          <p className="text-xs text-muted-foreground font-mono">{user.email}</p>
-                        )}
-                        <p className="text-sm text-muted-foreground">
-                          {t.participantsExtra.rejectedDate.replace('{date}', formatDate(user.created_at))}
-                        </p>
-                      </div>
-                      <Badge variant="destructive">
-                        <XCircle className="h-3 w-3 mr-1" />
-                        {t.participantsExtra.roleRejected}
-                      </Badge>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </ScrollArea>
-        </TabsContent>
-      </Tabs>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
+
+interface MemberCardProps {
+  member: CommunityMemberView;
+  currentUserId?: string;
+  actionKey: string | null;
+  labels: typeof memberLocals.uk;
+  roleLabel: (role: string) => string;
+  statusLabel: (status: string) => string;
+  getDisplayName: (member: CommunityMemberView) => string;
+  canPromote: boolean;
+  canDemote: boolean;
+  canRemove: boolean;
+  onPromote: () => void;
+  onDemote: () => void;
+  onRemove: () => void;
+}
+
+const MemberCard = ({
+  member,
+  currentUserId,
+  actionKey,
+  labels,
+  roleLabel,
+  statusLabel,
+  getDisplayName,
+  canPromote,
+  canDemote,
+  canRemove,
+  onPromote,
+  onDemote,
+  onRemove,
+}: MemberCardProps) => {
+  const displayName = getDisplayName(member);
+  const isSelf = member.user_id === currentUserId;
+  const busy = actionKey?.endsWith(member.id);
+  const hasActions = canPromote || canDemote || canRemove;
+
+  return (
+    <div className="rounded-xl border bg-card/60 p-4">
+      <div className="flex items-start gap-3">
+        <Avatar className="h-12 w-12 shrink-0">
+          <AvatarImage src={member.profile?.avatar_url || undefined} />
+          <AvatarFallback>{displayName.slice(0, 1).toUpperCase()}</AvatarFallback>
+        </Avatar>
+        <div className="min-w-0 flex-1 space-y-2">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="truncate font-semibold">{displayName}</h3>
+                {isSelf && <Badge variant="outline">{labels.you}</Badge>}
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {labels.joined}: {formatDate(member.created_at)}
+              </p>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <RoleBadge role={member.role} label={roleLabel(member.role)} />
+              <Badge variant={member.status === 'approved' ? 'secondary' : 'outline'}>
+                {statusLabel(member.status)}
+              </Badge>
+              {hasActions && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-9 w-9" disabled={busy}>
+                      {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <MoreHorizontal className="h-4 w-4" />}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    {canPromote && (
+                      <DropdownMenuItem onClick={onPromote}>
+                        <Shield className="mr-2 h-4 w-4" />
+                        {labels.makeAdmin}
+                      </DropdownMenuItem>
+                    )}
+                    {canDemote && (
+                      <DropdownMenuItem onClick={onDemote}>
+                        <Users className="mr-2 h-4 w-4" />
+                        {labels.makeMember}
+                      </DropdownMenuItem>
+                    )}
+                    {canRemove && (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <DropdownMenuItem
+                            className="text-destructive focus:text-destructive"
+                            onSelect={(event) => event.preventDefault()}
+                          >
+                            <UserMinus className="mr-2 h-4 w-4" />
+                            {labels.remove}
+                          </DropdownMenuItem>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>{labels.removeTitle}</AlertDialogTitle>
+                            <AlertDialogDescription>{labels.removeDesc}</AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>{labels.cancel}</AlertDialogCancel>
+                            <AlertDialogAction onClick={onRemove} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                              {labels.remove}
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
+          </div>
+          <div className="truncate font-mono text-[11px] text-muted-foreground">{member.user_id}</div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const RoleBadge = ({ role, label }: { role: string; label: string }) => {
+  if (role === 'owner') {
+    return (
+      <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/20 hover:bg-amber-500/10">
+        <Crown className="mr-1 h-3 w-3" />
+        {label}
+      </Badge>
+    );
+  }
+  if (role === 'admin') {
+    return (
+      <Badge className="bg-indigo-500/10 text-indigo-500 border-indigo-500/20 hover:bg-indigo-500/10">
+        <Shield className="mr-1 h-3 w-3" />
+        {label}
+      </Badge>
+    );
+  }
+  return <Badge variant="outline">{label}</Badge>;
+};
+
+const getDisplayName = (member: CommunityMemberView, fallback: string) =>
+  member.profile?.display_name || `${fallback} ${member.user_id.slice(0, 6)}`;
+
+const formatDate = (dateString: string) =>
+  new Date(dateString).toLocaleDateString(undefined, {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
