@@ -46,7 +46,9 @@ const randomSuffix = () => {
 export const buildInviteCode = (communityName: string, role: InviteRole) =>
   `${normalizeCodePart(communityName)}-${role.toUpperCase()}-${randomSuffix()}`;
 
-export const buildInviteUrl = (code: string, origin = window.location.origin) =>
+import { getPublicSiteUrl } from '@/lib/publicUrl';
+
+export const buildInviteUrl = (code: string, origin = getPublicSiteUrl()) =>
   `${origin}/onboarding?inviteCode=${encodeURIComponent(code)}`;
 
 export async function loadCommunityMembers(communityId: string): Promise<CommunityMemberView[]> {

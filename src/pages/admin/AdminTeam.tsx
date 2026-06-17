@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Users, UserPlus, ShieldAlert, Copy, RefreshCw, Trash2, Check, ExternalLink } from 'lucide-react';
+import { getPublicSiteUrl } from '@/lib/publicUrl';
 
 interface GuardianProfile {
   id: string;
@@ -131,7 +132,7 @@ export default function AdminTeam() {
   };
 
   const handleCopyLink = (invite: AdminInvite) => {
-    const inviteUrl = `${window.location.origin}/accept-invite?token=${invite.invite_token}`;
+    const inviteUrl = `${getPublicSiteUrl()}/accept-invite?token=${invite.invite_token}`;
     navigator.clipboard.writeText(inviteUrl);
     setCopiedId(invite.id);
     toast({
