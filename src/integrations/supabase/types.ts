@@ -844,15 +844,6 @@ export type Database = {
           user_id: string
           wallet_from: string | null
           wallet_to: string | null
-          verification_status: string | null
-          verification_checked_at: string | null
-          verification_error: string | null
-          verified_at: string | null
-          verified_by: string | null
-          block_number: number | null
-          tx_from: string | null
-          tx_to: string | null
-          onchain_amount: number | null
         }
         Insert: {
           amount_crypto?: number | null
@@ -869,15 +860,6 @@ export type Database = {
           user_id: string
           wallet_from?: string | null
           wallet_to?: string | null
-          verification_status?: string | null
-          verification_checked_at?: string | null
-          verification_error?: string | null
-          verified_at?: string | null
-          verified_by?: string | null
-          block_number?: number | null
-          tx_from?: string | null
-          tx_to?: string | null
-          onchain_amount?: number | null
         }
         Update: {
           amount_crypto?: number | null
@@ -894,15 +876,6 @@ export type Database = {
           user_id?: string
           wallet_from?: string | null
           wallet_to?: string | null
-          verification_status?: string | null
-          verification_checked_at?: string | null
-          verification_error?: string | null
-          verified_at?: string | null
-          verified_by?: string | null
-          block_number?: number | null
-          tx_from?: string | null
-          tx_to?: string | null
-          onchain_amount?: number | null
         }
         Relationships: [
           {
