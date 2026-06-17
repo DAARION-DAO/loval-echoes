@@ -832,77 +832,86 @@ export type Database = {
         Row: {
           amount_crypto: number | null
           amount_usd: number | null
+          block_number: number | null
           chain: string | null
+          chain_id: number | null
+          confirmations: number | null
           confirmed_at: string | null
           created_at: string | null
           crypto_asset: string
           expires_at: string | null
           id: string
+          onchain_amount: number | null
           status: string
           subscription_id: string | null
+          token_contract: string | null
+          tx_from: string | null
           tx_hash: string | null
+          tx_to: string | null
           user_id: string
-          wallet_from: string | null
-          wallet_to: string | null
-          verification_status: string | null
           verification_checked_at: string | null
           verification_error: string | null
+          verification_status: string | null
           verified_at: string | null
           verified_by: string | null
-          block_number: number | null
-          tx_from: string | null
-          tx_to: string | null
-          onchain_amount: number | null
+          wallet_from: string | null
+          wallet_to: string | null
         }
         Insert: {
           amount_crypto?: number | null
           amount_usd?: number | null
+          block_number?: number | null
           chain?: string | null
+          chain_id?: number | null
+          confirmations?: number | null
           confirmed_at?: string | null
           created_at?: string | null
           crypto_asset: string
           expires_at?: string | null
           id?: string
+          onchain_amount?: number | null
           status?: string
           subscription_id?: string | null
+          token_contract?: string | null
+          tx_from?: string | null
           tx_hash?: string | null
+          tx_to?: string | null
           user_id: string
-          wallet_from?: string | null
-          wallet_to?: string | null
-          verification_status?: string | null
           verification_checked_at?: string | null
           verification_error?: string | null
+          verification_status?: string | null
           verified_at?: string | null
           verified_by?: string | null
-          block_number?: number | null
-          tx_from?: string | null
-          tx_to?: string | null
-          onchain_amount?: number | null
+          wallet_from?: string | null
+          wallet_to?: string | null
         }
         Update: {
           amount_crypto?: number | null
           amount_usd?: number | null
+          block_number?: number | null
           chain?: string | null
+          chain_id?: number | null
+          confirmations?: number | null
           confirmed_at?: string | null
           created_at?: string | null
           crypto_asset?: string
           expires_at?: string | null
           id?: string
+          onchain_amount?: number | null
           status?: string
           subscription_id?: string | null
+          token_contract?: string | null
+          tx_from?: string | null
           tx_hash?: string | null
+          tx_to?: string | null
           user_id?: string
-          wallet_from?: string | null
-          wallet_to?: string | null
-          verification_status?: string | null
           verification_checked_at?: string | null
           verification_error?: string | null
+          verification_status?: string | null
           verified_at?: string | null
           verified_by?: string | null
-          block_number?: number | null
-          tx_from?: string | null
-          tx_to?: string | null
-          onchain_amount?: number | null
+          wallet_from?: string | null
+          wallet_to?: string | null
         }
         Relationships: [
           {
