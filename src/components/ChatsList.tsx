@@ -49,7 +49,7 @@ export function ChatsList() {
   }, []);
 
   const handleOpenChat = (id: string) => {
-    navigate(`/chat/${id}`);
+    navigate(`/chats/${id}`);
   };
 
   const handlePinChat = async (chatId: string, currentPinned: boolean) => {

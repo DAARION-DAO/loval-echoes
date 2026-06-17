@@ -1,5 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
+import { FunctionsHttpError } from '@supabase/supabase-js';
 import { translations, Language } from '@/lib/i18n';
+import { ensureCurrentUserParticipant } from '@/services/chats';
 
 const getCurrentLang = (): Language => {
   const saved = localStorage.getItem('language');
@@ -67,13 +69,37 @@ export class DifyClientError extends Error {
   }
 }
 
+export interface SendMessageResult {
+  agentOk: boolean;
+  agentError?: string;
+}
+
+const getFunctionErrorMessage = async (error: unknown): Promise<string> => {
+  const t = translations[getCurrentLang()];
+
+  if (error instanceof FunctionsHttpError) {
+    const payload = await error.context.json().catch(() => null);
+    if (payload?.error_code === 'MODEL_PROVIDER_ERROR' || payload?.error_code === 'AI_PROVIDER_ERROR') {
+      return t.chatInterface.agentUnavailableDesc;
+    }
+    if (typeof payload?.details === 'string') {
+      return payload.details;
+    }
+    if (typeof payload?.error === 'string') {
+      return payload.error;
+    }
+  }
+
+  return error instanceof Error ? error.message : t.chatInterface.agentUnavailableDesc;
+};
+
 export class DifyClient {
   async getChats(): Promise<Chat[]> {
     try {
       const { data: conversations, error } = await supabase
         .from('conversations')
-        .select('id, name, updated_at, created_at, dify_conversation_id')
-        .eq('is_archived', false)
+        .select('id, name, updated_at, created_at, dify_conversation_id, is_pinned, pinned_at, auto_generated_name')
+        .eq('status', 'active')
         .order('updated_at', { ascending: false });
 
       if (error) {
@@ -82,10 +108,20 @@ export class DifyClient {
 
       return (conversations || []).map(conv => ({
         id: conv.id,
-        name: conv.name,
+        name: conv.auto_generated_name && [
+          translations.uk.chatSidebar.defaultChatName,
+          translations.en.chatSidebar.defaultChatName,
+          translations.ru.chatSidebar.defaultChatName,
+          translations.es.chatSidebar.defaultChatName,
+        ].includes(conv.name)
+          ? translations[getCurrentLang()].chatSidebar.defaultChatName
+          : conv.name,
         dify_conversation_id: conv.dify_conversation_id || undefined,
         created_at: conv.created_at,
         updated_at: conv.updated_at,
+        is_pinned: conv.is_pinned,
+        pinned_at: conv.pinned_at,
+        auto_generated_name: conv.auto_generated_name,
       }));
     } catch (error) {
       console.error('Error getting chats:', error);
@@ -106,6 +142,8 @@ export class DifyClient {
         .insert({
           name: name || translations[getCurrentLang()].chats.newChat,
           user_id: user.id,
+          created_by: user.id,
+          status: 'active',
         })
         .select('id, name, created_at, updated_at')
         .single();
@@ -241,7 +279,7 @@ export class DifyClient {
       fileSize?: number;
       fileType?: string;
     }
-  ): Promise<void> {
+  ): Promise<SendMessageResult> {
     try {
       const { data: { user }, error: authError } = await supabase.auth.getUser();
       
@@ -261,6 +299,7 @@ export class DifyClient {
                              translations[getCurrentLang()].participantsExtra.roleMember;
 
       const messageType = voiceMeta?.messageType || (voiceMeta?.fileUrl ? 'file' : 'text');
+      await ensureCurrentUserParticipant(chatId);
 
       const { error } = await supabase
         .from('messages')
@@ -294,8 +333,12 @@ export class DifyClient {
       });
 
       if (invokeError) {
-        console.error('Failed to trigger AI agent:', invokeError.message);
+        const agentError = await getFunctionErrorMessage(invokeError);
+        console.warn('AI agent response unavailable after message save:', agentError);
+        return { agentOk: false, agentError };
       }
+
+      return { agentOk: true };
       
     } catch (error) {
       console.error('Error sending message:', error);

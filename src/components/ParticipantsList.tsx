@@ -7,6 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { supabase } from '@/integrations/supabase/client';
 import { useTranslation } from '@/lib/i18n';
+import { ensureCurrentUserParticipant, fetchChatParticipants } from '@/services/chats';
 
 interface Participant {
   user_id: string;
@@ -17,10 +18,10 @@ interface Participant {
 
 interface ParticipantsListProps {
   chatId: string;
-  onlineUsers: string[];
+  onlineUserIds: string[];
 }
 
-export const ParticipantsList = ({ chatId, onlineUsers }: ParticipantsListProps) => {
+export const ParticipantsList = ({ chatId, onlineUserIds }: ParticipantsListProps) => {
   const { t } = useTranslation();
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [loading, setLoading] = useState(true);
@@ -32,36 +33,25 @@ export const ParticipantsList = ({ chatId, onlineUsers }: ParticipantsListProps)
   const loadParticipants = async () => {
     try {
       setLoading(true);
-      
-      // Get all participants for this conversation
-      const { data: participantData, error } = await supabase
-        .from('conversation_participants')
-        .select(`
-          user_id,
-          profiles:user_id (
-            display_name,
-            avatar_url
-          )
-        `)
-        .eq('conversation_id', chatId);
+      const currentUserId = await ensureCurrentUserParticipant(chatId);
+      const participantData = await fetchChatParticipants(chatId);
 
-      if (error) {
-        console.error('Error loading participants:', error);
+      if (participantData.length === 0 && currentUserId) {
+        const { data: { user } } = await supabase.auth.getUser();
+        setParticipants([{
+          user_id: currentUserId,
+          display_name: user?.user_metadata?.display_name || user?.email?.split('@')[0] || t.participantsExtra.userFallbackName,
+          avatar_url: user?.user_metadata?.avatar_url,
+          isOnline: true,
+        }]);
         return;
       }
 
-      const participantsList: Participant[] = (participantData || []).map(p => {
-        const profile = p.profiles as { display_name?: string; avatar_url?: string } | null;
-        const fallbackName = t.participantsExtra.userFallbackName;
-        return {
-          user_id: p.user_id,
-          display_name: profile?.display_name || fallbackName,
-          avatar_url: profile?.avatar_url,
-          isOnline: onlineUsers.includes(profile?.display_name || fallbackName),
-        };
-      });
-
-      setParticipants(participantsList);
+      setParticipants(participantData.map(participant => ({
+        ...participant,
+        avatar_url: participant.avatar_url || undefined,
+        isOnline: onlineUserIds.includes(participant.user_id),
+      })));
     } catch (error) {
       console.error('Error loading participants:', error);
     } finally {
@@ -74,10 +64,10 @@ export const ParticipantsList = ({ chatId, onlineUsers }: ParticipantsListProps)
     setParticipants(prev => 
       prev.map(p => ({
         ...p,
-        isOnline: onlineUsers.includes(p.display_name),
+        isOnline: onlineUserIds.includes(p.user_id),
       }))
     );
-  }, [onlineUsers]);
+  }, [onlineUserIds]);
 
   const onlineCount = participants.filter(p => p.isOnline).length;
   const totalCount = participants.length;

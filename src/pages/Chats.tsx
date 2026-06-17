@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, MessageSquare, GitBranch, Users } from 'lucide-react';
+import { Plus, Search, MessageSquare, GitBranch, Users, Pin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useTranslation } from '@/lib/i18n';
 import { fetchChats, createChat, ChatLite } from '@/services/chats';
 import { useToast } from '@/hooks/use-toast';
@@ -20,7 +19,6 @@ export const ChatsPage = () => {
   const [filteredChats, setFilteredChats] = useState<ChatLite[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
-  const [onlineCount] = useState(3); // Mock data
 
   useEffect(() => {
     loadChats();
@@ -85,6 +83,19 @@ export const ChatsPage = () => {
     return date.toLocaleDateString();
   };
 
+  const getInitials = (value: string) => {
+    const trimmed = value.trim();
+    if (!trimmed) return 'C';
+    return trimmed
+      .split(/\s+/)
+      .slice(0, 2)
+      .map(part => part[0])
+      .join('')
+      .toUpperCase();
+  };
+
+  const totalParticipants = new Set(chats.flatMap(chat => chat.participants?.map(participant => participant.user_id) || [])).size;
+
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center">
@@ -97,16 +108,18 @@ export const ChatsPage = () => {
   }
 
   return (
-    <div className="flex-1 p-4 sm:p-6 max-w-6xl mx-auto">
+    <div className="flex-1 w-full max-w-4xl mx-auto p-3 sm:p-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold mb-2">{t.chats.title}</h1>
-          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-            <span>{t.chatsExtra.totalChats.replace('{count}', String(filteredChats.length))}</span>
-            <Badge variant="secondary" className="flex items-center gap-1">
+      <div className="mb-4 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-end sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-bold tracking-normal sm:text-3xl">{t.chats.title}</h1>
+          <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+            <Badge variant="outline">
+              {t.chatsExtra.totalChats.replace('{count}', String(filteredChats.length))}
+            </Badge>
+            <Badge variant="secondary" className="flex items-center gap-1.5">
               <Users className="h-3 w-3" />
-              {onlineCount}/12
+              {t.chatsExtra.participantsCount.replace('{count}', String(totalParticipants))}
             </Badge>
           </div>
         </div>
@@ -114,7 +127,7 @@ export const ChatsPage = () => {
         <div className="flex gap-2 w-full sm:w-auto">
           <Button 
             onClick={handleCreateChat} 
-            className="hover-lift h-11 px-6 flex-1 sm:flex-initial"
+            className="h-11 px-5 flex-1 sm:flex-initial"
             size="lg"
           >
             <Plus className="h-4 w-4 mr-2" />
@@ -124,13 +137,13 @@ export const ChatsPage = () => {
       </div>
 
       {/* Search */}
-      <div className="relative mb-6">
+      <div className="relative mb-4 sm:mb-6">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
           placeholder={t.chatsExtra.searchChatsPlaceholder}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-9 h-11 text-base w-full sm:max-w-md"
+          className="pl-9 h-11 text-base w-full"
         />
       </div>
 
@@ -155,49 +168,53 @@ export const ChatsPage = () => {
           )}
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="overflow-hidden rounded-xl border bg-card/40">
           {filteredChats.map((chat) => (
-            <Card 
+            <button
               key={chat.id}
-              className="hover-lift cursor-pointer transition-all animate-fade-in active:scale-95"
               onClick={() => navigate(`/chats/${chat.id}`)}
+              className="flex w-full items-center gap-3 border-b p-3 text-left transition-colors last:border-b-0 hover:bg-muted/40 active:bg-muted/60 sm:p-4"
             >
-              <CardContent className="p-4 sm:p-5">
-                <div className="flex items-start gap-3">
-                  <Avatar className="h-11 w-11 flex-shrink-0">
-                    <AvatarFallback className="bg-primary/10">
-                      <MessageSquare className="h-5 w-5 text-primary" />
+              <Avatar className="h-11 w-11 flex-shrink-0 sm:h-12 sm:w-12">
+                {chat.participants?.[0]?.avatar_url && <AvatarImage src={chat.participants[0].avatar_url} />}
+                <AvatarFallback className="bg-primary/10 text-primary">
+                  {chat.participants?.[0]?.display_name
+                    ? getInitials(chat.participants[0].display_name)
+                    : <MessageSquare className="h-5 w-5" />}
+                </AvatarFallback>
+              </Avatar>
+
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  {chat.is_pinned && <Pin className="h-3.5 w-3.5 flex-shrink-0 text-primary" />}
+                  <h3 className="truncate text-base font-semibold">{chat.name}</h3>
+                  {chat.forked_from_chat && (
+                    <GitBranch className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground" />
+                  )}
+                </div>
+
+                <p className="mt-1 truncate text-sm text-muted-foreground">
+                  {chat.lastMessagePreview || t.chatsExtra.noPreview}
+                </p>
+
+                <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                  {chat.updatedAt && <span>{formatDate(chat.updatedAt)}</span>}
+                  <span>{t.chatsManagement.messagesCount.replace('{count}', String(chat.messageCount || 0))}</span>
+                  <span>{t.chatsExtra.participantsCount.replace('{count}', String(chat.participants?.length || 0))}</span>
+                </div>
+              </div>
+
+              <div className="hidden flex-shrink-0 items-center -space-x-2 sm:flex">
+                {chat.participants?.slice(0, 3).map((participant) => (
+                  <Avatar key={participant.user_id} className="h-7 w-7 border-2 border-background">
+                    {participant.avatar_url && <AvatarImage src={participant.avatar_url} />}
+                    <AvatarFallback className="text-[10px]">
+                      {getInitials(participant.display_name)}
                     </AvatarFallback>
                   </Avatar>
-                  
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-2">
-                      <h3 className="font-semibold text-base truncate">{chat.name}</h3>
-                      {chat.forked_from_chat && (
-                        <GitBranch className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-                      )}
-                    </div>
-                    
-                    <div className="space-y-2">
-                      {chat.forked_from_chat && (
-                        <p className="text-sm text-muted-foreground">
-                          {t.chatsExtra.forkedFrom.replace('{id}', chat.forked_from_chat.slice(0, 8))}
-                        </p>
-                      )}
-                      
-                      <div className="flex items-center justify-between text-sm text-muted-foreground">
-                        <span>{chat.updatedAt && formatDate(chat.updatedAt)}</span>
-                        {chat.dify_conversation_id && (
-                          <Badge variant="outline" className="text-xs">
-                            {t.chatsExtra.active}
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                ))}
+              </div>
+            </button>
           ))}
         </div>
       )}

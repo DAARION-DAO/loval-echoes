@@ -1,9 +1,6 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Card } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 import { 
   Copy, 
   ThumbsUp, 
@@ -24,7 +21,6 @@ import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { difyClient, type DifyMessage } from '@/utils/difyClient';
 import { supabase } from '@/integrations/supabase/client';
-import { Avatar as CustomAvatar } from '@/components/Avatar';
 import { ReactionsBar } from '@/components/ReactionsBar';
 import { useTranslation } from '@/lib/i18n';
 
@@ -332,17 +328,6 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
     return parts.length > 0 ? parts : content;
   }, [handleCopyCode]);
 
-  const getBubbleClasses = () => {
-    // Убираем цветные фоны - все сообщения на одном фоне
-    return 'border-border bg-background';
-  };
-
-  const getIcon = () => {
-    if (isSystem) return <AlertTriangle className="h-4 w-4" />;
-    if (isAgent) return <Bot className="h-4 w-4" />;
-    return <User className="h-4 w-4" />;
-  };
-
   return (
     <div
       className={cn(
@@ -353,7 +338,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
     >
-      <div className={cn('flex gap-2 w-full leading-tight', isAgent ? 'justify-start' : 'justify-end')}>
+      <div className={cn('flex w-full items-end gap-2 leading-tight', isAgent || isSystem ? 'justify-start' : 'justify-end')}>
         
         {/* Компактный аватар */}
         <div className={cn('flex-shrink-0 order-1', isAgent ? 'order-1' : 'order-2')}>
@@ -373,13 +358,20 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         </div>
 
         {/* Компактный контент сообщения */}
-        <div className={cn('flex-1 min-w-0 max-w-md', isAgent ? 'order-2' : 'order-1')}>
+        <div className={cn(
+          'min-w-0 max-w-[86%] rounded-2xl border px-3 py-2 shadow-sm sm:max-w-[78%]',
+          isSystem
+            ? 'order-2 rounded-bl-md border-amber-400/30 bg-amber-500/10'
+            : isAgent
+              ? 'order-2 rounded-bl-md bg-muted/45'
+              : 'order-1 rounded-br-md border-primary bg-primary text-primary-foreground'
+        )}>
           {/* Компактный заголовок */}
           <div className={cn('flex items-center gap-2 mb-0.5', isAgent ? 'justify-start' : 'justify-end')}>
-            <span className="font-medium text-[11px] text-muted-foreground">
+            <span className={cn('font-medium text-[11px]', isAgent || isSystem ? 'text-muted-foreground' : 'text-primary-foreground/75')}>
               {senderName || (isSystem ? t.messages.systemSender : (isAgent ? t.messages.spiritSender : t.messages.userSender))}
             </span>
-            <span className="text-[10px] text-muted-foreground/60 flex items-center gap-1">
+            <span className={cn('text-[10px] flex items-center gap-1', isAgent || isSystem ? 'text-muted-foreground/60' : 'text-primary-foreground/65')}>
               {new Date(message.created_at).toLocaleTimeString(localeStr, { 
                 hour: '2-digit', 
                 minute: '2-digit' 
@@ -410,11 +402,11 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
           </div>
 
           {/* Компактный текст сообщения */}
-          <div className={cn('prose prose-sm max-w-none', isAgent ? 'text-left' : 'text-right')}>
+          <div className={cn('prose prose-sm max-w-none', isAgent || isSystem ? 'text-left' : 'text-right')}>
             {isDeleted ? (
               <em className="text-muted-foreground text-sm">{t.messages.deletedText}</em>
             ) : (
-              <div className="text-foreground leading-tight text-sm">
+              <div className={cn('leading-snug text-sm', isAgent || isSystem ? 'text-foreground' : 'text-primary-foreground')}>
                 {message.message_type === 'voice' ? (
                   <div className={cn("flex flex-col gap-2 p-2 rounded-lg border bg-card/50 max-w-sm", isAgent ? "mr-auto" : "ml-auto")}>
                     <div className="flex items-center gap-3">

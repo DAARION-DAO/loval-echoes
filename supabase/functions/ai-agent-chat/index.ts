@@ -3,6 +3,33 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
 import { handleCors } from '../_shared/cors.ts';
 
+const DEFAULT_CHAT_COMPLETION_MODEL = 'openai/gpt-5-mini';
+
+class LovableProviderError extends Error {
+  status: number;
+  code: string;
+
+  constructor(status: number, code: string, message: string) {
+    super(message);
+    this.name = 'LovableProviderError';
+    this.status = status;
+    this.code = code;
+  }
+}
+
+const getChatCompletionModel = () =>
+  Deno.env.get('CHAT_COMPLETION_MODEL')?.trim() || DEFAULT_CHAT_COMPLETION_MODEL;
+
+const createJsonResponse = (
+  body: Record<string, unknown>,
+  status: number,
+  corsHeaders: Record<string, string>,
+) =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
+
 // Lovable Gateway embedding generator helper
 async function generateEmbedding(queryText: string, apiKey: string): Promise<number[]> {
   const response = await fetch('https://ai.gateway.lovable.dev/v1/embeddings', {
@@ -31,6 +58,7 @@ async function generateChatCompletion(
   messages: Array<{ role: string; content: string }>,
   apiKey: string
 ): Promise<string> {
+  const model = getChatCompletionModel();
   const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -38,7 +66,7 @@ async function generateChatCompletion(
       'Authorization': `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: 'openai/gpt-4o-mini',
+      model,
       messages: messages,
       temperature: 0.7,
       max_tokens: 1500,
@@ -47,7 +75,21 @@ async function generateChatCompletion(
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(`Lovable Chat Completion API error: ${JSON.stringify(errorData)}`);
+    console.error('[ai-agent-chat] Lovable Chat Completion API error:', {
+      status: response.status,
+      model,
+      errorData,
+    });
+
+    const providerMessage = typeof errorData?.message === 'string' ? errorData.message : '';
+    const errorCode = providerMessage.includes('invalid model')
+      ? 'MODEL_PROVIDER_ERROR'
+      : 'AI_PROVIDER_ERROR';
+    const publicMessage = errorCode === 'MODEL_PROVIDER_ERROR'
+      ? 'The configured chat model is not available from the AI provider.'
+      : 'The AI provider could not complete the request.';
+
+    throw new LovableProviderError(response.status, errorCode, publicMessage);
   }
 
   const result = await response.json();
@@ -63,28 +105,19 @@ serve(async (req) => {
 
   // Verify method is POST
   if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
-      status: 405,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return createJsonResponse({ error: 'Method not allowed' }, 405, corsHeaders);
   }
 
   // Auth header verification
   const authHeader = req.headers.get('Authorization') || req.headers.get('authorization');
   if (!authHeader) {
-    return new Response(JSON.stringify({ error: 'Unauthorized: Missing Authorization header' }), {
-      status: 401,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return createJsonResponse({ error: 'Unauthorized: Missing Authorization header' }, 401, corsHeaders);
   }
 
   try {
     const { chatId, useRag = true } = await req.json();
     if (!chatId) {
-      return new Response(JSON.stringify({ error: 'Missing chatId in request' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return createJsonResponse({ error: 'Missing chatId in request' }, 400, corsHeaders);
     }
 
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
@@ -92,10 +125,7 @@ serve(async (req) => {
     const lovableApiKey = Deno.env.get('LOVABLE_API_KEY') ?? '';
 
     if (!lovableApiKey) {
-      return new Response(JSON.stringify({ error: 'Missing LOVABLE_API_KEY on server' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return createJsonResponse({ error: 'Missing LOVABLE_API_KEY on server' }, 500, corsHeaders);
     }
 
     // Create client
@@ -111,26 +141,17 @@ serve(async (req) => {
 
     if (historyError) {
       console.error('[ai-agent-chat] Fetch history error:', historyError);
-      return new Response(JSON.stringify({ error: 'Failed to fetch chat history' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return createJsonResponse({ error: 'Failed to fetch chat history' }, 500, corsHeaders);
     }
 
     if (!history || history.length === 0) {
-      return new Response(JSON.stringify({ error: 'No messages in this chat yet' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return createJsonResponse({ error: 'No messages in this chat yet' }, 400, corsHeaders);
     }
 
     // Identify last message (must be from user)
     const lastUserMessage = history[history.length - 1];
     if (lastUserMessage.role !== 'user') {
-      return new Response(JSON.stringify({ error: 'Last message in chat is not from user. Awaiting user input.' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return createJsonResponse({ error: 'Last message in chat is not from user. Awaiting user input.' }, 400, corsHeaders);
     }
 
     let contextText = '';
@@ -203,7 +224,7 @@ ${contextText}
     ];
 
     // 4. Generate completion
-    console.log('[ai-agent-chat] Requesting OpenAI Chat Completion...');
+    console.log('[ai-agent-chat] Requesting Lovable Chat Completion...');
     let assistantReply = await generateChatCompletion(apiMessages, lovableApiKey);
 
     // Append citation source footer if sources were found
@@ -228,10 +249,7 @@ ${contextText}
 
     if (insertError) {
       console.error('[ai-agent-chat] Database insert failed:', insertError);
-      return new Response(JSON.stringify({ error: `Failed to save assistant response: ${insertError.message}` }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return createJsonResponse({ error: `Failed to save assistant response: ${insertError.message}` }, 500, corsHeaders);
     }
 
     // 6. Update conversation timestamp
@@ -247,13 +265,18 @@ ${contextText}
     });
 
   } catch (error) {
+    if (error instanceof LovableProviderError) {
+      return createJsonResponse({
+        error: 'AI provider unavailable',
+        error_code: error.code,
+        details: error.message,
+      }, 502, corsHeaders);
+    }
+
     console.error('[ai-agent-chat] Unexpected error:', error);
-    return new Response(JSON.stringify({ 
+    return createJsonResponse({
       error: 'Internal server error', 
       details: error instanceof Error ? error.message : 'Unknown' 
-    }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    }, 500, corsHeaders);
   }
 });

@@ -125,7 +125,7 @@ serve(async (req) => {
         const { data: newChat, error } = await supabase
           .from('conversations')
           .insert({
-            name: name || 'Новый чат',
+            name: name || 'Новий чат',
             user_id: user.id, // RLS забезпечить що користувач може створювати тільки свої чати
           })
           .select('id, name, created_at, updated_at')

@@ -4,19 +4,25 @@ import { ArrowLeft, Users, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { ZhosBanner } from '@/components/ZhosBanner';
 import { MessageBubble } from '@/components/MessageBubble';
 import { ChatInterface } from '@/components/ChatInterface';
 import { ParticipantsList } from '@/components/ParticipantsList';
 import { EditableChatTitle } from '@/components/EditableChatTitle';
-import { OnlineUsersBar } from '@/components/OnlineUsersBar';
 import { useTranslation } from '@/lib/i18n';
 import { difyClient, type DifyMessage, type Chat } from '@/utils/difyClient';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { renameChat, pinChat, deleteMessage } from '@/services/chats';
+import { ensureCurrentUserParticipant, renameChat, pinChat, deleteMessage } from '@/services/chats';
 import { ChatTabs } from '@/components/ChatTabs';
 import { ThreadPanel } from '@/components/ThreadPanel';
+
+const dedupeMessages = (items: DifyMessage[]) => {
+  const byId = new Map<string, DifyMessage>();
+  items.forEach(item => byId.set(item.id, item));
+  return Array.from(byId.values()).sort(
+    (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+  );
+};
 
 export const ChatPage = () => {
   const { chatId } = useParams<{ chatId: string }>();
@@ -29,7 +35,7 @@ export const ChatPage = () => {
   const [chat, setChat] = useState<Chat | null>(null);
   const [messages, setMessages] = useState<DifyMessage[]>([]);
   const [loading, setLoading] = useState(true);
-  const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
+  const [onlineUserIds, setOnlineUserIds] = useState<string[]>([]);
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const [participantsReadTimes, setParticipantsReadTimes] = useState<Record<string, string>>({});
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -42,10 +48,10 @@ export const ChatPage = () => {
       return;
     }
     
-    // Get current user id
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (user) {
         setCurrentUserId(user.id);
+        await ensureCurrentUserParticipant(chatId);
       }
     });
 
@@ -66,6 +72,8 @@ export const ChatPage = () => {
   const updateLastRead = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user || !chatId) return;
+
+    await ensureCurrentUserParticipant(chatId);
 
     await supabase
       .from('conversation_participants')
@@ -123,18 +131,20 @@ export const ChatPage = () => {
 
   const setupRealTimePresence = () => {
     if (!chatId) return;
-
-    const channel = supabase.channel(`presence-chat-${chatId}`, {
-      config: {
-        presence: {
-          key: chatId,
-        },
-      },
-    });
+    let isActive = true;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
 
     // Получаем текущего пользователя
     supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) {
+      if (user && isActive) {
+        channel = supabase.channel(`presence-chat-${chatId}`, {
+          config: {
+            presence: {
+              key: user.id,
+            },
+          },
+        });
+
         const userInfo = {
           user_id: user.id,
           user_name: user.user_metadata?.display_name || user.email?.split('@')[0] || t.chatPage.userFallbackName,
@@ -144,16 +154,16 @@ export const ChatPage = () => {
         channel
           .on('presence', { event: 'sync' }, () => {
             const presenceState = channel.presenceState();
-            const users: string[] = [];
+            const userIds: string[] = [];
             Object.keys(presenceState).forEach(key => {
               const presences = presenceState[key];
               presences.forEach((presence: any) => {
-                if (presence.user_name) {
-                  users.push(presence.user_name);
+                if (presence.user_id) {
+                  userIds.push(presence.user_id);
                 }
               });
             });
-            setOnlineUsers(users);
+            setOnlineUserIds([...new Set(userIds)]);
           })
           .on('presence', { event: 'join' }, ({ newPresences }) => {
             console.log('User joined:', newPresences);
@@ -170,7 +180,8 @@ export const ChatPage = () => {
     });
 
     return () => {
-      supabase.removeChannel(channel);
+      isActive = false;
+      if (channel) supabase.removeChannel(channel);
     };
   };
 
@@ -217,7 +228,7 @@ export const ChatPage = () => {
             // Избегаем дублирования сообщений
             const exists = prev.some(msg => msg.id === difyMessage.id);
             if (exists) return prev;
-            return [...prev, difyMessage];
+            return dedupeMessages([...prev, difyMessage]);
           });
 
           // Update last read timestamp on receiving new message
@@ -303,7 +314,7 @@ export const ChatPage = () => {
         : (msg.sender_name || t.chatPage.userFallbackName)
     }));
     
-    setMessages(updatedMessages);
+    setMessages(dedupeMessages(updatedMessages));
   };
 
   const scrollToBottom = () => {
@@ -461,8 +472,7 @@ export const ChatPage = () => {
                   </div>
 
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    <OnlineUsersBar maxVisible={3} className="hidden sm:flex" />
-                    <ParticipantsList chatId={chatId} onlineUsers={onlineUsers} />
+                    <ParticipantsList chatId={chatId || ''} onlineUserIds={onlineUserIds} />
                     <Button
                       variant="outline"
                       size="sm"
@@ -478,10 +488,18 @@ export const ChatPage = () => {
 
               {/* Лента сообщений - компактная */}
               <ScrollArea className="flex-1 chat-messages custom-scrollbar">
-                <div className="p-2 space-y-2 pb-safe">
+                <div className="p-3 sm:p-4 space-y-3 pb-safe">
                   {messages.length === 0 ? (
-                    <div className="text-center py-8">
-                      <p className="text-muted-foreground text-sm">{t.chats.emptyState}</p>
+                    <div className="mx-auto max-w-xl py-10 text-center">
+                      <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                        <Users className="h-6 w-6 text-primary" />
+                      </div>
+                      <p className="text-sm sm:text-base text-muted-foreground">{t.chats.emptyState}</p>
+                      <div className="mt-4 flex flex-wrap justify-center gap-2">
+                        <Badge variant="secondary">{t.chatPage.emptyPromptKnowledge}</Badge>
+                        <Badge variant="secondary">{t.chatPage.emptyPromptSummary}</Badge>
+                        <Badge variant="secondary">{t.chatPage.emptyPromptDecision}</Badge>
+                      </div>
                     </div>
                   ) : (
                     messages.map((message) => (

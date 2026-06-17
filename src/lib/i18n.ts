@@ -900,6 +900,8 @@ export interface Translations {
     pinTooltip: string;
     unpinTooltip: string;
     onlineCount: string;
+    participantsCount: string;
+    noPreview: string;
     error: string;
   };
   chatsManagement: {
@@ -1157,6 +1159,10 @@ export interface Translations {
     errTtsTitle: string;
     errTtsDesc: string;
     userFallbackName: string;
+    agentUnavailableTitle: string;
+    agentUnavailableDesc: string;
+    voiceMessagePreview: string;
+    fileMessagePreview: string;
     errUploadTitle: string;
     errFileSizeTitle: string;
     errFileSizeDesc: string;
@@ -1325,7 +1331,11 @@ export interface Translations {
     indicatorTypingSingle: string;
     indicatorTypingMultiple: string;
     forkedFromTitle: string;
-  };  communityChat: {
+    emptyPromptKnowledge: string;
+    emptyPromptSummary: string;
+    emptyPromptDecision: string;
+  };
+  communityChat: {
     title: string;
     description: string;
     loadError: string;
@@ -2816,6 +2826,8 @@ export const translations: Record<Language, Translations> = {
       pinTooltip: 'Закріпити чат',
       unpinTooltip: 'Відкріпити чат',
       onlineCount: '{count} онлайн',
+      participantsCount: '{count} учасників',
+      noPreview: 'Поки немає повідомлень',
       error: 'Помилка',
     },
     chatsManagement: {
@@ -3073,6 +3085,10 @@ export const translations: Record<Language, Translations> = {
       errTtsTitle: 'Помилка озвучування',
       errTtsDesc: 'Не вдалося озвучити відповідь',
       userFallbackName: 'Користувач',
+      agentUnavailableTitle: 'Повідомлення збережено',
+      agentUnavailableDesc: 'Агент тимчасово недоступний. Ваше повідомлення вже є в чаті.',
+      voiceMessagePreview: 'Голосове повідомлення',
+      fileMessagePreview: 'Файл',
       errUploadTitle: 'Помилка завантаження файлу {name}',
       errFileSizeTitle: 'Файл занадто великий',
       errFileSizeDesc: 'Розмір файлу перевищує допустимий ліміт (25 МБ)',
@@ -3233,14 +3249,17 @@ export const translations: Record<Language, Translations> = {
     chatPage: {
       returnToChats: 'Повернутися до чатів',
       userFallbackName: 'Користувач',
-      agentFallbackName: 'Дух Общини',
-      knotFixedDesc: 'Узел зафіксовано в бесіді',
+      agentFallbackName: 'Дух спільноти',
+      knotFixedDesc: 'Вузол зафіксовано в бесіді',
       branchSuccessDesc: 'Гілка створена успішно',
       auditViolationDesc: 'Порушення зафіксовано в журналі аудиту',
       btnKnot: 'Вузол',
       indicatorTypingSingle: 'друкує...',
       indicatorTypingMultiple: 'друкують...',
       forkedFromTitle: 'Гілка з "{name}"',
+      emptyPromptKnowledge: 'Запитати базу знань',
+      emptyPromptSummary: 'Підсумувати рішення',
+      emptyPromptDecision: 'Зафіксувати домовленість',
     },
     communityChat: {
       title: 'Загальний чат ЖОС',
@@ -4727,6 +4746,8 @@ export const translations: Record<Language, Translations> = {
       pinTooltip: 'Pin chat',
       unpinTooltip: 'Unpin chat',
       onlineCount: '{count} online',
+      participantsCount: '{count} participants',
+      noPreview: 'No messages yet',
       error: 'Error',
     },
     chatsManagement: {
@@ -4984,6 +5005,10 @@ export const translations: Record<Language, Translations> = {
       errTtsTitle: 'TTS Error',
       errTtsDesc: 'Failed to speak response',
       userFallbackName: 'User',
+      agentUnavailableTitle: 'Message saved',
+      agentUnavailableDesc: 'The agent is temporarily unavailable. Your message is already in the chat.',
+      voiceMessagePreview: 'Voice message',
+      fileMessagePreview: 'File',
       errUploadTitle: 'Failed to upload file {name}',
       errFileSizeTitle: 'File Too Large',
       errFileSizeDesc: 'File size exceeds the allowed limit (25 MB)',
@@ -5152,6 +5177,9 @@ export const translations: Record<Language, Translations> = {
       indicatorTypingSingle: 'is typing...',
       indicatorTypingMultiple: 'are typing...',
       forkedFromTitle: 'Branch from "{name}"',
+      emptyPromptKnowledge: 'Ask the knowledge base',
+      emptyPromptSummary: 'Summarize decisions',
+      emptyPromptDecision: 'Record an agreement',
     },
     communityChat: {
       title: 'Global Chat ZHOS',
@@ -6638,6 +6666,8 @@ export const translations: Record<Language, Translations> = {
       pinTooltip: 'Закрепить чат',
       unpinTooltip: 'Открепить чат',
       onlineCount: '{count} онлайн',
+      participantsCount: '{count} участников',
+      noPreview: 'Пока нет сообщений',
       error: 'Ошибка',
     },
     chatsManagement: {
@@ -6895,6 +6925,10 @@ export const translations: Record<Language, Translations> = {
       errTtsTitle: 'Ошибка озвучивания',
       errTtsDesc: 'Не удалось озвучить ответ',
       userFallbackName: 'Пользователь',
+      agentUnavailableTitle: 'Сообщение сохранено',
+      agentUnavailableDesc: 'Агент временно недоступен. Ваше сообщение уже есть в чате.',
+      voiceMessagePreview: 'Голосовое сообщение',
+      fileMessagePreview: 'Файл',
       errUploadTitle: 'Ошибка загрузки файла {name}',
       errFileSizeTitle: 'Файл слишком большой',
       errFileSizeDesc: 'Размер файла превышает допустимый лимит (25 МБ)',
@@ -7063,6 +7097,9 @@ export const translations: Record<Language, Translations> = {
       indicatorTypingSingle: 'печатает...',
       indicatorTypingMultiple: 'печатают...',
       forkedFromTitle: 'Ветка из "{name}"',
+      emptyPromptKnowledge: 'Спросить базу знаний',
+      emptyPromptSummary: 'Суммировать решения',
+      emptyPromptDecision: 'Зафиксировать договорённость',
     },
     communityChat: {
       title: 'Общий чат ЖОС',
@@ -8549,6 +8586,8 @@ export const translations: Record<Language, Translations> = {
       pinTooltip: 'Fijar chat',
       unpinTooltip: 'Desfijar chat',
       onlineCount: '{count} en línea',
+      participantsCount: '{count} participantes',
+      noPreview: 'Aún no hay mensajes',
       error: 'Error',
     },
     chatsManagement: {
@@ -8806,6 +8845,10 @@ export const translations: Record<Language, Translations> = {
       errTtsTitle: 'Error de TTS',
       errTtsDesc: 'Error al reproducir respuesta por voz',
       userFallbackName: 'Usuario',
+      agentUnavailableTitle: 'Mensaje guardado',
+      agentUnavailableDesc: 'El agente no está disponible temporalmente. Su mensaje ya está en el chat.',
+      voiceMessagePreview: 'Mensaje de voz',
+      fileMessagePreview: 'Archivo',
       errUploadTitle: 'Error al subir el archivo {name}',
       errFileSizeTitle: 'Archivo Demasiado Grande',
       errFileSizeDesc: 'El tamaño del archivo excede el límite permitido (25 MB)',
@@ -8974,6 +9017,9 @@ export const translations: Record<Language, Translations> = {
       indicatorTypingSingle: 'está escribiendo...',
       indicatorTypingMultiple: 'están escribiendo...',
       forkedFromTitle: 'Rama de "{name}"',
+      emptyPromptKnowledge: 'Preguntar a la base de conocimiento',
+      emptyPromptSummary: 'Resumir decisiones',
+      emptyPromptDecision: 'Registrar un acuerdo',
     },
     communityChat: {
       title: 'Chat Global ZHOS',

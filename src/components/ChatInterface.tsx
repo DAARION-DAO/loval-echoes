@@ -37,7 +37,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
   const { toast } = useToast();
   
   // Оголошуємо всі state змінні перед їх використанням
-  const [voiceModeEnabled, setVoiceModeEnabled] = useState(true); // Увімкнено за замовчуванням
+  const [voiceModeEnabled, setVoiceModeEnabled] = useState(false);
   const [autoStopEnabled, setAutoStopEnabled] = useState(true);
   const [isPlayingTTS, setIsPlayingTTS] = useState(false);
   const [isAutoStopped, setIsAutoStopped] = useState(false);
@@ -409,14 +409,18 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
     if (isStreaming) return;
 
     try {
+      let agentWarning: string | undefined;
+
       // 1. Send text message if any
       if (messageText.trim() && !voiceMeta) {
-        await difyClient.sendMessage(chatId, messageText);
+        const result = await difyClient.sendMessage(chatId, messageText);
+        if (!result.agentOk) agentWarning = result.agentError;
       }
 
       // 2. Send voice message if any
       if (voiceMeta) {
-        await difyClient.sendMessage(chatId, '', undefined, voiceMeta);
+        const result = await difyClient.sendMessage(chatId, '', undefined, voiceMeta);
+        if (!result.agentOk) agentWarning = result.agentError;
       }
       
       // 3. Send each file as a separate message
@@ -424,13 +428,14 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
         for (const file of attachedFiles) {
           try {
             const uploadResult = await difyClient.uploadFile(file, chatId);
-            await difyClient.sendMessage(chatId, '', undefined, {
+            const result = await difyClient.sendMessage(chatId, '', undefined, {
               messageType: 'file',
               fileUrl: uploadResult.url,
               fileName: uploadResult.name,
               fileSize: uploadResult.size,
               fileType: file.type,
             });
+            if (!result.agentOk) agentWarning = result.agentError;
           } catch (error) {
             console.error('Error uploading file:', error);
             toast({
@@ -445,6 +450,13 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
       // Очищаем форму
       setMessage('');
       setAttachedFiles([]);
+
+      if (agentWarning) {
+        toast({
+          title: t.chatInterface.agentUnavailableTitle,
+          description: agentWarning,
+        });
+      }
       
     } catch (error) {
       console.error('Error sending message:', error);
@@ -954,12 +966,12 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
         </div>
       )}
 
-      {/* Область drag & drop */}
+      {/* Компактний composer; drag & drop підсвічується тільки під час перетягування */}
       <div
-        className={`relative rounded-lg border-2 border-dashed transition-colors ${
+        className={`relative rounded-2xl border bg-card/40 shadow-sm transition-colors ${
           isDragging 
-            ? 'border-primary bg-primary/5' 
-            : 'border-muted-foreground/25'
+            ? 'border-primary border-dashed bg-primary/5'
+            : 'border-border'
         }`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -980,7 +992,7 @@ export const ChatInterface = ({ chatId }: ChatInterfaceProps) => {
               onChange={(e) => setMessage(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder={isRecording ? t.chatInterface.placeholderRecording : t.chatInterface.placeholderTypeMessage}
-              className="min-h-[40px] sm:min-h-[44px] max-h-24 sm:max-h-32 resize-none border-0 shadow-none focus-visible:ring-0 mobile-input text-base px-3 py-2"
+              className="min-h-[40px] sm:min-h-[44px] max-h-24 sm:max-h-32 resize-none border-0 bg-transparent shadow-none focus-visible:ring-0 mobile-input text-base px-3 py-2"
               disabled={isRecording}
             />
           </div>
