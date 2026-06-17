@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from '@/lib/i18n';
+import { uploadProfileAvatar, AvatarUploadError } from '@/services/microdaoSettings';
 
 export interface UserProfile {
   id: string;
@@ -137,72 +138,26 @@ export const useUserProfile = () => {
     if (!user) throw new Error('User not authenticated');
 
     try {
-      // Client-side validation first
-      const MAX_SIZE = 5 * 1024 * 1024; // 5MB
-      const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-      
-      if (file.size > MAX_SIZE) {
-        throw new Error(t.userProfile.fileTooLarge);
-      }
-      
-      if (!ALLOWED_TYPES.includes(file.type)) {
-        throw new Error(t.userProfile.unsupportedFileType);
-      }
+      const { avatarUrl, profile: nextProfile } = await uploadProfileAvatar(file);
+      setProfile(nextProfile);
 
-      // Server-side validation via edge function
-      const { data: validationData, error: validationError } = await supabase.functions.invoke('file-validation', {
-        body: {
-          fileName: file.name,
-          fileSize: file.size,
-          fileType: file.type,
-          contentHash: 'avatar-upload'
-        }
+      toast({
+        title: t.userProfile.updatedTitle,
+        description: t.userProfile.updatedDesc
       });
 
-      if (validationError || !validationData?.success) {
-        throw new Error(validationData?.error || t.userProfile.fileSecurityFailed);
-      }
-
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}/avatar.${fileExt}`;
-
-      // Upload file to storage with additional security headers
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(fileName, file, { 
-          upsert: true,
-          cacheControl: '3600',
-          contentType: file.type
-        });
-
-      if (uploadError) throw uploadError;
-
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(fileName);
-
-      // Log security event
-      await supabase.rpc('log_security_event', {
-        p_user_id: user.id,
-        p_event_type: 'avatar_upload',
-        p_event_data: {
-          file_name: validationData.sanitizedFileName,
-          file_size: file.size,
-          file_type: file.type,
-          timestamp: new Date().toISOString()
-        }
-      });
-
-      // Update profile with new avatar URL
-      await updateProfile({ avatar_url: publicUrl });
-
-      return publicUrl;
+      return avatarUrl;
     } catch (error) {
       console.error('Error uploading avatar:', error);
+      const description = error instanceof AvatarUploadError && error.code === 'too_large'
+        ? t.userProfile.fileTooLarge
+        : error instanceof AvatarUploadError && error.code === 'unsupported_type'
+          ? t.userProfile.unsupportedFileType
+          : error instanceof Error ? error.message : t.userProfile.uploadFailed;
+
       toast({
         title: t.userProfile.updateErrorTitle,
-        description: error instanceof Error ? error.message : t.userProfile.uploadFailed,
+        description,
         variant: 'destructive'
       });
       throw error;

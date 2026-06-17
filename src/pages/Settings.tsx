@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
 import { 
   User, 
   Palette, 
@@ -14,7 +15,8 @@ import {
   Shield, 
   Upload,
   Fingerprint,
-  CreditCard
+  CreditCard,
+  Network
 } from 'lucide-react';
 import { useTranslation, Language } from '@/lib/i18n';
 import { useState, useRef, useEffect } from 'react';
@@ -30,19 +32,146 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { IdentityChecklist } from '@/components/identity/IdentityChecklist';
 import { WalletConnect } from '@/components/identity/WalletConnect';
 import { TelegramLink } from '@/components/identity/TelegramLink';
-import { useNavigate } from 'react-router-dom';
+import { useActiveCommunity } from '@/hooks/useActiveCommunity';
+import {
+  uploadCommunityAvatar,
+  updateActiveCommunity,
+  AvatarUploadError,
+} from '@/services/microdaoSettings';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+
+const microdaoSettingsCopy: Record<
+  Language,
+  {
+    title: string;
+    description: string;
+    readOnly: string;
+    nameLabel: string;
+    descriptionLabel: string;
+    descriptionPlaceholder: string;
+    uploadAvatar: string;
+    save: string;
+    saving: string;
+    savedTitle: string;
+    savedDesc: string;
+    uploadSuccess: string;
+    uploadError: string;
+    emptyState: string;
+    owner: string;
+    admin: string;
+    member: string;
+    tokenNote: string;
+  }
+> = {
+  uk: {
+    title: 'MicroDAO',
+    description: 'Редагуйте назву, опис і аватар активної MicroDAO. Slug не змінюється.',
+    readOnly: 'У вас режим перегляду. Редагувати MicroDAO можуть власник або адміністратор.',
+    nameLabel: 'Назва MicroDAO',
+    descriptionLabel: 'Опис',
+    descriptionPlaceholder: 'Коротко опишіть фокус і призначення MicroDAO',
+    uploadAvatar: 'Завантажити аватар',
+    save: 'Зберегти MicroDAO',
+    saving: 'Збереження...',
+    savedTitle: 'MicroDAO оновлено',
+    savedDesc: 'Назва, опис або аватар активної MicroDAO збережені.',
+    uploadSuccess: 'Аватар MicroDAO оновлено.',
+    uploadError: 'Не вдалося оновити MicroDAO.',
+    emptyState: 'Активну MicroDAO не вибрано.',
+    owner: 'Власник',
+    admin: 'Адмін',
+    member: 'Учасник',
+    tokenNote: 'Перейменування дозволене у V1, доки випуск власних токенів ще не активовано.',
+  },
+  en: {
+    title: 'MicroDAO',
+    description: 'Edit the active MicroDAO name, description, and avatar. The slug stays unchanged.',
+    readOnly: 'You are in read-only mode. Only the owner or an admin can edit this MicroDAO.',
+    nameLabel: 'MicroDAO name',
+    descriptionLabel: 'Description',
+    descriptionPlaceholder: 'Briefly describe the MicroDAO focus and purpose',
+    uploadAvatar: 'Upload avatar',
+    save: 'Save MicroDAO',
+    saving: 'Saving...',
+    savedTitle: 'MicroDAO updated',
+    savedDesc: 'The active MicroDAO name, description, or avatar was saved.',
+    uploadSuccess: 'MicroDAO avatar updated.',
+    uploadError: 'Could not update MicroDAO.',
+    emptyState: 'No active MicroDAO is selected.',
+    owner: 'Owner',
+    admin: 'Admin',
+    member: 'Member',
+    tokenNote: 'Renaming is allowed in V1 while custom token issuance is not active yet.',
+  },
+  ru: {
+    title: 'MicroDAO',
+    description: 'Редактируйте название, описание и аватар активной MicroDAO. Slug не меняется.',
+    readOnly: 'У вас режим просмотра. Редактировать MicroDAO может владелец или администратор.',
+    nameLabel: 'Название MicroDAO',
+    descriptionLabel: 'Описание',
+    descriptionPlaceholder: 'Кратко опишите фокус и назначение MicroDAO',
+    uploadAvatar: 'Загрузить аватар',
+    save: 'Сохранить MicroDAO',
+    saving: 'Сохранение...',
+    savedTitle: 'MicroDAO обновлена',
+    savedDesc: 'Название, описание или аватар активной MicroDAO сохранены.',
+    uploadSuccess: 'Аватар MicroDAO обновлен.',
+    uploadError: 'Не удалось обновить MicroDAO.',
+    emptyState: 'Активная MicroDAO не выбрана.',
+    owner: 'Владелец',
+    admin: 'Админ',
+    member: 'Участник',
+    tokenNote: 'Переименование разрешено в V1, пока выпуск собственных токенов еще не активирован.',
+  },
+  es: {
+    title: 'MicroDAO',
+    description: 'Edita el nombre, la descripción y el avatar de la MicroDAO activa. El slug no cambia.',
+    readOnly: 'Estás en modo de solo lectura. Solo el propietario o un admin pueden editar esta MicroDAO.',
+    nameLabel: 'Nombre de MicroDAO',
+    descriptionLabel: 'Descripción',
+    descriptionPlaceholder: 'Describe brevemente el foco y propósito de la MicroDAO',
+    uploadAvatar: 'Subir avatar',
+    save: 'Guardar MicroDAO',
+    saving: 'Guardando...',
+    savedTitle: 'MicroDAO actualizada',
+    savedDesc: 'Se guardó el nombre, la descripción o el avatar de la MicroDAO activa.',
+    uploadSuccess: 'Avatar de MicroDAO actualizado.',
+    uploadError: 'No se pudo actualizar la MicroDAO.',
+    emptyState: 'No hay una MicroDAO activa seleccionada.',
+    owner: 'Owner',
+    admin: 'Admin',
+    member: 'Miembro',
+    tokenNote: 'El cambio de nombre está permitido en V1 mientras la emisión de tokens propios no esté activa.',
+  },
+};
 
 export const Settings = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { t, language, setLanguage } = useTranslation();
   const { user } = useAuth();
   const { profile, updateProfile, updateTelegram, uploadAvatar, loading } = useUserProfile();
+  const {
+    activeCommunity,
+    activeCommunityId,
+    userCommunityRole,
+    isCommunityAdmin,
+    refresh: refreshCommunity,
+  } = useActiveCommunity();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const communityFileInputRef = useRef<HTMLInputElement>(null);
+  const microdaoSectionRef = useRef<HTMLDivElement>(null);
+  const microdaoCopy = microdaoSettingsCopy[language] ?? microdaoSettingsCopy.en;
   const [showPrinciplesBanner, setShowPrinciplesBanner] = useState(
     localStorage.getItem('zhos-principles-banner-dismissed') !== 'true'
   );
   const [displayName, setDisplayName] = useState(profile?.display_name || '');
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [communityName, setCommunityName] = useState(activeCommunity?.name || '');
+  const [communityDescription, setCommunityDescription] = useState(activeCommunity?.description || '');
+  const [communitySaving, setCommunitySaving] = useState(false);
+  const [communityAvatarUploading, setCommunityAvatarUploading] = useState(false);
   
   // Push notifications hook
   const {
@@ -62,6 +191,18 @@ export const Settings = () => {
       setDisplayName(profile.display_name);
     }
   }, [profile]);
+
+  useEffect(() => {
+    setCommunityName(activeCommunity?.name || '');
+    setCommunityDescription(activeCommunity?.description || '');
+  }, [activeCommunity?.id, activeCommunity?.name, activeCommunity?.description]);
+
+  useEffect(() => {
+    if (searchParams.get('section') !== 'microdao') return;
+    window.requestAnimationFrame(() => {
+      microdaoSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }, [searchParams]);
 
   // Load chats for push notification selection
   useEffect(() => {
@@ -123,33 +264,88 @@ export const Settings = () => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Check file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast({
-        title: t.settingsExtra.errorTitle,
-        description: t.settingsExtra.errorTooLarge,
-        variant: 'destructive'
-      });
-      return;
-    }
-
-    // Check file type
-    if (!file.type.startsWith('image/')) {
-      toast({
-        title: t.settingsExtra.errorTitle,
-        description: t.settingsExtra.errorImageOnly,
-        variant: 'destructive'
-      });
-      return;
-    }
-
     try {
+      setAvatarUploading(true);
       await uploadAvatar(file);
     } catch (error) {
       console.error('Error uploading avatar:', error);
+    } finally {
+      setAvatarUploading(false);
+      event.currentTarget.value = '';
     }
   };
 
+  const resolveAvatarError = (error: unknown) => {
+    if (error instanceof AvatarUploadError && error.code === 'too_large') {
+      return t.settingsExtra.errorTooLarge;
+    }
+
+    if (error instanceof AvatarUploadError && error.code === 'unsupported_type') {
+      return t.userProfile.unsupportedFileType;
+    }
+
+    return error instanceof Error ? error.message : microdaoCopy.uploadError;
+  };
+
+  const handleCommunityAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !activeCommunityId || !isCommunityAdmin) return;
+
+    try {
+      setCommunityAvatarUploading(true);
+      const updated = await uploadCommunityAvatar(file, activeCommunityId);
+      setCommunityName(updated.name);
+      setCommunityDescription(updated.description || '');
+      await refreshCommunity();
+      toast({
+        title: microdaoCopy.savedTitle,
+        description: microdaoCopy.uploadSuccess,
+      });
+    } catch (error) {
+      console.error('Error uploading community avatar:', error);
+      toast({
+        title: t.settingsExtra.errorTitle,
+        description: resolveAvatarError(error),
+        variant: 'destructive',
+      });
+    } finally {
+      setCommunityAvatarUploading(false);
+      event.currentTarget.value = '';
+    }
+  };
+
+  const handleSaveCommunity = async () => {
+    if (!activeCommunityId || !isCommunityAdmin) return;
+
+    try {
+      setCommunitySaving(true);
+      await updateActiveCommunity({
+        communityId: activeCommunityId,
+        name: communityName,
+        description: communityDescription,
+      });
+      await refreshCommunity();
+      toast({
+        title: microdaoCopy.savedTitle,
+        description: microdaoCopy.savedDesc,
+      });
+    } catch (error) {
+      console.error('Error saving community:', error);
+      toast({
+        title: t.settingsExtra.errorTitle,
+        description: error instanceof Error ? error.message : microdaoCopy.uploadError,
+        variant: 'destructive',
+      });
+    } finally {
+      setCommunitySaving(false);
+    }
+  };
+
+  const roleLabel = userCommunityRole === 'owner'
+    ? microdaoCopy.owner
+    : userCommunityRole === 'admin'
+      ? microdaoCopy.admin
+      : microdaoCopy.member;
 
   return (
     <div className="container max-w-2xl mx-auto p-6 space-y-6">
@@ -189,10 +385,10 @@ export const Settings = () => {
                 variant="outline" 
                 size="sm"
                 onClick={() => fileInputRef.current?.click()}
-                disabled={loading}
+                disabled={loading || avatarUploading}
               >
                 <Upload className="h-4 w-4 mr-2" />
-                {t.settingsExtra.uploadPhoto}
+                {avatarUploading ? t.settingsExtra.saving : t.settingsExtra.uploadPhoto}
               </Button>
             </div>
           </div>
@@ -218,6 +414,101 @@ export const Settings = () => {
               />
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Active MicroDAO Settings */}
+      <Card ref={microdaoSectionRef} className="scroll-mt-20">
+        <CardHeader>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Network className="h-5 w-5" />
+                {microdaoCopy.title}
+              </CardTitle>
+              <CardDescription className="mt-2">
+                {activeCommunity ? microdaoCopy.description : microdaoCopy.emptyState}
+              </CardDescription>
+            </div>
+            {activeCommunity && (
+              <Badge variant={isCommunityAdmin ? 'default' : 'outline'} className="w-fit shrink-0">
+                {roleLabel}
+              </Badge>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {!activeCommunity ? (
+            <p className="text-sm text-muted-foreground">{microdaoCopy.emptyState}</p>
+          ) : (
+            <>
+              {!isCommunityAdmin && (
+                <div className="rounded-md border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
+                  {microdaoCopy.readOnly}
+                </div>
+              )}
+
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                <Avatar className="h-16 w-16">
+                  <AvatarImage src={activeCommunity.avatar_url || ''} alt={activeCommunity.name} />
+                  <AvatarFallback>
+                    {activeCommunity.name?.charAt(0).toUpperCase() || 'M'}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="space-y-2">
+                  <input
+                    type="file"
+                    ref={communityFileInputRef}
+                    onChange={handleCommunityAvatarUpload}
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    className="hidden"
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => communityFileInputRef.current?.click()}
+                    disabled={!isCommunityAdmin || communityAvatarUploading}
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    {communityAvatarUploading ? t.settingsExtra.saving : microdaoCopy.uploadAvatar}
+                  </Button>
+                  <p className="text-xs text-muted-foreground">{microdaoCopy.tokenNote}</p>
+                </div>
+              </div>
+
+              <div className="grid gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="communityName">{microdaoCopy.nameLabel}</Label>
+                  <Input
+                    id="communityName"
+                    value={communityName}
+                    onChange={(event) => setCommunityName(event.target.value)}
+                    disabled={!isCommunityAdmin}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="communityDescription">{microdaoCopy.descriptionLabel}</Label>
+                  <Textarea
+                    id="communityDescription"
+                    value={communityDescription}
+                    onChange={(event) => setCommunityDescription(event.target.value)}
+                    placeholder={microdaoCopy.descriptionPlaceholder}
+                    disabled={!isCommunityAdmin}
+                    className="min-h-24"
+                  />
+                </div>
+              </div>
+
+              {isCommunityAdmin && (
+                <div className="flex justify-end">
+                  <Button onClick={handleSaveCommunity} disabled={communitySaving || !communityName.trim()}>
+                    {communitySaving ? microdaoCopy.saving : microdaoCopy.save}
+                  </Button>
+                </div>
+              )}
+            </>
+          )}
         </CardContent>
       </Card>
 

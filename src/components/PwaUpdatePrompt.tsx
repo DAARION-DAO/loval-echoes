@@ -58,15 +58,31 @@ export function PwaUpdatePrompt() {
   if (!visible) return null;
 
   const reload = () => {
-    registration?.waiting?.postMessage({ type: "SKIP_WAITING" });
-    window.location.reload();
+    const waitingWorker = registration?.waiting;
+
+    if (!waitingWorker || !navigator.serviceWorker.controller) {
+      window.location.reload();
+      return;
+    }
+
+    let hasReloaded = false;
+    const reloadOnce = () => {
+      if (hasReloaded) return;
+      hasReloaded = true;
+      window.location.reload();
+    };
+
+    navigator.serviceWorker.addEventListener("controllerchange", reloadOnce, { once: true });
+    waitingWorker.postMessage({ type: "SKIP_WAITING" });
+    window.setTimeout(reloadOnce, 3000);
   };
 
   return (
-    <div className="fixed inset-x-3 bottom-20 z-[70] rounded-lg border border-primary/30 bg-background/95 p-3 shadow-xl backdrop-blur sm:left-auto sm:right-4 sm:max-w-sm">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 space-y-1">
-          <p className="text-sm font-semibold text-foreground">{copy.title}</p>
+    <div className="fixed inset-x-3 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-[70] rounded-xl border border-primary/20 bg-background/95 p-4 shadow-2xl backdrop-blur sm:bottom-4 sm:left-auto sm:right-4 sm:max-w-md">
+      <div className="flex items-start gap-3">
+        <RefreshCw className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+        <div className="min-w-0 flex-1 space-y-1">
+          <p className="text-base font-semibold text-foreground">{copy.title}</p>
           <p className="text-xs leading-relaxed text-muted-foreground">{copy.description}</p>
         </div>
         <Button
@@ -80,12 +96,11 @@ export function PwaUpdatePrompt() {
         </Button>
       </div>
 
-      <div className="mt-3 flex justify-end gap-2">
-        <Button variant="ghost" size="sm" onClick={() => setVisible(false)} className="h-9 text-xs">
+      <div className="mt-4 flex justify-end gap-2">
+        <Button variant="outline" size="sm" onClick={() => setVisible(false)} className="h-10 px-4">
           {copy.dismiss}
         </Button>
-        <Button size="sm" onClick={reload} className="h-9 gap-1.5 text-xs">
-          <RefreshCw className="h-3.5 w-3.5" />
+        <Button size="sm" onClick={reload} className="h-10 gap-1.5 px-4">
           {copy.reload}
         </Button>
       </div>

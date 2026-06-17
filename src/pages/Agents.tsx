@@ -14,6 +14,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { generateCommunitySpiritPrompt } from '@/lib/communitySpiritPrompt';
+import { ensureCommunitySpiritAgent } from '@/services/microdaoSettings';
 import { 
   Bot, 
   Sparkles, 
@@ -57,6 +58,8 @@ const manageLocals = {
     repairCta: "Створити Дух Спільноти для цієї MicroDAO",
     repairDesc: "Кожна MicroDAO повинна мати власного Духа Спільноти для координації, памʼяті та автоматизації.",
     createAgentBtn: "Створити Дух Спільноти",
+    spiritCreatedToast: "Дух Спільноти створено. Тепер його можна налаштувати.",
+    spiritRepairError: "Не вдалося створити Дух Спільноти.",
     unsavedBadge: "Є незбережені зміни",
     roleLabel: "Ваша роль у DAO",
     autonomyLabel: "Автономія",
@@ -242,6 +245,8 @@ const manageLocals = {
     repairCta: "Create Community Spirit for this MicroDAO",
     repairDesc: "Every MicroDAO must have its own Community Spirit Agent for coordination, memory, and automation.",
     createAgentBtn: "Create Community Spirit",
+    spiritCreatedToast: "Community Spirit was created. You can configure it now.",
+    spiritRepairError: "Could not create Community Spirit.",
     unsavedBadge: "Unsaved changes exist",
     roleLabel: "DAO Role",
     autonomyLabel: "Autonomy",
@@ -430,6 +435,7 @@ export default function Agents() {
   const [agentPerms, setAgentPerms] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [creatingSpirit, setCreatingSpirit] = useState(false);
   const [activeTab, setActiveTab] = useState(defaultTab);
 
   useEffect(() => {
@@ -614,6 +620,73 @@ export default function Agents() {
 
     fetchAgentAndPermissions();
   }, [activeCommunityId, language]);
+
+  const handleEnsureCommunitySpirit = async () => {
+    if (!activeCommunity) return;
+
+    try {
+      setCreatingSpirit(true);
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError || !userData.user) throw userError || new Error('User not authenticated');
+
+      const result = await ensureCommunitySpiritAgent({
+        community: activeCommunity,
+        userId: userData.user.id,
+      });
+
+      setSpiritAgent(result.agent);
+      setAgentName(result.agent.name || '');
+
+      const personality = (result.agent.personality as any) || {};
+      setShortMission(personality.mission || '');
+      setPrimaryLang(personality.language || 'uk');
+      setSecondaryLangs(personality.secondary_languages || '');
+      setTone(personality.tone || 'warm');
+      setCommStyle(personality.communication_style || 'friendly');
+      setStrictness(personality.strictness || 'medium');
+      setDecisionStyle(personality.decision_style || 'human_approved');
+      setConflictStyle(personality.conflict_style || 'peaceful');
+
+      const { data: permsData, error: permsErr } = await supabase
+        .from('agent_permissions')
+        .select('*')
+        .eq('agent_id', result.agent.id)
+        .maybeSingle();
+      if (permsErr) throw permsErr;
+
+      if (permsData) {
+        setAgentPerms(permsData);
+        setPermsState({
+          can_invite_guests: !!permsData.can_invite_guests,
+          can_create_tasks: !!permsData.can_create_tasks,
+          can_send_welcome_messages: !!permsData.can_send_welcome_messages,
+          can_create_summaries: !!permsData.can_create_summaries,
+          can_suggest_roles: !!permsData.can_suggest_roles,
+          can_approve_members: !!permsData.can_approve_members,
+          can_make_admins: !!permsData.can_make_admins,
+          can_remove_members: !!permsData.can_remove_members,
+          can_delete_community: !!permsData.can_delete_community,
+          requires_human_approval_for_sensitive_actions: !!permsData.requires_human_approval_for_sensitive_actions,
+        });
+      }
+
+      await refreshCommunity();
+
+      toast({
+        title: t.success,
+        description: result.created ? ml.spiritCreatedToast : ml.pageTitle,
+      });
+    } catch (err: any) {
+      console.error('Error ensuring Community Spirit Agent:', err);
+      toast({
+        variant: 'destructive',
+        title: t.error,
+        description: err?.message || ml.spiritRepairError,
+      });
+    } finally {
+      setCreatingSpirit(false);
+    }
+  };
 
   // Live compiled prompt based on unsaved state
   const currentGeneratedPrompt = useMemo(() => {
@@ -1043,8 +1116,12 @@ export default function Agents() {
           <ShieldAlert className="h-12 w-12 mx-auto text-amber-400 mb-4 animate-pulse" />
           <h2 className="text-xl font-bold text-slate-200 mb-2">{ml.noSpiritAgent}</h2>
           <p className="text-slate-400 text-sm mb-6">{ml.repairDesc}</p>
-          <Button onClick={() => navigate('/onboarding')} className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-semibold shadow-md">
-            <Plus className="mr-2 h-4 w-4 shrink-0" />
+          <Button onClick={handleEnsureCommunitySpirit} disabled={creatingSpirit} className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-semibold shadow-md">
+            {creatingSpirit ? (
+              <Loader2 className="mr-2 h-4 w-4 shrink-0 animate-spin" />
+            ) : (
+              <Plus className="mr-2 h-4 w-4 shrink-0" />
+            )}
             {ml.createAgentBtn}
           </Button>
         </Card>

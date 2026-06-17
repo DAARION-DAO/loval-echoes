@@ -32,6 +32,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useTranslation } from '@/lib/i18n';
 import { useToast } from '@/hooks/use-toast';
@@ -537,10 +538,33 @@ export const ChatSidebar = () => {
 
 function ActiveCommunityHeader() {
   const { activeCommunity } = useActiveCommunity();
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+
   if (!activeCommunity) return null;
+
   return (
-    <div className="mb-2 px-1 text-xs font-semibold tracking-wide text-muted-foreground truncate">
-      {activeCommunity.name}
-    </div>
+    <button
+      type="button"
+      onClick={() => navigate('/settings?section=microdao')}
+      className="mb-3 flex w-full items-center gap-2 rounded-lg border bg-background/50 p-2 text-left transition-colors hover:bg-muted/40"
+      title={t.layout.microdaoSettings}
+    >
+      <Avatar className="h-8 w-8 shrink-0">
+        <AvatarImage src={activeCommunity.avatar_url || ''} alt={activeCommunity.name} />
+        <AvatarFallback className="text-xs">
+          {activeCommunity.name?.charAt(0).toUpperCase() || 'M'}
+        </AvatarFallback>
+      </Avatar>
+      <div className="min-w-0 flex-1">
+        <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+          {t.layout.currentMicrodao}
+        </div>
+        <div className="truncate text-sm font-semibold text-foreground">
+          {activeCommunity.name}
+        </div>
+      </div>
+      <Settings className="h-4 w-4 shrink-0 text-muted-foreground" />
+    </button>
   );
 }

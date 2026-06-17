@@ -15,6 +15,7 @@ export interface CommunityMembership {
     slug: string | null;
     type: string;
     description: string | null;
+    avatar_url: string | null;
     owner_id: string | null;
   };
 }
@@ -54,7 +55,7 @@ export const ActiveCommunityProvider = ({ children }: { children: ReactNode }) =
     try {
       const { data, error: qErr } = await supabase
         .from('community_members')
-        .select('community_id, role, status, community:communities!inner(id, name, slug, type, description, owner_id)')
+        .select('community_id, role, status, community:communities!inner(id, name, slug, type, description, avatar_url, owner_id)')
         .eq('user_id', user.id)
         .eq('status', 'approved');
 

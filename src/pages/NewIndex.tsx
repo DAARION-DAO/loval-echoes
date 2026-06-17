@@ -43,6 +43,7 @@ import { getFunctionErrorMessage } from '@/utils/functionErrors';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { ensureCommunitySpiritAgent } from '@/services/microdaoSettings';
 
 const dashboardLocals = {
   uk: {
@@ -88,6 +89,8 @@ const dashboardLocals = {
     manageParticipantsBtn: "Керувати учасниками",
     actionApprovedToast: "Дію успішно схвалено та виконано!",
     actionRejectedToast: "Дію відхилено.",
+    spiritCreatedToast: "Дух Спільноти створено. Його можна налаштувати у розділі Агентів.",
+    spiritRepairError: "Не вдалося створити Дух Спільноти.",
   },
   en: {
     widgetTitle: "Community Spirit",
@@ -132,6 +135,8 @@ const dashboardLocals = {
     manageParticipantsBtn: "Manage members",
     actionApprovedToast: "Action approved and executed!",
     actionRejectedToast: "Action rejected.",
+    spiritCreatedToast: "Community Spirit was created. You can configure it in Agents.",
+    spiritRepairError: "Could not create Community Spirit.",
   },
   ru: {
     widgetTitle: "Дух Сообщества",
@@ -176,6 +181,8 @@ const dashboardLocals = {
     manageParticipantsBtn: "Управлять участниками",
     actionApprovedToast: "Действие успешно одобрено и выполнено!",
     actionRejectedToast: "Действие отклонено.",
+    spiritCreatedToast: "Дух Сообщества создан. Его можно настроить в разделе Агентов.",
+    spiritRepairError: "Не удалось создать Дух Сообщества.",
   },
   es: {
     widgetTitle: "Espíritu de la Comunidad",
@@ -220,6 +227,8 @@ const dashboardLocals = {
     manageParticipantsBtn: "Gestionar miembros",
     actionApprovedToast: "¡Acción aprobada y ejecutada!",
     actionRejectedToast: "Acción rechazada.",
+    spiritCreatedToast: "El Espíritu de la Comunidad fue creado. Puedes configurarlo en Agentes.",
+    spiritRepairError: "No se pudo crear el Espíritu de la Comunidad.",
   }
 };
 
@@ -239,6 +248,7 @@ export const NewIndex = () => {
   const [spiritAgent, setSpiritAgent] = useState<any>(null);
   const [agentPerms, setAgentPerms] = useState<any>(null);
   const [loadingAgent, setLoadingAgent] = useState(false);
+  const [creatingSpirit, setCreatingSpirit] = useState(false);
 
   // Dialog open/close states
   const [rulesDialogOpen, setRulesDialogOpen] = useState(false);
@@ -312,6 +322,43 @@ export const NewIndex = () => {
     };
     fetchSpiritAgent();
   }, [activeCommunityId]);
+
+  const handleEnsureCommunitySpirit = async () => {
+    if (!activeCommunity || !user) return;
+
+    try {
+      setCreatingSpirit(true);
+      const result = await ensureCommunitySpiritAgent({
+        community: activeCommunity,
+        userId: user.id,
+      });
+
+      setSpiritAgent(result.agent);
+
+      const { data: pData } = await supabase
+        .from('agent_permissions')
+        .select('*')
+        .eq('agent_id', result.agent.id)
+        .maybeSingle();
+      setAgentPerms(pData || null);
+
+      await refreshCommunity();
+
+      toast({
+        title: t.success,
+        description: result.created ? dl.spiritCreatedToast : dl.configureBtn,
+      });
+    } catch (err: any) {
+      console.error('Error ensuring Community Spirit Agent:', err);
+      toast({
+        variant: 'destructive',
+        title: t.error,
+        description: err?.message || dl.spiritRepairError,
+      });
+    } finally {
+      setCreatingSpirit(false);
+    }
+  };
 
   const handleActionApproval = async (actionId: string, approvalStatus: 'approved' | 'rejected') => {
     try {
@@ -836,8 +883,12 @@ export const NewIndex = () => {
               <Bot className="mx-auto h-12 w-12 text-amber-400 mb-3 animate-pulse" />
               <h3 className="text-lg font-bold text-slate-200 mb-1">{dl.repairCta}</h3>
               <p className="text-sm text-slate-400 max-w-md mx-auto mb-4">{dl.repairDesc}</p>
-              <Button onClick={() => navigate('/onboarding')} className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-semibold">
-                <Plus className="mr-2 h-4 w-4 shrink-0" />
+              <Button onClick={handleEnsureCommunitySpirit} disabled={creatingSpirit} className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-semibold">
+                {creatingSpirit ? (
+                  <Loader2 className="mr-2 h-4 w-4 shrink-0 animate-spin" />
+                ) : (
+                  <Plus className="mr-2 h-4 w-4 shrink-0" />
+                )}
                 {dl.createAgentBtn}
               </Button>
             </Card>

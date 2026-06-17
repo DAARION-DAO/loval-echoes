@@ -57,7 +57,6 @@ export function Layout({ sidebar, children }: LayoutProps) {
     activeCommunity,
     activeCommunityId,
     setActiveCommunityId,
-    isCommunityAdmin,
   } = useActiveCommunity();
   const navigate = useNavigate();
   const location = useLocation();
@@ -78,7 +77,7 @@ export function Layout({ sidebar, children }: LayoutProps) {
     }
   };
 
-  const microdaoSettingsPath = isCommunityAdmin ? '/agents/manage' : '/settings';
+  const microdaoSettingsPath = '/settings?section=microdao';
 
   const handleCommunityChange = (communityId: string) => {
     setActiveCommunityId(communityId);
@@ -122,15 +121,36 @@ export function Layout({ sidebar, children }: LayoutProps) {
 
           {memberships.length > 0 && (
             <div className="hidden min-w-0 flex-1 items-center justify-center px-4 md:flex">
-              <div className="flex min-w-0 items-center gap-2">
+              <div className="flex min-w-0 items-center gap-2 rounded-full border bg-background/70 px-2 py-1">
+                <div className="hidden min-w-0 flex-col leading-none lg:flex">
+                  <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    {t.layout.currentMicrodao}
+                  </span>
+                </div>
                 <Select value={activeCommunityId ?? undefined} onValueChange={handleCommunityChange}>
-                  <SelectTrigger className="h-9 w-[220px] max-w-[30vw] bg-background/70">
-                    <SelectValue placeholder={t.layout.microdaoSwitcherPlaceholder} />
+                  <SelectTrigger className="h-8 w-[220px] max-w-[30vw] border-0 bg-transparent px-1 shadow-none focus:ring-0">
+                    <div className="flex min-w-0 items-center gap-2">
+                      <Avatar className="h-5 w-5 shrink-0">
+                        <AvatarImage src={activeCommunity?.avatar_url || ''} alt={activeCommunity?.name || 'MicroDAO'} />
+                        <AvatarFallback className="text-[10px]">
+                          {activeCommunity?.name?.charAt(0).toUpperCase() || 'M'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <SelectValue placeholder={t.layout.microdaoSwitcherPlaceholder} />
+                    </div>
                   </SelectTrigger>
                   <SelectContent>
                     {memberships.map((membership) => (
                       <SelectItem key={membership.community_id} value={membership.community_id}>
-                        {membership.community.name}
+                        <span className="flex min-w-0 items-center gap-2">
+                          <Avatar className="h-5 w-5 shrink-0">
+                            <AvatarImage src={membership.community.avatar_url || ''} alt={membership.community.name} />
+                            <AvatarFallback className="text-[10px]">
+                              {membership.community.name?.charAt(0).toUpperCase() || 'M'}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="truncate">{membership.community.name}</span>
+                        </span>
                       </SelectItem>
                     ))}
                   </SelectContent>
