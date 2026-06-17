@@ -1,7 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
-import { getCorsHeaders, handleCors } from '../_shared/cors.ts';
+import { handleCors } from '../_shared/cors.ts';
 import { SafeTextSchema, UUIDSchema, validateInput } from '../_shared/validation.ts';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
@@ -35,6 +35,40 @@ const UpdateFileMetadataSchema = z.object({
   folderId: UUIDSchema.nullable().optional(),
   tags: z.array(z.string().max(50)).optional(),
 });
+
+const getRouteParts = (url: URL) => {
+  const parts = url.pathname.split('/').filter(Boolean);
+  return parts[0] === 'knowledge-base-api' ? parts.slice(1) : parts;
+};
+
+const enrichUploadedByProfiles = async (supabase: any, files: any[]) => {
+  const userIds = [...new Set(files.map((file) => file.uploaded_by).filter(Boolean))];
+  if (userIds.length === 0) return files;
+
+  const { data: profiles, error } = await supabase.rpc('get_public_profiles', {
+    p_user_ids: userIds,
+  });
+
+  if (error) {
+    console.error('Error fetching file uploader profiles:', error);
+    return files;
+  }
+
+  const profileByUserId = new Map(
+    (profiles ?? []).map((profile: any) => [
+      profile.user_id,
+      {
+        display_name: profile.display_name,
+        avatar_url: profile.avatar_url,
+      },
+    ]),
+  );
+
+  return files.map((file) => ({
+    ...file,
+    profiles: file.uploaded_by ? profileByUserId.get(file.uploaded_by) ?? null : null,
+  }));
+};
 
 serve(async (req) => {
   // Handle CORS
@@ -83,7 +117,7 @@ serve(async (req) => {
 
     const url = new URL(req.url);
     const method = req.method;
-    const pathParts = url.pathname.split('/').filter(Boolean);
+    const pathParts = getRouteParts(url);
 
     // GET /search - поиск файлов
     if (method === 'GET' && pathParts[0] === 'search') {
@@ -106,7 +140,6 @@ serve(async (req) => {
         .select(`
           *,
           file_tags(tag),
-          profiles:uploaded_by(display_name, avatar_url),
           folders(name),
           conversations:project_id(name)
         `)
@@ -140,13 +173,15 @@ serve(async (req) => {
       if (error) throw error;
       
       // Фильтр по тегам на клиенте
-      let filteredFiles = files;
+      let filteredFiles = files ?? [];
       if (tags.length > 0) {
-        filteredFiles = files.filter((file: any) => {
+        filteredFiles = filteredFiles.filter((file: any) => {
           const fileTags = file.file_tags?.map((t: any) => t.tag) || [];
           return tags.some(tag => fileTags.includes(tag));
         });
       }
+
+      filteredFiles = await enrichUploadedByProfiles(supabase, filteredFiles);
       
       return new Response(JSON.stringify({ files: filteredFiles }), {
         headers: { ...headers, 'Content-Type': 'application/json' },
@@ -239,7 +274,6 @@ serve(async (req) => {
           *,
           file_tags(tag, auto_generated),
           file_versions(version_number, created_at, uploaded_by, change_note),
-          profiles:uploaded_by(display_name, avatar_url),
           folders(name),
           conversations:project_id(name)
         `)
@@ -248,7 +282,9 @@ serve(async (req) => {
       
       if (error) throw error;
       
-      return new Response(JSON.stringify({ file: data }), {
+      const [fileWithProfile] = await enrichUploadedByProfiles(supabase, data ? [data] : []);
+
+      return new Response(JSON.stringify({ file: fileWithProfile ?? data }), {
         headers: { ...headers, 'Content-Type': 'application/json' },
       });
     }

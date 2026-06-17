@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from '@/lib/i18n';
+import { getFunctionErrorMessage } from '@/utils/functionErrors';
 
 interface CreateProjectModalProps {
   open: boolean;
@@ -64,9 +65,10 @@ export function CreateProjectModal({ open, onOpenChange, onProjectCreated }: Cre
 
     } catch (error) {
       console.error('Error creating project:', error);
+      const description = await getFunctionErrorMessage(error, t.projects.createError);
       toast({
         title: t.error,
-        description: t.projects.createError,
+        description,
         variant: "destructive",
       });
     } finally {

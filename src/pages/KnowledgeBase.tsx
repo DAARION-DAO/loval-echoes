@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
-import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -25,6 +24,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useTranslation } from "@/lib/i18n";
+import { getFunctionErrorMessage } from "@/utils/functionErrors";
 
 interface KBFile {
   id: string;
@@ -132,12 +132,13 @@ export default function KnowledgeBase() {
         throw new Error(error.message || 'Failed to load files');
       }
       
-      setFiles(data || []);
+      setFiles(data?.files || []);
     } catch (error) {
       console.error('Error loading files:', error);
+      const description = await getFunctionErrorMessage(error, t.kb.errorLoadFiles);
       toast({
         title: t.error,
-        description: error instanceof Error ? error.message : t.kb.errorLoadFiles,
+        description,
         variant: "destructive",
       });
     } finally {
@@ -157,9 +158,15 @@ export default function KnowledgeBase() {
 
       if (error) throw new Error(error.message);
       
-      setFolders(data || []);
+      setFolders(data?.folders || []);
     } catch (error) {
       console.error('Error loading folders:', error);
+      const description = await getFunctionErrorMessage(error, t.kb.errorLoadFiles);
+      toast({
+        title: t.error,
+        description,
+        variant: "destructive",
+      });
     }
   };
 
@@ -237,10 +244,41 @@ export default function KnowledgeBase() {
     ));
   };
 
+  const sidebarContent = (
+    <div className="p-4">
+      <Tabs value={scope} onValueChange={(v) => setScope(v as 'community' | 'project')}>
+        <TabsList className="grid w-full grid-cols-3 mb-4">
+          <TabsTrigger value="community">{t.kb.tabCommunity}</TabsTrigger>
+          <TabsTrigger value="project">{t.kb.tabProjects}</TabsTrigger>
+          <TabsTrigger value="personal">{t.kb.tabPersonal}</TabsTrigger>
+        </TabsList>
+      </Tabs>
+
+      <div className="mb-4">
+        <Button
+          variant="ghost"
+          className="w-full justify-start"
+          onClick={() => setSelectedFolder(null)}
+        >
+          <Folder className="h-4 w-4 mr-2" />
+          {t.kb.allFiles}
+        </Button>
+      </div>
+
+      <ScrollArea className="h-[calc(100vh-300px)]">
+        {renderFolderTree()}
+      </ScrollArea>
+    </div>
+  );
+
   return (
-    <Layout
-      sidebar={
-        <div className="p-4">
+    <div className="flex min-h-[calc(100vh-7.5rem)] bg-background lg:min-h-[calc(100vh-3.5rem)]">
+      <aside className="hidden w-72 shrink-0 border-r bg-sidebar/50 lg:block">
+        {sidebarContent}
+      </aside>
+
+      <div className="min-w-0 flex-1 flex flex-col">
+        <div className="border-b border-border bg-background/50 p-3 lg:hidden">
           <Tabs value={scope} onValueChange={(v) => setScope(v as 'community' | 'project')}>
             <TabsList className="grid w-full grid-cols-3 mb-4">
               <TabsTrigger value="community">{t.kb.tabCommunity}</TabsTrigger>
@@ -248,28 +286,11 @@ export default function KnowledgeBase() {
               <TabsTrigger value="personal">{t.kb.tabPersonal}</TabsTrigger>
             </TabsList>
           </Tabs>
-          
-          <div className="mb-4">
-            <Button
-              variant="ghost"
-              className="w-full justify-start"
-              onClick={() => setSelectedFolder(null)}
-            >
-              <Folder className="h-4 w-4 mr-2" />
-              {t.kb.allFiles}
-            </Button>
-          </div>
-          
-          <ScrollArea className="h-[calc(100vh-300px)]">
-            {renderFolderTree()}
-          </ScrollArea>
         </div>
-      }
-    >
-      <div className="h-full flex flex-col">
+
         {/* Верхняя панель */}
-        <div className="border-b border-border bg-background/50 p-4 flex items-center gap-4">
-            <div className="flex-1 relative">
+        <div className="border-b border-border bg-background/50 p-3 sm:p-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+            <div className="w-full flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder={t.kb.searchPlaceholder}
@@ -296,14 +317,14 @@ export default function KnowledgeBase() {
               </Button>
             </div>
             
-            <Button onClick={() => setUploadDialogOpen(true)}>
+            <Button onClick={() => setUploadDialogOpen(true)} className="w-full sm:w-auto">
               <Upload className="h-4 w-4 mr-2" />
               {t.kb.uploadBtn}
             </Button>
         </div>
 
         {/* Область файлов */}
-        <ScrollArea className="flex-1 p-6">
+        <ScrollArea className="flex-1 p-4 sm:p-6">
             {loading ? (
               <div className="flex items-center justify-center h-full">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
@@ -507,7 +528,6 @@ export default function KnowledgeBase() {
               </div>
             )}
         </ScrollArea>
-      </div>
 
       <FileUploadDialog
         open={uploadDialogOpen}
@@ -565,6 +585,7 @@ export default function KnowledgeBase() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </Layout>
+      </div>
+    </div>
   );
 }

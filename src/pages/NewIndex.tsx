@@ -38,6 +38,7 @@ import { toast } from '@/hooks/use-toast';
 import { createChat } from '@/services/chats';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { supabase } from '@/integrations/supabase/client';
+import { getFunctionErrorMessage } from '@/utils/functionErrors';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -534,10 +535,11 @@ export const NewIndex = () => {
       }
     } catch (error) {
       console.error('Error creating:', error);
+      const description = await getFunctionErrorMessage(error, t.chats.errorCreate);
       toast({
         variant: 'destructive',
         title: t.projects.errorCreate,
-        description: error instanceof Error ? error.message : t.chats.errorCreate,
+        description,
       });
     } finally {
       setIsCreating(false);

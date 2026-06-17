@@ -128,6 +128,10 @@ export interface Translations {
     appName: string;
     logout: string;
     user: string;
+    microdaoSwitcherPlaceholder: string;
+    currentMicrodao: string;
+    switchMicrodao: string;
+    microdaoSettings: string;
   };
 
   // Чаты
@@ -2062,6 +2066,10 @@ export const translations: Record<Language, Translations> = {
       appName: 'Loval Echoes',
       logout: 'Вийти',
       user: 'Користувач',
+      microdaoSwitcherPlaceholder: 'Оберіть MicroDAO',
+      currentMicrodao: 'Поточна MicroDAO',
+      switchMicrodao: 'Перемкнути MicroDAO',
+      microdaoSettings: 'Налаштування MicroDAO',
     },
     
     chats: {
@@ -3982,6 +3990,10 @@ export const translations: Record<Language, Translations> = {
       appName: 'Loval Echoes',
       logout: 'Logout',
       user: 'User',
+      microdaoSwitcherPlaceholder: 'Select MicroDAO',
+      currentMicrodao: 'Current MicroDAO',
+      switchMicrodao: 'Switch MicroDAO',
+      microdaoSettings: 'MicroDAO settings',
     },
     
     chats: {
@@ -5902,6 +5914,10 @@ export const translations: Record<Language, Translations> = {
       appName: 'Loval Echoes',
       logout: 'Выйти',
       user: 'Пользователь',
+      microdaoSwitcherPlaceholder: 'Выберите MicroDAO',
+      currentMicrodao: 'Текущая MicroDAO',
+      switchMicrodao: 'Переключить MicroDAO',
+      microdaoSettings: 'Настройки MicroDAO',
     },
     
     chats: {
@@ -7822,6 +7838,10 @@ export const translations: Record<Language, Translations> = {
       appName: 'Loval Echoes',
       logout: 'Cerrar sesión',
       user: 'Usuario',
+      microdaoSwitcherPlaceholder: 'Selecciona MicroDAO',
+      currentMicrodao: 'MicroDAO actual',
+      switchMicrodao: 'Cambiar MicroDAO',
+      microdaoSettings: 'Ajustes de MicroDAO',
     },
     
     chats: {

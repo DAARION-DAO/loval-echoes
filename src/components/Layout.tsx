@@ -9,6 +9,7 @@ import {
   DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Search, 
   Plus, 
@@ -33,6 +34,7 @@ import { useTranslation } from "@/lib/i18n";
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { usePendingApprovals } from "@/hooks/usePendingApprovals";
+import { useActiveCommunity } from "@/hooks/useActiveCommunity";
 import { NewsNotificationsPopover } from "@/components/NewsNotificationsPopover";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
@@ -50,6 +52,13 @@ export function Layout({ sidebar, children }: LayoutProps) {
   const { profile } = useUserProfile();
   const { pendingCount } = usePendingApprovals();
   const { t } = useTranslation();
+  const {
+    memberships,
+    activeCommunity,
+    activeCommunityId,
+    setActiveCommunityId,
+    isCommunityAdmin,
+  } = useActiveCommunity();
   const navigate = useNavigate();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -67,6 +76,13 @@ export function Layout({ sidebar, children }: LayoutProps) {
     } catch (error) {
       console.error('Error signing out:', error);
     }
+  };
+
+  const microdaoSettingsPath = isCommunityAdmin ? '/agents/manage' : '/settings';
+
+  const handleCommunityChange = (communityId: string) => {
+    setActiveCommunityId(communityId);
+    navigate('/dashboard');
   };
 
   const mobileNavItems = [
@@ -103,6 +119,35 @@ export function Layout({ sidebar, children }: LayoutProps) {
               <span className="font-bold text-lg sm:text-xl">{t.layout.appName}</span>
             </div>
           </div>
+
+          {memberships.length > 0 && (
+            <div className="hidden min-w-0 flex-1 items-center justify-center px-4 md:flex">
+              <div className="flex min-w-0 items-center gap-2">
+                <Select value={activeCommunityId ?? undefined} onValueChange={handleCommunityChange}>
+                  <SelectTrigger className="h-9 w-[220px] max-w-[30vw] bg-background/70">
+                    <SelectValue placeholder={t.layout.microdaoSwitcherPlaceholder} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {memberships.map((membership) => (
+                      <SelectItem key={membership.community_id} value={membership.community_id}>
+                        {membership.community.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 shrink-0"
+                  onClick={() => navigate(microdaoSettingsPath)}
+                  title={t.layout.microdaoSettings}
+                >
+                  <SettingsIcon className="h-4 w-4" />
+                  <span className="sr-only">{t.layout.microdaoSettings}</span>
+                </Button>
+              </div>
+            </div>
+          )}
           
           <div className="flex items-center gap-2 sm:gap-3">
             {/* Desktop Actions */}
@@ -191,6 +236,27 @@ export function Layout({ sidebar, children }: LayoutProps) {
                       </Badge>
                     )}
                   </DropdownMenuItem>
+                  {memberships.length > 0 && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                        {t.layout.currentMicrodao}: {activeCommunity?.name || t.layout.microdaoSwitcherPlaceholder}
+                      </div>
+                      {memberships.map((membership) => (
+                        <DropdownMenuItem
+                          key={membership.community_id}
+                          onClick={() => handleCommunityChange(membership.community_id)}
+                        >
+                          <Network className="mr-2 h-4 w-4" />
+                          {membership.community.name}
+                        </DropdownMenuItem>
+                      ))}
+                      <DropdownMenuItem onClick={() => navigate(microdaoSettingsPath)}>
+                        <SettingsIcon className="mr-2 h-4 w-4" />
+                        {t.layout.microdaoSettings}
+                      </DropdownMenuItem>
+                    </>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>

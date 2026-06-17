@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "@/lib/i18n";
+import { getFunctionErrorMessage } from "@/utils/functionErrors";
 
 interface Project {
   id: string;
@@ -50,9 +51,10 @@ export default function Projects() {
       setProjects(response.data.projects || []);
     } catch (error) {
       console.error('Error loading projects:', error);
+      const description = await getFunctionErrorMessage(error, t.projects.errorLoad);
       toast({
         title: t.error,
-        description: t.projects.errorLoad,
+        description,
         variant: "destructive",
       });
     } finally {
