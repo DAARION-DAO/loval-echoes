@@ -637,7 +637,7 @@ export function Start() {
             </button>
             <span className="text-border">·</span>
             <button onClick={() => navigate('/install')} className="hover:text-foreground transition-colors">
-              DAARION Edge Client
+              Connect Device
             </button>
             <span className="text-border">·</span>
             <a href="https://github.com/DAARION-DAO/loval-echoes" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">

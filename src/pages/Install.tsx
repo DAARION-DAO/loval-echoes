@@ -76,22 +76,22 @@ const edgeClientAssetUrl = (filename: string) =>
 /* ── Localized Text Mapping ── */
 const localTexts = {
   uk: {
-    heroTitle: 'DAARION Edge Client',
-    heroSubtitle: 'Локальний клієнт і суверенний шлюз до вашого MicroDAO: агентів, децентралізованого месенджера, майбутнього гаманця, казни, голосувань і захищеного доступу спільноти.',
-    heroPrimaryCtaDevice: 'Скачати для цього пристрою',
-    heroPrimaryCtaChoose: 'Оберіть платформу',
-    heroSecondaryCta: 'Відкрити Web / PWA',
-    heroHelper: 'Інсталлер можна скачати одразу. Повні функції MicroDAO активуються після входу та створення або приєднання до спільноти.',
-    heroBadge: 'Суверенний шлюз · Beta / Canary',
+    heroTitle: 'Підключіть пристрій до DAARION',
+    heroSubtitle: 'Підготуйте цей пристрій для вашого MicroDAO: локальних агентів, майбутнього приватного виконання, захищеного доступу та режимів Worker Node, коли вони потрібні.',
+    heroPrimaryCtaDevice: 'Підготувати цей пристрій',
+    heroPrimaryCtaChoose: 'Обрати спосіб підключення',
+    heroSecondaryCta: 'Відкрити веб-налаштування пристрою',
+    heroHelper: 'Почніть у DAARION PWA. Нативний застосунок потрібен лише для локальних або привілейованих можливостей пристрою.',
+    heroBadge: 'Device connection · Beta / Canary',
     
-    headerTitleMobile: 'Edge Client',
+    headerTitleMobile: 'Пристрій',
     
-    platformsTitle: 'Оберіть платформу',
-    platformsSubtitle: 'Скачайте інсталятор для вашого пристрою або відкрийте Web / PWA версію.',
+    platformsTitle: 'Підготуйте пристрій',
+    platformsSubtitle: 'Використайте веб-налаштування або встановіть нативний застосунок, якщо потрібні локальні можливості.',
     quickStartTitle: 'Швидкий старт',
-    nativeInstallersTitle: 'Нативні інсталятори',
+    nativeInstallersTitle: 'Нативний застосунок, коли потрібен',
     
-    fallbackVersionDesc: 'Якщо інсталлер ще не доступний для вашої платформи, використайте Web / PWA версію.',
+    fallbackVersionDesc: 'Якщо нативний застосунок ще не доступний для вашої платформи, продовжуйте через веб-налаштування пристрою.',
     githubSourceLinkDesc: 'Для розробників: вихідний код доступний на GitHub.',
     githubRepositoryBtn: 'GitHub репозиторій',
     architectureLabel: 'Архітектура',
@@ -99,19 +99,20 @@ const localTexts = {
     versionLabel: 'Версія',
     devToolsLabel: 'Для розробників',
     sourceCodeGithub: 'Вихідний код на GitHub',
+
+    webTitle: 'Веб-налаштування пристрою',
+    webDesc: 'Почніть у браузері. Нативне встановлення не потрібне.',
+    webCta: 'Відкрити налаштування пристрою',
     
-    webDesc: 'Швидкий старт у браузері. Встановлення не потрібне.',
-    webCta: 'Відкрити Web / PWA',
-    
-    macSiliconCta: 'Скачати для Apple Silicon',
-    macIntelCta: 'Скачати для Intel Mac',
-    windowsCta: 'Скачати setup.exe',
-    windowsAltCta: 'Скачати MSI',
+    macSiliconCta: 'Підготувати Apple Silicon',
+    macIntelCta: 'Підготувати Intel Mac',
+    windowsCta: 'Підготувати Windows',
+    windowsAltCta: 'Альтернативний інсталятор MSI',
     windowsHelper: 'Використовуйте MSI тільки якщо setup.exe не запускається.',
-    linuxCta: 'Скачати AppImage',
+    linuxCta: 'Підготувати Linux',
     
-    androidDesc: 'Потрібне ручне встановлення APK. Версія для тестування.',
-    androidCta: 'Скачати APK',
+    androidDesc: 'Потрібне ручне встановлення APK. Тестовий режим підготовки пристрою.',
+    androidCta: 'Підготувати Android',
     
     iosDesc: 'iOS build буде додано пізніше.',
     iosCta: 'Скоро',
@@ -122,8 +123,8 @@ const localTexts = {
     statusSideload: 'Sideload',
 
     // New keys
-    afterInstallTitle: 'Що відбувається після встановлення?',
-    step1: 'Встановіть DAARION Edge Client',
+    afterInstallTitle: 'Що відбувається після підключення пристрою?',
+    step1: 'Підготуйте цей пристрій',
     step2: 'Увійдіть або створіть акаунт DAARION',
     step3: 'Створіть MicroDAO або приєднайтеся за запрошенням',
     step4: 'Активуйте Дух Спільноти — агента вашого DAO',
@@ -131,7 +132,7 @@ const localTexts = {
     step6: 'Налаштуйте ролі, памʼять, задачі та правила',
     step7: 'Поступово підключайте гаманець, казну, голосування й токени спільноти',
 
-    unlocksTitle: 'Що відкриває Edge Client',
+    unlocksTitle: 'Що відкриває підключений пристрій',
     unlockCard1Title: 'Дух Спільноти',
     unlockCard1Desc: 'Агент спільноти допомагає онбордити учасників, пояснювати правила, памʼятати домовленості, створювати задачі та готувати рішення.',
     unlockCard2Title: 'Децентралізований месенджер',
@@ -153,8 +154,8 @@ const localTexts = {
     roadmapComingTitle: 'Готується найближчим часом',
     roadmapLaterTitle: 'План розвитку (1-3 місяці)',
     roadmapFutureTitle: 'У майбутньому',
-    roadmapAvail1: 'Інсталятор Edge Client',
-    roadmapAvail2: 'Доступ через Web / PWA',
+    roadmapAvail1: 'Підготовка пристрою',
+    roadmapAvail2: 'DAARION PWA як основний вхід',
     roadmapAvail3: 'Онбординг до MicroDAO',
     roadmapAvail4: 'Налаштування агента Дух Спільноти',
     roadmapComing1: 'децентралізований месенджер спільноти',
@@ -165,28 +166,28 @@ const localTexts = {
     roadmapLater2: 'інтеграція з токен-фабрикою',
     roadmapLater3: 'казна DAO',
     roadmapLater4: 'процеси голосування та управління',
-    roadmapLater5: 'посилені локальні та edge-функції',
+    roadmapLater5: 'посилені локальні можливості пристрою',
     roadmapFuture1: 'децентралізований браузер',
     roadmapFuture2: 'VPN та захисний шар',
     roadmapFuture3: 'агенти-розробники для створення платформ і децентралізованих соцмереж',
   },
   en: {
-    heroTitle: 'DAARION Edge Client',
-    heroSubtitle: 'A local client and sovereign gateway to your MicroDAO: agents, decentralized messaging, future wallet, treasury, voting, and protected community access.',
-    heroPrimaryCtaDevice: 'Download for this device',
-    heroPrimaryCtaChoose: 'Choose your platform',
-    heroSecondaryCta: 'Open Web / PWA',
-    heroHelper: 'You can download the installer now. Full MicroDAO features activate after sign-in and after creating or joining a community.',
-    heroBadge: 'Sovereign Gateway · Beta / Canary',
+    heroTitle: 'Connect your device to DAARION',
+    heroSubtitle: 'Prepare this device for your MicroDAO: local agents, future private execution, protected access, and Worker Node modes when needed.',
+    heroPrimaryCtaDevice: 'Prepare this device',
+    heroPrimaryCtaChoose: 'Choose connection option',
+    heroSecondaryCta: 'Open device setup on web',
+    heroHelper: 'Start in the DAARION PWA. The native app is only needed for local or privileged device capabilities.',
+    heroBadge: 'Device connection · Beta / Canary',
     
-    headerTitleMobile: 'Edge Client',
+    headerTitleMobile: 'Device',
     
-    platformsTitle: 'Choose your platform',
-    platformsSubtitle: 'Download the installer for your device or open the Web / PWA version.',
+    platformsTitle: 'Prepare your device',
+    platformsSubtitle: 'Use web setup or install the native app only when local capabilities are required.',
     quickStartTitle: 'Quick Start',
-    nativeInstallersTitle: 'Native Installers',
+    nativeInstallersTitle: 'Native app when needed',
     
-    fallbackVersionDesc: 'If the installer is not yet available for your platform, use the Web / PWA version.',
+    fallbackVersionDesc: 'If the native app is not yet available for your platform, continue with device setup on web.',
     githubSourceLinkDesc: 'For developers: source code is available on GitHub.',
     githubRepositoryBtn: 'GitHub repository',
     architectureLabel: 'Architecture',
@@ -194,19 +195,20 @@ const localTexts = {
     versionLabel: 'Version',
     devToolsLabel: 'For Developers',
     sourceCodeGithub: 'Source Code on GitHub',
+
+    webTitle: 'Device setup on web',
+    webDesc: 'Start in the browser. No native install required.',
+    webCta: 'Open device setup',
     
-    webDesc: 'Quick start in the browser. No installation required.',
-    webCta: 'Open Web / PWA',
-    
-    macSiliconCta: 'Download for Apple Silicon',
-    macIntelCta: 'Download for Intel Mac',
-    windowsCta: 'Download setup.exe',
-    windowsAltCta: 'Download MSI',
+    macSiliconCta: 'Prepare Apple Silicon',
+    macIntelCta: 'Prepare Intel Mac',
+    windowsCta: 'Prepare Windows',
+    windowsAltCta: 'Alternative MSI installer',
     windowsHelper: 'Use MSI only if setup.exe does not launch.',
-    linuxCta: 'Download AppImage',
+    linuxCta: 'Prepare Linux',
     
-    androidDesc: 'Manual APK installation required. Testing version.',
-    androidCta: 'Download APK',
+    androidDesc: 'Manual APK installation required. Testing device setup mode.',
+    androidCta: 'Prepare Android',
     
     iosDesc: 'iOS build will be added later.',
     iosCta: 'Soon',
@@ -217,8 +219,8 @@ const localTexts = {
     statusSideload: 'Sideload',
 
     // New keys
-    afterInstallTitle: 'What happens after installation?',
-    step1: 'Install DAARION Edge Client',
+    afterInstallTitle: 'What happens after connecting a device?',
+    step1: 'Prepare this device',
     step2: 'Sign in or create DAARION account',
     step3: 'Create or join a MicroDAO',
     step4: 'Activate Community Spirit Agent',
@@ -226,7 +228,7 @@ const localTexts = {
     step6: 'Configure roles, memory, tasks, and rules',
     step7: 'Connect future wallet, treasury, voting, and token features as they become available',
 
-    unlocksTitle: 'What Edge Client unlocks',
+    unlocksTitle: 'What a connected device unlocks',
     unlockCard1Title: 'Community Spirit Agent',
     unlockCard1Desc: 'The community agent helps onboard members, explain rules, remember agreements, create tasks, and prepare decisions.',
     unlockCard2Title: 'Decentralized Messenger',
@@ -248,8 +250,8 @@ const localTexts = {
     roadmapComingTitle: 'Coming next',
     roadmapLaterTitle: 'Roadmap (1-3 months)',
     roadmapFutureTitle: 'Future',
-    roadmapAvail1: 'Edge Client installer',
-    roadmapAvail2: 'Web / PWA access',
+    roadmapAvail1: 'Device preparation',
+    roadmapAvail2: 'DAARION PWA as the main entry',
     roadmapAvail3: 'MicroDAO onboarding',
     roadmapAvail4: 'Community Spirit Agent setup',
     roadmapComing1: 'decentralized community messenger',
@@ -260,28 +262,28 @@ const localTexts = {
     roadmapLater2: 'token factory integration',
     roadmapLater3: 'DAO treasury',
     roadmapLater4: 'voting/governance flows',
-    roadmapLater5: 'stronger local/edge features',
+    roadmapLater5: 'stronger local device capabilities',
     roadmapFuture1: 'decentralized browser',
     roadmapFuture2: 'VPN/protection layer',
     roadmapFuture3: 'developer agents for building platforms and decentralized social networks',
   },
   ru: {
-    heroTitle: 'DAARION Edge Client',
-    heroSubtitle: 'Локальный клиент и суверенный шлюз к вашему MicroDAO: агентам, децентрализованному мессенджеру, будущему кошельку, казне, голосованиям и защищенному доступу сообщества.',
-    heroPrimaryCtaDevice: 'Скачать для этого устройства',
-    heroPrimaryCtaChoose: 'Выберите платформу',
-    heroSecondaryCta: 'Открыть Web / PWA',
-    heroHelper: 'Инсталлер можно скачать сразу. Полные функции MicroDAO активируются после входа и создания или присоединения к сообществу.',
-    heroBadge: 'Суверенный шлюз · Beta / Canary',
+    heroTitle: 'Подключите устройство к DAARION',
+    heroSubtitle: 'Подготовьте это устройство для вашего MicroDAO: локальных агентов, будущего приватного выполнения, защищенного доступа и режимов Worker Node, когда они нужны.',
+    heroPrimaryCtaDevice: 'Подготовить это устройство',
+    heroPrimaryCtaChoose: 'Выбрать способ подключения',
+    heroSecondaryCta: 'Открыть веб-настройку устройства',
+    heroHelper: 'Начните в DAARION PWA. Нативное приложение нужно только для локальных или привилегированных возможностей устройства.',
+    heroBadge: 'Device connection · Beta / Canary',
     
-    headerTitleMobile: 'Edge Client',
+    headerTitleMobile: 'Устройство',
     
-    platformsTitle: 'Выберите платформу',
-    platformsSubtitle: 'Скачайте установщик для вашего устройства или откройте Web / PWA версию.',
+    platformsTitle: 'Подготовьте устройство',
+    platformsSubtitle: 'Используйте веб-настройку или установите нативное приложение, если нужны локальные возможности.',
     quickStartTitle: 'Быстрый старт',
-    nativeInstallersTitle: 'Нативные инсталляторы',
+    nativeInstallersTitle: 'Нативное приложение, когда нужно',
     
-    fallbackVersionDesc: 'Если инсталлятор еще не доступен для вашей платформы, используйте версию Web / PWA.',
+    fallbackVersionDesc: 'Если нативное приложение еще не доступно для вашей платформы, продолжайте через веб-настройку устройства.',
     githubSourceLinkDesc: 'Для разработчиков: исходный код доступен на GitHub.',
     githubRepositoryBtn: 'GitHub репозиторий',
     architectureLabel: 'Архитектура',
@@ -289,19 +291,20 @@ const localTexts = {
     versionLabel: 'Версия',
     devToolsLabel: 'Для разработчиков',
     sourceCodeGithub: 'Исходный код на GitHub',
+
+    webTitle: 'Веб-настройка устройства',
+    webDesc: 'Начните в браузере. Нативная установка не требуется.',
+    webCta: 'Открыть настройку устройства',
     
-    webDesc: 'Быстрый старт в браузере. Установка не требуется.',
-    webCta: 'Открыть Web / PWA',
-    
-    macSiliconCta: 'Скачать для Apple Silicon',
-    macIntelCta: 'Скачать для Intel Mac',
-    windowsCta: 'Скачать setup.exe',
-    windowsAltCta: 'Скачать MSI',
+    macSiliconCta: 'Подготовить Apple Silicon',
+    macIntelCta: 'Подготовить Intel Mac',
+    windowsCta: 'Подготовить Windows',
+    windowsAltCta: 'Альтернативный инсталлятор MSI',
     windowsHelper: 'Используйте MSI только если setup.exe не запускается.',
-    linuxCta: 'Скачать AppImage',
+    linuxCta: 'Подготовить Linux',
     
-    androidDesc: 'Требуется ручная установка APK. Версия для тестирования.',
-    androidCta: 'Скачать APK',
+    androidDesc: 'Требуется ручная установка APK. Тестовый режим подготовки устройства.',
+    androidCta: 'Подготовить Android',
     
     iosDesc: 'iOS сборка будет добавлена позже.',
     iosCta: 'Скоро',
@@ -312,8 +315,8 @@ const localTexts = {
     statusSideload: 'Sideload',
 
     // New keys
-    afterInstallTitle: 'Что происходит после установки?',
-    step1: 'Установите DAARION Edge Client',
+    afterInstallTitle: 'Что происходит после подключения устройства?',
+    step1: 'Подготовьте это устройство',
     step2: 'Войдите или создайте аккаунт DAARION',
     step3: 'Создайте MicroDAO или присоединитесь по приглашению',
     step4: 'Активируйте Дух Сообщества — агента вашего DAO',
@@ -321,7 +324,7 @@ const localTexts = {
     step6: 'Настройте роли, память, задачи и правила',
     step7: 'Постепенно подключайте кошелек, казну, голосования и токены сообщества',
 
-    unlocksTitle: 'Что открывает Edge Client',
+    unlocksTitle: 'Что открывает подключенное устройство',
     unlockCard1Title: 'Дух Сообщества',
     unlockCard1Desc: 'Агент сообщества помогает онбордить участников, объяснять правила, помнить договоренности, создавать задачи и готовить решения.',
     unlockCard2Title: 'Децентрализованный мессенджер',
@@ -343,8 +346,8 @@ const localTexts = {
     roadmapComingTitle: 'Готовится в ближайшее время',
     roadmapLaterTitle: 'План развития (1-3 месяца)',
     roadmapFutureTitle: 'В будущем',
-    roadmapAvail1: 'Инсталлятор Edge Client',
-    roadmapAvail2: 'Доступ через Web / PWA',
+    roadmapAvail1: 'Подготовка устройства',
+    roadmapAvail2: 'DAARION PWA как основной вход',
     roadmapAvail3: 'Онбординг в MicroDAO',
     roadmapAvail4: 'Настройка агента Дух Сообщества',
     roadmapComing1: 'децентрализованный мессенджер сообщества',
@@ -355,28 +358,28 @@ const localTexts = {
     roadmapLater2: 'интеграция с токен-фабрикой',
     roadmapLater3: 'казна DAO',
     roadmapLater4: 'процессы голосования и управления',
-    roadmapLater5: 'усиленные локальные и edge-функции',
+    roadmapLater5: 'усиленные локальные возможности устройства',
     roadmapFuture1: 'децентрализованный браузер',
     roadmapFuture2: 'VPN и защитный слой',
     roadmapFuture3: 'агенты-разработчики для создания платформ и децентрализованных соцсети',
   },
   es: {
-    heroTitle: 'DAARION Edge Client',
-    heroSubtitle: 'Un cliente local y puerta soberana hacia tu MicroDAO: agentes, mensajería descentralizada, futura billetera, tesorería, votaciones y acceso protegido de la comunidad.',
-    heroPrimaryCtaDevice: 'Descargar para este dispositivo',
-    heroPrimaryCtaChoose: 'Elige tu plataforma',
-    heroSecondaryCta: 'Abrir Web / PWA',
-    heroHelper: 'Puedes descargar el instalador ahora. Las funciones completas de MicroDAO se activan después de iniciar sesión y crear o unirte a una comunidad.',
-    heroBadge: 'Pasarela soberana · Beta / Canary',
+    heroTitle: 'Conecta tu dispositivo a DAARION',
+    heroSubtitle: 'Prepara este dispositivo para tu MicroDAO: agentes locales, futura ejecución privada, acceso protegido y modos Worker Node cuando sean necesarios.',
+    heroPrimaryCtaDevice: 'Preparar este dispositivo',
+    heroPrimaryCtaChoose: 'Elegir opción de conexión',
+    heroSecondaryCta: 'Abrir configuración web del dispositivo',
+    heroHelper: 'Empieza en la DAARION PWA. La app nativa solo se necesita para capacidades locales o privilegiadas del dispositivo.',
+    heroBadge: 'Device connection · Beta / Canary',
     
-    headerTitleMobile: 'Edge Client',
+    headerTitleMobile: 'Dispositivo',
     
-    platformsTitle: 'Elige tu plataforma',
-    platformsSubtitle: 'Descargue el instalador para su dispositivo o abra la versión Web / PWA.',
+    platformsTitle: 'Prepara tu dispositivo',
+    platformsSubtitle: 'Usa la configuración web o instala la app nativa solo cuando se requieran capacidades locales.',
     quickStartTitle: 'Inicio rápido',
-    nativeInstallersTitle: 'Instaladores nativos',
+    nativeInstallersTitle: 'App nativa cuando sea necesaria',
     
-    fallbackVersionDesc: 'Si el instalador aún no está disponible para su plataforma, use la versión Web / PWA.',
+    fallbackVersionDesc: 'Si la app nativa aún no está disponible para su plataforma, continúe con la configuración web del dispositivo.',
     githubSourceLinkDesc: 'Para desarrolladores: el código fuente está disponible en GitHub.',
     githubRepositoryBtn: 'Repositorio de GitHub',
     architectureLabel: 'Arquitectura',
@@ -384,19 +387,20 @@ const localTexts = {
     versionLabel: 'Versión',
     devToolsLabel: 'Para desarrolladores',
     sourceCodeGithub: 'Código fuente en GitHub',
+
+    webTitle: 'Configuración web del dispositivo',
+    webDesc: 'Empieza en el navegador. No requiere instalación nativa.',
+    webCta: 'Abrir configuración del dispositivo',
     
-    webDesc: 'Inicio rápido en el navegador. No requiere instalación.',
-    webCta: 'Abrir Web / PWA',
-    
-    macSiliconCta: 'Descargar para Apple Silicon',
-    macIntelCta: 'Descargar para Intel Mac',
-    windowsCta: 'Descargar setup.exe',
-    windowsAltCta: 'Descargar MSI',
+    macSiliconCta: 'Preparar Apple Silicon',
+    macIntelCta: 'Preparar Intel Mac',
+    windowsCta: 'Preparar Windows',
+    windowsAltCta: 'Instalador MSI alternativo',
     windowsHelper: 'Use MSI solo si setup.exe no se ejecuta.',
-    linuxCta: 'Descargar AppImage',
+    linuxCta: 'Preparar Linux',
     
-    androidDesc: 'Se requiere instalación manual de APK. Versión de prueba.',
-    androidCta: 'Descargar APK',
+    androidDesc: 'Se requiere instalación manual de APK. Modo de prueba para preparar el dispositivo.',
+    androidCta: 'Preparar Android',
     
     iosDesc: 'La compilación de iOS se agregará más tarde.',
     iosCta: 'Próximamente',
@@ -407,8 +411,8 @@ const localTexts = {
     statusSideload: 'Sideload',
 
     // New keys
-    afterInstallTitle: '¿Qué ocurre después de instalar?',
-    step1: 'Instala DAARION Edge Client',
+    afterInstallTitle: '¿Qué ocurre después de conectar un dispositivo?',
+    step1: 'Prepara este dispositivo',
     step2: 'Inicia sesión o crea una cuenta de DAARION',
     step3: 'Crea o únete a una MicroDAO por invitación',
     step4: 'Activa el Agente de Espíritu Comunitario de tu DAO',
@@ -416,7 +420,7 @@ const localTexts = {
     step6: 'Configura roles, memoria, tareas y reglas',
     step7: 'Conecta la billetera futura, la tesorería, las votaciones y los tokens de la comunidad a medida que estén disponibles',
 
-    unlocksTitle: 'Lo que desbloquea Edge Client',
+    unlocksTitle: 'Lo que desbloquea un dispositivo conectado',
     unlockCard1Title: 'Agente de Espíritu Comunitario',
     unlockCard1Desc: 'El agente comunitario ayuda a incorporar miembros, explicar reglas, recordar acuerdos, crear tareas y preparar decisiones.',
     unlockCard2Title: 'Mensajero Descentralizado',
@@ -438,8 +442,8 @@ const localTexts = {
     roadmapComingTitle: 'Próximamente',
     roadmapLaterTitle: 'Plan de desarrollo (1-3 meses)',
     roadmapFutureTitle: 'Futuro',
-    roadmapAvail1: 'Instalador de Edge Client',
-    roadmapAvail2: 'Acceso Web / PWA',
+    roadmapAvail1: 'Preparación del dispositivo',
+    roadmapAvail2: 'DAARION PWA como entrada principal',
     roadmapAvail3: 'Inducción a MicroDAO',
     roadmapAvail4: 'Configuración del Agente de Espíritu Comunitario',
     roadmapComing1: 'mensajería comunitaria descentralizada',
@@ -450,7 +454,7 @@ const localTexts = {
     roadmapLater2: 'integración de fábrica de tokens',
     roadmapLater3: 'tesorería de la DAO',
     roadmapLater4: 'flujos de votación y gobernanza',
-    roadmapLater5: 'funciones locales y edge más sólidas',
+    roadmapLater5: 'capacidades locales del dispositivo más sólidas',
     roadmapFuture1: 'navegador descentralizado',
     roadmapFuture2: 'capa de protección/VPN',
     roadmapFuture3: 'agentes desarrolladores para crear plataformas y redes sociales descentralizadas',
@@ -729,7 +733,7 @@ export function Install() {
               </div>
               <div>
                 <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-400 block mb-0.5">{texts.quickStartTitle}</span>
-                <h4 className="font-extrabold text-lg sm:text-xl text-foreground">Web / PWA</h4>
+                <h4 className="font-extrabold text-lg sm:text-xl text-foreground">{texts.webTitle}</h4>
                 <p className="text-sm text-muted-foreground mt-0.5">{texts.webDesc}</p>
               </div>
             </div>
@@ -844,17 +848,17 @@ export function Install() {
         </div>
       </section>
 
-      {/* ── What happens after installation? ── */}
+      {/* ── What happens after connecting a device? ── */}
       <section className="py-16 md:py-24 border-t border-border/10 bg-muted/5 relative">
         <div className="landing-orb absolute top-10 left-[10%] w-60 h-60 bg-emerald-500/5 rounded-full blur-[80px]" />
         <div className="container max-w-5xl mx-auto px-4 space-y-10 relative z-10">
           <div className="text-center space-y-3 landing-reveal">
             <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">{texts.afterInstallTitle}</h2>
             <p className="text-sm text-muted-foreground max-w-xl mx-auto">
-              {language === 'uk' ? 'Сім простих кроків для запуску суверенного локального шару вашої спільноти.' :
-               language === 'ru' ? 'Семь простых шагов для запуска суверенного локального слоя вашего сообщества.' :
-               language === 'es' ? 'Siete sencillos pasos para iniciar la capa soberana local de tu comunidad.' :
-               'Seven simple steps to launch the sovereign local layer of your community.'}
+              {language === 'uk' ? 'Простий шлях від MicroDAO до готового пристрою та першої корисної дії.' :
+               language === 'ru' ? 'Простой путь от MicroDAO к готовому устройству и первому полезному действию.' :
+               language === 'es' ? 'Un camino simple desde MicroDAO hasta un dispositivo listo y la primera acción útil.' :
+               'A simple path from MicroDAO to a ready device and the first useful action.'}
             </p>
           </div>
 
@@ -889,16 +893,16 @@ export function Install() {
         </div>
       </section>
 
-      {/* ── What Edge Client unlocks ── */}
+      {/* ── What a connected device unlocks ── */}
       <section className="py-16 md:py-24 border-t border-border/10 relative">
         <div className="container max-w-5xl mx-auto px-4 space-y-12">
           <div className="text-center space-y-3 landing-reveal">
             <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">{texts.unlocksTitle}</h2>
             <p className="text-sm text-muted-foreground max-w-xl mx-auto">
-              {language === 'uk' ? 'Edge Client розширює можливості MicroDAO, створюючи повноцінне децентралізоване середовище.' :
-               language === 'ru' ? 'Edge Client расширяет возможности MicroDAO, создавая полноценную децентрализованную среду.' :
-               language === 'es' ? 'Edge Client amplía las posibilidades de MicroDAO, creando un entorno descentralizado completo.' :
-               'Edge Client extends MicroDAO capabilities, creating a complete decentralized environment.'}
+              {language === 'uk' ? 'Підключений пристрій розширює можливості MicroDAO без потреби розуміти технічний runtime.' :
+               language === 'ru' ? 'Подключенное устройство расширяет возможности MicroDAO без необходимости понимать технический runtime.' :
+               language === 'es' ? 'Un dispositivo conectado amplía las capacidades de MicroDAO sin exigir entender el runtime técnico.' :
+               'A connected device extends MicroDAO capabilities without asking users to understand the technical runtime.'}
             </p>
           </div>
 
@@ -1245,7 +1249,7 @@ npm run tauri build`}</code>
             </button>
             <span className="text-border">·</span>
             <button onClick={() => navigate('/install')} className="hover:text-foreground transition-colors text-foreground">
-              DAARION Edge Client
+              Connect Device
             </button>
             <span className="text-border">·</span>
             <a href="https://github.com/DAARION-DAO/loval-echoes" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">
