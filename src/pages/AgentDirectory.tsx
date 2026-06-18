@@ -472,10 +472,10 @@ export default function AgentDirectory() {
       icon: Key,
       status: "future" as const,
       desc: {
-        uk: "Керує шифруванням повідомлень, безпечним обміном E2EE ключами та конфіденційністю даних на рівні Edge Client.",
-        en: "Manages message encryption, secure E2EE key exchange, and data privacy on the Edge Client layer.",
-        ru: "Управляет шифрованием сообщений, безопасным обменом E2EE ключами и конфиденциальностью данных на уровне Edge Client.",
-        es: "Gestiona el cifrado de mensajes, intercambio seguro de claves E2EE y privacidad de datos en la capa Edge Client."
+        uk: "Керує шифруванням повідомлень, безпечним обміном E2EE ключами та конфіденційністю даних на рівні підключеного пристрою.",
+        en: "Manages message encryption, secure E2EE key exchange, and data privacy on the connected device layer.",
+        ru: "Управляет шифрованием сообщений, безопасным обменом E2EE ключами и конфиденциальностью данных на уровне подключенного устройства.",
+        es: "Gestiona el cifrado de mensajes, intercambio seguro de claves E2EE y privacidad de datos en la capa del dispositivo conectado."
       },
       permissions: "encrypt.data, decrypt.data, rotate.keys",
       approval: false,
@@ -1484,7 +1484,7 @@ export default function AgentDirectory() {
             </button>
             <span className="text-border">·</span>
             <button onClick={() => navigate("/install")} className="hover:text-foreground transition-colors">
-              DAARION Edge Client
+              Connect Device
             </button>
             <span className="text-border">·</span>
             <a href="https://github.com/DAARION-DAO/loval-echoes" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">
