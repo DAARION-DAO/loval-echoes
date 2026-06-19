@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useTranslation, Language } from '@/lib/i18n';
 import { Card } from '@/components/ui/card';
 import { PublicHeader } from '@/components/PublicHeader';
+import { decodeDeviceConnectionIntent } from '@/services/deviceConnection';
 import {
   Download,
   Monitor,
@@ -83,6 +84,10 @@ const localTexts = {
     heroSecondaryCta: 'Відкрити веб-налаштування пристрою',
     heroHelper: 'Почніть у DAARION PWA. Нативний застосунок потрібен лише для локальних або привілейованих можливостей пристрою.',
     heroBadge: 'Device connection · Beta / Canary',
+    intentBadge: 'Контекст MicroDAO додано',
+    intentTitle: 'Підготовка пристрою для {community}',
+    intentDesc: 'Цей перехід прийшов із Dashboard. Живий код підключення пристрою буде доступний після активації контракту підключення.',
+    intentPending: 'Це ще не живий код підключення пристрою.',
     
     headerTitleMobile: 'Пристрій',
     
@@ -179,6 +184,10 @@ const localTexts = {
     heroSecondaryCta: 'Open device setup on web',
     heroHelper: 'Start in the DAARION PWA. The native app is only needed for local or privileged device capabilities.',
     heroBadge: 'Device connection · Beta / Canary',
+    intentBadge: 'MicroDAO context attached',
+    intentTitle: 'Device setup for {community}',
+    intentDesc: 'This handoff came from Dashboard. A live device pairing invite will become available after the device-connection contract is active.',
+    intentPending: 'This is not a live device connection code yet.',
     
     headerTitleMobile: 'Device',
     
@@ -275,6 +284,10 @@ const localTexts = {
     heroSecondaryCta: 'Открыть веб-настройку устройства',
     heroHelper: 'Начните в DAARION PWA. Нативное приложение нужно только для локальных или привилегированных возможностей устройства.',
     heroBadge: 'Device connection · Beta / Canary',
+    intentBadge: 'Контекст MicroDAO добавлен',
+    intentTitle: 'Подготовка устройства для {community}',
+    intentDesc: 'Этот переход пришел из Dashboard. Живой код подключения устройства будет доступен после активации контракта подключения.',
+    intentPending: 'Это еще не живой код подключения устройства.',
     
     headerTitleMobile: 'Устройство',
     
@@ -371,6 +384,10 @@ const localTexts = {
     heroSecondaryCta: 'Abrir configuración web del dispositivo',
     heroHelper: 'Empieza en la DAARION PWA. La app nativa solo se necesita para capacidades locales o privilegiadas del dispositivo.',
     heroBadge: 'Device connection · Beta / Canary',
+    intentBadge: 'Contexto de MicroDAO adjunto',
+    intentTitle: 'Preparación del dispositivo para {community}',
+    intentDesc: 'Esta transición vino desde Dashboard. La invitación real del dispositivo estará disponible cuando el contrato de conexión esté activo.',
+    intentPending: 'Esto todavía no es un código real de conexión del dispositivo.',
     
     headerTitleMobile: 'Dispositivo',
     
@@ -582,12 +599,18 @@ function getArchitectureLayers(t: any) {
 
 export function Install() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const scrollRef = useScrollReveal();
   const { t, language } = useTranslation();
 
   const texts = localTexts[language as Language] || localTexts.en;
   const platforms = getPlatforms(t, texts);
   const architectureLayers = getArchitectureLayers(t);
+  const deviceIntentToken = searchParams.get('deviceIntent');
+  const deviceIntent = useMemo(
+    () => decodeDeviceConnectionIntent(deviceIntentToken),
+    [deviceIntentToken],
+  );
 
   const [detectedPlatform, setDetectedPlatform] = useState<string | null>(null);
 
@@ -689,6 +712,31 @@ export function Install() {
           <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed mt-4 mb-10">
             {texts.heroSubtitle}
           </p>
+
+          {deviceIntent && (
+            <div className="mx-auto mb-8 max-w-2xl rounded-2xl border border-emerald-500/25 bg-emerald-500/10 p-4 text-left shadow-lg">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-300">
+                  <CheckCircle2 className="h-5 w-5" />
+                </div>
+                <div className="space-y-2">
+                  <Badge variant="outline" className="border-emerald-500/25 bg-emerald-500/10 text-[10px] text-emerald-300">
+                    {texts.intentBadge}
+                  </Badge>
+                  <h2 className="text-base font-bold text-foreground">
+                    {texts.intentTitle.replace('{community}', deviceIntent.community_name)}
+                  </h2>
+                  <p className="text-sm leading-relaxed text-muted-foreground">
+                    {texts.intentDesc}
+                  </p>
+                  <div className="flex items-start gap-2 rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-xs text-amber-100/90">
+                    <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-300" />
+                    <span>{texts.intentPending}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto sm:max-w-none">
             <Button
