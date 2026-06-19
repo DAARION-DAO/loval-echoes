@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,8 +19,10 @@ export const AuthForm = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { saveCredentials, getSavedEmail, isRemembered, attemptAutoLogin } = useRememberMe();
+  const requestedAuthTab = searchParams.get('signup') === 'true' ? 'signup' : 'signin';
   
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
@@ -28,6 +30,7 @@ export const AuthForm = () => {
   const [showResendButton, setShowResendButton] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [isPasswordReset, setIsPasswordReset] = useState(false);
+  const [activeTab, setActiveTab] = useState<'signin' | 'signup'>(requestedAuthTab);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   // Always remember the device. Session is cleared only on explicit sign-out.
@@ -41,6 +44,25 @@ export const AuthForm = () => {
     communityName: '',
     communityType: 'team'
   });
+
+  useEffect(() => {
+    setActiveTab(requestedAuthTab);
+  }, [requestedAuthTab]);
+
+  const getSignupErrorDescription = (message: string) => {
+    const normalized = message.toLowerCase();
+    const isQuotaOrLimitError =
+      normalized.includes('limit') ||
+      normalized.includes('quota') ||
+      normalized.includes('too many') ||
+      normalized.includes('rate limit') ||
+      normalized.includes('ліміт') ||
+      normalized.includes('лимит') ||
+      normalized.includes('повідомл') ||
+      normalized.includes('сообщен');
+
+    return isQuotaOrLimitError ? t.onboarding.errorLimitDesc : message;
+  };
 
   // Initialize form with saved email if remembered
   useEffect(() => {
@@ -152,13 +174,12 @@ export const AuthForm = () => {
             variant: 'destructive',
           });
           setTimeout(() => {
-            const signinTab = document.querySelector('[value="signin"]') as HTMLButtonElement;
-            if (signinTab) signinTab.click();
+            setActiveTab('signin');
           }, 2000);
         } else {
           toast({
             title: t.error,
-            description: error.message,
+            description: getSignupErrorDescription(error.message),
             variant: 'destructive',
           });
         }
@@ -488,8 +509,7 @@ export const AuthForm = () => {
             size="sm"
             onClick={() => {
               setShowForgotPassword(true);
-              const signinTab = document.querySelector('[value="signin"]') as HTMLButtonElement;
-              if (signinTab) signinTab.click();
+              setActiveTab('signin');
             }}
           >
             {t.authForm.btnResetPassword}
@@ -504,7 +524,7 @@ export const AuthForm = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="signin" className="w-full">
+            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'signin' | 'signup')} className="w-full">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="signin">{t.auth.signIn}</TabsTrigger>
                 <TabsTrigger value="signup">{t.auth.signUp}</TabsTrigger>
@@ -608,12 +628,6 @@ export const AuthForm = () => {
             
             <TabsContent value="signup">
               <form onSubmit={handleSignUp} className="space-y-4">
-                <div className="rounded-lg bg-accent/10 border border-accent/20 p-3 text-center mb-2">
-                  <p className="text-xs text-muted-foreground">
-                    {t.onboarding.errorLimitDesc}
-                  </p>
-                </div>
-
                 <div className="space-y-2">
                   <Label htmlFor="display-name">{t.auth.displayName}</Label>
                   <Input
