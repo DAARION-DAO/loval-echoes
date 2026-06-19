@@ -30,6 +30,7 @@ import { VideoIntro } from '@/components/VideoIntro';
 import { UserApprovalPanel } from '@/components/UserApprovalPanel';
 import { CommunityNewsFeed } from '@/components/CommunityNewsFeed';
 import { NewsNotificationsPopover } from '@/components/NewsNotificationsPopover';
+import { DeviceConnectionCard } from '@/components/device/DeviceConnectionCard';
 import { Badge } from '@/components/ui/badge';
 import { useActiveCommunity } from '@/hooks/useActiveCommunity';
 import { useTranslation } from '@/lib/i18n';
@@ -91,6 +92,15 @@ const dashboardLocals = {
     actionRejectedToast: "Дію відхилено.",
     spiritCreatedToast: "Дух Спільноти створено. Його можна налаштувати у розділі Агентів.",
     spiritRepairError: "Не вдалося створити Дух Спільноти.",
+    deviceEyebrow: "Статус пристрою",
+    deviceTitle: "Підключити цей пристрій",
+    deviceStatus: "Готово до підключення",
+    deviceDescription: "Підготуйте цей пристрій для поточної MicroDAO. Dashboard залишається доступним, а локальні можливості відкриються після підключення пристрою.",
+    deviceContextReady: "Контекст MicroDAO та учасника готовий.",
+    deviceContractPending: "Живий код підключення буде видано після активації контракту підключення пристрою.",
+    deviceDashboardAvailable: "Dashboard не вимагає підключеного пристрою.",
+    devicePrimaryCta: "Підготувати пристрій",
+    deviceHelper: "Це не код запрошення до MicroDAO. Пристрою ще потрібен живий код підключення.",
   },
   en: {
     widgetTitle: "Community Spirit",
@@ -137,6 +147,15 @@ const dashboardLocals = {
     actionRejectedToast: "Action rejected.",
     spiritCreatedToast: "Community Spirit was created. You can configure it in Agents.",
     spiritRepairError: "Could not create Community Spirit.",
+    deviceEyebrow: "Device status",
+    deviceTitle: "Connect this device",
+    deviceStatus: "Ready to connect",
+    deviceDescription: "Prepare this device for the current MicroDAO. Dashboard access stays available, and local capabilities unlock after the device is connected.",
+    deviceContextReady: "MicroDAO and member context is ready.",
+    deviceContractPending: "A live device invite will be issued after the device-connection contract is active.",
+    deviceDashboardAvailable: "Dashboard access does not require a connected device.",
+    devicePrimaryCta: "Prepare device",
+    deviceHelper: "This is not a MicroDAO invite code. The device still needs a live connection code.",
   },
   ru: {
     widgetTitle: "Дух Сообщества",
@@ -183,6 +202,15 @@ const dashboardLocals = {
     actionRejectedToast: "Действие отклонено.",
     spiritCreatedToast: "Дух Сообщества создан. Его можно настроить в разделе Агентов.",
     spiritRepairError: "Не удалось создать Дух Сообщества.",
+    deviceEyebrow: "Статус устройства",
+    deviceTitle: "Подключить это устройство",
+    deviceStatus: "Готово к подключению",
+    deviceDescription: "Подготовьте это устройство для текущей MicroDAO. Dashboard остается доступным, а локальные возможности откроются после подключения устройства.",
+    deviceContextReady: "Контекст MicroDAO и участника готов.",
+    deviceContractPending: "Живой код подключения будет выдан после активации контракта подключения устройства.",
+    deviceDashboardAvailable: "Dashboard не требует подключенного устройства.",
+    devicePrimaryCta: "Подготовить устройство",
+    deviceHelper: "Это не код приглашения в MicroDAO. Устройству еще нужен живой код подключения.",
   },
   es: {
     widgetTitle: "Espíritu de la Comunidad",
@@ -229,6 +257,15 @@ const dashboardLocals = {
     actionRejectedToast: "Acción rechazada.",
     spiritCreatedToast: "El Espíritu de la Comunidad fue creado. Puedes configurarlo en Agentes.",
     spiritRepairError: "No se pudo crear el Espíritu de la Comunidad.",
+    deviceEyebrow: "Estado del dispositivo",
+    deviceTitle: "Conectar este dispositivo",
+    deviceStatus: "Listo para conectar",
+    deviceDescription: "Prepare este dispositivo para la MicroDAO actual. El Dashboard sigue disponible y las capacidades locales se activan después de conectar el dispositivo.",
+    deviceContextReady: "El contexto de MicroDAO y miembro está listo.",
+    deviceContractPending: "La invitación real del dispositivo se emitirá cuando el contrato de conexión esté activo.",
+    deviceDashboardAvailable: "El Dashboard no requiere un dispositivo conectado.",
+    devicePrimaryCta: "Preparar dispositivo",
+    deviceHelper: "Esto no es un código de invitación a MicroDAO. El dispositivo todavía necesita un código de conexión real.",
   }
 };
 
@@ -244,7 +281,7 @@ export const NewIndex = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [showVideoIntro, setShowVideoIntro] = useState(true);
   
-  const { activeCommunity, activeCommunityId, refresh: refreshCommunity } = useActiveCommunity();
+  const { activeCommunity, activeCommunityId, userCommunityRole, refresh: refreshCommunity } = useActiveCommunity();
   const [spiritAgent, setSpiritAgent] = useState<any>(null);
   const [agentPerms, setAgentPerms] = useState<any>(null);
   const [loadingAgent, setLoadingAgent] = useState(false);
@@ -650,6 +687,27 @@ export const NewIndex = () => {
             {t.dashboard.welcomeDesc}
           </p>
         </div>
+
+        {activeCommunityId && (
+          <DeviceConnectionCard
+            userId={user?.id}
+            communityId={activeCommunityId}
+            communityName={activeCommunity?.name}
+            membershipRole={userCommunityRole}
+            onOpenDeviceSetup={(installPath) => navigate(installPath)}
+            labels={{
+              eyebrow: dl.deviceEyebrow,
+              title: dl.deviceTitle,
+              status: dl.deviceStatus,
+              description: dl.deviceDescription,
+              contextReady: dl.deviceContextReady,
+              contractPending: dl.deviceContractPending,
+              dashboardAvailable: dl.deviceDashboardAvailable,
+              primaryCta: dl.devicePrimaryCta,
+              helper: dl.deviceHelper,
+            }}
+          />
+        )}
 
         {/* Community Spirit Agent Card */}
         {activeCommunityId && (
