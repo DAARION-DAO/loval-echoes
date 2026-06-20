@@ -926,6 +926,108 @@ export type Database = {
           },
         ]
       }
+      device_backend_profiles: {
+        Row: {
+          backend_url: string
+          created_at: string
+          environment: string
+          id: string
+          is_active: boolean
+          label: string
+          updated_at: string
+        }
+        Insert: {
+          backend_url: string
+          created_at?: string
+          environment?: string
+          id?: string
+          is_active?: boolean
+          label: string
+          updated_at?: string
+        }
+        Update: {
+          backend_url?: string
+          created_at?: string
+          environment?: string
+          id?: string
+          is_active?: boolean
+          label?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      device_pairing_invitations: {
+        Row: {
+          backend_profile_id: string | null
+          community_id: string
+          consumed_at: string | null
+          consumed_device_id: string | null
+          created_at: string
+          created_by: string
+          device_label: string | null
+          expires_at: string
+          id: string
+          membership_role: string
+          pairing_code: string
+          pairing_payload: Json
+          purpose: string
+          revoked_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          backend_profile_id?: string | null
+          community_id: string
+          consumed_at?: string | null
+          consumed_device_id?: string | null
+          created_at?: string
+          created_by: string
+          device_label?: string | null
+          expires_at: string
+          id?: string
+          membership_role: string
+          pairing_code: string
+          pairing_payload: Json
+          purpose?: string
+          revoked_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          backend_profile_id?: string | null
+          community_id?: string
+          consumed_at?: string | null
+          consumed_device_id?: string | null
+          created_at?: string
+          created_by?: string
+          device_label?: string | null
+          expires_at?: string
+          id?: string
+          membership_role?: string
+          pairing_code?: string
+          pairing_payload?: Json
+          purpose?: string
+          revoked_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "device_pairing_invitations_backend_profile_id_fkey"
+            columns: ["backend_profile_id"]
+            isOneToOne: false
+            referencedRelation: "device_backend_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "device_pairing_invitations_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_chunks: {
         Row: {
           content: string
@@ -1374,6 +1476,81 @@ export type Database = {
             columns: ["parent_id"]
             isOneToOne: false
             referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      microdao_device_statuses: {
+        Row: {
+          capability_summary: Json
+          community_id: string
+          created_at: string
+          device_id: string | null
+          device_label: string | null
+          genesis_status: string
+          health_state: string
+          id: string
+          last_seen_at: string | null
+          latest_invitation_id: string | null
+          next_action: string
+          pairing_status: string
+          platform: string | null
+          purpose: string
+          readiness_state: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          capability_summary?: Json
+          community_id: string
+          created_at?: string
+          device_id?: string | null
+          device_label?: string | null
+          genesis_status?: string
+          health_state?: string
+          id?: string
+          last_seen_at?: string | null
+          latest_invitation_id?: string | null
+          next_action?: string
+          pairing_status?: string
+          platform?: string | null
+          purpose?: string
+          readiness_state?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          capability_summary?: Json
+          community_id?: string
+          created_at?: string
+          device_id?: string | null
+          device_label?: string | null
+          genesis_status?: string
+          health_state?: string
+          id?: string
+          last_seen_at?: string | null
+          latest_invitation_id?: string | null
+          next_action?: string
+          pairing_status?: string
+          platform?: string | null
+          purpose?: string
+          readiness_state?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "microdao_device_statuses_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "microdao_device_statuses_latest_invitation_id_fkey"
+            columns: ["latest_invitation_id"]
+            isOneToOne: false
+            referencedRelation: "device_pairing_invitations"
             referencedColumns: ["id"]
           },
         ]
@@ -2074,6 +2251,14 @@ export type Database = {
         Returns: boolean
       }
       cleanup_expired_refresh_tokens: { Args: never; Returns: undefined }
+      create_device_pairing_invitation: {
+        Args: {
+          p_community_id: string
+          p_device_label?: string
+          p_purpose?: string
+        }
+        Returns: Json
+      }
       create_microdao_with_spirit_agent: {
         Args: {
           p_agent_name: string
@@ -2097,6 +2282,10 @@ export type Database = {
           p_type: string
           p_user_id: string
         }
+        Returns: string
+      }
+      encode_device_pairing_payload: {
+        Args: { p_payload: Json }
         Returns: string
       }
       fix_approval_inconsistencies: { Args: never; Returns: undefined }
@@ -2134,6 +2323,10 @@ export type Database = {
         Returns: {
           user_id: string
         }[]
+      }
+      get_device_connection_status: {
+        Args: { p_community_id: string; p_purpose?: string }
+        Returns: Json
       }
       get_platform_admin_access_requests: {
         Args: never
@@ -2258,6 +2451,19 @@ export type Database = {
           metadata: Json
           similarity: number
         }[]
+      }
+      record_device_readiness: {
+        Args: {
+          p_capability_summary?: Json
+          p_device_id: string
+          p_device_label?: string
+          p_genesis_status?: string
+          p_health_state?: string
+          p_invitation_id: string
+          p_pairing_status?: string
+          p_platform?: string
+        }
+        Returns: Json
       }
       revoke_admin_role: { Args: { p_user_id: string }; Returns: undefined }
       revoke_user_refresh_tokens: {
