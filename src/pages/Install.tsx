@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { useTranslation, Language } from '@/lib/i18n';
 import { Card } from '@/components/ui/card';
 import { PublicHeader } from '@/components/PublicHeader';
-import { decodeDeviceConnectionIntent } from '@/services/deviceConnection';
+import { decodeDeviceConnectionIntent, decodeDevicePairingInvite } from '@/services/deviceConnection';
 import {
   Download,
   Monitor,
@@ -27,6 +27,7 @@ import {
   Vote,
   Coins,
   Wallet,
+  Copy,
 } from 'lucide-react';
 
 /* ── Scroll-reveal hook (same as landing) ── */
@@ -88,6 +89,14 @@ const localTexts = {
     intentTitle: 'Підготовка пристрою для {community}',
     intentDesc: 'Цей перехід прийшов із Dashboard. Живий код підключення пристрою буде доступний після активації контракту підключення.',
     intentPending: 'Це ще не живий код підключення пристрою.',
+    inviteBadge: 'Код підключення готовий',
+    inviteTitle: 'Підключення пристрою до {community}',
+    inviteDesc: 'Відкрийте DAARION Edge і вставте цей код у полі Enter invitation code.',
+    inviteWarning: 'Цей код підключає пристрій до вашого MicroDAO. Не публікуйте його.',
+    inviteCodeLabel: 'Код підключення пристрою',
+    inviteExpiresLabel: 'Діє до',
+    inviteCopyCta: 'Скопіювати код',
+    inviteCopied: 'Код скопійовано',
     
     headerTitleMobile: 'Пристрій',
     
@@ -188,6 +197,14 @@ const localTexts = {
     intentTitle: 'Device setup for {community}',
     intentDesc: 'This handoff came from Dashboard. A live device pairing invite will become available after the device-connection contract is active.',
     intentPending: 'This is not a live device connection code yet.',
+    inviteBadge: 'Connection code ready',
+    inviteTitle: 'Connect device to {community}',
+    inviteDesc: 'Open DAARION Edge and paste this code into the Enter invitation code field.',
+    inviteWarning: 'This code connects a device to your MicroDAO. Do not publish it.',
+    inviteCodeLabel: 'Device connection code',
+    inviteExpiresLabel: 'Expires',
+    inviteCopyCta: 'Copy code',
+    inviteCopied: 'Code copied',
     
     headerTitleMobile: 'Device',
     
@@ -288,6 +305,14 @@ const localTexts = {
     intentTitle: 'Подготовка устройства для {community}',
     intentDesc: 'Этот переход пришел из Dashboard. Живой код подключения устройства будет доступен после активации контракта подключения.',
     intentPending: 'Это еще не живой код подключения устройства.',
+    inviteBadge: 'Код подключения готов',
+    inviteTitle: 'Подключение устройства к {community}',
+    inviteDesc: 'Откройте DAARION Edge и вставьте этот код в поле Enter invitation code.',
+    inviteWarning: 'Этот код подключает устройство к вашей MicroDAO. Не публикуйте его.',
+    inviteCodeLabel: 'Код подключения устройства',
+    inviteExpiresLabel: 'Действует до',
+    inviteCopyCta: 'Скопировать код',
+    inviteCopied: 'Код скопирован',
     
     headerTitleMobile: 'Устройство',
     
@@ -388,6 +413,14 @@ const localTexts = {
     intentTitle: 'Preparación del dispositivo para {community}',
     intentDesc: 'Esta transición vino desde Dashboard. La invitación real del dispositivo estará disponible cuando el contrato de conexión esté activo.',
     intentPending: 'Esto todavía no es un código real de conexión del dispositivo.',
+    inviteBadge: 'Código de conexión listo',
+    inviteTitle: 'Conectar dispositivo a {community}',
+    inviteDesc: 'Abre DAARION Edge y pega este código en el campo Enter invitation code.',
+    inviteWarning: 'Este código conecta un dispositivo a tu MicroDAO. No lo publiques.',
+    inviteCodeLabel: 'Código de conexión del dispositivo',
+    inviteExpiresLabel: 'Expira',
+    inviteCopyCta: 'Copiar código',
+    inviteCopied: 'Código copiado',
     
     headerTitleMobile: 'Dispositivo',
     
@@ -607,12 +640,43 @@ export function Install() {
   const platforms = getPlatforms(t, texts);
   const architectureLayers = getArchitectureLayers(t);
   const deviceIntentToken = searchParams.get('deviceIntent');
+  const deviceInviteCode = searchParams.get('deviceInvite');
   const deviceIntent = useMemo(
     () => decodeDeviceConnectionIntent(deviceIntentToken),
     [deviceIntentToken],
   );
+  const deviceInvite = useMemo(
+    () => decodeDevicePairingInvite(deviceInviteCode),
+    [deviceInviteCode],
+  );
 
   const [detectedPlatform, setDetectedPlatform] = useState<string | null>(null);
+  const [copiedInvite, setCopiedInvite] = useState(false);
+
+  const inviteExpiresAt = useMemo(() => {
+    if (!deviceInvite?.expires_at) return null;
+
+    try {
+      return new Intl.DateTimeFormat(undefined, {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+      }).format(new Date(deviceInvite.expires_at));
+    } catch {
+      return deviceInvite.expires_at;
+    }
+  }, [deviceInvite?.expires_at]);
+
+  const copyDeviceInvite = async () => {
+    if (!deviceInviteCode) return;
+
+    try {
+      await navigator.clipboard.writeText(deviceInviteCode);
+      setCopiedInvite(true);
+      window.setTimeout(() => setCopiedInvite(false), 2000);
+    } catch {
+      setCopiedInvite(false);
+    }
+  };
 
   useEffect(() => {
     const ua = navigator.userAgent.toLowerCase();
@@ -713,7 +777,53 @@ export function Install() {
             {texts.heroSubtitle}
           </p>
 
-          {deviceIntent && (
+          {deviceInvite && deviceInviteCode && (
+            <div className="mx-auto mb-8 max-w-2xl rounded-2xl border border-emerald-500/25 bg-emerald-500/10 p-4 text-left shadow-lg">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-300">
+                  <CheckCircle2 className="h-5 w-5" />
+                </div>
+                <div className="min-w-0 flex-1 space-y-3">
+                  <Badge variant="outline" className="border-emerald-500/25 bg-emerald-500/10 text-[10px] text-emerald-300">
+                    {texts.inviteBadge}
+                  </Badge>
+                  <h2 className="text-base font-bold text-foreground">
+                    {texts.inviteTitle.replace('{community}', deviceInvite.community_name)}
+                  </h2>
+                  <p className="text-sm leading-relaxed text-muted-foreground">
+                    {texts.inviteDesc}
+                  </p>
+                  <div className="space-y-2 rounded-lg border border-emerald-500/20 bg-background/70 p-3">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-300">
+                          {texts.inviteCodeLabel}
+                        </p>
+                        {inviteExpiresAt && (
+                          <p className="mt-1 text-[11px] text-muted-foreground">
+                            {texts.inviteExpiresLabel}: {inviteExpiresAt}
+                          </p>
+                        )}
+                      </div>
+                      <Button variant="outline" size="sm" className="h-8" onClick={copyDeviceInvite}>
+                        <Copy className="h-3.5 w-3.5" />
+                        {copiedInvite ? texts.inviteCopied : texts.inviteCopyCta}
+                      </Button>
+                    </div>
+                    <div className="max-h-28 overflow-auto rounded-md border border-border/70 bg-background p-2 font-mono text-[11px] leading-relaxed text-foreground break-all">
+                      {deviceInviteCode}
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2 rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-xs text-amber-100/90">
+                    <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-300" />
+                    <span>{texts.inviteWarning}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {!deviceInvite && deviceIntent && (
             <div className="mx-auto mb-8 max-w-2xl rounded-2xl border border-emerald-500/25 bg-emerald-500/10 p-4 text-left shadow-lg">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-300">
