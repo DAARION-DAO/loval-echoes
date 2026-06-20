@@ -868,6 +868,9 @@ export interface Translations {
     btnUpdatePassword: string;
     btnUpdatingPassword: string;
     btnBackToLogin: string;
+    signupIntroTitle: string;
+    signupIntroDesc: string;
+    signupSubmitCta: string;
     cantLoginTitle: string;
     cantLoginDesc: string;
     btnResetPassword: string;
@@ -1517,6 +1520,19 @@ export interface Translations {
     draftFoundDesc: string;
     restoreDraftBtn: string;
     existingCommTitle: string;
+    firstUserChoicesTitle: string;
+    firstUserChoicesDesc: string;
+    choiceCreateTitle: string;
+    choiceCreateDesc: string;
+    choiceJoinTitle: string;
+    choiceJoinDesc: string;
+    choiceApplyTitle: string;
+    choiceApplyDesc: string;
+    choiceViewTitle: string;
+    choiceViewDesc: string;
+    viewDashboardLockedCta: string;
+    microdaoCreationGateNote: string;
+    deviceConnectionGateNote: string;
     createCommTitle: string;
     createCommDesc: string;
     startCreationBtn: string;
@@ -2798,6 +2814,9 @@ export const translations: Record<Language, Translations> = {
       btnUpdatePassword: 'Оновити пароль',
       btnUpdatingPassword: 'Оновлення...',
       btnBackToLogin: 'Повернутися до входу',
+      signupIntroTitle: 'Створіть безкоштовний акаунт',
+      signupIntroDesc: 'Акаунт дає доступ до DAARION. MicroDAO створюється окремо після входу; підключення пристрою стане доступним після створення або приєднання до MicroDAO та активації сервісу підключення.',
+      signupSubmitCta: 'Створити безкоштовний акаунт',
       cantLoginTitle: '🔑 Не вдається увійти?',
       cantLoginDesc: 'Якщо ви забули пароль або маєте проблеми зі входом — скористайтесь відновленням паролю.',
       btnResetPassword: 'Відновити пароль',
@@ -3457,9 +3476,22 @@ export const translations: Record<Language, Translations> = {
       draftFoundDesc: 'Ви зупинилися на кроці {step} для створення спільноти {name}.',
       restoreDraftBtn: 'Відновити чернетку',
       existingCommTitle: 'Ваші чинні MicroDAO',
+      firstUserChoicesTitle: 'Оберіть наступний крок',
+      firstUserChoicesDesc: 'Безкоштовний акаунт вже дає доступ до DAARION. MicroDAO створюється окремо, а пристрій підключається тільки після підтвердженого членства в MicroDAO і активації сервісу підключення.',
+      choiceCreateTitle: 'Створити MicroDAO',
+      choiceCreateDesc: 'Для спільноти, команди або організації. Створення може вимагати підтвердженого доступу.',
+      choiceJoinTitle: 'Приєднатись до MicroDAO',
+      choiceJoinDesc: 'Використайте invite code від лідера або адміністратора існуючої спільноти.',
+      choiceApplyTitle: 'Подати заявку / чекати доступу',
+      choiceApplyDesc: 'Якщо створення MicroDAO ще недоступне, залиште заявку на Founding або партнерський доступ.',
+      choiceViewTitle: 'Переглянути Dashboard',
+      choiceViewDesc: 'Dashboard відкриється після створення або приєднання до MicroDAO.',
+      viewDashboardLockedCta: 'Доступно після MicroDAO',
+      microdaoCreationGateNote: 'MicroDAO не створюється автоматично під час реєстрації акаунта. Це окрема gated дія.',
+      deviceConnectionGateNote: 'Connect Device не є першим кроком для нового акаунта: pairing-код зʼявиться лише після підтвердженого членства в MicroDAO і активації сервісу підключення.',
       createCommTitle: 'Створити нову спільноту (MicroDAO)',
-      createCommDesc: 'Станьте лідером і запустіть простір з персональним Духом Спільноти',
-      startCreationBtn: 'Почати створення з Агентом',
+      createCommDesc: 'Запустіть MicroDAO для спільноти, команди або організації. Це окрема дія після створення акаунта.',
+      startCreationBtn: 'Створити MicroDAO',
       joinCommTitle: 'Приєднатися за кодом запрошення',
       joinCommDesc: 'Введіть код від лідера, щоб автоматично отримати доступ',
       joinCommPlaceholder: 'Введіть код, напр: ECO-MEMBER-492',
@@ -4722,6 +4754,9 @@ export const translations: Record<Language, Translations> = {
       btnUpdatePassword: 'Update Password',
       btnUpdatingPassword: 'Updating...',
       btnBackToLogin: 'Back to Sign In',
+      signupIntroTitle: 'Create a free account',
+      signupIntroDesc: 'An account gives you access to DAARION. A MicroDAO is created separately after sign-in; device connection becomes available after you create or join a MicroDAO and the connection service is active.',
+      signupSubmitCta: 'Create free account',
       cantLoginTitle: '🔑 Having trouble signing in?',
       cantLoginDesc: 'If you forgot your password or have issues logging in, use password recovery.',
       btnResetPassword: 'Reset Password',
@@ -5381,9 +5416,22 @@ export const translations: Record<Language, Translations> = {
       draftFoundDesc: 'You stopped at step {step} for community creation of {name}.',
       restoreDraftBtn: 'Restore draft',
       existingCommTitle: 'Your current MicroDAOs',
+      firstUserChoicesTitle: 'Choose your next step',
+      firstUserChoicesDesc: 'A free account gives access to DAARION. A MicroDAO is created separately, and device connection is available only after approved MicroDAO membership and connection service activation.',
+      choiceCreateTitle: 'Create MicroDAO',
+      choiceCreateDesc: 'For a community, team, or organization. Creation may require approval.',
+      choiceJoinTitle: 'Join MicroDAO',
+      choiceJoinDesc: 'Use an invite code from the leader or admin of an existing community.',
+      choiceApplyTitle: 'Apply / wait for access',
+      choiceApplyDesc: 'If MicroDAO creation is not available yet, submit a Founding or partner access request.',
+      choiceViewTitle: 'View Dashboard',
+      choiceViewDesc: 'Dashboard opens after you create or join a MicroDAO.',
+      viewDashboardLockedCta: 'Available after MicroDAO',
+      microdaoCreationGateNote: 'A MicroDAO is not created automatically during account signup. It is a separate gated action.',
+      deviceConnectionGateNote: 'Connect Device is not the first step for a new account: a pairing code appears only after approved MicroDAO membership and connection service activation.',
       createCommTitle: 'Create new community (MicroDAO)',
-      createCommDesc: 'Become a leader and launch a space with a personal Community Spirit',
-      startCreationBtn: 'Start creation with Agent',
+      createCommDesc: 'Launch a MicroDAO for a community, team, or organization. This is a separate action after account signup.',
+      startCreationBtn: 'Create MicroDAO',
       joinCommTitle: 'Join by invite code',
       joinCommDesc: 'Enter code from leader to automatically gain access',
       joinCommPlaceholder: 'Enter code, e.g. ECO-MEMBER-492',
@@ -6646,6 +6694,9 @@ export const translations: Record<Language, Translations> = {
       btnUpdatePassword: 'Обновить пароль',
       btnUpdatingPassword: 'Обновление...',
       btnBackToLogin: 'Вернуться к входу',
+      signupIntroTitle: 'Создайте бесплатный аккаунт',
+      signupIntroDesc: 'Аккаунт дает доступ к DAARION. MicroDAO создается отдельно после входа; подключение устройства станет доступным после создания или присоединения к MicroDAO и активации сервиса подключения.',
+      signupSubmitCta: 'Создать бесплатный аккаунт',
       cantLoginTitle: '🔑 Не можете войти?',
       cantLoginDesc: 'Если вы забыли пароль или возникли проблемы со входом — воспользуйтесь восстановлением пароля.',
       btnResetPassword: 'Восстановить пароль',
@@ -7305,9 +7356,22 @@ export const translations: Record<Language, Translations> = {
       draftFoundDesc: 'Вы остановились на шаге {step} для создания сообщества {name}.',
       restoreDraftBtn: 'Восстановить черновик',
       existingCommTitle: 'Ваши действующие MicroDAO',
+      firstUserChoicesTitle: 'Выберите следующий шаг',
+      firstUserChoicesDesc: 'Бесплатный аккаунт дает доступ к DAARION. MicroDAO создается отдельно, а подключение устройства доступно только после подтвержденного членства в MicroDAO и активации сервиса подключения.',
+      choiceCreateTitle: 'Создать MicroDAO',
+      choiceCreateDesc: 'Для сообщества, команды или организации. Создание может требовать подтвержденного доступа.',
+      choiceJoinTitle: 'Присоединиться к MicroDAO',
+      choiceJoinDesc: 'Используйте invite code от лидера или администратора существующего сообщества.',
+      choiceApplyTitle: 'Подать заявку / ждать доступ',
+      choiceApplyDesc: 'Если создание MicroDAO еще недоступно, оставьте заявку на Founding или партнерский доступ.',
+      choiceViewTitle: 'Просмотреть Dashboard',
+      choiceViewDesc: 'Dashboard откроется после создания или присоединения к MicroDAO.',
+      viewDashboardLockedCta: 'Доступно после MicroDAO',
+      microdaoCreationGateNote: 'MicroDAO не создается автоматически при регистрации аккаунта. Это отдельное gated действие.',
+      deviceConnectionGateNote: 'Connect Device не является первым шагом для нового аккаунта: pairing-код появится только после подтвержденного членства в MicroDAO и активации сервиса подключения.',
       createCommTitle: 'Создать новое сообщество (MicroDAO)',
-      createCommDesc: 'Станьте лидером и запустите пространство с персональным Духом Сообщества',
-      startCreationBtn: 'Начать создание с Агентом',
+      createCommDesc: 'Запустите MicroDAO для сообщества, команды или организации. Это отдельное действие после создания аккаунта.',
+      startCreationBtn: 'Создать MicroDAO',
       joinCommTitle: 'Присоединиться по коду приглашения',
       joinCommDesc: 'Введите код от лидера, чтобы автоматически получить доступ',
       joinCommPlaceholder: 'Введите код, например: ECO-MEMBER-492',
@@ -8570,6 +8634,9 @@ export const translations: Record<Language, Translations> = {
       btnUpdatePassword: 'Actualizar Contraseña',
       btnUpdatingPassword: 'Actualizando...',
       btnBackToLogin: 'Volver a Iniciar Sesión',
+      signupIntroTitle: 'Cree una cuenta gratuita',
+      signupIntroDesc: 'La cuenta da acceso a DAARION. MicroDAO se crea por separado después de iniciar sesión; la conexión del dispositivo estará disponible después de crear o unirse a un MicroDAO y activar el servicio de conexión.',
+      signupSubmitCta: 'Crear cuenta gratuita',
       cantLoginTitle: '🔑 ¿Tiene problemas para iniciar sesión?',
       cantLoginDesc: 'Si olvidó su contraseña o tiene problemas para iniciar sesión, use la recuperación de contraseña.',
       btnResetPassword: 'Restablecer Contraseña',
@@ -9229,9 +9296,22 @@ export const translations: Record<Language, Translations> = {
       draftFoundDesc: 'Se detuvo en el paso {step} para la creación de la comunidad {name}.',
       restoreDraftBtn: 'Restaurar borrador',
       existingCommTitle: 'Sus MicroDAOs actuales',
+      firstUserChoicesTitle: 'Elija el siguiente paso',
+      firstUserChoicesDesc: 'Una cuenta gratuita da acceso a DAARION. MicroDAO se crea por separado, y la conexión del dispositivo solo está disponible después de la membresía aprobada y la activación del servicio de conexión.',
+      choiceCreateTitle: 'Crear MicroDAO',
+      choiceCreateDesc: 'Para una comunidad, equipo u organización. La creación puede requerir acceso aprobado.',
+      choiceJoinTitle: 'Unirse a MicroDAO',
+      choiceJoinDesc: 'Use un código de invitación del líder o administrador de una comunidad existente.',
+      choiceApplyTitle: 'Solicitar / esperar acceso',
+      choiceApplyDesc: 'Si la creación de MicroDAO aún no está disponible, envíe una solicitud de acceso Founding o de socio.',
+      choiceViewTitle: 'Ver Dashboard',
+      choiceViewDesc: 'Dashboard se abre después de crear o unirse a un MicroDAO.',
+      viewDashboardLockedCta: 'Disponible después de MicroDAO',
+      microdaoCreationGateNote: 'MicroDAO no se crea automáticamente durante el registro de la cuenta. Es una acción separada y controlada.',
+      deviceConnectionGateNote: 'Connect Device no es el primer paso para una cuenta nueva: el código de pairing aparece solo después de la membresía aprobada de MicroDAO y la activación del servicio de conexión.',
       createCommTitle: 'Crear nueva comunidad (MicroDAO)',
-      createCommDesc: 'Conviértase en líder y lance un espacio con un Espíritu Comunitario personal',
-      startCreationBtn: 'Comenzar creación con Agente',
+      createCommDesc: 'Lance un MicroDAO para una comunidad, equipo u organización. Esta es una acción separada después del registro de la cuenta.',
+      startCreationBtn: 'Crear MicroDAO',
       joinCommTitle: 'Unirse por código de invitación',
       joinCommDesc: 'Introduzca el código del líder para obtener acceso automáticamente',
       joinCommPlaceholder: 'Introduzca el código, ej: ECO-MEMBER-492',

@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useAuth } from '@/hooks/useAuth';
 import { useActiveCommunity } from '@/hooks/useActiveCommunity';
 import { supabase } from '@/integrations/supabase/client';
+import type { Json } from '@/integrations/supabase/types';
 import { toast } from '@/hooks/use-toast';
 import { 
   Sparkles, 
@@ -72,6 +73,61 @@ interface AnswersState {
   enabled_modules: string[];
   suggested_roles: string;
 }
+
+type DraftSetupSession = {
+  id: string;
+  current_step: string | null;
+  answers: Partial<AnswersState> | null;
+};
+
+type CommunityRpcResult = {
+  community_id: string;
+};
+
+type ConversationInsertClient = {
+  insert: (values: {
+    name: string;
+    type: string;
+    community_id: string;
+    created_by: string;
+  }) => {
+    select: () => {
+      single: () => Promise<{
+        data: { id: string } | null;
+        error: { message: string } | null;
+      }>;
+    };
+  };
+};
+
+const toJson = (value: unknown): Json => value as Json;
+
+const getErrorMessage = (err: unknown, fallback: string): string => {
+  if (err instanceof Error && err.message) {
+    return err.message;
+  }
+  if (typeof err === 'object' && err !== null && 'message' in err) {
+    const message = (err as { message?: unknown }).message;
+    if (typeof message === 'string' && message.trim()) {
+      return message;
+    }
+  }
+  return fallback;
+};
+
+const getCommunityId = (value: Json | null): string | null => {
+  if (typeof value === 'object' && value !== null && !Array.isArray(value) && 'community_id' in value) {
+    const communityId = value.community_id;
+    return typeof communityId === 'string' ? communityId : null;
+  }
+  return null;
+};
+
+const isOnboardingLanguage = (value: string): value is AnswersState['language'] =>
+  ['uk', 'en', 'ru', 'es'].includes(value);
+
+const isAutonomyLevel = (value: string): value is AnswersState['autonomy_level'] =>
+  ['assistant', 'coordinator', 'supervised_admin'].includes(value);
 
 const defaultAnswers: AnswersState = {
   name: '',
@@ -326,7 +382,7 @@ export default function MicroDAOOnboarding() {
   const checkSubscription = async () => {
     if (!user) return;
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('microdao_subscriptions')
         .select('status')
         .eq('owner_user_id', user.id)
@@ -387,7 +443,7 @@ export default function MicroDAOOnboarding() {
   const [partnerMessage, setPartnerMessage] = useState('');
   const [partnerSubmitted, setPartnerSubmitted] = useState(false);
   const [selectedProgram, setSelectedProgram] = useState<AdvancedAccessProgram | null>(null);
-  const [draftSession, setDraftSession] = useState<any>(null);
+  const [draftSession, setDraftSession] = useState<DraftSetupSession | null>(null);
 
   const toggleModule = (mod: string) => {
     setAnswers(prev => {
@@ -429,7 +485,11 @@ export default function MicroDAOOnboarding() {
 
         if (error) throw error;
         if (data && data.length > 0) {
-          setDraftSession(data[0]);
+          setDraftSession({
+            id: data[0].id,
+            current_step: data[0].current_step,
+            answers: data[0].answers as Partial<AnswersState> | null,
+          });
         }
       } catch (err) {
         console.error('Error fetching draft session:', err);
@@ -461,15 +521,18 @@ export default function MicroDAOOnboarding() {
         description: t.onboardingWizard.toastJoinSuccessDesc
       });
       
-      const newCommId = (data as any).community_id;
+      const newCommId = getCommunityId(data);
+      if (!newCommId) {
+        throw new Error(t.onboardingWizard.toastJoinErrorDesc);
+      }
       setActiveCommunityId(newCommId);
       await refresh();
       navigate('/dashboard', { replace: true });
-    } catch (err: any) {
+    } catch (err) {
       toast({
         variant: "destructive",
         title: t.onboardingWizard.toastJoinErrorTitle,
-        description: err.message || t.onboardingWizard.toastJoinErrorDesc
+        description: getErrorMessage(err, t.onboardingWizard.toastJoinErrorDesc)
       });
     } finally {
       setLoading(false);
@@ -482,7 +545,7 @@ export default function MicroDAOOnboarding() {
     if (!partnerMessage.trim()) return;
     setLoading(true);
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('access_requests')
         .insert({
           user_id: user?.id,
@@ -499,11 +562,11 @@ export default function MicroDAOOnboarding() {
         title: t.onboardingWizard.toastPartnerSuccessTitle,
         description: t.onboardingWizard.toastPartnerSuccessDesc
       });
-    } catch (err: any) {
+    } catch (err) {
       toast({
         variant: "destructive",
         title: t.onboardingWizard.toastPartnerErrorTitle,
-        description: err.message
+        description: getErrorMessage(err, t.onboardingWizard.toastPartnerErrorTitle)
       });
     } finally {
       setLoading(false);
@@ -513,7 +576,7 @@ export default function MicroDAOOnboarding() {
   // Restore Draft
   const handleRestoreDraft = () => {
     if (!draftSession) return;
-    const restoredAnswers = { ...defaultAnswers, ...draftSession.answers };
+    const restoredAnswers = { ...defaultAnswers, ...(draftSession.answers || {}) };
     setAnswers(restoredAnswers);
     setSessionId(draftSession.id);
     const savedStep = parseInt(draftSession.current_step) || 1;
@@ -537,7 +600,7 @@ export default function MicroDAOOnboarding() {
           leader_id: user.id,
           current_step: step.toString(),
           status: 'draft',
-          answers: answers as any,
+          answers: toJson(answers),
           updated_at: new Date().toISOString()
         })
         .select()
@@ -551,11 +614,11 @@ export default function MicroDAOOnboarding() {
           description: t.onboardingWizard.toastDraftSavedDesc
         });
       }
-    } catch (err: any) {
+    } catch (err) {
       toast({
         variant: "destructive",
         title: t.onboardingWizard.toastDraftSaveErrorTitle,
-        description: err.message
+        description: getErrorMessage(err, t.onboardingWizard.toastDraftSaveErrorTitle)
       });
     } finally {
       setLoading(false);
@@ -614,12 +677,15 @@ export default function MicroDAOOnboarding() {
         p_values_rules: combinedRules || null,
         p_agent_name: answers.agent_name.trim(),
         p_autonomy_level: answers.autonomy_level,
-        p_setup_answers: answers as any,
+        p_setup_answers: toJson(answers),
         p_setup_session_id: sessionId || null
       });
 
       if (rpcErr) throw rpcErr;
-      const { community_id } = data as any;
+      const community_id = getCommunityId(data);
+      if (!community_id) {
+        throw new Error(t.onboardingWizard.toastCreateErrorDesc);
+      }
 
       // 2. Create custom invitation codes if specified
       if (answers.member_code) {
@@ -649,8 +715,8 @@ export default function MicroDAOOnboarding() {
       // 3. Create starter task if title is provided and conversations/projects setup is done
       // Note: We'll create a default "general" conversation for the community first if required,
       // but since project tasks require conversations, we can look up or insert a default one.
-      const { data: conv, error: convErr } = await (supabase as any)
-        .from('conversations')
+      const conversations = supabase.from('conversations') as unknown as ConversationInsertClient;
+      const { data: conv, error: convErr } = await conversations
         .insert({
           name: t.onboardingWizard.defaultChatName,
           type: 'group',
@@ -678,12 +744,12 @@ export default function MicroDAOOnboarding() {
       setActiveCommunityId(community_id);
       await refresh();
       navigate('/dashboard', { replace: true });
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error creating microdao:', err);
       toast({
         variant: "destructive",
         title: t.onboardingWizard.toastCreateErrorTitle,
-        description: err.message || t.onboardingWizard.toastCreateErrorDesc
+        description: getErrorMessage(err, t.onboardingWizard.toastCreateErrorDesc)
       });
     } finally {
       setLoading(false);
@@ -783,6 +849,63 @@ export default function MicroDAOOnboarding() {
 
             {/* Right side options */}
             <div className="lg:col-span-7 space-y-6">
+              <Card className="bg-slate-900/40 border-indigo-500/20 backdrop-blur-lg shadow-xl">
+                <CardHeader>
+                  <CardTitle className="text-lg font-bold flex items-center gap-2">
+                    <CheckCircle2 className="h-5 w-5 text-indigo-400" />
+                    <span>{t.onboardingWizard.firstUserChoicesTitle}</span>
+                  </CardTitle>
+                  <CardDescription>
+                    {t.onboardingWizard.firstUserChoicesDesc}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="rounded-lg border border-indigo-500/20 bg-indigo-500/5 p-3">
+                      <div className="flex items-center gap-2 text-sm font-semibold text-slate-100">
+                        <Plus className="h-4 w-4 text-indigo-400" />
+                        <span>{t.onboardingWizard.choiceCreateTitle}</span>
+                      </div>
+                      <p className="mt-1 text-[11px] leading-relaxed text-slate-400">
+                        {t.onboardingWizard.choiceCreateDesc}
+                      </p>
+                    </div>
+                    <div className="rounded-lg border border-purple-500/20 bg-purple-500/5 p-3">
+                      <div className="flex items-center gap-2 text-sm font-semibold text-slate-100">
+                        <Key className="h-4 w-4 text-purple-400" />
+                        <span>{t.onboardingWizard.choiceJoinTitle}</span>
+                      </div>
+                      <p className="mt-1 text-[11px] leading-relaxed text-slate-400">
+                        {t.onboardingWizard.choiceJoinDesc}
+                      </p>
+                    </div>
+                    <div className="rounded-lg border border-pink-500/20 bg-pink-500/5 p-3">
+                      <div className="flex items-center gap-2 text-sm font-semibold text-slate-100">
+                        <Users className="h-4 w-4 text-pink-400" />
+                        <span>{t.onboardingWizard.choiceApplyTitle}</span>
+                      </div>
+                      <p className="mt-1 text-[11px] leading-relaxed text-slate-400">
+                        {t.onboardingWizard.choiceApplyDesc}
+                      </p>
+                    </div>
+                    <div className="rounded-lg border border-slate-700 bg-slate-950/30 p-3">
+                      <div className="flex items-center gap-2 text-sm font-semibold text-slate-200">
+                        <Clock className="h-4 w-4 text-slate-400" />
+                        <span>{t.onboardingWizard.choiceViewTitle}</span>
+                      </div>
+                      <p className="mt-1 text-[11px] leading-relaxed text-slate-400">
+                        {t.onboardingWizard.choiceViewDesc}
+                      </p>
+                      <Button disabled variant="outline" size="sm" className="mt-3 w-full border-slate-700 text-slate-500">
+                        {t.onboardingWizard.viewDashboardLockedCta}
+                      </Button>
+                    </div>
+                  </div>
+                  <p className="rounded-lg border border-amber-500/10 bg-amber-500/5 p-3 text-[11px] leading-relaxed text-amber-200/80">
+                    {t.onboardingWizard.deviceConnectionGateNote}
+                  </p>
+                </CardContent>
+              </Card>
               
               {/* Card 1: Create Space */}
               <Card className="bg-slate-900/40 border-slate-800 backdrop-blur-lg hover:border-indigo-500/30 transition-all shadow-xl">
@@ -798,6 +921,9 @@ export default function MicroDAOOnboarding() {
                 <CardContent>
                   <p className="text-xs text-slate-400 leading-relaxed">
                     {t.onboarding.createCommunityDesc}
+                  </p>
+                  <p className="mt-3 rounded-lg border border-amber-500/10 bg-amber-500/5 p-3 text-[11px] leading-relaxed text-amber-200/80">
+                    {t.onboardingWizard.microdaoCreationGateNote}
                   </p>
                   {/* Sprint F3 — Identity Requirements Info */}
                   <div className="mt-3 space-y-2">
@@ -1166,7 +1292,11 @@ export default function MicroDAOOnboarding() {
                         <Label htmlFor="agent-lang" className="text-xs font-bold text-slate-300">{wl.agentLanguageLabel}</Label>
                         <Select 
                           value={answers.language}
-                          onValueChange={(val: any) => setAnswers(prev => ({ ...prev, language: val }))}
+                          onValueChange={(val) => {
+                            if (isOnboardingLanguage(val)) {
+                              setAnswers(prev => ({ ...prev, language: val }));
+                            }
+                          }}
                         >
                           <SelectTrigger id="agent-lang" className="bg-slate-950/80 border-slate-800">
                             <SelectValue placeholder="Мова / Language" />
@@ -1200,7 +1330,11 @@ export default function MicroDAOOnboarding() {
                         <Label className="text-xs font-bold text-slate-300">{t.onboardingWizard.autonomyLevelLabel}</Label>
                         <RadioGroup 
                           value={answers.autonomy_level} 
-                          onValueChange={(val: any) => setAnswers(prev => ({ ...prev, autonomy_level: val }))}
+                          onValueChange={(val) => {
+                            if (isAutonomyLevel(val)) {
+                              setAnswers(prev => ({ ...prev, autonomy_level: val }));
+                            }
+                          }}
                           className="grid grid-cols-1 gap-2 pt-1"
                         >
                           <div className="flex items-start gap-3 p-3 rounded-lg border border-slate-800 bg-slate-950/40 hover:bg-slate-900/20 cursor-pointer">
