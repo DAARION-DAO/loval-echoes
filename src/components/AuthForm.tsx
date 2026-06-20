@@ -495,26 +495,27 @@ export const AuthForm = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted/20 p-4">
       <div className="w-full max-w-md space-y-4">
-        {/* Temporary help banner */}
-        <div className="rounded-lg border border-accent/30 bg-accent/10 p-4 text-center space-y-2">
-          <p className="text-sm font-medium text-foreground">
-            🔑 {t.authForm.cantLoginTitle}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            {t.authForm.cantLoginDesc}
-          </p>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              setShowForgotPassword(true);
-              setActiveTab('signin');
-            }}
-          >
-            {t.authForm.btnResetPassword}
-          </Button>
-        </div>
+        {activeTab === 'signin' && (
+          <div className="rounded-lg border border-accent/30 bg-accent/10 p-4 text-center space-y-2">
+            <p className="text-sm font-medium text-foreground">
+              🔑 {t.authForm.cantLoginTitle}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {t.authForm.cantLoginDesc}
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setShowForgotPassword(true);
+                setActiveTab('signin');
+              }}
+            >
+              {t.authForm.btnResetPassword}
+            </Button>
+          </div>
+        )}
 
         <Card className="shadow-elegant">
           <CardHeader className="text-center">
@@ -628,6 +629,14 @@ export const AuthForm = () => {
             
             <TabsContent value="signup">
               <form onSubmit={handleSignUp} className="space-y-4">
+                <div className="rounded-lg border border-indigo-500/20 bg-indigo-500/10 p-3 text-left">
+                  <p className="text-sm font-semibold text-foreground">
+                    {t.authForm.signupIntroTitle}
+                  </p>
+                  <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                    {t.authForm.signupIntroDesc}
+                  </p>
+                </div>
                 <div className="space-y-2">
                   <Label htmlFor="display-name">{t.auth.displayName}</Label>
                   <Input
@@ -664,7 +673,7 @@ export const AuthForm = () => {
                 </div>
                 
                 <Button type="submit" className="w-full mt-6 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold">
-                  {loading ? t.loading : t.auth.signUp}
+                  {loading ? t.loading : t.authForm.signupSubmitCta}
                 </Button>
               </form>
             </TabsContent>
