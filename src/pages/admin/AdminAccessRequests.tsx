@@ -1,21 +1,13 @@
 import { useState, useEffect } from 'react';
 import { getAdminAccessRequests, AdminAccessRequestRow, isRlsOrSchemaError } from '@/lib/adminQueries';
-import { supabase } from '@/integrations/supabase/client';
 import { 
   ShieldAlert, 
-  Key, 
   Copy, 
   Check, 
   X, 
   HelpCircle,
   Clock,
   Mail,
-  User,
-  ExternalLink,
-  Gem,
-  Building2,
-  Shield,
-  Server,
   ArrowRight
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,19 +15,18 @@ import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/lib/i18n';
 import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
-import { useToast } from '@/hooks/use-toast';
-import { ADVANCED_ACCESS_PROGRAMS, getAdvancedProgramInfo } from '@/lib/subscriptionTypes';
+import { ADVANCED_ACCESS_PROGRAMS } from '@/lib/subscriptionTypes';
 
 export const AdminAccessRequests = () => {
   const { t, language } = useTranslation();
-  const { toast } = useToast();
   const [requests, setRequests] = useState<AdminAccessRequestRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<any>(null);
-  const [isRpc, setIsRpc] = useState(true);
-  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [error, setError] = useState<unknown>(null);
 
   const isUk = language === 'uk';
+  const accessRequestWriteCopy = isUk
+    ? 'Схвалення заявок тимчасово вимкнене до появи secure platform admin RPC. Дані можна переглядати, але не змінювати з UI.'
+    : 'Access request approval is temporarily disabled until the secure platform admin RPC is available. Requests are readable, but UI writes are blocked.';
 
   const fetchRequests = async () => {
     setLoading(true);
@@ -44,7 +35,6 @@ export const AdminAccessRequests = () => {
       setRequests(res.data);
     }
     setError(res.error);
-    setIsRpc(res.isRpc);
     setLoading(false);
   };
 
@@ -57,53 +47,6 @@ export const AdminAccessRequests = () => {
     toast({
       description: `${label} ${isUk ? 'скопійовано' : 'copied'}`,
     });
-  };
-
-  const handleUpdateStatus = async (requestId: string, status: 'approved' | 'rejected' | 'needs_info', requestedTier?: string | null) => {
-    setActionLoading(requestId);
-    try {
-      // Update the request status
-      const { error } = await (supabase as any)
-        .from('access_requests')
-        .update({ status, reviewed_at: new Date().toISOString() })
-        .eq('id', requestId);
-
-      if (error) throw error;
-
-      // On approve: attempt to set access_tier on the user's profile
-      if (status === 'approved' && requestedTier) {
-        const request = requests.find(r => r.id === requestId);
-        if (request?.user_id) {
-          const programInfo = getAdvancedProgramInfo(requestedTier);
-          const tierToSet = programInfo?.accessTierOnApprove || requestedTier;
-          try {
-            await (supabase as any)
-              .from('profiles')
-              .update({ access_tier: tierToSet })
-              .eq('id', request.user_id);
-          } catch {
-            // Profile update may fail due to RLS — non-critical
-          }
-        }
-      }
-
-      toast({
-        title: isUk ? 'Заявку оновлено' : 'Request Updated',
-        description: isUk ? `Статус встановлено: ${status}` : `Status updated to: ${status}`,
-      });
-      await fetchRequests();
-    } catch (err: any) {
-      console.warn('Direct access_requests update failed, showing read-only notification:', err);
-      toast({
-        variant: "destructive",
-        title: isUk ? 'Запис заблоковано RLS' : 'Write Blocked by RLS',
-        description: isUk 
-          ? 'Потрібно налаштувати RPC для зміни статусу заявок розширеного доступу в Sprint F2B.'
-          : 'Requires secure platform admin RPC to modify advanced access requests in Sprint F2B.',
-      });
-    } finally {
-      setActionLoading(null);
-    }
   };
 
   const getStatusBadge = (status: string | null) => {
@@ -184,6 +127,9 @@ export const AdminAccessRequests = () => {
               );
             })}
           </div>
+          <p className="mt-3 rounded-lg border border-amber-500/15 bg-amber-500/5 p-2 text-[10px] leading-relaxed text-amber-300">
+            {accessRequestWriteCopy}
+          </p>
         </CardContent>
       </Card>
 
@@ -257,8 +203,8 @@ export const AdminAccessRequests = () => {
                               size="sm"
                               variant="outline"
                               className="h-8 text-[11px] font-semibold border-emerald-500/20 hover:border-emerald-500/40 bg-emerald-500/5 hover:bg-emerald-500/10 text-emerald-400 flex items-center gap-1 px-3"
-                              onClick={() => handleUpdateStatus(req.id, 'approved', req.requested_tier)}
-                              disabled={actionLoading === req.id}
+                              disabled
+                              title={accessRequestWriteCopy}
                             >
                               <Check className="h-3.5 w-3.5" />
                               {isUk ? 'Схвалити' : 'Approve'}
@@ -268,8 +214,8 @@ export const AdminAccessRequests = () => {
                               size="sm"
                               variant="outline"
                               className="h-8 text-[11px] font-semibold border-red-500/20 hover:border-red-500/40 bg-red-500/5 hover:bg-red-500/10 text-red-400 flex items-center gap-1 px-3"
-                              onClick={() => handleUpdateStatus(req.id, 'rejected')}
-                              disabled={actionLoading === req.id}
+                              disabled
+                              title={accessRequestWriteCopy}
                             >
                               <X className="h-3.5 w-3.5" />
                               {isUk ? 'Відхилити' : 'Reject'}
@@ -279,8 +225,8 @@ export const AdminAccessRequests = () => {
                               size="sm"
                               variant="outline"
                               className="h-8 text-[11px] font-semibold border-cyan-500/20 hover:border-cyan-500/40 bg-cyan-500/5 hover:bg-cyan-500/10 text-cyan-400 flex items-center gap-1 px-3"
-                              onClick={() => handleUpdateStatus(req.id, 'needs_info')}
-                              disabled={actionLoading === req.id}
+                              disabled
+                              title={accessRequestWriteCopy}
                             >
                               <HelpCircle className="h-3.5 w-3.5" />
                               {isUk ? 'Потребує інфо' : 'Needs Info'}

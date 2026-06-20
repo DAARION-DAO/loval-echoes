@@ -58,7 +58,8 @@ const memberLocals = {
     noCommunityTitle: 'MicroDAO не вибрано',
     noCommunityDesc: 'Оберіть або створіть MicroDAO, щоб керувати її учасниками.',
     inviteTitle: 'Запрошення',
-    inviteDesc: 'Надсилайте код або посилання. Email-доставка поки не підключена.',
+    inviteDesc: 'Діліться signup-first посиланням або кодом вручну. Email-доставка поки не підключена.',
+    inviteSignupNote: 'Посилання відкриває реєстрацію для нових користувачів і повертає їх до цього inviteCode після входу.',
     memberInvite: 'Код учасника',
     adminInvite: 'Код адміністратора',
     noActiveCode: 'Активного коду немає',
@@ -105,7 +106,8 @@ const memberLocals = {
     noCommunityTitle: 'No MicroDAO selected',
     noCommunityDesc: 'Select or create a MicroDAO to manage its members.',
     inviteTitle: 'Invites',
-    inviteDesc: 'Share a code or link. Email delivery is not connected yet.',
+    inviteDesc: 'Share the signup-first link or code manually. Email delivery is not connected yet.',
+    inviteSignupNote: 'The link opens signup for new users and returns them to this inviteCode after authentication.',
     memberInvite: 'Member code',
     adminInvite: 'Admin code',
     noActiveCode: 'No active code',
@@ -152,7 +154,8 @@ const memberLocals = {
     noCommunityTitle: 'MicroDAO не выбрана',
     noCommunityDesc: 'Выберите или создайте MicroDAO, чтобы управлять участниками.',
     inviteTitle: 'Приглашения',
-    inviteDesc: 'Отправляйте код или ссылку. Email-доставка пока не подключена.',
+    inviteDesc: 'Отправляйте signup-first ссылку или код вручную. Email-доставка пока не подключена.',
+    inviteSignupNote: 'Ссылка открывает регистрацию для новых пользователей и возвращает их к этому inviteCode после входа.',
     memberInvite: 'Код участника',
     adminInvite: 'Код администратора',
     noActiveCode: 'Активного кода нет',
@@ -199,7 +202,8 @@ const memberLocals = {
     noCommunityTitle: 'No hay MicroDAO seleccionada',
     noCommunityDesc: 'Selecciona o crea una MicroDAO para gestionar sus miembros.',
     inviteTitle: 'Invitaciones',
-    inviteDesc: 'Comparte un código o enlace. El envío por email aún no está conectado.',
+    inviteDesc: 'Comparte manualmente el enlace signup-first o el código. El envío por email aún no está conectado.',
+    inviteSignupNote: 'El enlace abre el registro para nuevos usuarios y los devuelve a este inviteCode después de autenticarse.',
     memberInvite: 'Código de miembro',
     adminInvite: 'Código de administrador',
     noActiveCode: 'Sin código activo',
@@ -282,11 +286,11 @@ export const Participants = () => {
       ]);
       setMembers(loadedMembers);
       setInviteCodes(loadedCodes);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error loading community members:', error);
       toast({
         title: t.error,
-        description: error?.message || l.loadError,
+        description: l.loadError,
         variant: 'destructive',
       });
     } finally {
@@ -329,10 +333,10 @@ export const Participants = () => {
     try {
       await navigator.clipboard.writeText(value);
       toast({ title: l.copied });
-    } catch (error: any) {
+    } catch {
       toast({
         title: t.error,
-        description: error?.message || l.loadError,
+        description: l.loadError,
         variant: 'destructive',
       });
     }
@@ -348,8 +352,8 @@ export const Participants = () => {
           url,
         });
         return;
-      } catch (error: any) {
-        if (error?.name === 'AbortError') return;
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') return;
       }
     }
     await copyText(url);
@@ -376,10 +380,10 @@ export const Participants = () => {
         title: t.success,
         description: l.inviteUpdated,
       });
-    } catch (error: any) {
+    } catch {
       toast({
         title: t.error,
-        description: error?.message || l.loadError,
+        description: l.loadError,
         variant: 'destructive',
       });
     } finally {
@@ -398,10 +402,10 @@ export const Participants = () => {
         title: t.success,
         description: l.roleUpdated,
       });
-    } catch (error: any) {
+    } catch {
       toast({
         title: t.error,
-        description: error?.message || l.loadError,
+        description: l.loadError,
         variant: 'destructive',
       });
     } finally {
@@ -420,10 +424,10 @@ export const Participants = () => {
         title: t.success,
         description: l.memberRemoved,
       });
-    } catch (error: any) {
+    } catch {
       toast({
         title: t.error,
-        description: error?.message || l.loadError,
+        description: l.loadError,
         variant: 'destructive',
       });
     } finally {
@@ -474,9 +478,12 @@ export const Participants = () => {
             {invite?.code || l.noActiveCode}
           </div>
           {invite && (
-            <div className="flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
-              <span>{l.copyLink}: {url.replace(/^https?:\/\//, '')}</span>
-              <span>{invite.used_count ?? 0}/{invite.max_uses ?? '∞'}</span>
+            <div className="space-y-1 text-[11px] text-muted-foreground">
+              <div className="flex items-center justify-between gap-2">
+                <span>{l.copyLink}: {url.replace(/^https?:\/\//, '')}</span>
+                <span>{invite.used_count ?? 0}/{invite.max_uses ?? '∞'}</span>
+              </div>
+              <p className="leading-relaxed">{l.inviteSignupNote}</p>
             </div>
           )}
           <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">

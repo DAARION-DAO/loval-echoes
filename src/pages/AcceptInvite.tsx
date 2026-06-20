@@ -8,6 +8,30 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Shield, CheckCircle, AlertTriangle, LogIn, Loader2 } from 'lucide-react';
 
+const getGuardianAcceptFailureCopy = (message?: string) => {
+  const normalized = (message || '').toLowerCase();
+  if (
+    normalized.includes('gen_random_bytes') ||
+    normalized.includes('pgcrypto') ||
+    normalized.includes('function') ||
+    normalized.includes('does not exist') ||
+    normalized.includes('permission denied') ||
+    normalized.includes('row-level security')
+  ) {
+    return 'Guardian invitations are not fully activated yet. Please ask a platform Guardian to verify invite setup before trying again.';
+  }
+  return 'The invitation could not be accepted. Make sure the invitation is active and that you are using the email address that received it.';
+};
+
+const getErrorMessage = (error: unknown) => {
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'object' && error !== null && 'message' in error) {
+    const message = (error as { message?: unknown }).message;
+    return typeof message === 'string' ? message : undefined;
+  }
+  return undefined;
+};
+
 export default function AcceptInvite() {
   const { t } = useTranslation();
   const { toast } = useToast();
@@ -32,7 +56,7 @@ export default function AcceptInvite() {
     setSubmitting(true);
     setErrorMsg(null);
     try {
-      const { error } = await (supabase as any).rpc('accept_platform_admin_invite', {
+      const { error } = await supabase.rpc('accept_platform_admin_invite', {
         p_invite_token: token
       });
 
@@ -48,12 +72,13 @@ export default function AcceptInvite() {
       setTimeout(() => {
         navigate('/admin/team');
       }, 2000);
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Failed to accept invitation. Make sure the invitation is valid and matches your signed-in email address.');
+    } catch (err) {
+      const safeMessage = getGuardianAcceptFailureCopy(getErrorMessage(err));
+      setErrorMsg(safeMessage);
       toast({
         variant: 'destructive',
-        title: 'Error',
-        description: err.message
+        title: 'Guardian invitation unavailable',
+        description: safeMessage,
       });
     } finally {
       setSubmitting(false);
@@ -75,7 +100,7 @@ export default function AcceptInvite() {
           </CardHeader>
           <CardContent className="flex justify-center pb-6">
             <Button 
-              onClick={() => navigate(`/auth?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`)}
+              onClick={() => navigate(`/auth?signup=true&redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`)}
               className="bg-indigo-600 hover:bg-indigo-550 text-indigo-100 font-semibold gap-1.5 h-10 px-6"
             >
               <LogIn className="h-4 w-4" />

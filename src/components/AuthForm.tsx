@@ -14,6 +14,14 @@ import { useRememberMe } from '@/hooks/useRememberMe';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
+const getSafeInternalRedirect = (value: string | null) => {
+  if (!value) return '/';
+  const trimmed = value.trim();
+  if (!trimmed.startsWith('/') || trimmed.startsWith('//') || trimmed.startsWith('/auth')) {
+    return '/';
+  }
+  return trimmed;
+};
 
 export const AuthForm = () => {
   const { t } = useTranslation();
@@ -23,6 +31,7 @@ export const AuthForm = () => {
   const { user } = useAuth();
   const { saveCredentials, getSavedEmail, isRemembered, attemptAutoLogin } = useRememberMe();
   const requestedAuthTab = searchParams.get('signup') === 'true' ? 'signup' : 'signin';
+  const redirectTarget = getSafeInternalRedirect(searchParams.get('redirect'));
   
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
@@ -61,7 +70,7 @@ export const AuthForm = () => {
       normalized.includes('повідомл') ||
       normalized.includes('сообщен');
 
-    return isQuotaOrLimitError ? t.onboarding.errorLimitDesc : message;
+    return isQuotaOrLimitError ? t.onboarding.errorLimitDesc : t.authForm.regErrorDesc;
   };
 
   // Initialize form with saved email if remembered
@@ -78,21 +87,21 @@ export const AuthForm = () => {
     (async () => {
       const restored = await attemptAutoLogin();
       if (restored && active) {
-        navigate('/', { replace: true });
+        navigate(redirectTarget, { replace: true });
       }
     })();
     return () => {
       active = false;
     };
-  }, []);
+  }, [navigate, redirectTarget]);
 
   // Redirect if user is already logged in
   useEffect(() => {
     if (user) {
-      console.log('User detected in AuthForm, redirecting to home');
-      navigate('/', { replace: true });
+      console.log('User detected in AuthForm, redirecting to destination');
+      navigate(redirectTarget, { replace: true });
     }
-  }, [user, navigate]);
+  }, [user, navigate, redirectTarget]);
 
   // Check for password reset mode on mount
   useEffect(() => {
@@ -154,7 +163,7 @@ export const AuthForm = () => {
 
     setLoading(true);
     try {
-      const redirectUrl = `${window.location.origin}/`;
+      const redirectUrl = `${window.location.origin}${redirectTarget}`;
       const { data, error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -196,6 +205,7 @@ export const AuthForm = () => {
           title: t.authForm.welcomeTitle,
           description: t.authForm.welcomeDesc,
         });
+        navigate(redirectTarget, { replace: true });
       }
     } catch (error) {
       toast({
@@ -253,7 +263,7 @@ export const AuthForm = () => {
 
         toast({
           title: t.authForm.loginErrorTitle,
-          description: error.message,
+          description: t.authForm.loginErrorDesc,
           variant: 'destructive',
         });
         return;
@@ -267,6 +277,7 @@ export const AuthForm = () => {
           title: t.authForm.welcomeTitle,
           description: t.authForm.welcomeLoginDesc,
         });
+        navigate(redirectTarget, { replace: true });
       }
 
     } catch (error) {
@@ -304,7 +315,7 @@ export const AuthForm = () => {
       if (error) {
         toast({
           title: t.error,
-          description: error.message,
+          description: t.authForm.resendConfirmErrorDesc,
           variant: 'destructive',
         });
       } else {
@@ -343,7 +354,7 @@ export const AuthForm = () => {
       if (error) {
         toast({
           title: t.error,
-          description: error.message,
+          description: t.authForm.forgotPasswordErrorDesc,
           variant: 'destructive',
         });
       } else {
@@ -404,7 +415,7 @@ export const AuthForm = () => {
         console.error('Password update error:', error);
         toast({
           title: t.authForm.updatePasswordErrorTitle,
-          description: error.message,
+          description: t.authForm.updatePasswordErrorDesc,
           variant: 'destructive',
         });
       } else {

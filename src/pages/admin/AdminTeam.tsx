@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Users, UserPlus, ShieldAlert, Copy, RefreshCw, Trash2, Check, ExternalLink } from 'lucide-react';
+import { Users, UserPlus, ShieldAlert, Copy, RefreshCw, Trash2, Check } from 'lucide-react';
 import { getPublicSiteUrl } from '@/lib/publicUrl';
 
 interface GuardianProfile {
@@ -28,6 +28,34 @@ interface AdminInvite {
   accepted_at: string | null;
 }
 
+const guardianInviteSetupCopy =
+  'Guardian invite creation is temporarily unavailable until the database invite RPC and pgcrypto readiness are confirmed.';
+
+const guardianInviteUnavailableCopy =
+  'Guardian invite action is unavailable right now. Existing team data remains read-only.';
+
+const isGuardianInviteSetupError = (message?: string) => {
+  const normalized = (message || '').toLowerCase();
+  return (
+    normalized.includes('gen_random_bytes') ||
+    normalized.includes('pgcrypto') ||
+    normalized.includes('does not exist') ||
+    normalized.includes('function') ||
+    normalized.includes('platform_admin_invites') ||
+    normalized.includes('permission denied') ||
+    normalized.includes('row-level security')
+  );
+};
+
+const getErrorMessage = (error: unknown) => {
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'object' && error !== null && 'message' in error) {
+    const message = (error as { message?: unknown }).message;
+    return typeof message === 'string' ? message : undefined;
+  }
+  return undefined;
+};
+
 export default function AdminTeam() {
   const { t } = useTranslation();
   const { toast } = useToast();
@@ -37,6 +65,7 @@ export default function AdminTeam() {
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [inviteCreationBlocked, setInviteCreationBlocked] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -55,7 +84,7 @@ export default function AdminTeam() {
       setGuardians(gData || []);
 
       // Load invites
-      const { data: iData, error: iError } = await (supabase as any)
+      const { data: iData, error: iError } = await supabase
         .from('platform_admin_invites')
         .select('*')
         .order('created_at', { ascending: false });
@@ -63,15 +92,19 @@ export default function AdminTeam() {
       if (iError) {
         // If table doesn't exist yet (migration not applied to remote), set empty array
         console.warn('Invites table fetch error (likely migration not applied yet):', iError);
+        if (isGuardianInviteSetupError(iError.message)) {
+          setInviteCreationBlocked(true);
+        }
         setInvites([]);
       } else {
         setInvites((iData as AdminInvite[]) || []);
       }
-    } catch (err: any) {
+    } catch (err) {
+      const message = getErrorMessage(err);
       toast({
         variant: 'destructive',
-        title: 'Error loading data',
-        description: err.message
+        title: 'Guardian team unavailable',
+        description: isGuardianInviteSetupError(message) ? guardianInviteSetupCopy : guardianInviteUnavailableCopy,
       });
     } finally {
       setLoading(false);
@@ -84,7 +117,7 @@ export default function AdminTeam() {
 
     setSubmitting(true);
     try {
-      const { data, error } = await (supabase as any).rpc('admin_create_platform_admin_invite', {
+      const { error } = await supabase.rpc('admin_create_platform_admin_invite', {
         invited_email: email.trim().toLowerCase(),
         invited_role: 'guardian'
       });
@@ -98,11 +131,15 @@ export default function AdminTeam() {
 
       setEmail('');
       loadData();
-    } catch (err: any) {
+    } catch (err) {
+      const setupBlocked = isGuardianInviteSetupError(getErrorMessage(err));
+      if (setupBlocked) {
+        setInviteCreationBlocked(true);
+      }
       toast({
         variant: 'destructive',
-        title: 'Failed to create invite',
-        description: err.message
+        title: setupBlocked ? 'Guardian invite setup required' : 'Guardian invite unavailable',
+        description: setupBlocked ? guardianInviteSetupCopy : guardianInviteUnavailableCopy,
       });
     } finally {
       setSubmitting(false);
@@ -111,7 +148,7 @@ export default function AdminTeam() {
 
   const handleRevokeInvite = async (inviteId: string) => {
     try {
-      const { error } = await (supabase as any).rpc('admin_revoke_platform_admin_invite', {
+      const { error } = await supabase.rpc('admin_revoke_platform_admin_invite', {
         invite_id: inviteId
       });
 
@@ -122,11 +159,11 @@ export default function AdminTeam() {
       });
 
       loadData();
-    } catch (err: any) {
+    } catch (err) {
       toast({
         variant: 'destructive',
-        title: 'Failed to revoke invite',
-        description: err.message
+        title: 'Guardian invite action unavailable',
+        description: isGuardianInviteSetupError(getErrorMessage(err)) ? guardianInviteSetupCopy : guardianInviteUnavailableCopy,
       });
     }
   };
@@ -188,6 +225,11 @@ export default function AdminTeam() {
               </CardDescription>
             </CardHeader>
             <CardContent>
+              {inviteCreationBlocked && (
+                <div className="mb-4 rounded-lg border border-amber-500/20 bg-amber-500/5 p-3 text-[11px] leading-relaxed text-amber-300">
+                  {guardianInviteSetupCopy}
+                </div>
+              )}
               <form onSubmit={handleCreateInvite} className="space-y-4">
                 <div className="space-y-2">
                   <label className="text-xs text-slate-350">{t.pricingExtra.guardianEmail}</label>
@@ -202,10 +244,10 @@ export default function AdminTeam() {
                 </div>
                 <Button 
                   type="submit" 
-                  disabled={submitting || !email}
+                  disabled={submitting || !email || inviteCreationBlocked}
                   className="w-full h-10 bg-indigo-600 hover:bg-indigo-550 text-indigo-100 font-semibold text-xs border border-indigo-500/30"
                 >
-                  {t.pricingExtra.createInvite}
+                  {inviteCreationBlocked ? 'Setup required' : t.pricingExtra.createInvite}
                 </Button>
               </form>
             </CardContent>
