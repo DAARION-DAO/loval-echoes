@@ -458,7 +458,10 @@ export default function MicroDAOOnboarding() {
   useEffect(() => {
     if (!user) {
       const redirect = `${window.location.pathname}${window.location.search}`;
-      navigate(`/auth?redirect=${encodeURIComponent(redirect)}`, { replace: true });
+      const authPath = inviteCodeParam
+        ? `/auth?signup=true&redirect=${encodeURIComponent(redirect)}`
+        : `/auth?redirect=${encodeURIComponent(redirect)}`;
+      navigate(authPath, { replace: true });
     } else if (memberships.length > 0 && !inviteCodeParam) {
       navigate('/dashboard', { replace: true });
     }
@@ -529,10 +532,11 @@ export default function MicroDAOOnboarding() {
       await refresh();
       navigate('/dashboard', { replace: true });
     } catch (err) {
+      console.warn('Invite-code join failed:', err);
       toast({
         variant: "destructive",
         title: t.onboardingWizard.toastJoinErrorTitle,
-        description: getErrorMessage(err, t.onboardingWizard.toastJoinErrorDesc)
+        description: t.onboardingWizard.toastJoinErrorDesc
       });
     } finally {
       setLoading(false);

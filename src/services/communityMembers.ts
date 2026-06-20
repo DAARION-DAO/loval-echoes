@@ -48,8 +48,11 @@ export const buildInviteCode = (communityName: string, role: InviteRole) =>
 
 import { getPublicSiteUrl } from '@/lib/publicUrl';
 
+export const buildInviteRedirectPath = (code: string) =>
+  `/onboarding?inviteCode=${encodeURIComponent(code)}`;
+
 export const buildInviteUrl = (code: string, origin = getPublicSiteUrl()) =>
-  `${origin}/onboarding?inviteCode=${encodeURIComponent(code)}`;
+  `${origin}/auth?signup=true&redirect=${encodeURIComponent(buildInviteRedirectPath(code))}`;
 
 export async function loadCommunityMembers(communityId: string): Promise<CommunityMemberView[]> {
   const { data: rows, error } = await supabase

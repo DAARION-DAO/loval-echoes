@@ -30,8 +30,7 @@ export const AdminUsers = () => {
   const { toast } = useToast();
   const [users, setUsers] = useState<AdminUserRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<any>(null);
-  const [isRpc, setIsRpc] = useState(true);
+  const [error, setError] = useState<unknown>(null);
   
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilter, setActiveFilter] = useState<'all' | 'guardian' | 'approved' | 'pending' | 'rejected'>('all');
@@ -46,7 +45,6 @@ export const AdminUsers = () => {
       setUsers(res.data);
     }
     setError(res.error);
-    setIsRpc(res.isRpc);
     setLoading(false);
   };
 
@@ -81,12 +79,14 @@ export const AdminUsers = () => {
       
       // Reload user lists
       await fetchUsers();
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error changing approval status:', err);
       toast({
         variant: "destructive",
         title: isUk ? 'Помилка оновлення' : 'Update Failed',
-        description: err.message || (isUk ? 'Не вдалося виконати операцію' : 'Failed to perform operation'),
+        description: isUk
+          ? 'Дію тимчасово заблоковано, доки secure admin RPC не буде підтверджено в цьому середовищі.'
+          : 'This action is temporarily blocked until the secure admin RPC is confirmed in this environment.',
       });
     } finally {
       setActionLoading(null);
@@ -243,7 +243,7 @@ export const AdminUsers = () => {
                                 <span className="cursor-help">{getRoleBadge(user.role)}</span>
                               </TooltipTrigger>
                               <TooltipContent className="bg-slate-900 border border-slate-800 text-[10px] text-slate-400">
-                                {isUk ? 'Потребує RPC у F2B для зміни ролі' : 'Requires RPC in F2B to modify platform role'}
+                                {isUk ? 'Зміна платформної ролі вимкнена до підтвердження secure admin RPC.' : 'Platform role changes are disabled until the secure admin RPC is confirmed.'}
                               </TooltipContent>
                             </Tooltip>
                           </TooltipProvider>
@@ -259,7 +259,7 @@ export const AdminUsers = () => {
                                 </span>
                               </TooltipTrigger>
                               <TooltipContent className="bg-slate-900 border border-slate-800 text-[10px] text-slate-400">
-                                {isUk ? 'Потребує RPC у F2B для зміни ліміту' : 'Requires RPC in F2B to modify access tier'}
+                                {isUk ? 'Зміна рівня доступу вимкнена до підтвердження secure admin RPC.' : 'Access tier changes are disabled until the secure admin RPC is confirmed.'}
                               </TooltipContent>
                             </Tooltip>
                           </TooltipProvider>
@@ -299,14 +299,15 @@ export const AdminUsers = () => {
                                     size="icon"
                                     variant="outline"
                                     className="h-7 w-7 border-slate-800 text-slate-500 hover:text-slate-400 cursor-not-allowed opacity-50"
+                                    disabled
                                   >
                                     <Info className="h-3.5 w-3.5" />
                                   </Button>
                                 </TooltipTrigger>
                                 <TooltipContent className="bg-slate-900 border border-slate-800 text-[10px] text-slate-400">
                                   {isUk 
-                                    ? 'Зміна ролі чи білінгу відключена (Потребує RPC у F2B)' 
-                                    : 'Role/Tier editing is disabled (Needs RPC in F2B)'}
+                                    ? 'Зміна ролі, рівня доступу чи білінгу вимкнена до підтвердження secure admin RPC.'
+                                    : 'Role, access-tier, and billing edits are disabled until the secure admin RPC is confirmed.'}
                                 </TooltipContent>
                               </Tooltip>
                             </TooltipProvider>
