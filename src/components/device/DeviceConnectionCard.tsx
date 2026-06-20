@@ -42,6 +42,7 @@ interface DeviceConnectionCardProps {
     inviteReady: string;
     dashboardAvailable: string;
     primaryCta: string;
+    setupRequiredCta: string;
     continueSetupCta: string;
     refreshCta: string;
     copyCodeCta: string;
@@ -108,6 +109,13 @@ function unavailableStatus(
   };
 }
 
+function isSetupRequiredStatus(status: DeviceConnectionStatusView | null) {
+  return (
+    status?.backend_profile_configured === false ||
+    status?.next_action === 'wait_for_backend_profile'
+  );
+}
+
 export function DeviceConnectionCard({
   userId,
   communityId,
@@ -124,8 +132,8 @@ export function DeviceConnectionCard({
   const hasContext = Boolean(userId && communityId && communityName);
   const pairingCode = status?.pairing_code || null;
   const expiresAt = useMemo(() => formatExpiry(status?.expires_at), [status?.expires_at]);
-  const backendNotConfigured = status?.backend_profile_configured === false;
-  const blocked = status?.dashboard_state === 'blocked' || backendNotConfigured;
+  const setupRequired = isSetupRequiredStatus(status);
+  const blocked = status?.dashboard_state === 'blocked' || setupRequired;
 
   const loadStatus = async () => {
     if (!communityId) return;
@@ -202,7 +210,9 @@ export function DeviceConnectionCard({
         return;
       }
 
-      const message = nextStatus.message || labels.backendNotConfigured;
+      const message = isSetupRequiredStatus(nextStatus)
+        ? labels.backendNotConfigured
+        : nextStatus.message || labels.backendNotConfigured;
       setError(message);
       toast({
         title: labels.createError,
@@ -240,10 +250,9 @@ export function DeviceConnectionCard({
   const busy = loading || creating;
   const canPrepare = hasContext && !busy && !blocked;
   const badgeLabel = statusLabel(status, loading, labels);
-  const connectionMessage =
-    error ||
-    status?.message ||
-    (backendNotConfigured ? labels.backendNotConfigured : labels.helper);
+  const connectionMessage = setupRequired
+    ? labels.backendNotConfigured
+    : error || status?.message || labels.helper;
 
   return (
     <Card className="border-emerald-500/25 bg-emerald-950/10 backdrop-blur-lg shadow-elegant relative overflow-hidden text-left">
@@ -344,7 +353,7 @@ export function DeviceConnectionCard({
               className="h-10 gap-2 bg-emerald-600 text-white hover:bg-emerald-500"
             >
               {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}
-              {pairingCode ? labels.continueSetupCta : labels.primaryCta}
+              {blocked ? labels.setupRequiredCta : pairingCode ? labels.continueSetupCta : labels.primaryCta}
             </Button>
           </div>
         </div>
