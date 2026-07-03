@@ -29,7 +29,7 @@
 | --- | --- | --- | --- | --- |
 | **High** | `supabase/migrations/*` (історичні міграції) | Зміна історичних міграційних файлів для локального запуску | Помилка збірки та деплою при пуші міграцій на продакшн (`checksum mismatch`) | Відновити оригінальний стан історичних міграцій та винести необхідні виправлення у нові forward-only міграції. |
 | **High** | `supabase/migrations/20260525000000_add_advanced_chat_features.sql` | Була відсутня RLS політика на вставку (`INSERT`) для бакета `voice-messages` | Користувачі отримуватимуть помилку `Permission Denied` при спробі завантаження аудіофайлів | Додати політики RLS для сховища (`storage.objects`). *(Виправлено під час аудиту)* |
-| **Medium** | `supabase/functions/push-send/index.ts` | Локальний хардкоджений ключ `loval-echoes-internal-key-2026` для обходу JWT | Можливість несанкціонованого надсилання пушів у разі компрометації ключа | Вимкнути локальний ключ-заглушку в середовищі production. *(Виправлено під час аудиту)* |
+| **Medium** | `supabase/functions/push-send/index.ts` | Історичний локальний хардкоджений ключ для обходу JWT | Можливість несанкціонованого надсилання пушів у разі компрометації ключа | Локальний ключ-заглушку видалено; системна авторизація має використовувати лише секрет з env. |
 
 ---
 
@@ -107,15 +107,15 @@ sequenceDiagram
    ```
    *Результат*: Успішно зібрано дистрибутив у папку `dist/`.
 3. **Edge Function System Auth Test**:
-   Надіслано тестовий HTTP запит через `pg_net` з внутрішнім API-ключем авторизації:
+   Історично надсилався тестовий HTTP запит через `pg_net` з внутрішнім API-ключем авторизації. Хардкоджений fallback-ключ більше не є валідним шляхом авторизації; системна авторизація має використовувати секрет з env.
    ```sql
    SELECT net.http_post(
      url := 'http://supabase_kong_pbsdsdexayzfoexjdlgb:8000/functions/v1/push-send',
-     headers := '{"Content-Type": "application/json", "apikey": "sb_anon_key_placeholder", "Authorization": "Bearer loval-echoes-internal-key-2026"}'::jsonb,
+     headers := '{"Content-Type": "application/json", "apikey": "sb_anon_key_placeholder", "Authorization": "Bearer [redacted-env-secret]"}'::jsonb,
      body := '{"title": "Test Title", "body": "Test Body"}'::jsonb
    );
    ```
-   *Результат*: Повернено статус `200` з тілом `{"success":true,"sent":0,"message":"No subscriptions found"}`. Обхід JWT та системна авторизація працюють коректно.
+   *Результат*: Історичний тест повертав статус `200` з тілом `{"success":true,"sent":0,"message":"No subscriptions found"}`. Після hardening цей шлях потребує налаштованого `INTERNAL_API_KEY` або service-role secret в env.
 
 ---
 
@@ -199,4 +199,3 @@ To support local database bootstrapping (`supabase db reset`) from scratch witho
 
 ### Final Verdict
 - **Status**: `READY`
-

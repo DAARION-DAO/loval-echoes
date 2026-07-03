@@ -1,7 +1,26 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
 import { handleCors } from '../_shared/cors.ts';
+import {
+  createServiceClient,
+  jsonResponse,
+  requireAuthenticatedUser,
+  resolveAccessibleKnowledgeFileIds,
+} from '../_shared/auth.ts';
+
+type MatchedChunk = {
+  id: string;
+  file_id: string;
+  content: string;
+  metadata?: unknown;
+  similarity: number;
+};
+
+type SourceFile = {
+  id: string;
+  name: string;
+  storage_path: string;
+};
 
 // Lovable AI Gateway embedding helper (OpenAI-compatible).
 async function generateEmbedding(queryText: string, apiKey: string): Promise<number[]> {
@@ -41,13 +60,9 @@ serve(async (req) => {
     });
   }
 
-  // Auth header verification
-  const authHeader = req.headers.get('Authorization') || req.headers.get('authorization');
-  if (!authHeader) {
-    return new Response(JSON.stringify({ error: 'Unauthorized: Missing Authorization header' }), {
-      status: 401,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+  const auth = await requireAuthenticatedUser(req, corsHeaders);
+  if (auth instanceof Response) {
+    return auth;
   }
 
   try {
@@ -59,8 +74,6 @@ serve(async (req) => {
       });
     }
 
-    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
-    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
     const lovableApiKey = Deno.env.get('LOVABLE_API_KEY') ?? '';
 
     if (!lovableApiKey) {
@@ -70,20 +83,39 @@ serve(async (req) => {
       });
     }
 
-    // Create client
-    const supabase = createClient(supabaseUrl, serviceRoleKey);
+    const requestedFileIds = Array.isArray(fileIds)
+      ? fileIds.filter((id): id is string => typeof id === 'string' && id.length > 0)
+      : null;
+
+    const accessibleFileIds = await resolveAccessibleKnowledgeFileIds(
+      auth.userClient,
+      requestedFileIds,
+      corsHeaders,
+    );
+    if (accessibleFileIds instanceof Response) {
+      return accessibleFileIds;
+    }
+
+    if (accessibleFileIds.length === 0) {
+      return jsonResponse({ success: true, results: [] }, 200, corsHeaders);
+    }
+
+    const supabase = createServiceClient(corsHeaders);
+    if (supabase instanceof Response) {
+      return supabase;
+    }
 
     // 1. Generate embedding for query
     console.log(`[rag-search] Generating embedding for query: "${query.substring(0, 50)}..."`);
     const queryEmbedding = await generateEmbedding(query, lovableApiKey);
 
     // 2. Query database for similar chunks
-    console.log(`[rag-search] Searching similar chunks (threshold: ${matchThreshold}, count: ${matchCount}, filter_file_ids: ${fileIds || 'all'})`);
+    console.log(`[rag-search] Searching similar chunks (threshold: ${matchThreshold}, count: ${matchCount}, authorized_file_count: ${accessibleFileIds.length})`);
     const { data: chunks, error: matchError } = await supabase.rpc('match_document_chunks', {
       query_embedding: queryEmbedding,
       match_threshold: matchThreshold,
       match_count: matchCount,
-      filter_file_ids: fileIds || null
+      filter_file_ids: accessibleFileIds
     });
 
     if (matchError) {
@@ -99,17 +131,19 @@ serve(async (req) => {
     // 3. Fetch file names for the matching chunks to return rich sources metadata
     const responseData = [];
     if (chunks && chunks.length > 0) {
+      const matchedChunks = chunks as MatchedChunk[];
       // Get unique file IDs from matches
-      const matchedFileIds = [...new Set(chunks.map((c: any) => c.file_id))];
+      const matchedFileIds = [...new Set(matchedChunks.map((chunk) => chunk.file_id))];
       
       const { data: files } = await supabase
         .from('files')
         .select('id, name, storage_path')
         .in('id', matchedFileIds);
 
-      const filesMap = new Map((files || []).map(f => [f.id, f]));
+      const sourceFiles = (files ?? []) as SourceFile[];
+      const filesMap = new Map(sourceFiles.map((file) => [file.id, file]));
 
-      for (const chunk of chunks) {
+      for (const chunk of matchedChunks) {
         const fileInfo = filesMap.get(chunk.file_id);
         responseData.push({
           id: chunk.id,
