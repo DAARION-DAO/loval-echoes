@@ -1,9 +1,33 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
 import { handleCors } from '../_shared/cors.ts';
+import {
+  createServiceClient,
+  requireAuthenticatedUser,
+  requireConversationAccess,
+  resolveAccessibleKnowledgeFileIds,
+} from '../_shared/auth.ts';
 
 const DEFAULT_CHAT_COMPLETION_MODEL = 'openai/gpt-5-mini';
+
+type ChatMessageRow = {
+  content: string;
+  role: string;
+  parent_id?: string | null;
+};
+
+type MatchedChunk = {
+  id: string;
+  file_id: string;
+  content: string;
+  metadata?: unknown;
+  similarity: number;
+};
+
+type SourceFile = {
+  id: string;
+  name: string;
+};
 
 class LovableProviderError extends Error {
   status: number;
@@ -108,10 +132,9 @@ serve(async (req) => {
     return createJsonResponse({ error: 'Method not allowed' }, 405, corsHeaders);
   }
 
-  // Auth header verification
-  const authHeader = req.headers.get('Authorization') || req.headers.get('authorization');
-  if (!authHeader) {
-    return createJsonResponse({ error: 'Unauthorized: Missing Authorization header' }, 401, corsHeaders);
+  const auth = await requireAuthenticatedUser(req, corsHeaders);
+  if (auth instanceof Response) {
+    return auth;
   }
 
   try {
@@ -120,16 +143,27 @@ serve(async (req) => {
       return createJsonResponse({ error: 'Missing chatId in request' }, 400, corsHeaders);
     }
 
-    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
-    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
     const lovableApiKey = Deno.env.get('LOVABLE_API_KEY') ?? '';
 
     if (!lovableApiKey) {
       return createJsonResponse({ error: 'Missing LOVABLE_API_KEY on server' }, 500, corsHeaders);
     }
 
+    const conversationAccess = await requireConversationAccess(
+      auth.userClient,
+      auth.user.id,
+      chatId,
+      corsHeaders,
+    );
+    if (conversationAccess instanceof Response) {
+      return conversationAccess;
+    }
+
     // Create client
-    const supabase = createClient(supabaseUrl, serviceRoleKey);
+    const supabase = createServiceClient(corsHeaders);
+    if (supabase instanceof Response) {
+      return supabase;
+    }
 
     // 1. Fetch chat history (last 10 messages)
     const { data: history, error: historyError } = await supabase
@@ -144,12 +178,14 @@ serve(async (req) => {
       return createJsonResponse({ error: 'Failed to fetch chat history' }, 500, corsHeaders);
     }
 
-    if (!history || history.length === 0) {
+    const chatHistory = (history ?? []) as ChatMessageRow[];
+
+    if (chatHistory.length === 0) {
       return createJsonResponse({ error: 'No messages in this chat yet' }, 400, corsHeaders);
     }
 
     // Identify last message (must be from user)
-    const lastUserMessage = history[history.length - 1];
+    const lastUserMessage = chatHistory[chatHistory.length - 1];
     if (lastUserMessage.role !== 'user') {
       return createJsonResponse({ error: 'Last message in chat is not from user. Awaiting user input.' }, 400, corsHeaders);
     }
@@ -161,41 +197,56 @@ serve(async (req) => {
     if (useRag) {
       console.log(`[ai-agent-chat] Initiating RAG search for query: "${lastUserMessage.content.substring(0, 50)}..."`);
       try {
-        const queryEmbedding = await generateEmbedding(lastUserMessage.content, lovableApiKey);
-        
-        const { data: chunks, error: matchError } = await supabase.rpc('match_document_chunks', {
-          query_embedding: queryEmbedding,
-          match_threshold: 0.3,
-          match_count: 5,
-          filter_file_ids: null
-        });
+        const accessibleFileIds = await resolveAccessibleKnowledgeFileIds(
+          auth.userClient,
+          null,
+          corsHeaders,
+        );
+        if (accessibleFileIds instanceof Response) {
+          return accessibleFileIds;
+        }
 
-        if (matchError) {
-          console.error('[ai-agent-chat] match_document_chunks RPC failed:', matchError);
-        } else if (chunks && chunks.length > 0) {
-          // Fetch file names
-          const matchedFileIds = [...new Set(chunks.map((c: any) => c.file_id))];
-          const { data: files } = await supabase
-            .from('files')
-            .select('id, name')
-            .in('id', matchedFileIds);
+        if (accessibleFileIds.length === 0) {
+          console.log('[ai-agent-chat] No accessible knowledge-base files for authenticated user');
+        } else {
+          const queryEmbedding = await generateEmbedding(lastUserMessage.content, lovableApiKey);
 
-          const filesMap = new Map((files || []).map(f => [f.id, f]));
-
-          const formattedChunks = chunks.map((chunk: any, index: number) => {
-            const fileInfo = filesMap.get(chunk.file_id);
-            const fileName = fileInfo ? fileInfo.name : 'Unknown File';
-            
-            // Add to sources citation list
-            if (fileInfo && !sourcesList.some(s => s.name === fileInfo.name)) {
-              sourcesList.push({ name: fileInfo.name, similarity: chunk.similarity });
-            }
-            
-            return `--- [Source ${index + 1}: ${fileName}] ---\n${chunk.content}`;
+          const { data: chunks, error: matchError } = await supabase.rpc('match_document_chunks', {
+            query_embedding: queryEmbedding,
+            match_threshold: 0.3,
+            match_count: 5,
+            filter_file_ids: accessibleFileIds
           });
 
-          contextText = formattedChunks.join('\n\n');
-          console.log(`[ai-agent-chat] Retrieved ${chunks.length} context chunks from ${sourcesList.length} files`);
+          if (matchError) {
+            console.error('[ai-agent-chat] match_document_chunks RPC failed:', matchError);
+          } else if (chunks && chunks.length > 0) {
+            const matchedChunks = chunks as MatchedChunk[];
+            // Fetch file names only for already authorized matches
+            const matchedFileIds = [...new Set(matchedChunks.map((chunk) => chunk.file_id))];
+            const { data: files } = await supabase
+              .from('files')
+              .select('id, name')
+              .in('id', matchedFileIds);
+
+            const sourceFiles = (files ?? []) as SourceFile[];
+            const filesMap = new Map(sourceFiles.map((file) => [file.id, file]));
+
+            const formattedChunks = matchedChunks.map((chunk, index) => {
+              const fileInfo = filesMap.get(chunk.file_id);
+              const fileName = fileInfo ? fileInfo.name : 'Unknown File';
+
+              // Add to sources citation list
+              if (fileInfo && !sourcesList.some(s => s.name === fileInfo.name)) {
+                sourcesList.push({ name: fileInfo.name, similarity: chunk.similarity });
+              }
+
+              return `--- [Source ${index + 1}: ${fileName}] ---\n${chunk.content}`;
+            });
+
+            contextText = formattedChunks.join('\n\n');
+            console.log(`[ai-agent-chat] Retrieved ${matchedChunks.length} context chunks from ${sourcesList.length} files`);
+          }
         }
       } catch (ragError) {
         console.error('[ai-agent-chat] RAG search error:', ragError);
@@ -217,7 +268,7 @@ ${contextText}
     // Map conversation history
     const apiMessages = [
       { role: 'system', content: systemPrompt },
-      ...history.map(msg => ({
+      ...chatHistory.map(msg => ({
         role: msg.role === 'assistant' ? 'assistant' : 'user',
         content: msg.content
       }))

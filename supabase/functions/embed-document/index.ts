@@ -1,7 +1,11 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
 import { handleCors } from '../_shared/cors.ts';
+import {
+  createServiceClient,
+  requireAuthenticatedUser,
+  requireFileAccess,
+} from '../_shared/auth.ts';
 
 // Text splitter helper
 function splitText(text: string, chunkSize = 1000, overlap = 200): string[] {
@@ -88,13 +92,9 @@ serve(async (req) => {
     });
   }
 
-  // Auth header verification
-  const authHeader = req.headers.get('Authorization') || req.headers.get('authorization');
-  if (!authHeader) {
-    return new Response(JSON.stringify({ error: 'Unauthorized: Missing Authorization header' }), {
-      status: 401,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+  const auth = await requireAuthenticatedUser(req, corsHeaders);
+  if (auth instanceof Response) {
+    return auth;
   }
 
   try {
@@ -106,8 +106,6 @@ serve(async (req) => {
       });
     }
 
-    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
-    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
     const lovableApiKey = Deno.env.get('LOVABLE_API_KEY') ?? '';
 
     if (!lovableApiKey) {
@@ -117,7 +115,15 @@ serve(async (req) => {
       });
     }
 
-    const supabase = createClient(supabaseUrl, serviceRoleKey);
+    const fileAccess = await requireFileAccess(auth.userClient, fileId, corsHeaders);
+    if (fileAccess instanceof Response) {
+      return fileAccess;
+    }
+
+    const supabase = createServiceClient(corsHeaders);
+    if (supabase instanceof Response) {
+      return supabase;
+    }
 
     // 1. Get file details
     const { data: file, error: fileError } = await supabase

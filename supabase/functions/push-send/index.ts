@@ -1,7 +1,12 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
 import { handleCors } from '../_shared/cors.ts';
+import {
+  createServiceClient,
+  jsonResponse,
+  requireAdminRole,
+  requireAuthenticatedUser,
+} from '../_shared/auth.ts';
 
 // VAPID ключи (генерируются один раз)
 // Для production используйте переменные окружения
@@ -103,16 +108,12 @@ serve(async (req) => {
 
   try {
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
-    let internalApiKey = Deno.env.get('INTERNAL_API_KEY');
-    
-    // Harden production detection: if URL contains .supabase.co or is not localhost, treat as production
-    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
-    const isProd = supabaseUrl.includes('.supabase.co') || 
-                   (!supabaseUrl.includes('localhost') && !supabaseUrl.includes('127.0.0.1') && supabaseUrl.startsWith('https'));
+    const internalApiKey = Deno.env.get('INTERNAL_API_KEY')?.trim() || '';
 
-    if (!internalApiKey || internalApiKey === 'undefined' || internalApiKey === 'null') {
-      internalApiKey = isProd ? null : 'loval-echoes-internal-key-2026';
+    if (!serviceRoleKey || !internalApiKey) {
+      return jsonResponse({ error: 'Server push configuration is missing' }, 500, corsHeaders);
     }
+
     const authHeader = req.headers.get('Authorization') || req.headers.get('authorization');
     let isSystemAuth = false;
     let token = '';
@@ -130,61 +131,32 @@ serve(async (req) => {
       isSystemAuth = true;
     }
 
-    console.log('[push-send] isSystemAuth:', isSystemAuth);
-    console.log('[push-send] token length:', token.length);
+    const supabase = createServiceClient(corsHeaders);
+    if (supabase instanceof Response) {
+      return supabase;
+    }
 
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      serviceRoleKey
-    );
-
-    let user = null;
+    let actorUserId: string | null = null;
 
     if (!isSystemAuth) {
-      if (!authHeader) {
-        return new Response(
-          JSON.stringify({ error: 'Unauthorized: Missing Authorization header' }),
-          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+      const auth = await requireAuthenticatedUser(req, corsHeaders);
+      if (auth instanceof Response) {
+        return auth;
       }
-
-      const userSupabase = createClient(
-        Deno.env.get('SUPABASE_URL') ?? '',
-        Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-        {
-          global: {
-            headers: { Authorization: authHeader },
-          },
-        }
-      );
-
-      // Verify user authentication
-      const { data: { user: authUser }, error: authError } = await userSupabase.auth.getUser();
-      
-      if (authError || !authUser) {
-        return new Response(
-          JSON.stringify({ error: 'Unauthorized' }),
-          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      user = authUser;
+      actorUserId = auth.user.id;
 
       // Check if user has admin role (only admins can send push notifications manually)
-      const { data: isAdmin } = await userSupabase.rpc('has_role', {
-        _user_id: user.id,
-        _role: 'admin'
-      });
-
-      if (!isAdmin) {
-        return new Response(
-          JSON.stringify({ error: 'Forbidden: Admin role required' }),
-          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+      const adminAccess = await requireAdminRole(auth.userClient, auth.user.id, corsHeaders);
+      if (adminAccess instanceof Response) {
+        return adminAccess;
       }
     }
 
     const requestBody = await req.json();
-    const { userId, title, body: messageBody, url, tag } = requestBody;
+    const { userId: requestedUserId, title, body: messageBody, url, tag } = requestBody;
+    const targetUserId = typeof requestedUserId === 'string' && requestedUserId.length > 0
+      ? requestedUserId
+      : null;
 
     // Input validation
     if (!title || typeof title !== 'string' || title.length > 200) {
@@ -204,8 +176,8 @@ serve(async (req) => {
     // Get push subscriptions
     let query = supabase.from('push_subscriptions').select('*');
     
-    if (userId) {
-      query = query.eq('user_id', userId);
+    if (targetUserId) {
+      query = query.eq('user_id', targetUserId);
     }
     
     const { data: subscriptions, error } = await query;
@@ -219,7 +191,7 @@ serve(async (req) => {
     }
 
     if (!subscriptions || subscriptions.length === 0) {
-      console.log('No subscriptions found for user:', userId);
+      console.log('No subscriptions found for user:', targetUserId);
       return new Response(JSON.stringify({ 
         success: true, 
         sent: 0,
@@ -279,12 +251,12 @@ serve(async (req) => {
     }
 
     // Log the admin action
-    if (user) {
+    if (actorUserId) {
       await supabase.rpc('enhanced_log_security_event', {
-        p_user_id: user.id,
+        p_user_id: actorUserId,
         p_event_type: 'push_notification_sent',
         p_event_data: {
-          target_user_id: userId,
+          target_user_id: targetUserId,
           title,
           recipients_count: successCount,
           failed_count: failedEndpoints.length

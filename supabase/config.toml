@@ -1,19 +1,19 @@
 project_id = "hjquragwfmcrljanmhtt"
 
 [functions.auth-security]
-verify_jwt = false
+verify_jwt = true
 
 [functions.login-fix]
-verify_jwt = false
+verify_jwt = true
 
 [functions.auto-register]
-verify_jwt = false
+verify_jwt = true
 
 [functions.embed-document]
-verify_jwt = false
+verify_jwt = true
 
 [functions.rag-search]
-verify_jwt = false
+verify_jwt = true
 
 [functions.ai-agent-chat]
-verify_jwt = false
+verify_jwt = true
