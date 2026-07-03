@@ -6,6 +6,8 @@ Repository: `DAARION-DAO/loval-echoes`
 
 Branch: `beta/edge-backend-health-truth`
 
+Related audit PR: `https://github.com/DAARION-DAO/loval-echoes/pull/25`
+
 Scope: read-only audit and backend-health truth report. No deploy, Supabase
 apply, production database write, backend profile insert, Edge worker mode,
 DAARWIZZ routing, node federation, Qdrant write, or runtime service change was
@@ -49,8 +51,7 @@ Inspected evidence:
 | `loval-echoes/src/services/deviceConnection.ts` | Encodes and decodes pairing payloads with `backendUrl`, but does not implement backend health. |
 | `research/daarion-edge-client` | Tauri client source at `0.2.2-4`; contains the backend health client and contract docs. It is not the backend server. |
 | `microdao-daarion/daarion-edge-client` | Older local Edge Client copy at `0.2.2-3`; does not prove the live health backend exists. |
-| `microdao-daarion/backend` | Express backend with `/health` and DAARION app routes. It does not expose `/api/v1/edge/health`. |
-| `microdao-daarion/services/node-registry` | FastAPI node registry service with `/health` and `/api/v1/nodes/*`. It is adjacent infrastructure, not the canonical Edge health endpoint. |
+| DAARION infrastructure workspace | Contains historical DAGI router, gateway, nginx, RBAC, memory/RAG, SOFIIA, and node infrastructure references. Targeted search did not find a `daarion-edge-backend` implementation or `/api/v1/edge/health` route. |
 | `daarion-ai-city` | No `GET /api/v1/edge/health` implementation was found in the inspected workspace search. |
 
 Conclusion: there are partial adjacent services and a clear client-side
@@ -129,9 +130,16 @@ Client interpretation from `backend_health.rs`:
 
 Safe public checks were repeated during this audit. No credentials were used.
 
+Observed DNS:
+
+| Host | Evidence |
+| --- | --- |
+| `api.daarion.city` | A record to `144.76.224.179` |
+| `edge.daarion.city` | CNAME to GitHub Pages (`daarion-dao.github.io`) |
+
 | Candidate URL | Result |
 | --- | --- |
-| `https://api.daarion.city/api/v1/edge/health` | Timed out after 10 seconds. |
+| `https://api.daarion.city/api/v1/edge/health` | Timed out after 15 seconds. |
 | `https://edge.daarion.city/api/v1/edge/health` | HTTP `404` from GitHub Pages. |
 
 Interpretation:
@@ -168,6 +176,12 @@ GET /api/v1/edge/health
 - no secrets in response;
 - optional later signed readiness callback or RPC wrapper for
   `record_device_readiness`.
+
+No existing required environment-variable set was found for a missing Edge
+backend service. If the MVP is created, define typed server-only settings for
+environment, backend version, protocol version, minimum supported Edge Client
+version, and advertised capabilities. Keep any future Supabase privileged key
+server-only and out of public clients, logs, and docs.
 
 Future optional endpoint, after a separate trust/auth design:
 
@@ -277,11 +291,12 @@ Local source evidence:
 
 Decision:
 
-- `v0.2.2-3` can remain the public install artifact for a limited install or
-  pairing-code copy/paste smoke if the operator accepts that narrower proof.
-- Full Connect Device beta health validation should prefer a released
-  `0.2.2-4` or later artifact, because the inspected `0.2.2-4` source contains
-  the explicit health-contract implementation and validation docs.
+- `v0.2.2-3` can remain evidence for current public installer/download
+  availability.
+- Real Connect Device beta pairing plus health validation needs either a
+  verified local/current `0.2.2-4` build or a released `0.2.2-4` or later
+  artifact, because the inspected `0.2.2-4` source contains the explicit
+  health-contract implementation and validation docs.
 - In both cases, no beta pairing smoke is valid until a live backend URL passes
   `/api/v1/edge/health`.
 
