@@ -4,6 +4,12 @@
 
 **URL**: https://lovable.dev/projects/4411fba9-f975-4193-bebf-d5df27e57cfc
 
+## Repository Role
+
+This repository is part of the DAARION.city ecosystem. See
+`docs/REPOSITORY_ROLE.md` for the repository boundary and public/private
+information rules.
+
 ## How can I edit this code?
 
 There are several ways of editing your application.
