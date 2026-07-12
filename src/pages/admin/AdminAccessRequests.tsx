@@ -16,6 +16,7 @@ import { useTranslation } from '@/lib/i18n';
 import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { ADVANCED_ACCESS_PROGRAMS } from '@/lib/subscriptionTypes';
+import { toast } from '@/hooks/use-toast';
 
 export const AdminAccessRequests = () => {
   const { t, language } = useTranslation();
