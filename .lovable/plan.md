@@ -1,55 +1,44 @@
+## Pre-publish security gate — read-only report
 
-## Status of the sync
+Scan: `security--get_scan_results`, 2026-07-12 08:36 UTC. Project owning https://1.daarion.city/.
 
-Repo is already at the target commit `99a6f4e` ("feat: Sprint B2 - MicroDAO Leader Onboarding & Community Spirit Agent"). The local migration file `supabase/migrations/20260612190000_trial_and_waitlist.sql` is present and unapplied. All Sprint B2 frontend code (onboarding lobby, leader setup, Дух Спільноти dashboard card, invite-code joiner) is already in the working tree from that commit.
+| Item | Value |
+|---|---|
+| critical / error count | **1** |
+| supply-chain critical / error | 0 |
+| env or secret exposure detected | No |
+| `.env` committed | No |
+| SUPABASE_SERVICE_ROLE_KEY / DB password / JWT / RouterOS / DNS creds exposed | No |
+| warn count | 12 |
 
-## Critical issues found in the migration
+The single `error` finding is `agent_security / grant_admin_role_bypass`: the `grant_admin_role` (and `revoke_admin_role`) RPC lost its admin-only caller check, so any authenticated user can self-promote to platform admin. Not env-related, not secret exposure — a pre-existing DB function regression. This is what blocks `preview_ui--publish`.
 
-Applying the file as-is would break or regress security. I want to apply the migration **plus a corrective migration in the same step** to fix:
+Warns (not blocking, not env-related): integration tokens mirrored to localStorage; PostgREST `.or()` interpolation in knowledge-base search; wrong-column profile lookup in `verify-polygon-payment`; 3 Supabase linter warns (SECURITY DEFINER exec, mutable search_path); 6 MISSING_RLS_POLICY notices (fail-closed, not exposure).
 
-1. **`is_admin(uuid)` redefinition is unsafe.** The migration replaces the existing project-wide `is_admin` with a heuristic ("first approved profile + 1 day"). The current `is_admin` returns true only for `profiles.role = 'guardian'` and is used by other policies. Replacing it will silently change admin semantics across the whole app, including the SecurityDashboard and approval flows. Fix: **do not redefine `is_admin`**, keep the existing one, and reference it as-is from the invitation_codes policies.
+## Decision needed before republish
 
-2. **`profiles` SELECT policy regresses email privacy.** The migration drops the current policy and recreates `FOR SELECT USING (true)` — this re-exposes emails to all authenticated users. This directly contradicts the project security memory ("hide emails via RLS"). Fix: keep the existing privacy-preserving profiles policies untouched (drop those two policy statements from the migration via the corrective migration that re-applies the safe version after the fact).
+Publish stays blocked until the `error`-level finding is resolved. Pick one path:
 
-3. **`agents.agent_type` backfill is wrong.** `ADD COLUMN ... NOT NULL DEFAULT 'community_spirit'` will mark every pre-existing agent (personal agents, presets, etc.) as Community Spirit. Fix: in the corrective migration, set `agent_type` to `'personal'` for rows where `scope = 'personal'` and to `'preset'` where `is_preset = true`; leave the column nullable-friendly default but only newly-inserted Spirit Agents will use `'community_spirit'` via the RPC.
+### Option A — Fix the critical, then republish (recommended)
 
-4. **`community_setup_sessions` policy is missing `FOR ALL`.** As written, the policy has no command clause, which Postgres interprets as ALL — works, but I'll explicitly write `FOR ALL` to be safe and to avoid linter warnings.
+Scope is a single migration, no code, no runtime infra touched.
 
-5. **`agents` insert in `create_microdao_with_spirit_agent` references `is_preset`** — verified the column exists, so this is fine. I'll double-check `connection_type`/`status` enums during apply; if a constraint rejects `'msp'` or `'active'` the RPC will fail and I'll patch.
+1. Migration `harden_grant_revoke_admin_role`:
+   - Redefine `public.grant_admin_role(p_user_id uuid)` and `public.revoke_admin_role(p_user_id uuid)` as `SECURITY DEFINER`, `SET search_path = public`, with a guard `if not public.has_role(auth.uid(), 'admin') then raise exception 'not authorized'; end if;` and, for `grant_admin_role`, reject `p_user_id = auth.uid()` (no self-grant).
+   - `REVOKE EXECUTE ON FUNCTION public.grant_admin_role(uuid), public.revoke_admin_role(uuid) FROM PUBLIC, anon, authenticated;`
+   - `GRANT EXECUTE ... TO service_role;` (admin edge functions call as service role; direct client `.rpc()` is no longer allowed).
+2. Re-run `security--run_security_scan`, confirm the `error` clears, then call `security--manage_security_finding` (`mark_as_fixed`) on `grant_admin_role_bypass` with the migration reference.
+3. Republish via `preview_ui--publish` (no code changes, current commit) so the Vite bundle is rebuilt with the restored `VITE_SUPABASE_URL` / `VITE_SUPABASE_PUBLISHABLE_KEY`.
+4. Post-publish smoke: fetch `https://1.daarion.city/`, confirm new JS/CSS hashes, `#root` non-empty, no `Error: supabaseUrl is required` in console.
 
-6. **Invitation-codes safety** — the SELECT/ALL policies correctly limit visibility to admins, creators, and community owners/admins. Non-members cannot list active codes. Validation goes through the SECURITY DEFINER RPC. This matches the brief.
+Does not touch: Supabase DB rows, `device_backend_profiles`, `api.daarion.city`, RouterOS, DNS, UFW, TLS, Edge Client/Backend runtime. Only DDL on two RPCs.
 
-7. **`community_members.status`** — kept as `'approved'`. RPCs insert with `status = 'approved'`. Consistent with the rest of the app.
+### Option B — Ignore the finding to unblock publish now, fix later
 
-8. **Existing users are preserved** — the migration does not touch existing `communities`, `community_members`, or owner/admin assignments. The `handle_new_user` trigger continues to set `approval_status = 'approved'` so new signups go to onboarding, not a waitlist.
+Only if you accept that any signed-in user can self-promote to admin until fixed. I would call `security--manage_security_finding` (`ignore`) with an explicit justification, republish, then track the fix as a follow-up. I do not recommend this on a production system.
 
-## Plan
+### Option C — Do nothing / abort republish
 
-1. **Create corrective migration** `supabase/migrations/20260612200000_b2_safety_fixes.sql` that runs after the Sprint B2 migration and:
-   - Restores the original safe `is_admin(uuid)` (guardian-based).
-   - Restores the email-hiding `profiles` SELECT policies (drop the permissive one introduced by B2, recreate the prior safe policies).
-   - Backfills `agents.agent_type` to `'personal'` / `'preset'` for rows that are not actually community-spirit agents.
-   - Adds explicit `FOR ALL` to the `community_setup_sessions` policy.
+Site remains broken with `supabaseUrl is required`.
 
-2. **Apply both migrations** via `supabase--migration` (one approval). After approval, regenerated types update `agents`, `invitation_codes`, `community_setup_sessions`, `agent_permissions`, `agent_action_logs`.
-
-3. **Verify frontend wiring** — quickly read the Sprint B2 pages already shipped (`MicroDAOOnboarding.tsx`, leader setup, dashboard card) to confirm they call `create_microdao_with_spirit_agent`, `validate_invitation_code`, `join_community_by_code`. Patch only if there's a typed mismatch (e.g. `as any` workarounds before types regenerate).
-
-4. **Run security linter** and address any new warnings.
-
-5. **Publish** with `preview_ui--publish` after confirming title/meta on `/`, `/pricing`, `/agents`, `/install` are still set.
-
-6. **Smoke tests** against the published URL using the browser tool:
-   - Load `/`, `/pricing`, `/agents`, `/install` (public).
-   - Existing approved user with existing community → `/dashboard` opens, chats/projects/knowledge/prompts render.
-   - New signup → lands on `/onboarding`, no waitlist screen.
-   - Create MicroDAO flow → community + owner membership + Дух Спільноти agent + permissions + action log + setup session completion, dashboard card visible.
-   - Join by code flow → insert a test `invitation_codes` row via `supabase--insert`, validate via RPC, join, confirm `used_count` increments and membership exists.
-
-7. **Report back** with: migration status, linter results, deploy URL, smoke results, and screenshots of onboarding lobby / guided setup / Дух Спільноти dashboard card.
-
-## Notes / non-goals
-
-- No edits to `src/integrations/supabase/client.ts`, `.env`, or `config.toml`.
-- No changes to the Reset Password, Auth, RAG (KB), or existing prompt-editor flows other than what regenerated types require.
-- The corrective migration does **not** weaken any policy added in B2 — only restores prior protections that B2 inadvertently dropped.
+## Please confirm which option to run (A, B, or C). No files will be edited and no publish will be triggered until you approve.
