@@ -47,6 +47,7 @@ const AdminAgentOps = lazy(() => import("./pages/admin/AdminAgentOps").then(m =>
 const AdminTeam = lazy(() => import("./pages/admin/AdminTeam"));
 const AdminAgent = lazy(() => import("./pages/admin/AdminAgent"));
 const AcceptInvite = lazy(() => import("./pages/AcceptInvite"));
+const OAuthConsent = lazy(() => import("./pages/OAuthConsent"));
 
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { Layout } from "./components/Layout";
@@ -214,6 +215,7 @@ const App = () => {
                   <Route path="/agents" element={<Suspense fallback={<LoadingSpinner size="lg" text={t.loading} />}><AgentDirectory /></Suspense>} />
                   <Route path="/onboarding" element={<Suspense fallback={<LoadingSpinner size="lg" text={t.loading} />}><MicroDAOOnboarding /></Suspense>} />
                   <Route path="/accept-invite" element={<Suspense fallback={<LoadingSpinner size="lg" text={t.loading} />}><AcceptInvite /></Suspense>} />
+                  <Route path="/.lovable/oauth/consent" element={<Suspense fallback={<LoadingSpinner size="lg" text={t.loading} />}><OAuthConsent /></Suspense>} />
                   <Route 
                     path="/admin/*" 
                     element={
