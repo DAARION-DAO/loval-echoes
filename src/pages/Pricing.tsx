@@ -7,6 +7,7 @@ import { useTranslation, Language } from "@/lib/i18n";
 import { useAuth } from "@/hooks/useAuth";
 import { useBillingPlanConfig } from "@/lib/cryptoBilling";
 import { PublicHeader } from "@/components/PublicHeader";
+import { Helmet } from "react-helmet-async";
 
 const pricingUiCopy: Record<
   Language,
@@ -206,6 +207,26 @@ export default function Pricing() {
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col overflow-x-hidden">
+      <Helmet>
+        <title>Pricing — MicroDAO plans for communities and DAOs</title>
+        <meta name="description" content="MicroDAO pricing: Participant, Leader, Founder and Sovereign plans for communities, teams and DAOs. Transparent tiers, Polygon payments, manual verification options." />
+        <link rel="canonical" href="https://1.daarion.city/pricing" />
+        <meta property="og:title" content="Pricing — MicroDAO plans for communities and DAOs" />
+        <meta property="og:description" content="Participant, Leader, Founder and Sovereign plans for MicroDAO — the Living Operating System for teams and DAOs." />
+        <meta property="og:url" content="https://1.daarion.city/pricing" />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Product",
+          name: "MicroDAO",
+          description: "Living Operating System for teams, communities and DAOs.",
+          brand: { "@type": "Brand", name: "MicroDAO" },
+          offers: [
+            { "@type": "Offer", name: "Participant", priceCurrency: "USD", price: "0", url: "https://1.daarion.city/pricing" },
+            { "@type": "Offer", name: "Leader", priceCurrency: "USD", price: "0", url: "https://1.daarion.city/pricing" },
+            { "@type": "Offer", name: "Founder", priceCurrency: "USD", price: "0", url: "https://1.daarion.city/pricing" }
+          ]
+        })}</script>
+      </Helmet>
       <PublicHeader
         active="pricing"
         backToHome
@@ -214,6 +235,7 @@ export default function Pricing() {
         onPrimaryClick={() => navigate(user ? "/dashboard" : "/auth?signup=true")}
       />
 
+      <main>
       {/* ── Pricing Hero ── */}
       <section className="relative py-16 sm:py-24 text-center overflow-hidden border-b border-border/10">
         <div className="landing-orb absolute top-10 left-[20%] w-72 h-72 bg-primary/5 rounded-full blur-[100px]" />
@@ -238,11 +260,11 @@ export default function Pricing() {
           
           {/* Explanatory distinction block */}
           <div className="bg-indigo-500/5 border border-indigo-500/20 rounded-2xl p-5 max-w-4xl mx-auto space-y-2 text-center shadow-[0_0_20px_-5px_rgba(99,102,241,0.15)]">
-            <h3 className="font-bold text-sm text-indigo-400 flex items-center justify-center gap-2">
+            <h2 className="font-bold text-sm text-indigo-400 flex items-center justify-center gap-2">
               <Shield className="h-4 w-4 text-indigo-450" />
               {t.pricingExtra.distinctionTitle}
-            </h3>
-            <p className="text-xs text-slate-300 leading-relaxed max-w-2xl mx-auto">
+            </h2>
+            <p className="text-xs text-muted-foreground leading-relaxed max-w-2xl mx-auto">
               {t.pricingExtra.distinctionDesc}
             </p>
           </div>
@@ -325,12 +347,13 @@ export default function Pricing() {
           </div>
         </div>
       </section>
+      </main>
 
       {/* ── Footer ── */}
       <footer className="border-t border-border/30 py-10 bg-card/10 backdrop-blur-sm">
         <div className="container max-w-7xl mx-auto px-4 space-y-4 text-center">
           <div className="flex items-center justify-center gap-2 mb-4">
-            <img src="/logo.jpg" alt="MicroDAO" className="h-7 w-7 rounded-lg object-cover shadow-sm" />
+            <img src="/logo.jpg" alt="MicroDAO platform logo" className="h-7 w-7 rounded-lg object-cover shadow-sm" />
             <span className="font-semibold text-sm text-foreground/80">MicroDAO</span>
           </div>
           <div className="flex items-center justify-center flex-wrap gap-x-4 gap-y-2 text-xs text-muted-foreground">

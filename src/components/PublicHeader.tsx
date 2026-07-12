@@ -42,7 +42,7 @@ interface PublicHeaderProps {
 export function PublicHeader({
   active = "home",
   logoSrc = "/logo.jpg",
-  logoAlt = "MicroDAO",
+  logoAlt = "MicroDAO platform logo",
   title = "MicroDAO",
   mobileTitle,
   backToHome = false,

@@ -13,6 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useActiveCommunity } from '@/hooks/useActiveCommunity';
 import { useUserApprovalStatus } from '@/hooks/useUserApprovalStatus';
 import { PublicHeader } from '@/components/PublicHeader';
+import { Helmet } from 'react-helmet-async';
 
 import {
   Users,
@@ -288,6 +289,14 @@ export function Start() {
 
   return (
     <div ref={scrollRef} className="min-h-screen bg-background text-foreground flex flex-col overflow-x-hidden">
+      <Helmet>
+        <title>MicroDAO — Living Operating System (ЖОС) for teams & DAOs</title>
+        <meta name="description" content="MicroDAO (ЖОС) is a Living Operating System for teams, communities and DAOs — chats, tasks, projects, knowledge, meetings and AI agents in one shared space." />
+        <link rel="canonical" href="https://1.daarion.city/" />
+        <meta property="og:title" content="MicroDAO — Living Operating System (ЖОС) for teams & DAOs" />
+        <meta property="og:description" content="Chats, tasks, projects, knowledge, meetings and AI agents in one shared space for teams, communities and DAOs." />
+        <meta property="og:url" content="https://1.daarion.city/" />
+      </Helmet>
 
       <PublicHeader
         active="home"
@@ -297,6 +306,7 @@ export function Start() {
         showInstallPrompt
       />
 
+      <main>
       {/* ── Hero Section ── */}
       <section className="relative py-12 sm:py-20 md:py-32 overflow-hidden">
         {/* Background Photo for Hero */}
@@ -619,12 +629,13 @@ export function Start() {
           </div>
         </div>
       </section>
+      </main>
 
       {/* ── Footer ── */}
       <footer className="mt-auto border-t border-border/30 py-10 bg-card/10 backdrop-blur-sm">
         <div className="container max-w-7xl mx-auto px-4 space-y-4 text-center">
           <div className="flex items-center justify-center gap-2 mb-4">
-            <img src="/logo.jpg" alt="MicroDAO" className="h-7 w-7 rounded-lg object-cover shadow-sm" />
+            <img src="/logo.jpg" alt="MicroDAO platform logo" className="h-7 w-7 rounded-lg object-cover shadow-sm" />
             <span className="font-semibold text-sm text-foreground/80">MicroDAO</span>
           </div>
           <div className="flex items-center justify-center flex-wrap gap-x-4 gap-y-2 text-xs text-muted-foreground">

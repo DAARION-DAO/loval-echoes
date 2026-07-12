@@ -7,6 +7,7 @@ import { useTranslation, Language } from '@/lib/i18n';
 import { useAuth } from '@/hooks/useAuth';
 import { useActiveCommunity } from '@/hooks/useActiveCommunity';
 import { PublicHeader } from '@/components/PublicHeader';
+import { Helmet } from 'react-helmet-async';
 import {
   Bot,
   Shield,
@@ -1039,6 +1040,14 @@ export default function AgentDirectory() {
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col overflow-x-hidden">
+      <Helmet>
+        <title>AI Agents Directory — MicroDAO built-in assistants</title>
+        <meta name="description" content="Explore MicroDAO's directory of AI agents for communities and DAOs: task-flow, knowledge, moderation, meetings and community-spirit assistants." />
+        <link rel="canonical" href="https://1.daarion.city/agents" />
+        <meta property="og:title" content="AI Agents Directory — MicroDAO built-in assistants" />
+        <meta property="og:description" content="AI agents for communities and DAOs: task-flow, knowledge, moderation, meetings and community-spirit assistants." />
+        <meta property="og:url" content="https://1.daarion.city/agents" />
+      </Helmet>
       <PublicHeader
         active="agents"
         backToHome

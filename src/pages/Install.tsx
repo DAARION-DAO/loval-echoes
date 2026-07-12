@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { useTranslation, Language } from '@/lib/i18n';
 import { Card } from '@/components/ui/card';
 import { PublicHeader } from '@/components/PublicHeader';
+import { Helmet } from 'react-helmet-async';
 import { decodeDeviceConnectionIntent, decodeDevicePairingInvite } from '@/services/deviceConnection';
 import {
   Download,
@@ -733,6 +734,14 @@ export function Install() {
 
   return (
     <div ref={scrollRef} className="min-h-screen bg-background text-foreground flex flex-col overflow-x-hidden">
+      <Helmet>
+        <title>Install MicroDAO — connect your device to DAARION.city</title>
+        <meta name="description" content="Install the MicroDAO PWA and connect your device to DAARION.city — private edge network for teams, communities and DAOs with local-first sync." />
+        <link rel="canonical" href="https://1.daarion.city/install" />
+        <meta property="og:title" content="Install MicroDAO — connect your device to DAARION.city" />
+        <meta property="og:description" content="Install the MicroDAO PWA and connect your device to the DAARION.city edge network." />
+        <meta property="og:url" content="https://1.daarion.city/install" />
+      </Helmet>
       <style>{`
         @keyframes glow {
           0%, 100% { border-color: rgba(16, 185, 129, 0.4); box-shadow: 0 0 0 rgba(16, 185, 129, 0); }
