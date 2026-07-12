@@ -135,10 +135,14 @@ export default function Integrations() {
     try {
       setLoading(true);
       
-      // Load saved integrations from localStorage (user_integrations table not yet created)
+      // Load saved integration status from localStorage.
+      // SECURITY: Only non-secret status fields (enabled/connected/scope/lastSync)
+      // are cached here. Credentials (bot tokens, API keys, client secrets) are
+      // never mirrored to localStorage — they live only in the RLS-protected
+      // user_integrations table on the server and are set via edge functions.
       const saved = localStorage.getItem(`user_integrations_${user.id}`);
-      const savedData: Record<string, { enabled: boolean; connected: boolean; scope: string; config?: Record<string, unknown>; lastSync?: string }> = saved ? JSON.parse(saved) : {};
-      
+      const savedData: Record<string, { enabled: boolean; connected: boolean; scope: string; lastSync?: string }> = saved ? JSON.parse(saved) : {};
+
       const allIntegrations: Integration[] = [];
       INTEGRATIONS.forEach(int => {
         ['team', 'personal'].forEach(scopeVal => {
@@ -150,7 +154,7 @@ export default function Integrations() {
             enabled: savedInt?.enabled || false,
             connected: savedInt?.connected || false,
             scope: scopeVal as 'team' | 'personal',
-            config: savedInt?.config,
+            config: undefined,
             lastSync: savedInt?.lastSync,
           });
         });
@@ -190,7 +194,7 @@ export default function Integrations() {
 
       const newEnabled = !integration.enabled;
 
-      // Save to localStorage
+      // Save non-secret status to localStorage (never credentials).
       const savedKey = `user_integrations_${user.id}`;
       const saved = localStorage.getItem(savedKey);
       const savedData = saved ? JSON.parse(saved) : {};
@@ -199,7 +203,6 @@ export default function Integrations() {
         enabled: newEnabled,
         connected: integration.connected,
         scope: integration.scope,
-        config: integration.config,
       };
       localStorage.setItem(savedKey, JSON.stringify(savedData));
 
@@ -249,7 +252,9 @@ export default function Integrations() {
         throw error;
       }
 
-      // Save to localStorage
+      // Save non-secret status to localStorage. Credentials are already
+      // stored server-side by the integration-connect edge function and
+      // must never be mirrored into browser storage.
       const savedKey = `user_integrations_${user.id}`;
       const saved = localStorage.getItem(savedKey);
       const savedData = saved ? JSON.parse(saved) : {};
@@ -258,16 +263,16 @@ export default function Integrations() {
         enabled: true,
         connected: true,
         scope: selectedScope,
-        config: { ...integration.config, ...configValues },
         lastSync: new Date().toISOString(),
       };
       localStorage.setItem(savedKey, JSON.stringify(savedData));
 
-      // Оновлюємо локальний стан
+      // Update local state — do not retain plain-text credentials in memory
+      // beyond the connect call.
       setIntegrations(prev =>
         prev.map(int =>
           int.id === integration.id
-            ? { ...int, enabled: true, connected: true, config: { ...int.config, ...configValues } }
+            ? { ...int, enabled: true, connected: true, config: undefined }
             : int
         )
       );
