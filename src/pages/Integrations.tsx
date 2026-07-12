@@ -140,8 +140,23 @@ export default function Integrations() {
       // are cached here. Credentials (bot tokens, API keys, client secrets) are
       // never mirrored to localStorage — they live only in the RLS-protected
       // user_integrations table on the server and are set via edge functions.
-      const saved = localStorage.getItem(`user_integrations_${user.id}`);
-      const savedData: Record<string, { enabled: boolean; connected: boolean; scope: string; lastSync?: string }> = saved ? JSON.parse(saved) : {};
+      const savedKey = `user_integrations_${user.id}`;
+      const saved = localStorage.getItem(savedKey);
+      const rawSaved: Record<string, { enabled?: boolean; connected?: boolean; scope?: string; config?: unknown; lastSync?: string }> = saved ? JSON.parse(saved) : {};
+      // Migrate away from any legacy entries that mirrored secret config
+      // into localStorage: strip `config` and rewrite.
+      let mutated = false;
+      const savedData: Record<string, { enabled: boolean; connected: boolean; scope: string; lastSync?: string }> = {};
+      for (const [k, v] of Object.entries(rawSaved)) {
+        if (v && typeof v === 'object' && 'config' in v) mutated = true;
+        savedData[k] = {
+          enabled: !!v?.enabled,
+          connected: !!v?.connected,
+          scope: (v?.scope as string) ?? 'personal',
+          lastSync: v?.lastSync,
+        };
+      }
+      if (mutated) localStorage.setItem(savedKey, JSON.stringify(savedData));
 
       const allIntegrations: Integration[] = [];
       INTEGRATIONS.forEach(int => {
