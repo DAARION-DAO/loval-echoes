@@ -137,7 +137,7 @@ serve(async (req) => {
     const { data: profile } = await serviceClient
       .from("profiles")
       .select("role")
-      .eq("id", user.id)
+      .eq("user_id", user.id)
       .single();
     const isGuardian = profile?.role === "guardian";
 
@@ -325,7 +325,7 @@ serve(async (req) => {
       const { data: userProfile } = await serviceClient
         .from("profiles")
         .select("wallet_address")
-        .eq("id", intent.user_id)
+        .eq("user_id", intent.user_id)
         .single();
 
       if (
