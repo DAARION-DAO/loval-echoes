@@ -7,6 +7,16 @@ import { auth, defineMcp } from "npm:@lovable.dev/mcp-js@0.20.1";
 
 // src/lib/mcp/tools/who-am-i.ts
 import { createClient } from "npm:@supabase/supabase-js@^2.106.1";
+
+// src/lib/mcp/env.ts
+function getSupabaseUrl() {
+  return process.env.SUPABASE_URL ?? "";
+}
+function getSupabasePublishableKey() {
+  return process.env.SUPABASE_PUBLISHABLE_KEY ?? "";
+}
+
+// src/lib/mcp/tools/who-am-i.ts
 import { defineTool } from "npm:@lovable.dev/mcp-js@0.20.1";
 var who_am_i_default = defineTool({
   name: "who_am_i",
@@ -19,8 +29,8 @@ var who_am_i_default = defineTool({
       return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
     }
     const supabase = createClient(
-      process.env.SUPABASE_URL,
-      process.env.SUPABASE_PUBLISHABLE_KEY,
+      getSupabaseUrl(),
+      getSupabasePublishableKey(),
       {
         global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
         auth: { persistSession: false, autoRefreshToken: false }
@@ -63,8 +73,8 @@ var list_my_conversations_default = defineTool2({
       return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
     }
     const supabase = createClient2(
-      process.env.SUPABASE_URL,
-      process.env.SUPABASE_PUBLISHABLE_KEY,
+      getSupabaseUrl(),
+      getSupabasePublishableKey(),
       {
         global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
         auth: { persistSession: false, autoRefreshToken: false }
@@ -101,8 +111,8 @@ var list_conversation_messages_default = defineTool3({
       return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
     }
     const supabase = createClient3(
-      process.env.SUPABASE_URL,
-      process.env.SUPABASE_PUBLISHABLE_KEY,
+      getSupabaseUrl(),
+      getSupabasePublishableKey(),
       {
         global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
         auth: { persistSession: false, autoRefreshToken: false }
@@ -137,8 +147,8 @@ var send_message_default = defineTool4({
       return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
     }
     const supabase = createClient4(
-      process.env.SUPABASE_URL,
-      process.env.SUPABASE_PUBLISHABLE_KEY,
+      getSupabaseUrl(),
+      getSupabasePublishableKey(),
       {
         global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
         auth: { persistSession: false, autoRefreshToken: false }
@@ -178,8 +188,8 @@ var list_my_tasks_default = defineTool5({
       return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
     }
     const supabase = createClient5(
-      process.env.SUPABASE_URL,
-      process.env.SUPABASE_PUBLISHABLE_KEY,
+      getSupabaseUrl(),
+      getSupabasePublishableKey(),
       {
         global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
         auth: { persistSession: false, autoRefreshToken: false }
