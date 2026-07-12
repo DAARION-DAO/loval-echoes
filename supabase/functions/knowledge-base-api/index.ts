@@ -146,7 +146,15 @@ serve(async (req) => {
         .is('deleted_at', null);
       
       if (query) {
-        dbQuery = dbQuery.or(`name.ilike.%${query}%,description.ilike.%${query}%`);
+        // Sanitize user input to prevent PostgREST filter injection.
+        // Strip PostgREST-significant characters (comma, parentheses, period,
+        // asterisk, backslash) so the query text cannot alter filter logic.
+        const safeQuery = query.replace(/[,()*.\\]/g, ' ').trim();
+        if (safeQuery) {
+          dbQuery = dbQuery.or(
+            `name.ilike.%${safeQuery}%,description.ilike.%${safeQuery}%`,
+          );
+        }
       }
       
       if (scope) {
