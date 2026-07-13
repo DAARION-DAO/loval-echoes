@@ -1,8 +1,11 @@
 import { createRoot } from "react-dom/client";
-import App from "./App.tsx";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { HelmetProvider } from "react-helmet-async";
 import "./index.css";
+import { getSupabaseEnvStatus } from "@/lib/supabaseEnv";
+import { SupabaseEnvErrorScreen } from "@/components/SupabaseEnvErrorScreen";
+
+const envStatus = getSupabaseEnvStatus();
 
 // Register Service Worker for PWA updates and offline shell.
 if ("serviceWorker" in navigator) {
@@ -45,10 +48,26 @@ if ("serviceWorker" in navigator) {
   });
 }
 
-createRoot(document.getElementById("root")!).render(
-  <HelmetProvider>
-    <ThemeProvider>
-      <App />
-    </ThemeProvider>
-  </HelmetProvider>
-);
+const rootEl = document.getElementById("root")!;
+const root = createRoot(rootEl);
+
+if (!envStatus.ok) {
+  // Render friendly fallback without importing App (which would crash on createClient).
+  root.render(
+    <HelmetProvider>
+      <ThemeProvider>
+        <SupabaseEnvErrorScreen status={envStatus} />
+      </ThemeProvider>
+    </HelmetProvider>,
+  );
+} else {
+  void import("./App.tsx").then(({ default: App }) => {
+    root.render(
+      <HelmetProvider>
+        <ThemeProvider>
+          <App />
+        </ThemeProvider>
+      </HelmetProvider>,
+    );
+  });
+}
