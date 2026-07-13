@@ -5,14 +5,31 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 const DIST = "dist/assets";
+
+// Load .env values so we can verify the *exact* values Vite should have
+// inlined, without hardcoding any format-specific regex. Values are never
+// printed — only presence is reported.
+function loadEnv() {
+  const env = { ...process.env };
+  try {
+    const raw = readFileSync(".env", "utf8");
+    for (const line of raw.split(/\r?\n/)) {
+      const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/i);
+      if (!m) continue;
+      let [, k, v] = m;
+      if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) {
+        v = v.slice(1, -1);
+      }
+      if (env[k] === undefined) env[k] = v;
+    }
+  } catch {}
+  return env;
+}
+
+const env = loadEnv();
 const MARKERS = [
-  { name: "VITE_SUPABASE_URL", pattern: /\.supabase\.co/ },
-  // Accept either the new publishable key format (sb_publishable_…) or a
-  // legacy anon JWT (eyJ… . eyJ… . …) — hosted builds may inject either.
-  {
-    name: "VITE_SUPABASE_PUBLISHABLE_KEY",
-    pattern: /sb_publishable_[A-Za-z0-9_\-]{6,}|eyJ[A-Za-z0-9_\-]{10,}\.eyJ[A-Za-z0-9_\-]{10,}\.[A-Za-z0-9_\-]{10,}/,
-  },
+  { name: "VITE_SUPABASE_URL", value: env.VITE_SUPABASE_URL },
+  { name: "VITE_SUPABASE_PUBLISHABLE_KEY", value: env.VITE_SUPABASE_PUBLISHABLE_KEY },
 ];
 
 function walk(dir) {
@@ -35,8 +52,13 @@ try {
 }
 
 let failed = false;
-for (const { name, pattern } of MARKERS) {
-  const hits = files.filter((f) => pattern.test(readFileSync(f, "utf8"))).length;
+for (const { name, value } of MARKERS) {
+  if (!value) {
+    console.error(`[verify-build-env] MISSING ${name} in build environment. Configure it before running vite build.`);
+    failed = true;
+    continue;
+  }
+  const hits = files.filter((f) => readFileSync(f, "utf8").includes(value)).length;
   if (hits === 0) {
     console.error(`[verify-build-env] MISSING ${name} in bundle. Configure it in the production build env.`);
     failed = true;
