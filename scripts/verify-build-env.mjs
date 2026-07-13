@@ -7,7 +7,12 @@ import { join } from "node:path";
 const DIST = "dist/assets";
 const MARKERS = [
   { name: "VITE_SUPABASE_URL", pattern: /\.supabase\.co/ },
-  { name: "VITE_SUPABASE_PUBLISHABLE_KEY", pattern: /sb_publishable_[A-Za-z0-9_\-]{6,}/ },
+  // Accept either the new publishable key format (sb_publishable_…) or a
+  // legacy anon JWT (eyJ… . eyJ… . …) — hosted builds may inject either.
+  {
+    name: "VITE_SUPABASE_PUBLISHABLE_KEY",
+    pattern: /sb_publishable_[A-Za-z0-9_\-]{6,}|eyJ[A-Za-z0-9_\-]{10,}\.eyJ[A-Za-z0-9_\-]{10,}\.[A-Za-z0-9_\-]{10,}/,
+  },
 ];
 
 function walk(dir) {
