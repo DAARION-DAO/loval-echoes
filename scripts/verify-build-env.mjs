@@ -32,6 +32,38 @@ const MARKERS = [
   { name: "VITE_SUPABASE_PUBLISHABLE_KEY", value: env.VITE_SUPABASE_PUBLISHABLE_KEY },
 ];
 
+function decodeBase64UrlJson(segment) {
+  try {
+    const normalized = segment.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = normalized.padEnd(normalized.length + ((4 - (normalized.length % 4)) % 4), "=");
+    return JSON.parse(Buffer.from(padded, "base64").toString("utf8"));
+  } catch {
+    return null;
+  }
+}
+
+function getPublishableKeyFormat(value) {
+  if (!value || typeof value !== "string" || value.trim() !== value || value.length === 0) {
+    return "invalid_or_forbidden";
+  }
+
+  if (/^sb_publishable_[A-Za-z0-9_-]+$/.test(value)) {
+    return "publishable_format";
+  }
+
+  const jwtMatch = value.match(/^([A-Za-z0-9_-]+)\.([A-Za-z0-9_-]+)\.([A-Za-z0-9_-]+)$/);
+  if (!jwtMatch) {
+    return "invalid_or_forbidden";
+  }
+
+  const payload = decodeBase64UrlJson(jwtMatch[2]);
+  if (payload?.role === "anon") {
+    return "legacy_anon_jwt_format";
+  }
+
+  return "invalid_or_forbidden";
+}
+
 function walk(dir) {
   const out = [];
   for (const entry of readdirSync(dir)) {
@@ -58,6 +90,17 @@ for (const { name, value } of MARKERS) {
     failed = true;
     continue;
   }
+
+  if (name === "VITE_SUPABASE_PUBLISHABLE_KEY") {
+    const format = getPublishableKeyFormat(value);
+    console.log(`[verify-build-env] VITE_SUPABASE_PUBLISHABLE_KEY format: ${format}`);
+    if (format === "invalid_or_forbidden") {
+      console.error("[verify-build-env] INVALID VITE_SUPABASE_PUBLISHABLE_KEY format. Use sb_publishable_* or a legacy anon JWT only.");
+      failed = true;
+      continue;
+    }
+  }
+
   const hits = files.filter((f) => readFileSync(f, "utf8").includes(value)).length;
   if (hits === 0) {
     console.error(`[verify-build-env] MISSING ${name} in bundle. Configure it in the production build env.`);
