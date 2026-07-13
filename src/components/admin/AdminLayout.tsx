@@ -20,6 +20,8 @@ import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useTranslation } from '@/lib/i18n';
+import { getSupabaseEnvStatus } from '@/lib/supabaseEnv';
+import { SupabaseEnvErrorScreen } from '@/components/SupabaseEnvErrorScreen';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -32,6 +34,7 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
   const location = useLocation();
   const { language } = useTranslation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const envStatus = getSupabaseEnvStatus();
 
   const isUk = language === 'uk';
 
@@ -181,6 +184,9 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
 
         {/* Content Body */}
         <main className="flex-1 p-6 md:p-8 max-w-7xl w-full mx-auto space-y-8 animate-fade-in">
+          {!envStatus.ok && (
+            <SupabaseEnvErrorScreen status={envStatus} compact />
+          )}
           {children}
         </main>
       </div>
