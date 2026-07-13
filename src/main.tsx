@@ -1,8 +1,11 @@
 import { createRoot } from "react-dom/client";
-import App from "./App.tsx";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { HelmetProvider } from "react-helmet-async";
 import "./index.css";
+import { getSupabaseEnvStatus } from "@/lib/supabaseEnv";
+import { SupabaseEnvErrorScreen } from "@/components/SupabaseEnvErrorScreen";
+
+const envStatus = getSupabaseEnvStatus();
 
 // Register Service Worker for PWA updates and offline shell.
 if ("serviceWorker" in navigator) {
