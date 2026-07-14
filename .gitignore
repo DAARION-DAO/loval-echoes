@@ -11,11 +11,11 @@ node_modules
 dist
 dist-ssr
 *.local
+.env
 .env.*
 !.env.example
-# .env is intentionally committed for Lovable Cloud production builds.
-# It must contain ONLY frontend-safe VITE_SUPABASE_* public values (URL, PUBLISHABLE_KEY, PROJECT_ID).
-# Never add SUPABASE_SERVICE_ROLE_KEY, DB passwords/URLs, JWT secrets, or any private keys here.
+# Keep real local environment values out of Git. Copy the tracked example to
+# an ignored local .env and supply only browser-safe VITE_* values there.
 
 # Editor directories and files
 .vscode/*
